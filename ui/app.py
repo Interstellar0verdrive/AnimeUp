@@ -3531,6 +3531,19 @@ def _modale_taratura() -> None:
         st.rerun()
 
 
+def _nomi_impostazioni(chiavi: list[str]) -> list[str]:
+    """Le chiavi delle impostazioni col nome che hanno in sidebar.
+
+    L'avviso del file sospeso elencava le chiavi interne («disco», «forza»):
+    nomi che a schermo non compaiono da nessuna parte.
+    """
+    nomi = {"altezza": t("sb.altezza"), "crf": "CRF", "preset": "Preset x265",
+            "dedup": t("sb.dedup"), "denoise": t("sb.denoise"),
+            "forza": t("sb.forza"), "disco": t("sb.disco"),
+            "pausa": t("sb.pausa"), "approfondita": t("sb.approf")}
+    return [nomi.get(c, c) for c in chiavi]
+
+
 def sidebar() -> dict:
     # Con una catena in corso le impostazioni si CONGELANO: cambiarle non
     # avrebbe alcun effetto reale (la catena porta i parametri scritti nel
@@ -3822,7 +3835,8 @@ def sidebar() -> dict:
             with posto_sospeso.container():
                 st.markdown(
                     "<div class='au-nota-viva au-nota-avviso'>"
-                    f"{t('sb.sospeso', diversi=', '.join(diversi))}</div>",
+                    f"{t('sb.sospeso', diversi=', '.join(_nomi_impostazioni(diversi)))}"
+                    "</div>",
                     unsafe_allow_html=True)
                 # Niente `st.rerun()`: il richiamo ne provoca gia' uno, e
                 # chiamarlo qui significherebbe scrivere nello stato dal
