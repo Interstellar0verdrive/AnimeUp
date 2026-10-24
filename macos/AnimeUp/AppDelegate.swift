@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     /// the interface changes it, the server restarts on the new folder.
     private var dataChoice: String?
     private var dataWatch: Timer?
+    private var updating = false
     private var server: ServerProcess?
     /// PID of a server we found already running at launch (left over from a
     /// crash) and reused instead of starting a new one.
@@ -169,7 +170,81 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         dataWatch = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             guard let self, let paths = self.paths, self.ready, !self.quitting else { return }
             let now = AppPaths.chosenDataFolder(state: paths.state)
-            if now != self.dataChoice { self.switchDataFolder() }
+            if now != self.dataChoice { self.switchDataFolder(); return }
+            self.checkUpdateRequest()
+        }
+    }
+
+    // MARK: Updates
+
+    /// The interface's "Install update" button leaves a request file; the
+    /// app takes it from there (see Updater.swift for why it's done here).
+    private func checkUpdateRequest() {
+        guard let paths, ready, !updating else { return }
+        let request = Updater.requestFile(state: paths.state)
+        guard FileManager.default.fileExists(atPath: request.path) else { return }
+        try? FileManager.default.removeItem(at: request)
+        updating = true
+        Task { @MainActor in
+            await self.runUpdate()
+            self.updating = false
+        }
+    }
+
+    @MainActor private func runUpdate() async {
+        if case .failure(let e) = Updater.replaceableLocation() { updateFailed(e); return }
+        let release: Release
+        do {
+            release = try await Updater.latestRelease()
+        } catch {
+            updateFailed(error); return
+        }
+        guard Updater.isNewer(release.version, than: appVersion) else {
+            updateFailed(UpdateError.notNewer(release.version)); return
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        let ask = NSAlert()
+        ask.messageText = tr("Install AnimeUp \(release.version)?", "Installare AnimeUp \(release.version)?")
+        let mb = max(1, release.size / 1_000_000)
+        ask.informativeText = tr(
+            "AnimeUp downloads the new version from GitHub (about \(mb) MB), checks it against the checksum published with the release, replaces itself and restarts. Jobs in progress keep running; your files, settings and calibration stay as they are.",
+            "AnimeUp scarica la nuova versione da GitHub (circa \(mb) MB), la verifica con il checksum pubblicato nella release, si sostituisce e si riavvia. Le lavorazioni in corso continuano; file, impostazioni e taratura restano come sono.")
+        ask.addButton(withTitle: tr("Install and Restart", "Installa e riavvia"))
+        ask.addButton(withTitle: tr("Cancel", "Annulla"))
+        guard ask.runModal() == .alertFirstButtonReturn else { return }
+
+        let window = PreparingWindow()
+        window.title = "AnimeUp"
+        window.show(line: tr("Downloading AnimeUp \(release.version)…", "Scarico AnimeUp \(release.version)…"))
+        window.makeKeyAndOrderFront(nil)
+        do {
+            let work = FileManager.default.temporaryDirectory
+                .appendingPathComponent("AnimeUp-update-\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
+            let newApp = try await Updater.download(release, into: work)
+            window.show(line: tr("Installing and restarting…", "Installo e riavvio…"))
+            let current = try Updater.replaceableLocation().get()
+            let old = try Updater.swap(current: current, with: newApp)
+            server?.writeLog("[app] updated to \(release.version): restarting\n")
+            Updater.relaunch(newApp: current, oldCopy: old)
+            NSApp.terminate(nil)
+        } catch {
+            window.orderOut(nil)
+            updateFailed(error)
+        }
+    }
+
+    @MainActor private func updateFailed(_ error: Error) {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = tr("AnimeUp couldn't update itself", "AnimeUp non è riuscito ad aggiornarsi")
+        alert.informativeText = error.localizedDescription
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: tr("Open Release Page", "Apri la pagina della release"))
+        if alert.runModal() == .alertSecondButtonReturn {
+            NSWorkspace.shared.open(releasesPage)
         }
     }
 

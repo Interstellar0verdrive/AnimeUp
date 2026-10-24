@@ -3555,6 +3555,22 @@ def _modale_taratura() -> None:
     st.dialog(t("lav.tar_titolo"), width="large")(_contenuto_taratura)()
 
 
+def _chiedi_aggiornamento() -> None:
+    """Lascia all'app per macOS la richiesta di aggiornarsi.
+
+    Solo la richiesta: quale versione, da dove e con che checksum lo chiede
+    l'app direttamente a GitHub, senza fidarsi di niente scritto qui.
+    """
+    stato = os.environ.get("ANIMEUP_STATO")
+    if not stato:
+        return
+    try:
+        (Path(stato) / "aggiornamento-richiesta").write_text(str(time.time()))
+        st.session_state["aggiornamento_chiesto"] = True
+    except OSError:
+        pass
+
+
 def _file_cartella_dati() -> Path | None:
     """Dove l'app per macOS legge la cartella dei dati al prossimo avvio."""
     stato = os.environ.get("ANIMEUP_STATO")
@@ -3664,14 +3680,23 @@ def sidebar() -> dict:
     # sezioni sorelle, "Di base" e "Avanzate".
     nuova = aggiornamenti.disponibile(attivo=salvate.get("aggiornamenti", True))
     if nuova:
-        # Un link e non un pulsante: nell'app per macOS i link esterni si
-        # aprono nel browser, ed e' li' che si scarica la release.
+        app = os.environ.get("ANIMEUP_APP") == "1"
+        # Nell'app l'aggiornamento lo fa l'app stessa (scarica, verifica il
+        # checksum, si sostituisce): qui si chiede soltanto. Nella cartella
+        # portatile resta il link alla release, da scaricare a mano.
+        link = (f"<a href='{esc(nuova['url'])}' target='_blank'>"
+                f"{t('sb.aggiornamento_note' if app else 'sb.aggiornamento_link')}</a>")
         st.sidebar.markdown(
             "<div class='au-nota-viva au-nota-avviso'>"
-            f"{t('sb.aggiornamento', versione=esc(nuova['versione']))} "
-            f"<a href='{esc(nuova['url'])}' target='_blank'>"
-            f"{t('sb.aggiornamento_link')}</a></div>",
+            f"{t('sb.aggiornamento', versione=esc(nuova['versione']))} {link}</div>",
             unsafe_allow_html=True)
+        if app:
+            if st.sidebar.button(t("sb.aggiornamento_installa"), key="installaAgg",
+                                 type="primary", use_container_width=True,
+                                 icon=":material/system_update_alt:"):
+                _chiedi_aggiornamento()
+            if st.session_state.get("aggiornamento_chiesto"):
+                st.sidebar.caption(t("sb.aggiornamento_chiesto"))
     st.sidebar.markdown(f"<div class='au-sb-titolo'>{t('sb.titolo')}</div>",
                         unsafe_allow_html=True)
     # Il posto dell'avviso «file sospeso» sta QUI, in alto, anche se il suo

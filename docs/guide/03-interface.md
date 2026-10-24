@@ -162,7 +162,7 @@ Minutes of rest between one file and the next, to give the CPU and GPU a break d
 
 ### Check for updates
 
-On by default. Once a day AnimeUp asks GitHub for the latest release; if there's a newer one, a note appears at the top of the sidebar, *AnimeUp x.y.z is available. Download it*, linking to the release page. Nothing is downloaded or installed automatically, and it's the only connection AnimeUp makes by itself after the first launch. Turn it off here if you prefer.
+On by default. Once a day AnimeUp asks GitHub for the latest release; if there's a newer one, a note appears at the top of the sidebar, *AnimeUp x.y.z is available*, with a link to what's new. In the app it also shows an **Install update** button: AnimeUp asks you to confirm, then downloads the new version, verifies it and restarts (see [Using and updating the app](01-install.md#using-and-updating-the-app)). In the portable folder the note links to the release to download by hand. Nothing is installed without your click, and the daily check is the only connection AnimeUp makes by itself after the first launch. Turn it off here if you prefer.
 
 ### Data folder (app only)
 
