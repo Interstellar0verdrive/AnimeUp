@@ -3,7 +3,6 @@ site_description: Step-by-step guide to AnimeUp, the local, offline anime upscal
 site_url: https://interstellar0verdrive.github.io/AnimeUp/
 repo_url: https://github.com/Interstellar0verdrive/AnimeUp
 repo_name: Interstellar0verdrive/AnimeUp
-edit_uri: edit/main/docs/
 docs_dir: docs
 site_dir: site
 exclude_docs: |
@@ -63,7 +62,6 @@ theme:
     - search.highlight
     - search.suggest
     - content.code.copy
-    - content.action.edit
 
 plugins:
   - search

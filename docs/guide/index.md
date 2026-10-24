@@ -9,7 +9,7 @@ description: Step-by-step guide to AnimeUp, the local, offline anime upscaler fo
     <img class="animeup-hero__icon animeup-logo__light" src="../assets/animeup-logo-light.png" alt="" aria-hidden="true">
   </span>
   <div class="animeup-hero__copy">
-    <span class="eyebrow">User guide · AnimeUp 1.4</span>
+    <span class="eyebrow">Version 1.4 · Apple Silicon</span>
     <h1>AnimeUp user guide</h1>
     <p>Upscale anime episodes to 1080p and beyond on your own Mac, offline, with Real-ESRGAN and Real-CUGAN, and choose the model by looking at the result.</p>
   </div>
