@@ -80,6 +80,21 @@ and it works the same way there.
 4. The UI opens in your browser at <http://localhost:8899>. Keep the
    Terminal window open while you use it: that window is the server.
 
+### Optional: video-compare
+
+The Compare tab has buttons that open two renders side by side in
+[video-compare](https://github.com/pixop/video-compare), a split-screen
+player that lets you compare them in motion rather than as still crops.
+It isn't bundled: it's GPL-2.0, and there is no self-contained macOS build.
+Install it with [Homebrew](https://brew.sh) if you want it:
+
+```bash
+brew install video-compare
+```
+
+Without it, AnimeUp opens the two files in [IINA](https://iina.io) if
+that is installed. Everything else works the same either way.
+
 ### Option B: from source
 
 ```bash
@@ -174,6 +189,8 @@ thanks to all of them.
 | [MoltenVK](https://github.com/KhronosGroup/MoltenVK) | Vulkan-on-Metal layer linked into both binaries | Apache-2.0 ([text](LICENSES/MoltenVK.txt)) |
 | [FFmpeg](https://ffmpeg.org), static macOS builds by [Martin Riedl](https://ffmpeg.martin-riedl.de) | Decoding, analysis, encoding (x265), remuxing. **Downloaded on first launch, not distributed.** | GPLv3 for this build |
 | [uv](https://github.com/astral-sh/uv) by Astral | Self-contained Python runtime and dependencies | MIT / Apache-2.0 ([MIT](LICENSES/uv-MIT.txt), [Apache](LICENSES/uv-APACHE.txt)) |
+| [video-compare](https://github.com/pixop/video-compare) by Pixop | Optional side-by-side player for the Compare tab. **Not distributed**: installed separately by the user. | GPL-2.0 |
+| [IINA](https://iina.io) | Optional fallback player for the Compare tab. **Not distributed.** | GPL-3.0 |
 | [Streamlit](https://github.com/streamlit/streamlit) | Web UI | Apache-2.0 |
 | [Typer](https://github.com/fastapi/typer) | Command-line interface | MIT |
 | [Rich](https://github.com/Textualize/rich) | Terminal output | MIT |
