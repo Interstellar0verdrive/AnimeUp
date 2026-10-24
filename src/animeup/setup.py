@@ -21,6 +21,7 @@ from pathlib import Path
 from rich.console import Console
 
 from . import __version__
+from .i18n import t
 from .paths import PATHS
 
 # Build statiche per macOS arm64, verificate: Mach-O arm64 con zero dipendenze
@@ -182,7 +183,7 @@ def _vendor_ffmpeg(console: Console, missing: list[str]) -> None:
     for name in missing:
         url = FFMPEG_SOURCES[name]
         dest = PATHS.bin / name
-        console.print(f"Scarico {name}...")
+        console.print(t("cli.setup.scarico", nome=name))
         try:
             with tempfile.NamedTemporaryFile(suffix=".archive", delete=False) as tmp:
                 archive = Path(tmp.name)
@@ -191,39 +192,36 @@ def _vendor_ffmpeg(console: Console, missing: list[str]) -> None:
             archive.unlink(missing_ok=True)
         except Exception as exc:  # noqa: BLE001 - qualunque errore di rete o formato
             console.print(
-                f"[red]Fallito: {exc}[/red]\n"
-                f"[dim]Ripiego manuale: scarica {url}, estrai '{name}' "
-                f"e mettilo in {PATHS.bin}/[/dim]"
+                f"[red]{t('cli.setup.fallito', errore=exc)}[/red]\n"
+                f"[dim]{t('cli.setup.ripiego_ffmpeg', url=url, nome=name, cartella=PATHS.bin)}[/dim]"
             )
             continue
 
         if not ok:
-            console.print(f"[red]{name} non trovato dentro l'archivio.[/red]")
+            console.print(f"[red]{t('cli.setup.non_trovato', nome=name)}[/red]")
             continue
 
         if not _is_static(dest):
             console.print(
-                f"[yellow]{name} scaricato ma NON statico: dipende da librerie "
-                "esterne e non garantisce la portabilità.[/yellow]"
+                f"[yellow]{t('cli.setup.non_statico', nome=name)}[/yellow]"
             )
             continue
 
         if lacking := _capabilities_ok(dest, name):
             console.print(
-                f"[red]{name} statico ma incompleto: mancano {', '.join(lacking)}.[/red]\n"
-                "[red]Rimosso: una build monca farebbe fallire la lavorazione "
-                "a metà strada.[/red]"
+                f"[red]{t('cli.setup.incompleto', nome=name, mancanti=', '.join(lacking))}[/red]\n"
+                f"[red]{t('cli.setup.rimosso')}[/red]"
             )
             dest.unlink(missing_ok=True)
             continue
 
-        console.print(f"[green]{name} vendorizzato, statico e completo.[/green]")
+        console.print(f"[green]{t('cli.setup.ffmpeg_ok', nome=name)}[/green]")
 
 
 def _vendor_ncnn(console: Console, missing: list[str]) -> None:
     for name in missing:
         pacchetto = NCNN_SOURCES[name]
-        console.print(f"Scarico {name} e i suoi modelli...")
+        console.print(t("cli.setup.scarico_modelli", nome=name))
         with tempfile.TemporaryDirectory() as tmp:
             tmpdir = Path(tmp)
             archive = tmpdir / "pacchetto.zip"
@@ -231,9 +229,8 @@ def _vendor_ncnn(console: Console, missing: list[str]) -> None:
                 _download(pacchetto.url, archive)
             except Exception as exc:  # noqa: BLE001 - qualunque errore di rete
                 console.print(
-                    f"[red]Fallito: {exc}[/red]\n"
-                    f"[dim]Ripiego manuale: scarica {pacchetto.url} ed estrai "
-                    f"binario e modelli in {PATHS.bin}/[/dim]"
+                    f"[red]{t('cli.setup.fallito', errore=exc)}[/red]\n"
+                    f"[dim]{t('cli.setup.ripiego_ncnn', url=pacchetto.url, cartella=PATHS.bin)}[/dim]"
                 )
                 continue
 
@@ -241,8 +238,7 @@ def _vendor_ncnn(console: Console, missing: list[str]) -> None:
             # non si installa, che sia corrotto o sostituito a monte.
             if (trovato := _sha256(archive)) != pacchetto.sha256:
                 console.print(
-                    f"[red]{name}: checksum inatteso ({trovato}). "
-                    "Archivio scartato.[/red]"
+                    f"[red]{t('cli.setup.checksum', nome=name, trovato=trovato)}[/red]"
                 )
                 continue
 
@@ -253,7 +249,7 @@ def _vendor_ncnn(console: Console, missing: list[str]) -> None:
             binario = estratto / pacchetto.binario
             cartelle = [estratto / c for c in pacchetto.cartelle]
             if not binario.is_file() or not all(c.is_dir() for c in cartelle):
-                console.print(f"[red]{name}: contenuto dell'archivio inatteso.[/red]")
+                console.print(f"[red]{t('cli.setup.contenuto', nome=name)}[/red]")
                 continue
 
             dest = PATHS.bin / name
@@ -262,40 +258,41 @@ def _vendor_ncnn(console: Console, missing: list[str]) -> None:
             for cartella in cartelle:
                 shutil.copytree(cartella, PATHS.bin / cartella.name, dirs_exist_ok=True)
 
-        console.print(f"[green]{name} vendorizzato, con i modelli.[/green]")
+        console.print(f"[green]{t('cli.setup.ncnn_ok', nome=name)}[/green]")
 
 
 def vendor_all(console: Console, *, conferma: bool = True) -> None:
     """Scarica in bin/ i binari e i modelli che mancano, previa conferma."""
     if platform.machine() != "arm64":
         console.print(
-            f"[yellow]Architettura {platform.machine()} non gestita "
-            "automaticamente: copia a mano binari e modelli in bin/.[/yellow]"
+            f"[yellow]{t('cli.setup.architettura', arch=platform.machine())}[/yellow]"
         )
         return
 
     ffmpeg = _ffmpeg_mancanti()
     ncnn = _ncnn_mancanti()
     if not ffmpeg and not ncnn:
-        console.print("[green]Binari e modelli sono già tutti in bin/.[/green]")
+        console.print(f"[green]{t('cli.setup.gia_tutti')}[/green]")
         return
 
-    console.print("Per rendere la cartella autonoma verranno scaricati:\n")
+    console.print(t("cli.setup.verranno") + "\n")
     for name in ffmpeg:
-        console.print(f"  · {name}  (build statica)  da  {FFMPEG_SOURCES[name]}")
+        console.print(t("cli.setup.voce_ffmpeg", nome=name, url=FFMPEG_SOURCES[name]))
     for name in ncnn:
-        console.print(f"  · {name}  + modelli  da  {NCNN_SOURCES[name].url}")
+        console.print(t("cli.setup.voce_ncnn", nome=name, url=NCNN_SOURCES[name].url))
     console.print(
-        f"\n[dim]Circa {40 * len(ffmpeg) + 50 * len(ncnn)} MB in totale. "
-        "Finiranno in bin/ e non usciranno dalla cartella.[/dim]"
+        f"\n[dim]{t('cli.setup.peso', mb=40 * len(ffmpeg) + 50 * len(ncnn))}[/dim]"
     )
 
-    if conferma and input("\nProcedo con il download? [s/N] ").strip().lower() not in ("s", "si", "y"):
-        console.print("Annullato. Senza questi binari le lavorazioni non possono partire.")
+    # Si accettano le risposte in tutte e due le lingue, qualunque sia
+    # quella della domanda.
+    if conferma and input("\n" + t("cli.setup.procedo") + " ").strip().lower() not in (
+            "s", "si", "sì", "y", "yes"):
+        console.print(t("cli.setup.annullato"))
         return
 
     PATHS.bin.mkdir(parents=True, exist_ok=True)
     _vendor_ffmpeg(console, ffmpeg)
     _vendor_ncnn(console, ncnn)
 
-    console.print("\nVerifica finale:  [bold]./animeup doctor[/bold]")
+    console.print("\n" + t("cli.setup.verifica", comando="[bold]./animeup doctor[/bold]"))
