@@ -4828,6 +4828,69 @@ def _() -> None:
         assert st_.versione_ffmpeg(Path(tmp) / "non-esiste") is None
 
 
+@caso("l'avviso di aggiornamento: solo versioni piu' nuove, mai la rete in primo piano")
+def _() -> None:
+    import json as _json
+    import time as _time
+    from animeup import aggiornamenti as agg
+    assert agg.versione("v1.4.2") == (1, 4, 2) == agg.versione("1.4.2")
+    assert agg.versione("v2.0.0-beta") is None and agg.versione("") is None
+    assert agg.versione("1.10.0") > agg.versione("1.9.9")
+    with tempfile.TemporaryDirectory() as tmp:
+        cache = Path(tmp) / "aggiornamenti.json"
+        vero = agg._file
+        agg._file = lambda: cache
+        try:
+            adesso = _time.time()
+            # Controllo recente: si legge la cache, nessun thread di rete.
+            cache.write_text(_json.dumps({"controllato": adesso, "ultima": "v999.0.0",
+                                          "url": "https://example.invalid/r"}))
+            nuova = agg.disponibile(adesso=adesso)
+            assert nuova == {"versione": "999.0.0", "url": "https://example.invalid/r"}, nuova
+            assert agg.disponibile(attivo=False, adesso=adesso) is None
+            cache.write_text(_json.dumps({"controllato": adesso, "ultima": "v0.0.1"}))
+            assert agg.disponibile(adesso=adesso) is None
+            cache.write_text("non e' json")
+            # Cache rotta: nessuna eccezione. (Il thread di rete parte, ma il
+            # risultato arriva su disco e non si aspetta.)
+            agg._chiedi_a_github = lambda: None
+            assert agg.disponibile(adesso=adesso) is None
+        finally:
+            agg._file = vero
+
+
+@caso("con ANIMEUP_STATO i binari scaricati stanno fuori dal programma")
+def _() -> None:
+    """L'app per macOS non si modifica: Python, ambiente e bin/ vanno nella
+    cartella di stato (~/Library/Application Support/AnimeUp)."""
+    from animeup.paths import Paths, code_root
+    vecchio = os.environ.get("ANIMEUP_STATO")
+    with tempfile.TemporaryDirectory() as tmp:
+        os.environ["ANIMEUP_STATO"] = tmp
+        try:
+            p = Paths()
+            assert p.bin == Path(tmp).resolve() / "bin", p.bin
+            assert p.campioni == code_root() / "campioni", p.campioni
+        finally:
+            if vecchio is None:
+                os.environ.pop("ANIMEUP_STATO", None)
+            else:
+                os.environ["ANIMEUP_STATO"] = vecchio
+    lanciatore = (ROOT / "animeup").read_text()
+    for chiave in ('UV_PYTHON_INSTALL_DIR="$STATO/.python"',
+                   'UV_PROJECT_ENVIRONMENT="$STATO/.venv"', 'UV="$STATO/bin/uv"'):
+        assert chiave in lanciatore, chiave
+
+
+@caso("l'interfaccia di fabbrica risponde solo da questo Mac")
+def _() -> None:
+    """Il server ascoltava su tutte le interfacce: chiunque sulla stessa rete
+    poteva avviare e fermare lavorazioni. Ora serve --rete per aprirlo."""
+    cli = (ROOT / "src" / "animeup" / "cli.py").read_text()
+    assert '"--server.address", "0.0.0.0" if rete else "127.0.0.1"' in cli
+    assert 'typer.Option("--rete"' in cli
+
+
 @caso("la lingua salvata torna al riavvio, e una sconosciuta non rompe niente")
 def _() -> None:
     import json as _json

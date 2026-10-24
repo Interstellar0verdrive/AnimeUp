@@ -49,7 +49,8 @@ sys.path.insert(0, str(CODICE / "src"))
 import streamlit as st  # noqa: E402
 
 from animeup import __version__  # noqa: E402
-from animeup import i18n, library, monitor, preview, taratura  # noqa: E402
+from animeup import (  # noqa: E402
+    aggiornamenti, i18n, library, monitor, preview, primo_avvio, taratura)
 from animeup.i18n import t, tn  # noqa: E402
 from animeup.models import (  # noqa: E402
     ALTEZZA_INCERTA, CATALOG, CLEAN_SOURCE_MIN_HEIGHT, altezza_minima,
@@ -2947,6 +2948,9 @@ _IMPOSTAZIONI_DEFAULT = {
     # Scritto per esteso e non `i18n.PREDEFINITA`: il dizionario deve restare
     # un letterale, i test lo leggono cosi'. Sono la stessa cosa.
     "lingua": "en",
+    # Un controllo al giorno su GitHub, spegnibile: e' l'unica connessione
+    # che AnimeUp fa da solo dopo il primo avvio.
+    "aggiornamenti": True,
 }
 
 
@@ -3555,6 +3559,45 @@ def _modale_taratura() -> None:
     st.dialog(t("lav.tar_titolo"), width="large")(_contenuto_taratura)()
 
 
+def _file_cartella_dati() -> Path | None:
+    """Dove l'app per macOS legge la cartella dei dati al prossimo avvio."""
+    stato = os.environ.get("ANIMEUP_STATO")
+    return Path(stato) / "cartella_dati" if stato else None
+
+
+def _scegli_cartella_dati() -> None:
+    """Il selettore di cartelle di macOS, aperto dal server (che gira su
+    questo stesso Mac). Annullare non cambia niente."""
+    esito = subprocess.run(
+        ["osascript", "-e",
+         f'POSIX path of (choose folder with prompt "{t("sb.cartella_prompt")}")'],
+        capture_output=True, text=True, check=False)
+    scelta = esito.stdout.strip()
+    file = _file_cartella_dati()
+    if esito.returncode == 0 and scelta and file is not None:
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_text(str(Path(scelta).resolve()) + "\n")
+        st.session_state["cartella_cambiata"] = str(Path(scelta).resolve())
+
+
+def _riga_cartella_dati(congelata: bool) -> None:
+    """La cartella dei dati dell'app: dove sta, e come cambiarla.
+
+    Vale dal prossimo avvio: cambiarla a caldo vorrebbe dire spostare sotto
+    i piedi le lavorazioni e le analisi gia' caricate in memoria.
+    """
+    attuale = str(PATHS.root).replace(str(Path.home()), "~", 1)
+    _etichetta_sb(t("sb.cartella"), t("sb.cartella_aiuto"))
+    st.sidebar.markdown(f"<div class='au-meta'>{esc(attuale)}</div>",
+                        unsafe_allow_html=True)
+    nuova = st.session_state.get("cartella_cambiata")
+    if nuova:
+        st.sidebar.caption(t("sb.cartella_riavvia",
+                             cartella=nuova.replace(str(Path.home()), "~", 1)))
+    st.sidebar.button(t("sb.cartella_cambia"), key="cambiaCartella",
+                      disabled=congelata, on_click=_scegli_cartella_dati)
+
+
 def _nomi_impostazioni(chiavi: list[str]) -> list[str]:
     """Le chiavi delle impostazioni col nome che hanno in sidebar.
 
@@ -3593,6 +3636,16 @@ def sidebar() -> dict:
     # (e le avanzate globali non meno delle altre): un titolo-madre
     # "Impostazioni" con la nota di stato sotto — così copre TUTTO — e due
     # sezioni sorelle, "Di base" e "Avanzate".
+    nuova = aggiornamenti.disponibile(attivo=salvate.get("aggiornamenti", True))
+    if nuova:
+        # Un link e non un pulsante: nell'app per macOS i link esterni si
+        # aprono nel browser, ed e' li' che si scarica la release.
+        st.sidebar.markdown(
+            "<div class='au-nota-viva au-nota-avviso'>"
+            f"{t('sb.aggiornamento', versione=esc(nuova['versione']))} "
+            f"<a href='{esc(nuova['url'])}' target='_blank'>"
+            f"{t('sb.aggiornamento_link')}</a></div>",
+            unsafe_allow_html=True)
     st.sidebar.markdown(f"<div class='au-sb-titolo'>{t('sb.titolo')}</div>",
                         unsafe_allow_html=True)
     # Il posto dell'avviso «file sospeso» sta QUI, in alto, anche se il suo
@@ -3797,6 +3850,16 @@ def sidebar() -> dict:
 
     # La voce di manutenzione: data dell'ultima taratura e l'ingresso alla
     # modale. Vive in Sistema perche' e' della macchina, non del lavoro.
+    with st.sidebar.container(key="swAggiorn"):
+        controlla_agg = st.toggle(t("sb.controlla_agg"), key="w_aggiornamenti")
+        _aiuto_a_destra(t("sb.controlla_agg_aiuto"), t("sb.abilitato"))
+
+    # La cartella dei dati si sceglie solo nell'app: nella modalita' a
+    # cartella i dati stanno accanto al programma (o in ANIMEUP_ROOT, che e'
+    # una variabile da Terminale).
+    if os.environ.get("ANIMEUP_APP") == "1":
+        _riga_cartella_dati(congelata)
+
     voce_tar = taratura.carica()
     if voce_tar:
         import datetime as _dt
@@ -3852,7 +3915,8 @@ def sidebar() -> dict:
     attuali = {"altezza": altezza, "crf": crf, "preset": preset,
                "dedup": dedup, "denoise": denoise, "forza": forza,
                "disco": disco, "pausa": pausa,
-               "approfondita": approfondita, "lingua": lingua}
+               "approfondita": approfondita, "lingua": lingua,
+               "aggiornamenti": controlla_agg}
     # Persistenza: si scrive solo quando qualcosa e' cambiato davvero.
     if attuali != salvate:
         _impostazioni_scrivi(attuali)
@@ -3900,6 +3964,13 @@ def sidebar() -> dict:
     # La fascia è ANCORATA in fondo alla sidebar (sticky): prima il
     # pulsante finiva fuori dall'area di scroll e per trovarlo bisognava
     # sapere che c'era — il contenuto ora le scorre sotto.
+    # Nell'app per macOS si esce dal menu (⌘Q), che ferma il server e chiude
+    # la finestra insieme: il pulsante spegnerebbe solo il server, lasciando
+    # la finestra vuota davanti all'utente.
+    if os.environ.get("ANIMEUP_APP") == "1":
+        return {"altezza": altezza, "crf": crf, "dedup": dedup, "preset": preset,
+                "denoise": denoise, "disco": disco, "forza": forza, "pausa": pausa,
+                "approfondita": approfondita}
     with st.sidebar.container(key="spegnimento"):
         conferma_off = st.session_state.get("conferma_spegni")
         spegni_armato = (isinstance(conferma_off, float)
@@ -7369,6 +7440,71 @@ def _termina_gruppo(pid: int) -> None:
 
 # ===========================================================================
 
+@st.cache_resource
+def _preparazione() -> primo_avvio.Preparazione:
+    """Una sola preparazione per server: sopravvive ai giri della pagina."""
+    return primo_avvio.Preparazione()
+
+
+def _pagina_primo_avvio() -> bool:
+    """Al primo avvio mancano FFmpeg e i motori: si scaricano da qui.
+
+    Ritorna True se ha disegnato la pagina (e il resto dell'app va saltato).
+    Prima la preparazione si faceva solo nel Terminale, che l'app per macOS
+    non mostra.
+    """
+    # Il controllo esegue ffmpeg per leggerne la versione: una volta per
+    # sessione basta, la Lavorazione rifa' il giro ogni cinque secondi.
+    if st.session_state.get("preparato"):
+        return False
+    lavoro = _preparazione()
+    if not lavoro.in_corso and not lavoro.errore and not primo_avvio.serve():
+        st.session_state["preparato"] = True
+        return False
+    st.markdown(
+        "<div class='au-marchio'>"
+        "<svg width='22' height='22' viewBox='0 0 22 22' aria-hidden='true'>"
+        "<rect x='1' y='13' width='8' height='8' rx='1.5' fill='#2AC9DE' opacity='.3'/>"
+        "<rect x='7' y='7' width='9' height='9' rx='1.5' fill='#2AC9DE' opacity='.55'/>"
+        "<rect x='13' y='1' width='8' height='8' rx='1.5' fill='#2AC9DE'/></svg>"
+        "<span class='au-title'>Anime<b>Up</b></span>"
+        f"<span class='au-sub'>v{__version__}</span></div>",
+        unsafe_allow_html=True)
+    st.markdown(f"<div class='au-sezione'>{t('pa.titolo')}</div>"
+                f"<div class='au-hint' style='margin-bottom:16px'>{t('pa.intro')}</div>",
+                unsafe_allow_html=True)
+    mancano = primo_avvio.da_scaricare()
+    voci = []
+    if mancano["ffmpeg"]:
+        voci.append(t("pa.voce_ffmpeg"))
+    if mancano["ncnn"]:
+        voci.append(t("pa.voce_ncnn"))
+    if voci:
+        st.markdown("\n".join(f"- {v}" for v in voci))
+        st.caption(t("pa.nota", mb=primo_avvio.peso_mb()))
+    if lavoro.in_corso:
+        with st.spinner(t("pa.in_corso")):
+            righe = lavoro.righe.righe[-4:]
+            if righe:
+                st.code("\n".join(righe), language=None)
+            time.sleep(1.0)
+        st.rerun()
+    if lavoro.errore:
+        st.error(t("pa.errore"))
+        st.code(lavoro.errore, language=None)
+        if st.button(t("pa.riprova"), type="primary", key="paRiprova"):
+            lavoro.avvia()
+            st.rerun()
+        return True
+    if lavoro.finita and not primo_avvio.serve():
+        return False
+    if st.button(t("pa.scarica", mb=primo_avvio.peso_mb()), type="primary",
+                 key="paScarica"):
+        lavoro.avvia()
+        st.rerun()
+    return True
+
+
 def main() -> None:
     try:
         PATHS.ensure_dirs()
@@ -7379,6 +7515,8 @@ def main() -> None:
     # widget scrive la sessione e Streamlit rifa' il giro: qui la si trova.
     i18n.imposta(st.session_state.get("w_lingua")
                  or _impostazioni_carica()["lingua"])
+    if _pagina_primo_avvio():
+        return
     sezione = header()
     # L'analisi si accoda QUI e non dentro Sorgenti: la scheda aperta
     # sopravvive nell'URL, quindi aprendo l'app direttamente su Lavorazione

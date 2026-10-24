@@ -951,9 +951,12 @@ def open_comparison(left: Path, right: Path) -> tuple[bool, str]:
     """
     tool = comparison_tool()
     if tool:
+        # Una sessione sua: chiudendo l'app per macOS (che ferma il server e
+        # il suo gruppo di processi) il confronto aperto restava ucciso.
         subprocess.Popen(
             [str(tool), str(left), str(right)],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True,
         )
         return True, t("mot.preview.aperto_video_compare", sinistra=left.name,
                        destra=right.name)

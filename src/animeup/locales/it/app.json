@@ -1,0 +1,20 @@
+{
+  "sb.aggiornamento": "È disponibile AnimeUp {versione}.",
+  "sb.aggiornamento_link": "Scaricala",
+  "sb.controlla_agg": "Controlla gli aggiornamenti",
+  "sb.controlla_agg_aiuto": "Una volta al giorno AnimeUp chiede a GitHub qual è l'ultima release e, se ce n'è una più nuova, mostra una nota in cima alla barra laterale con il link. Non scarica né installa niente da solo. È l'unica connessione che AnimeUp fa da sé dopo il primo avvio.",
+  "sb.cartella": "Cartella dei dati",
+  "sb.cartella_aiuto": "Dove stanno i tuoi file: INPUT, OUTPUT, JOBS e i registri di AnimeUp (impostazioni, taratura, storico). Può stare anche su un disco esterno. Il cambio vale dal prossimo avvio, e i file già presenti non vengono spostati.",
+  "sb.cartella_prompt": "Scegli la cartella per i dati di AnimeUp (INPUT, OUTPUT, JOBS…)",
+  "sb.cartella_riavvia": "Dal prossimo avvio: {cartella}. Esci e riapri AnimeUp per usarla; i file già presenti non vengono spostati.",
+  "sb.cartella_cambia": "Cambia…",
+  "pa.titolo": "Benvenuto in AnimeUp",
+  "pa.intro": "Un ultimo passo prima della prima lavorazione: AnimeUp ha bisogno dei suoi strumenti video, che tiene in una cartella sua e non condivide con il resto del Mac.",
+  "pa.voce_ffmpeg": "**FFmpeg 9.0.2**: legge, analizza e codifica il video. Si scarica invece di essere incluso per via della licenza (GPLv3).",
+  "pa.voce_ncnn": "**Real-ESRGAN e Real-CUGAN**: i motori di upscale, con i loro modelli.",
+  "pa.nota": "Circa {mb} MB, dalle release ufficiali dei progetti, verificati con il checksum. Si fa una volta sola: dopo AnimeUp funziona anche offline.",
+  "pa.scarica": "Scarica e continua (circa {mb} MB)",
+  "pa.in_corso": "Scarico e verifico gli strumenti…",
+  "pa.errore": "Il download non è andato a buon fine. Controlla la connessione e riprova; quanto già scaricato resta.",
+  "pa.riprova": "Riprova"
+}

@@ -132,30 +132,68 @@ via GitHub Actions.
 
 ## Installation
 
-### Option A: release zip (recommended)
+### Option A: the app (recommended)
 
-1. Download `AnimeUp-<version>-macos-arm64.zip` from the
-   [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest)
-   and unzip it wherever you like. An external drive works fine.
-2. Double-click **`Avvia AnimeUp.command`** ("Launch AnimeUp").
+1. Download `AnimeUp-<version>-macos-app.zip` from the
+   [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest),
+   unzip it and **drag `AnimeUp.app` into your Applications folder**. (Run
+   from Downloads, macOS starts an unapproved app from a temporary read-only
+   copy.)
+2. Open it. The first time, macOS refuses because AnimeUp isn't signed by an
+   identified developer (the project has no paid Apple Developer account).
+   Open **System Settings → Privacy & Security**, scroll down to the message
+   about AnimeUp and click **Open Anyway**, then confirm. You only do this
+   once. (On recent macOS versions right-click → Open no longer bypasses
+   this.)
+3. A small window says *Preparing AnimeUp…* while it sets up a private
+   Python runtime (about a minute, once). Then the welcome page asks to
+   download its video tools (FFmpeg 9.0.2 and the upscaling engines, about
+   180 MB, from pinned official releases verified by checksum). After that it
+   works offline.
+4. Your files live in **`~/Movies/AnimeUp`** (INPUT, OUTPUT, JOBS…); you can
+   choose another folder, an external drive included, in the sidebar under
+   *System → Data folder*. AnimeUp's own tools and environment live in
+   `~/Library/Application Support/AnimeUp` (about 1 GB).
 
-   macOS blocks it the first time because the script isn't signed by an
-   identified developer. Open **System Settings → Privacy & Security**,
-   scroll down and click **Open Anyway**. Alternatively, run this once in
-   Terminal on the unzipped folder:
+Quit with **⌘Q**: running jobs keep going in the background and reappear
+when you reopen the app. To update, replace `AnimeUp.app` with the new one:
+your data and settings are untouched. AnimeUp checks once a day for a new
+release and shows a note in the sidebar (you can turn this off).
+
+### Option B: the portable folder
+
+`AnimeUp-<version>-macos-arm64.zip` is the same program as a self-contained
+folder, handy to keep on an external drive or to use from the Terminal.
+
+1. Unzip it anywhere and double-click **`Avvia AnimeUp.command`** ("Launch
+   AnimeUp"). If macOS blocks it, use **System Settings → Privacy & Security
+   → Open Anyway** as above, or run once in Terminal:
 
    ```bash
    xattr -dr com.apple.quarantine ~/Downloads/AnimeUp
    ```
 
-3. A Terminal window opens. On the first launch AnimeUp:
-   - removes the macOS quarantine flag from **its own folder** only, so the
-     bundled tools aren't blocked one by one;
-   - downloads a private Python runtime and the dependencies (once);
-   - asks for confirmation, then downloads a static **FFmpeg** build
-     (see [why FFmpeg isn't bundled](#why-ffmpeg-isnt-bundled)).
-4. The UI opens in your browser at <http://localhost:8899>. Keep the
-   Terminal window open while you use it: that window is the server.
+2. A Terminal window opens: it sets up Python inside the folder and asks to
+   download FFmpeg (once). Keep it open while you use AnimeUp: it's the
+   server.
+3. The interface opens in your browser at <http://localhost:8899>. It's only
+   reachable from this Mac; `./animeup ui --rete` also lets other devices on
+   your network open it.
+
+### Option C: from source
+
+```bash
+git clone https://github.com/Interstellar0verdrive/AnimeUp.git
+cd AnimeUp
+./animeup setup     # downloads FFmpeg, Real-ESRGAN, Real-CUGAN and the models into bin/
+./animeup ui
+```
+
+The launcher also fetches [uv](https://github.com/astral-sh/uv), the tool
+that sets up the private Python environment, if you don't have it. Every
+third-party download comes from a pinned official release and is verified
+with SHA256, FFmpeg included (release 9.0.2), and FFmpeg is also checked
+for the encoders and filters AnimeUp needs.
 
 ### Optional: video-compare
 
@@ -171,21 +209,6 @@ brew install video-compare
 
 Without it, AnimeUp opens the two files in [IINA](https://iina.io) if
 that is installed. Everything else works the same either way.
-
-### Option B: from source
-
-```bash
-git clone https://github.com/Interstellar0verdrive/AnimeUp.git
-cd AnimeUp
-./animeup setup     # downloads FFmpeg, Real-ESRGAN, Real-CUGAN and the models into bin/
-./animeup ui
-```
-
-The launcher also fetches [uv](https://github.com/astral-sh/uv), the tool
-that sets up the private Python environment, if you don't have it. Every
-third-party download comes from a pinned official release and is verified
-with SHA256, FFmpeg included (release 9.0.2), and FFmpeg is also checked
-for the encoders and filters AnimeUp needs.
 
 ## Why FFmpeg isn't bundled
 
