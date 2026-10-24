@@ -123,5 +123,6 @@
   "probe.mov_text": "mov_text subtitles: they can't be copied into MKV and will be converted to SRT.",
   "probe.no_video": "No usable video track: this file can't be processed.",
   "probe.colore_hd": "No colour metadata: BT.709 (HD source) will be assumed, as is the convention, and the tags will be written explicitly in the output.",
-  "probe.colore_sd": "No colour metadata: BT.601 (SD source) will be assumed, as is the convention, and the tags will be written explicitly in the output."
+  "probe.colore_sd": "No colour metadata: BT.601 (SD source) will be assumed, as is the convention, and the tags will be written explicitly in the output.",
+  "sb.interfaccia": "Interface"
 }

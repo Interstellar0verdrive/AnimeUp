@@ -3642,6 +3642,12 @@ def sidebar() -> dict:
     # l'etichetta nelle due lingue: chi si ritrova l'interfaccia in una
     # lingua che non legge deve poterla trovare lo stesso. Non si congela:
     # non tocca nessuna lavorazione.
+    # Sotto un gruppo suo, come «Uscita»: attaccata al titolo della sezione
+    # stava troppo stretta (detto dall'utente), e il gruppo da' lo stesso
+    # respiro degli altri controlli.
+    st.sidebar.markdown(
+        f"<div class='au-eyebrow au-sgruppo'>{t('sb.interfaccia')}</div>",
+        unsafe_allow_html=True)
     _etichetta_sb("Language · Lingua", t("sb.lingua_aiuto"),
                   predefinito=i18n.LINGUE[i18n.PREDEFINITA])
     with st.sidebar.container(key="cLingua"):
