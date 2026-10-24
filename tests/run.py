@@ -2113,7 +2113,29 @@ def _thread_non_oltre_i_core():
     assert taratura.salvataggio_predefinito() <= taratura.core()
 
 
+def _otto_core(fn):
+    """Il caso gira come su una macchina da 8 core, qualunque sia la vera.
+
+    I valori provati (fino a 8 thread) presuppongono almeno 8 core, e il
+    codice li taglia giustamente al numero vero: sul runner di GitHub, che
+    ne ha 3, l'8 diventava impossibile e il caso falliva per la macchina,
+    non per il codice."""
+    import functools
+    import os as _os
+
+    @functools.wraps(fn)
+    def dentro():
+        vero = _os.cpu_count
+        _os.cpu_count = lambda: 8
+        try:
+            return fn()
+        finally:
+            _os.cpu_count = vero
+    return dentro
+
+
 @caso("la produzione legge i thread misurati, e rifiuta tutto il resto")
+@_otto_core
 def _thread_dalla_taratura():
     import json as json_
     from animeup import backend, taratura
@@ -2144,6 +2166,7 @@ def _thread_dalla_taratura():
 
 
 @caso("la prova dei thread arriva davvero fino al valore salvato")
+@_otto_core
 def _prova_thread_intera():
     """Fra la misura e la produzione c'era una zona scoperta: i test
     provavano la regola come funzione pura, ma nessuno verificava che
