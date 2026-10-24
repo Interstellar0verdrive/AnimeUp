@@ -1,5 +1,6 @@
 /* AnimeUp's UI palette, applied to the two built-in Material color schemes. */
-[data-md-color-scheme="slate"] {
+[data-md-color-scheme="slate"],
+[data-md-color-scheme="animeup-auto"] {
   --animeup-bg: #101113;
   --animeup-surface: #17191c;
   --animeup-border: #26292e;
@@ -55,8 +56,30 @@
   --md-footer-bg-color--dark: #dce7e9;
 }
 
-/* The automatic palette receives a scheme from the OS; slate is the fallback. */
+/* The System option follows macOS without extra JavaScript. */
+@media (prefers-color-scheme: light) {
+  [data-md-color-scheme="animeup-auto"] {
+    --animeup-bg: #f5f8f9;
+    --animeup-surface: #ffffff;
+    --animeup-border: #d9e1e5;
+    --animeup-text: #17252b;
+    --animeup-muted: #475963;
+    --animeup-accent: #0e9fb3;
+    --animeup-link: #087c8f;
+    --animeup-warning: #a86d00;
+    --animeup-success: #16834b;
+    --animeup-danger: #bc3d43;
+    --md-default-fg-color--lighter: #697d86;
+    --md-primary-fg-color--light: #ffffff;
+    --md-primary-fg-color--dark: #e7f0f2;
+    --md-code-bg-color: #edf3f5;
+    --md-footer-bg-color: #e7eef0;
+    --md-footer-bg-color--dark: #dce7e9;
+  }
+}
+
 [data-md-color-scheme="slate"] .md-header,
+[data-md-color-scheme="animeup-auto"] .md-header,
 [data-md-color-scheme="default"] .md-header {
   border-bottom: 1px solid var(--animeup-border);
   box-shadow: none;
