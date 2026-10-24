@@ -36,24 +36,24 @@ theme:
     text: Inter
     code: JetBrains Mono
   palette:
-    - media: "(prefers-color-scheme)"
-      toggle:
-        icon: material/brightness-7
-        name: Use light appearance
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: custom
-      accent: custom
-      toggle:
-        icon: material/brightness-4
-        name: Use dark appearance
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
+    - scheme: slate
       primary: custom
       accent: custom
       toggle:
         icon: material/brightness-auto
         name: Use system appearance
+    - scheme: animeup-auto
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Use light appearance
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Use dark appearance
   features:
     - navigation.sections
     - navigation.path
