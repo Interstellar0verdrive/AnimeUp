@@ -49,7 +49,8 @@ sys.path.insert(0, str(CODICE / "src"))
 import streamlit as st  # noqa: E402
 
 from animeup import __version__  # noqa: E402
-from animeup import library, monitor, preview, taratura  # noqa: E402
+from animeup import i18n, library, monitor, preview, taratura  # noqa: E402
+from animeup.i18n import t, tn  # noqa: E402
 from animeup.models import (  # noqa: E402
     ALTEZZA_INCERTA, CATALOG, CLEAN_SOURCE_MIN_HEIGHT, recommend)
 from animeup.paths import PATHS  # noqa: E402
@@ -94,7 +95,8 @@ def _icona_aiuto(testo: str, predefinito: str = "") -> str:
     della spiegazione, e distinguerlo col colore evita di doverlo introdurre
     con una frase.
     """
-    coda = (f"<span class='au-bolla-nota'>Predefinito: {esc(predefinito)}</span>"
+    coda = (f"<span class='au-bolla-nota'>"
+            f"{esc(t('comune.predefinito', valore=predefinito))}</span>"
             if predefinito else "")
     return ("<span class='au-info' tabindex='0'>"
             "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' "
@@ -2808,8 +2810,8 @@ def header() -> str:
             "<rect x='7' y='7' width='9' height='9' rx='1.5' fill='#2AC9DE' opacity='.55'/>"
             "<rect x='13' y='1' width='8' height='8' rx='1.5' fill='#2AC9DE'/></svg>"
             "<span class='au-title'>Anime<b>Up</b></span>"
-            "<span class='au-sub'>Upscaler locale · Apple Silicon · "
-            f"v{__version__}</span></div>",
+            f"<span class='au-sub'>{t('header.sottotitolo', versione=__version__)}"
+            "</span></div>",
             unsafe_allow_html=True)
     with st.container(key="fasi"):
         # La scheda attiva vive anche nell'URL (?scheda=lavorazione): al
@@ -2819,8 +2821,11 @@ def header() -> str:
         # riceve mai; il query param sì.
         dal_url = str(st.query_params.get("scheda") or "").capitalize()
         predefinita = dal_url if dal_url in SEZIONI else SEZIONI[0]
+        # `format_func`: i valori restano gli identificativi italiani (URL,
+        # CSS, confronti nel codice), cambia solo la scritta.
         scelta = st.segmented_control(
             "Fasi", SEZIONI, key="sezione", default=predefinita,
+            format_func=lambda s: t(f"tab.{s}"),
             label_visibility="collapsed")
         _pallini_schede()
     # Le tendine di Streamlit sono combobox: scrivendoci si filtrano le
@@ -2928,6 +2933,9 @@ _IMPOSTAZIONI_DEFAULT = {
     # senza la misura sul file la deduplica si deduce dai file simili per
     # taglia — criterio che pesca il fratello sbagliato (voce 84).
     "approfondita": True,
+    # Scritto per esteso e non `i18n.PREDEFINITA`: il dizionario deve restare
+    # un letterale, i test lo leggono cosi'. Sono la stessa cosa.
+    "lingua": "en",
 }
 
 
@@ -2999,6 +3007,8 @@ def _impostazioni_pulite(dati: object) -> dict:
         puliti["altezza"] = dati["altezza"]
     if dati.get("preset") in ("medium", "slow", "slower", "veryslow"):
         puliti["preset"] = dati["preset"]
+    if dati.get("lingua") in i18n.LINGUE:
+        puliti["lingua"] = dati["lingua"]
     for chiave, minimo, massimo in (("crf", 14, 24),
                                     ("disco", MINIMO_SPAZIO_GB, _tetto_spazio()[0]),
                                     ("pausa", 0, 30)):
@@ -3546,7 +3556,13 @@ def sidebar() -> dict:
     # (e le avanzate globali non meno delle altre): un titolo-madre
     # "Impostazioni" con la nota di stato sotto — così copre TUTTO — e due
     # sezioni sorelle, "Di base" e "Avanzate".
-    st.sidebar.markdown("<div class='au-sb-titolo'>Impostazioni</div>",
+    # La lingua prima di tutto, e con l'etichetta nelle due lingue: chi si
+    # ritrova l'interfaccia in una lingua che non legge deve poterla
+    # trovare lo stesso. Non si congela: non tocca nessuna lavorazione.
+    lingua = st.sidebar.selectbox(
+        "Language · Lingua", list(i18n.LINGUE), key="w_lingua",
+        format_func=i18n.LINGUE.get, help=t("sb.lingua_aiuto"))
+    st.sidebar.markdown(f"<div class='au-sb-titolo'>{t('sb.titolo')}</div>",
                         unsafe_allow_html=True)
     # Il posto dell'avviso «file sospeso» sta QUI, in alto, anche se il suo
     # contenuto si sa solo in fondo (serve il confronto con i widget). Prima
@@ -3562,9 +3578,7 @@ def sidebar() -> dict:
         # dimmer qui sotto lo risparmia — spegnere anche la spiegazione
         # lascerebbe solo il mistero.
         st.sidebar.markdown("<div class='au-nota-viva au-nota-congelo'>"
-                            "Impostazioni congelate finché la lavorazione è in corso: "
-                            "la coda usa i parametri con cui è partita. "
-                            "Si sbloccano a coda finita (o fermata).</div>",
+                            f"{t('sb.congelata')}</div>",
                             unsafe_allow_html=True)
         # Congelata DAVVERO anche all'occhio: `disabled=` spegne i widget ma
         # le toggle restavano col loro ciano e i tooltip vivi — "tutto
@@ -3612,17 +3626,15 @@ def sidebar() -> dict:
             "  opacity: .45; }"
             "</style>", unsafe_allow_html=True)
     else:
-        st.sidebar.caption("Valgono per tutti i file. Il modello si sceglie "
-                           "per singolo file nella scheda Lavorazione.")
-    st.sidebar.markdown("<div class='au-sb-sezione'>Impostazioni di base</div>", unsafe_allow_html=True)
+        st.sidebar.caption(t("sb.valgono"))
+    st.sidebar.markdown(f"<div class='au-sb-sezione'>{t('sb.di_base')}</div>",
+                        unsafe_allow_html=True)
     regole: list[str] = []
 
-    st.sidebar.markdown("<div class='au-eyebrow au-sgruppo'>Uscita</div>",
+    st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.uscita')}</div>",
                         unsafe_allow_html=True)
     _etichetta_sb(
-        "Altezza finale",
-        "La larghezza si ricava dall'aspect ratio reale, con pixel quadri: "
-        "un 4:3 resta 4:3 e un anamorfico non viene schiacciato.",
+        t("sb.altezza"), t("sb.altezza_aiuto"),
         f"{st.session_state.get('w_altezza', 1080)} px",
         predefinito="1080 px")
     with st.sidebar.container(key="cAltezza"):
@@ -3632,9 +3644,7 @@ def sidebar() -> dict:
             label_visibility="collapsed")
 
     _etichetta_sb(
-        "CRF (x265)",
-        "Più basso = qualità maggiore e file più grande. A 18 la differenza "
-        "dal senza-perdite misurata è di 54 dB, impercettibile.",
+        "CRF (x265)", t("sb.crf_aiuto"),
         str(st.session_state.get("w_crf", 18)), predefinito="18")
     with st.sidebar.container(key="cCrf"):
         crf = st.slider(
@@ -3642,9 +3652,7 @@ def sidebar() -> dict:
             label_visibility="collapsed")
 
     _etichetta_sb(
-        "Preset x265",
-        "Più lento = file più piccolo a parità di qualità. Incide sulla "
-        "codifica, non sull'upscale.",
+        "Preset x265", t("sb.preset_aiuto"),
         str(st.session_state.get("w_preset", "slower")),
         predefinito="slower")
     with st.sidebar.container(key="cPreset"):
@@ -3657,45 +3665,31 @@ def sidebar() -> dict:
     # SORELLA di "Di base" (stesso grado), figlia di "Impostazioni" come
     # tutto il resto.
     st.sidebar.divider()
-    st.sidebar.markdown("<div class='au-sb-sezione'>Impostazioni avanzate</div>", unsafe_allow_html=True)
-    st.sidebar.caption("I valori preimpostati vanno bene quasi sempre.")
+    st.sidebar.markdown(f"<div class='au-sb-sezione'>{t('sb.avanzate')}</div>",
+                        unsafe_allow_html=True)
+    st.sidebar.caption(t("sb.avanzate_nota"))
 
-    st.sidebar.markdown("<div class='au-eyebrow au-sgruppo'>Pre-elaborazione</div>",
+    st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.preelab')}</div>",
                         unsafe_allow_html=True)
     with st.sidebar.container(key="swDedup"):
-        dedup = st.toggle("Deduplica fotogrammi", key="w_dedup",
+        dedup = st.toggle(t("sb.dedup"), key="w_dedup",
                           disabled=congelata)
-        _aiuto_a_destra(
-            "Salta i fotogrammi identici dell'animazione \"in due\": sul "
-            "materiale provato ha dimezzato i tempi. Verificata a ogni "
-            "blocco: se un fotogramma con movimento reale venisse scartato, "
-            "viene rielaborato.", "abilitato")
+        _aiuto_a_destra(t("sb.dedup_aiuto"), t("sb.abilitato"))
     with st.sidebar.container(key="swDenoise"):
-        denoise = st.toggle("Denoise prima dell'upscale", key="w_denoise",
+        denoise = st.toggle(t("sb.denoise"), key="w_denoise",
                             disabled=congelata)
-        _aiuto_a_destra(
-            "Utile solo su sorgenti rumorosi: il modello amplificherebbe il "
-            "rumore di compressione insieme al disegno.", "disabilitato")
+        _aiuto_a_destra(t("sb.denoise_aiuto"), t("sb.disabilitato"))
     with st.sidebar.container(key="swForza"):
-        forza = st.toggle("Procedi sotto la soglia minima", key="w_forza",
+        forza = st.toggle(t("sb.forza"), key="w_forza",
                           disabled=congelata)
-        _aiuto_a_destra(
-            "Di norma lo strumento rifiuta gli ingrandimenti inferiori a "
-            "1,25x: costano le stesse ore per pochi pixel in più.", "disabilitato")
+        _aiuto_a_destra(t("sb.forza_aiuto"), t("sb.disabilitato"))
 
     with st.sidebar.container(key="swApprof"):
-        approfondita = st.toggle("Sempre analisi approfondita",
+        approfondita = st.toggle(t("sb.approf"),
                                  key="w_approfondita")
-        _aiuto_a_destra(
-            "Misura la deduplica di ogni sorgente, anziché stimarla in base "
-            "ai file elaborati in precedenza, per fornire previsioni più "
-            "accurate sui tempi di elaborazione. L'analisi richiede "
-            "indicativamente 11 secondi per un file 360p, 40 secondi per un "
-            "720p e 69 secondi per un 1080p, una sola volta per file. "
-            "Se l'opzione è disabilitata, la misurazione può comunque essere "
-            "richiesta per i singoli file.", "abilitato")
+        _aiuto_a_destra(t("sb.approf_aiuto"), t("sb.abilitato"))
 
-    st.sidebar.markdown("<div class='au-eyebrow au-sgruppo'>Sistema</div>",
+    st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.sistema')}</div>",
                         unsafe_allow_html=True)
     # Il TETTO COMPLESSIVO, non la dimensione di un blocco: si chiede quanto
     # disco dedicare a un file, e la divisione in blocchi la decide l'app.
@@ -3719,46 +3713,35 @@ def sidebar() -> dict:
     # l'utente crede ancora di avere. (Chiesto da Alberto l'11/08.)
     if _disco_ora > _tetto_max:
         st.sidebar.markdown(
-            f"<div class='au-nota-viva au-nota-congelo'>Lo spazio impostato "
-            f"({_disco_ora} GB) non c'è più su questo disco: liberi "
-            f"{_libero_gb} GB. Abbassato a {_tetto_max} GB, che ne lascia "
-            f"da parte quanto basta al sistema.</div>",
+            f"<div class='au-nota-viva au-nota-congelo'>"
+            f"{t('sb.disco_ridotto', ora=_disco_ora, libero=_libero_gb, tetto=_tetto_max)}"
+            "</div>",
             unsafe_allow_html=True)
         st.session_state["w_disco"] = _tetto_max
         _disco_ora = _tetto_max
     _etichetta_sb(
-        "Spazio massimo per file (GB)",
-        "Quanto disco può occupare UN file mentre viene lavorato: fotogrammi "
-        "estratti, blocchi e segmenti insieme. Più alto = meno blocchi e "
-        "qualche minuto in meno; il minimo necessario dipende dalla durata e "
-        "dalla risoluzione, e se non basta viene detto prima di partire. "
-        "È un tetto, non una prenotazione: viene occupato quello che il file "
-        "chiede. Di fabbrica è il più prudente fra l'85% dello spazio libero "
-        "e «tutto meno 40 GB».",
+        t("sb.disco"), t("sb.disco_aiuto"),
         f"{_disco_ora} GB",
         # Il predefinito e' una REGOLA, non un numero: scriverne uno fisso
         # («40 GB») voleva dire mostrare per mesi un valore che nessun ramo
         # del codice produceva piu' (segnalato dall'utente il 12/08).
-        predefinito=f"{_tetto_max} GB · liberi {_libero_gb} GB")
+        predefinito=t("sb.disco_predefinito", tetto=_tetto_max, libero=_libero_gb))
     with st.sidebar.container(key="cDisco"):
         disco = st.slider(
-            "Spazio massimo per file (GB)", MINIMO_SPAZIO_GB, _tetto_max,
+            t("sb.disco"), MINIMO_SPAZIO_GB, _tetto_max,
             key="w_disco",
             disabled=congelata, label_visibility="collapsed")
 
     _pausa_ora = st.session_state.get("w_pausa", 5)
     _etichetta_sb(
-        "Pausa fra i file (min)",
-        "Minuti di riposo fra un file e l'altro, per dare respiro a CPU e GPU "
-        "nelle maratone lunghe. Durante la pausa l'Avvia resta bloccato e la "
-        "barra dice quando riparte. 0 = nessuna pausa.",
-        "nessuna" if _pausa_ora == 0 else f"{_pausa_ora} min",
+        t("sb.pausa"), t("sb.pausa_aiuto"),
+        t("sb.pausa_nessuna") if _pausa_ora == 0 else f"{_pausa_ora} min",
         predefinito="5 min")
     with st.sidebar.container(key="cPausa"):
         # Default 5 e non 0 (scelta dell'utente): nelle maratone la pausa
         # deve esserci senza doversene ricordare; 0 spegne la funzione.
         pausa = st.slider(
-            "Pausa fra i file (min)", 0, 30, key="w_pausa",
+            t("sb.pausa"), 0, 30, key="w_pausa",
             disabled=congelata, label_visibility="collapsed")
 
     # La voce di manutenzione: data dell'ultima taratura e l'ingresso alla
@@ -3767,10 +3750,11 @@ def sidebar() -> dict:
     if voce_tar:
         import datetime as _dt
         _q = _dt.datetime.fromtimestamp(voce_tar["quando"])
-        stato_tar = _q.strftime("%d/%m/%Y %H:%M")
-        azione, spazio_link = "Ripeti", 42
+        stato_tar = _q.strftime(t("fmt.data_ora"))
+        azione, spazio_link = t("sb.taratura_ripeti"), 42
     else:
-        stato_tar, azione, spazio_link = "Nessuna", "Esegui ora", 66
+        stato_tar, azione, spazio_link = (t("sb.taratura_mai"),
+                                          t("sb.taratura_esegui"), 66)
     # Calendario nello stesso tratto delle altre icone di casa (stroke 2).
     _cal = ("<svg width='12' height='12' viewBox='0 0 24 24' fill='none' "
             "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
@@ -3779,10 +3763,7 @@ def sidebar() -> dict:
             "<line x1='16' y1='2' x2='16' y2='6'/>"
             "<line x1='8' y1='2' x2='8' y2='6'/>"
             "<line x1='3' y1='10' x2='21' y2='10'/></svg>")
-    _aiuto_tar = (
-        "Cronometra questo Mac sul clip campione (modelli, estrazione e "
-        "codifica) e adatta ogni stima alla sua velocità reale. Circa 10 "
-        "minuti, a GPU libera.")
+    _aiuto_tar = t("sb.taratura_aiuto")
     _perche = (
         "<span class='au-perche' tabindex='0'>"
         "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' "
@@ -3795,7 +3776,7 @@ def sidebar() -> dict:
     with st.sidebar.container(key="cTarRiga"):
         st.markdown(
             f"<div class='au-tar-riga' style='padding-right: "
-            f"{spazio_link}px'><span>Taratura{_perche}</span>"
+            f"{spazio_link}px'><span>{t('sb.taratura')}{_perche}</span>"
             f"<span class='au-meta au-tar-data'>{_cal} {stato_tar}</span>"
             f"</div>", unsafe_allow_html=True)
         # DENTRO il contenitore della riga: il CSS che lo posiziona a destra
@@ -3820,7 +3801,7 @@ def sidebar() -> dict:
     attuali = {"altezza": altezza, "crf": crf, "preset": preset,
                "dedup": dedup, "denoise": denoise, "forza": forza,
                "disco": disco, "pausa": pausa,
-               "approfondita": approfondita}
+               "approfondita": approfondita, "lingua": lingua}
     # Persistenza: si scrive solo quando qualcosa e' cambiato davvero.
     if attuali != salvate:
         _impostazioni_scrivi(attuali)
@@ -3840,17 +3821,14 @@ def sidebar() -> dict:
             # parametri suoi — e' informazione, non pericolo.
             with posto_sospeso.container():
                 st.markdown(
-                    "<div class='au-nota-viva au-nota-avviso'>C'è un file "
-                    "sospeso lanciato con parametri diversi da questi "
-                    f"({', '.join(diversi)}). Riprendi userà comunque i "
-                    "parametri suoi: qui cambia solo ciò che vale per i "
-                    "lanci nuovi.</div>", unsafe_allow_html=True)
+                    "<div class='au-nota-viva au-nota-avviso'>"
+                    f"{t('sb.sospeso', diversi=', '.join(diversi))}</div>",
+                    unsafe_allow_html=True)
                 # Niente `st.rerun()`: il richiamo ne provoca gia' uno, e
                 # chiamarlo qui significherebbe scrivere nello stato dal
                 # corpo dello script — cioe' il difetto che questa forma
                 # evita.
-                st.button("Riporta la sidebar ai parametri del "
-                          "file sospeso", key="ripristina_parametri",
+                st.button(t("sb.ripristina"), key="ripristina_parametri",
                           use_container_width=True,
                           on_click=_ripristina_parametri, args=(ricetta,))
 
@@ -3861,9 +3839,9 @@ def sidebar() -> dict:
     if mancanti:
         st.sidebar.divider()
         st.sidebar.markdown(
-            f"<span class='au-tag au-warn'>{len(mancanti)} dipendenze dal sistema</span>",
+            f"<span class='au-tag au-warn'>{tn('sb.dipendenze', len(mancanti))}</span>",
             unsafe_allow_html=True)
-        st.sidebar.caption("La cartella non è autonoma: `./animeup setup`")
+        st.sidebar.caption(t("sb.non_autonoma"))
 
     # Chiudere TUTTO da qui: "chiudo la finestra = ho chiuso l'app" è il
     # modello mentale di chiunque, e costringere al Terminale lo tradiva
@@ -3876,12 +3854,9 @@ def sidebar() -> dict:
         spegni_armato = (isinstance(conferma_off, float)
                          and time.time() - conferma_off < 10)
         if not spegni_armato:
-            if st.button("Chiudi AnimeUp", use_container_width=True,
+            if st.button(t("sb.chiudi"), use_container_width=True,
                          icon=":material/power_settings_new:",
-                         help="Spegne l'interfaccia (il server). Le "
-                              "lavorazioni in corso NON si fermano: "
-                              "proseguono da sole e restano disponibili "
-                              "alla prossima apertura."):
+                         help=t("sb.chiudi_aiuto")):
                 st.session_state["conferma_spegni"] = time.time()
                 st.rerun()
         else:
@@ -3890,17 +3865,13 @@ def sidebar() -> dict:
             if congelata:
                 st.markdown(
                     "<div class='au-gpu-pausa' style='margin-bottom:10px'>"
-                    "La lavorazione in corso NON si ferma: continuerà in "
-                    "sottofondo e sarà disponibile alla prossima apertura "
-                    "di AnimeUp. Per interrompere completamente "
-                    "l'attività, utilizzare prima il pulsante \"Ferma "
-                    "tutto\" in Lavorazione.</div>",
+                    f"{t('sb.chiudi_avviso')}</div>",
                     unsafe_allow_html=True)
-            if st.button("Confermi? Chiudi", use_container_width=True,
+            if st.button(t("sb.chiudi_conferma"), use_container_width=True,
                          key="fermasi_app"):
                 st.session_state.pop("conferma_spegni", None)
                 _spegni_interfaccia(congelata)
-            if st.button("Annulla", use_container_width=True,
+            if st.button(t("sb.annulla"), use_container_width=True,
                          key="spegni_annulla"):
                 st.session_state.pop("conferma_spegni", None)
                 st.rerun()
@@ -3913,9 +3884,8 @@ def sidebar() -> dict:
 def page_sorgenti(cfg: dict) -> None:
     files = load_library()
     if not files:
-        st.markdown("#### Nessun video in INPUT")
-        st.info(f"Copia i file da elaborare in **{PATHS.input}**.\n\n"
-                "Possono essere serie intere e avere risoluzioni diverse fra loro.")
+        st.markdown(f"#### {t('src.vuoto_titolo')}")
+        st.info(t("src.vuoto_testo", cartella=PATHS.input))
         return
 
     alta = sum(1 for f in files if f["height"] >= CLEAN_SOURCE_MIN_HEIGHT)
@@ -3935,11 +3905,9 @@ def page_sorgenti(cfg: dict) -> None:
     # pagina senza, e chi arriva qui per la prima volta non aveva una riga
     # che gli dicesse cosa sta guardando (chiesto dall'utente).
     st.markdown(
-        "<div class='au-sezione'>Controllo dei sorgenti</div>"
-        "<div class='au-hint' style='margin-bottom:20px'>Ogni file copiato "
-        "in INPUT viene analizzato da solo: risoluzione, tempi, tracce e "
-        "avvisi da conoscere prima di lavorarci. Il referto completo è "
-        "disponibile nei dettagli di ogni riga.</div>",
+        f"<div class='au-sezione'>{t('src.titolo')}</div>"
+        "<div class='au-hint' style='margin-bottom:20px'>"
+        f"{t('src.sottotitolo')}</div>",
         unsafe_allow_html=True)
 
     # Una fascia al posto di titolo + paragrafo + tre riquadri di spiegazione.
@@ -3953,12 +3921,13 @@ def page_sorgenti(cfg: dict) -> None:
         chip.append(f"<span class='au-tag au-dim'>{alta} &ge; "
                     f"{CLEAN_SOURCE_MIN_HEIGHT}p</span>")
     if len(files) - alta:
-        chip.append(f"<span class='au-tag au-dim'>{len(files) - alta} sotto soglia</span>")
+        chip.append(f"<span class='au-tag au-dim'>"
+                    f"{t('src.sotto_soglia', n=len(files) - alta)}</span>")
     con_avvisi = sum(1 for f in files
                      if (r := library.cached_report(Path(f["path"]))) and r.warnings())
     if con_avvisi:
-        chip.append(f"<span class='au-tag au-warn'>{con_avvisi} "
-                    f"avvis{'o' if con_avvisi == 1 else 'i'}</span>")
+        chip.append(f"<span class='au-tag au-warn'>"
+                    f"{tn('src.avvisi', con_avvisi)}</span>")
     analizzati = sum(1 for f in files
                      if library.cached_report(Path(f["path"])) is not None)
     # Lo stato dell'analisi serve gia' qui, per la fascia in alto. La coda
@@ -3976,8 +3945,8 @@ def page_sorgenti(cfg: dict) -> None:
         fs1, fs2 = st.columns([5, 1])
         fs1.markdown(
             f"<div class='au-fascia au-fascia-nuda'>"
-            f"<b>{len(files)} file in INPUT</b>"
-            f"<span class='au-meta'>{hms(durata)} di video</span>"
+            f"<b>{tn('src.file_in_input', len(files))}</b>"
+            f"<span class='au-meta'>{t('src.di_video', durata=hms(durata))}</span>"
             f"{''.join(chip)}</div>", unsafe_allow_html=True)
         # `al_lavoro` e non il solo conteggio dei referti: chiedendo una
         # RIANALISI i referti vecchi restano (di proposito, cosi' l'elenco
@@ -3991,16 +3960,14 @@ def page_sorgenti(cfg: dict) -> None:
             # a larghezza negativa e' un modo curioso di informare.
             fatti = max(0, min(analizzati, len(files) - da_fare))
             fs2.markdown(
-                f"<span class='au-fascia-dx'><span class='au-meta'>analisi "
-                f"{fatti}/{len(files)}</span>"
+                f"<span class='au-fascia-dx'><span class='au-meta'>"
+                f"{t('src.analisi_conta', fatti=fatti, totale=len(files))}</span>"
                 f"<span class='au-barra'><span style='width:"
                 f"{fatti / max(1, len(files)) * 100:.0f}%'></span>"
                 f"</span></span>", unsafe_allow_html=True)
-        elif fs2.button("Rianalizza tutti", key="rianTutti",
+        elif fs2.button(t("src.rianalizza_tutti"), key="rianTutti",
                         icon=":material/refresh:",
-                        help="Rianalizza tutti i file da capo, ignorando "
-                             "quanto salvato. Utile se i file sono cambiati "
-                             "a parità di nome."):
+                        help=t("src.rianalizza_tutti_aiuto")):
             analizzatore().accoda([Path(f["path"]) for f in files],
                                   approfondita=cfg.get("approfondita", True),
                                   rifai=True)
@@ -4026,17 +3993,14 @@ def page_sorgenti(cfg: dict) -> None:
             rimasti = len(in_coda) + (1 if corrente else 0)
             st.markdown(
                 "<div class='au-avviso'><span class='au-rotella'></span>"
-                f"<b>Analisi in corso</b> — {rimasti} file "
-                f"{'ancora da fare' if rimasti > 1 else 'rimasto'}. "
-                "Nel frattempo è possibile usare le altre schede: i file "
-                "non ancora analizzati vi compaiono in attesa, e si "
-                "popolano da soli quando arriva il loro turno.</div>",
+                f"{tn('src.analisi_in_corso', rimasti)}</div>",
                 unsafe_allow_html=True)
 
     pesi = [4.6, 1.2, 0.9, 3.6, 0.5]
     with st.container(key="intest"):
         for col, label in zip(st.columns(pesi),
-                              ["File", "Risoluzione", "Durata", "Analisi", ""]):
+                              [t("src.col_file"), t("src.col_risoluzione"),
+                               t("src.col_durata"), t("src.col_analisi"), ""]):
             col.markdown(f"<span class='au-eyebrow'>{label}</span>",
                          unsafe_allow_html=True)
 
@@ -4091,15 +4055,15 @@ def page_sorgenti(cfg: dict) -> None:
                 # lavorando, non solo che qualcosa sta lavorando.
                 c[3].markdown(
                     "<span class='au-tag au-warn au-lavoro'>"
-                    "<span class='au-rotella'></span>analisi in corso…</span>",
+                    f"<span class='au-rotella'></span>{t('src.riga_in_corso')}</span>",
                     unsafe_allow_html=True)
             elif str(path) in in_coda:
                 c[3].markdown(
-                    "<span class='au-tag au-dim'>in coda</span>",
+                    f"<span class='au-tag au-dim'>{t('src.riga_in_coda')}</span>",
                     unsafe_allow_html=True)
             elif rep is None:
                 c[3].markdown(
-                    "<span class='au-tag au-dim'>da analizzare</span>",
+                    f"<span class='au-tag au-dim'>{t('src.riga_da_analizzare')}</span>",
                     unsafe_allow_html=True)
             else:
                 # UNA riga di sintesi, non tre. Il framerate esatto, il SAR e
@@ -4112,19 +4076,19 @@ def page_sorgenti(cfg: dict) -> None:
                 # nel pannello, qui ruberebbe metà riga per un dato che in
                 # elenco non si confronta mai.
                 breve = fps_str(rep.timing.fps).split(" (")[0]
-                sintesi = [f"{breve} {rep.timing.mode.value}",
+                sintesi = [f"{breve} {t(f'enum.ritmo.{rep.timing.mode.value}')}",
                            f"{rep.bit_depth} bit {_chroma(rep.pix_fmt)}"]
                 if rep.fields and rep.fields.mode is not FieldMode.PROGRESSIVE:
-                    sintesi.append(rep.fields.mode.value)
+                    sintesi.append(t(f"enum.campi.{rep.fields.mode.value}"))
                 if rep.color_space:
                     sintesi.append(rep.color_space)
                 tracce = []
                 if rep.audio_tracks:
-                    tracce.append(f"{rep.audio_tracks} audio")
+                    tracce.append(t("src.tracce_audio", n=rep.audio_tracks))
                 if rep.subtitle_tracks:
-                    tracce.append(f"{rep.subtitle_tracks} sub")
+                    tracce.append(t("src.tracce_sub", n=rep.subtitle_tracks))
                 if rep.chapters:
-                    tracce.append(f"{rep.chapters} cap")
+                    tracce.append(t("src.tracce_capitoli", n=rep.chapters))
                 if tracce:
                     sintesi.append(", ".join(tracce))
 
@@ -4132,8 +4096,7 @@ def page_sorgenti(cfg: dict) -> None:
                 blocco = f"<div class='au-meta'>{esc(' · '.join(sintesi))}</div>"
                 if avvisi:
                     blocco += (f"<div><span class='au-tag au-warn au-chip-riga'>"
-                               f"{len(avvisi)} "
-                               f"avvis{'o' if len(avvisi) == 1 else 'i'}</span></div>")
+                               f"{tn('src.avvisi', len(avvisi))}</span></div>")
                 c[3].markdown(blocco, unsafe_allow_html=True)
 
             # La chevron è l'unico comando della riga chiusa. "Rianalizza"
@@ -4175,7 +4138,7 @@ def page_sorgenti(cfg: dict) -> None:
                         testa, fondo, azione = st.columns([3, 1.35, 1])
                         testa.markdown(
                             "<div class='au-pan-titolo'>"
-                            "Dettagli analisi</div>", unsafe_allow_html=True)
+                            f"{t('src.dettagli')}</div>", unsafe_allow_html=True)
                         # L'analisi normale non misura la deduplica: la
                         # dedurrebbe dai file gia' lavorati, e quel criterio
                         # pesca il fratello sbagliato (voce 84). Misurarla
@@ -4191,8 +4154,9 @@ def page_sorgenti(cfg: dict) -> None:
                         if gia_misurata is not None:
                             fondo.markdown(
                                 f"<div class='au-tag au-ok' "
-                                f"style='margin-top:6px'>deduplica misurata "
-                                f"{gia_misurata:.0%}</div>",
+                                f"style='margin-top:6px'>"
+                                f"{t('src.dedup_misurata', quota=f'{gia_misurata:.0%}')}"
+                                "</div>",
                                 unsafe_allow_html=True)
                         # «In corso» solo se lo e' DAVVERO. Su un file troppo
                         # corto la misura non riesce, la coda lo scarta e non
@@ -4204,32 +4168,19 @@ def page_sorgenti(cfg: dict) -> None:
                                          or str(path) in lavoro.in_coda):
                             fondo.markdown(
                                 "<div class='au-hint' style='margin-top:8px'>"
-                                "misura in corso…</div>",
+                                f"{t('src.misura_in_corso')}</div>",
                                 unsafe_allow_html=True)
                         elif sempre:
                             fondo.markdown(
                                 "<div class='au-hint' style='margin-top:8px'>"
-                                "deduplica non misurabile su questo file</div>",
+                                f"{t('src.dedup_non_misurabile')}</div>",
                                 unsafe_allow_html=True)
                         elif fondo.button(
-                                "Analisi approfondita",
+                                t("src.approfondita"),
                                 icon=":material/query_stats:",
                                 key=f"appr{i}",
                                 use_container_width=True,
-                                help=(
-                                    "Misura la deduplica direttamente su "
-                                    "questo file, invece di dedurla dai file "
-                                    "già lavorati. Serve a sapere PRIMA di "
-                                    "partire quanto durerà davvero: su un "
-                                    "caso reale la deduplica dedotta diceva "
-                                    "6,5% dove la vera era 33%, cioè quasi "
-                                    "quattro ore di stima sbagliata su tredici."
-                                    "\n\nRichiede da una decina di secondi "
-                                    "(360p) a poco più di un minuto (1080p da "
-                                    "25 minuti), lavora in sottofondo e si fa "
-                                    "UNA VOLTA SOLA: il risultato resta "
-                                    "salvato. L'analisi gia' fatta non viene "
-                                    "rifatta.")):
+                                help=t("src.approfondita_aiuto")):
                             lavoro.accoda_approfondita([path])
                             st.rerun()
                         # Serve quando il file cambia ma tiene lo stesso nome,
@@ -4237,10 +4188,9 @@ def page_sorgenti(cfg: dict) -> None:
                         # `icon=` e non ":material/refresh:" dentro
                         # l'etichetta: lì resta la parola "refresh" in Inter,
                         # perché il font delle icone non viene applicato.
-                        if azione.button("Rianalizza", icon=":material/refresh:",
+                        if azione.button(t("src.rianalizza"), icon=":material/refresh:",
                                          key=f"ric{i}",
-                                         help="Rianalizza questo file da capo, "
-                                              "ignorando quanto salvato."):
+                                         help=t("src.rianalizza_aiuto")):
                             lavoro.accoda([path], rifai=True)
                             st.rerun()
                         _dettagli(rep)
@@ -4270,32 +4220,39 @@ def _dettagli(rep) -> None:
     g = rep.geometry
     intreccio = rep.fields and rep.fields.mode is not FieldMode.PROGRESSIVE
     gruppi = [
-        ("Tempi", [
+        (t("det.tempi"), [
             # Senza " fps": l'etichetta dice già FRAMERATE, e quelle tre
             # lettere mandavano il valore a capo dentro la colonna.
-            ("Framerate", fps_str(rep.timing.fps), False),
-            ("Ritmo", rep.timing.mode.value, rep.timing.mode.value != "cfr"),
-            ("Fotogrammi", f"{rep.timing.packets:,}".replace(",", "."), False),
-            ("Durata", hms(rep.duration), False),
+            (t("det.framerate"), fps_str(rep.timing.fps), False),
+            (t("det.ritmo"), t(f"enum.ritmo.{rep.timing.mode.value}"),
+             rep.timing.mode.value != "cfr"),
+            (t("det.fotogrammi"),
+             f"{rep.timing.packets:,}".replace(",", t("fmt.migliaia")), False),
+            (t("det.durata"), hms(rep.duration), False),
         ]),
-        ("Immagine", [
-            ("Geometria", f"{g.width}×{g.height}", False),
-            ("Pixel", (f"non quadri, SAR {g.sar} → {g.display_width}×{g.display_height}"
-                       if g.anamorphic else "quadri"), g.anamorphic),
-            ("Formato", f"{rep.pix_fmt} · {rep.bit_depth} bit", False),
+        (t("det.immagine"), [
+            (t("det.geometria"), f"{g.width}×{g.height}", False),
+            (t("det.pixel"), (t("det.pixel_non_quadri", sar=g.sar,
+                                larghezza=g.display_width,
+                                altezza=g.display_height)
+                              if g.anamorphic else t("det.pixel_quadri")),
+             g.anamorphic),
+            (t("det.formato"), f"{rep.pix_fmt} · {rep.bit_depth} bit", False),
             # Niente giallo: un sorgente senza tag colore non e' un
             # problema, e' un dato mancante che AnimeUp copre da solo con
             # la convenzione (601 sotto i 720p, 709 sopra) scrivendo poi i
             # tag espliciti nell'uscita. Il giallo si tiene per i problemi
             # veri, o smette di volere dire qualcosa.
-            ("Colore", rep.color_space or "non dichiarato", False),
+            (t("det.colore"), rep.color_space or t("det.non_dichiarato"), False),
         ]),
-        ("Tracce", [
-            ("Audio", str(rep.audio_tracks), False),
-            ("Sottotitoli", (f"{rep.subtitle_tracks} ({', '.join(rep.subtitle_codecs)})"
-                             if rep.subtitle_codecs else str(rep.subtitle_tracks)), False),
-            ("Capitoli", str(rep.chapters), False),
-            ("Campi", rep.fields.mode.value if rep.fields else "non analizzati",
+        (t("det.tracce"), [
+            (t("det.audio"), str(rep.audio_tracks), False),
+            (t("det.sottotitoli"),
+             (f"{rep.subtitle_tracks} ({', '.join(rep.subtitle_codecs)})"
+              if rep.subtitle_codecs else str(rep.subtitle_tracks)), False),
+            (t("det.capitoli"), str(rep.chapters), False),
+            (t("det.campi"), (t(f"enum.campi.{rep.fields.mode.value}")
+                              if rep.fields else t("det.non_analizzati")),
              bool(intreccio)),
         ]),
     ]
@@ -7390,6 +7347,11 @@ def main() -> None:
         PATHS.ensure_dirs()
     except OSError:
         pass
+    # La lingua si decide PRIMA di disegnare: l'intestazione viene prima
+    # della sidebar, che e' dove la lingua si sceglie. Cambiandola, il
+    # widget scrive la sessione e Streamlit rifa' il giro: qui la si trova.
+    i18n.imposta(st.session_state.get("w_lingua")
+                 or _impostazioni_carica()["lingua"])
     sezione = header()
     # L'analisi si accoda QUI e non dentro Sorgenti: la scheda aperta
     # sopravvive nell'URL, quindi aprendo l'app direttamente su Lavorazione
