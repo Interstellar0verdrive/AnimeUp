@@ -27,6 +27,7 @@ from enum import Enum
 from pathlib import Path
 
 from .ffmpeg import run_esito, run_stderr
+from .i18n import t
 from .models import CATALOG
 from . import taratura
 from .paths import PATHS, Paths
@@ -92,9 +93,7 @@ def estrai_finestra(p: Paths, src: Path, start: float, resto: list[str],
                                for segno in _SEGNI_DECODIFICA_ROTTA):
         return
     if on_step:
-        on_step("Questo file non permette il salto: decodifico dall'inizio, "
-                "in genere qualche minuto per un episodio (una volta sola, "
-                "poi resta in memoria)")
+        on_step(t("mot.preview.niente_salto"))
     run_stderr(_comando_estrazione(p, src, start, veloce=False,
                                    dur=dur) + resto)
 
@@ -108,10 +107,10 @@ class Kind(str, Enum):
     @property
     def tests(self) -> str:
         return {
-            Kind.STATIC: "texture di fondo, banding sulle sfumature",
-            Kind.MOTION: "sfarfallio temporale, dettaglio instabile",
-            Kind.DARK: "banding nei gradienti scuri, rumore amplificato",
-            Kind.BRIGHT: "linee nette, aloni sui bordi ad alto contrasto",
+            Kind.STATIC: t("mot.preview.prova_statico"),
+            Kind.MOTION: t("mot.preview.prova_movimento"),
+            Kind.DARK: t("mot.preview.prova_scuro"),
+            Kind.BRIGHT: t("mot.preview.prova_luminoso"),
         }[self]
 
 
@@ -154,14 +153,21 @@ class Variant:
     """Una configurazione da confrontare."""
 
     key: str            # chiave nel catalogo, oppure "originale"
-    label: str
 
     @property
     def is_reference(self) -> bool:
         return self.key == "originale"
 
+    @property
+    def label(self) -> str:
+        # Letta a ogni uso e non fissata alla nascita: REFERENCE nasce
+        # all'import, e la lingua può cambiare ad app aperta.
+        if self.is_reference:
+            return t("mot.preview.riferimento")
+        return CATALOG[self.key].label
 
-REFERENCE = Variant("originale", "Originale solo ingrandito (riferimento)")
+
+REFERENCE = Variant("originale")
 
 
 def scale_for(key: str, plan: Plan) -> int:
@@ -187,7 +193,7 @@ def scale_for(key: str, plan: Plan) -> int:
 
 
 def variants_for(*model_keys: str, reference: bool = True) -> list[Variant]:
-    out = [Variant(k, CATALOG[k].label) for k in model_keys if k in CATALOG]
+    out = [Variant(k) for k in model_keys if k in CATALOG]
     if reference:
         out.append(REFERENCE)
     return out
@@ -332,17 +338,17 @@ def find_candidates(
     if schedario.is_file():
         gia = _leggi_schedario(schedario, fps)
         if gia:
-            passo("Ripresi dalla scansione precedente")
+            passo(t("mot.preview.scansione_ripresa"))
             return gia
 
     # format=gray forza la scala a 8 bit: senza, su un sorgente a 10 bit i
     # valori escono su 0-1023 e i numeri mostrati all'utente sono illeggibili.
-    passo("Scansione del movimento (1 di 2)")
+    passo(t("mot.preview.scansione_movimento"))
     motion = _scan(
         plan.source.path,
         "scale=320:180,format=gray,tblend=all_mode=difference,signalstats", _YMAX, p,
     )
-    passo("Scansione della luminosità (2 di 2)")
+    passo(t("mot.preview.scansione_luminosita"))
     bright = _scan(plan.source.path, "scale=320:180,format=gray,signalstats", _YAVG, p)
     if not motion or not bright:
         return []
@@ -370,18 +376,19 @@ def find_candidates(
 
     rules = [
         (Kind.MOTION, lambda i: m_roll[i], True,
-         lambda i: f"movimento {m_roll[i]:.0f} contro {m_avg:.0f} di media episodio"),
+         lambda i: t("mot.preview.motivo_movimento", movimento=f"{m_roll[i]:.0f}",
+                     media=f"{m_avg:.0f}")),
         (Kind.STATIC, lambda i: -m_roll[i], True,
-         lambda i: f"quasi fermo (movimento {m_roll[i]:.0f}): è qui che si vedono texture e banding"),
+         lambda i: t("mot.preview.motivo_statico", movimento=f"{m_roll[i]:.0f}")),
         # Il segno della penalità era PIÙ, quindi promuoveva i punti fermi
         # invece di scartarli: la scena "scura" scelta era per costruzione
         # immobile, e la descrizione mostrata a schermo — "con movimento" —
         # era falsa. Il caso duplicava quello già coperto da `statico`,
         # lasciando due situazioni distinte su quattro.
         (Kind.DARK, lambda i: -b_roll[i] + (0 if m_roll[i] > pct(m_sorted, 0.2) else -1e6), True,
-         lambda i: f"scena scura (luminosità {b_roll[i]:.0f}) con movimento: gradienti a rischio banding"),
+         lambda i: t("mot.preview.motivo_scuro", luminosita=f"{b_roll[i]:.0f}")),
         (Kind.BRIGHT, lambda i: b_roll[i] + (0 if m_roll[i] > pct(m_sorted, 0.3) else -1e6), True,
-         lambda i: f"scena luminosa (luminosità {b_roll[i]:.0f}): bordi ad alto contrasto"),
+         lambda i: t("mot.preview.motivo_luminoso", luminosita=f"{b_roll[i]:.0f}")),
     ]
 
     chosen: list[Candidate] = []
@@ -915,7 +922,8 @@ def crop_sheet(
     for i, key in enumerate(order):
         cx, cy = (i % cols) * size, (i // cols) * (size + label_h)
         sheet.paste(grabbed[key].crop((bx, by, bx + size, by + size)), (cx, cy + label_h))
-        name = "Originale ingrandito" if key == "originale" else CATALOG[key].label
+        name = (t("mot.preview.originale_ingrandito") if key == "originale"
+                else CATALOG[key].label)
         draw.text((cx + 6, cy + 6), name, fill=(235, 235, 235),
                   font=carattere)
 
@@ -947,16 +955,14 @@ def open_comparison(left: Path, right: Path) -> tuple[bool, str]:
             [str(tool), str(left), str(right)],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
-        return True, f"aperto in video-compare: {left.name} | {right.name}"
+        return True, t("mot.preview.aperto_video_compare", sinistra=left.name,
+                       destra=right.name)
 
     if Path("/Applications/IINA.app").exists():
         subprocess.Popen(
             ["open", "-a", "IINA", str(left), str(right)],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
-        return True, "video-compare non installato: aperti in IINA"
+        return True, t("mot.preview.aperto_iina")
 
-    return False, (
-        "nessuno strumento di confronto trovato. Installa video-compare con:\n"
-        "    brew install video-compare"
-    )
+    return False, t("mot.preview.nessuno_strumento")

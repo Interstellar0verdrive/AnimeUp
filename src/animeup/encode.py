@@ -9,6 +9,7 @@ from fractions import Fraction
 from pathlib import Path
 
 from .ffmpeg import FFmpegError
+from .i18n import t
 from .paths import PATHS, Paths
 from .plan import Plan
 
@@ -37,9 +38,7 @@ def _run(cmd: list[str], log: Path | None,
                               timeout=timeout, check=False)
     except subprocess.TimeoutExpired as exc:
         raise FFmpegError(
-            cmd, -1,
-            f"ffmpeg non risponde da {TETTO_SECONDI // 3600} ore: interrotto. "
-            "Controlla che il disco sia ancora collegato, poi rilancia."
+            cmd, -1, t("mot.encode.timeout", ore=TETTO_SECONDI // 3600)
         ) from exc
     if log is not None:
         with log.open("a") as fh:
