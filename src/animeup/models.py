@@ -191,6 +191,17 @@ class Recommendation:
     giudizi: dict = None
 
 
+def altezza_minima(chiave: str, altezza_uscita: int) -> int:
+    """Il sorgente più basso da cui il modello arriva ad `altezza_uscita`.
+
+    Con la sua scala più grande, come conta il piano: sotto, l'ultimo tratto
+    lo coprirebbe lanczos e il piano rifiuta. Serve al consiglio generale,
+    che prima suggeriva il denoise leggero (solo x2) in tutta la fascia di
+    mezzo anche a 1080p, dove da 380 a 539 righe non può arrivarci.
+    """
+    return -(-altezza_uscita // max(CATALOG[chiave].scales))
+
+
 def recommend(height: int) -> Recommendation:
     """Propone un modello in base alla sola risoluzione del sorgente.
 

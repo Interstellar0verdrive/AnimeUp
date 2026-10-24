@@ -93,6 +93,7 @@
   "lav.det_cartella": "Cartella",
   "lav.det_finder": "{cartella} · apri nel Finder",
   "lav.avvia_no_lanciatore": "Non trovo il lanciatore in {percorso}: la lavorazione non è partita.",
+  "lav.avvia_taratura": "C'è una taratura in corso: la lavorazione si dividerebbe la GPU con lei, e la taratura salverebbe numeri sbagliati. Aspetta che finisca, poi avvia di nuovo.",
   "lav.avvia_fallito": "La lavorazione non è partita (codice {codice}). Ulteriori dettagli sono disponibili nel registro: `{registro}`",
   "lav.avvia_gruppo": "{n} con {modello}",
   "lav.avvia_sequenza": "in sequenza",

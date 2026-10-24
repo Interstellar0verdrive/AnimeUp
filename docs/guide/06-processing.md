@@ -107,7 +107,7 @@ The Notes column shows **one** status per row, picked in a fixed order of import
 | **paused** (yellow) | The job is frozen by **Pause**: no GPU, no CPU. On resume it continues from exactly this point, and the paused time isn't counted in the file's duration. | **Resume** in the bottom bar. |
 | **queued** | The file is waiting for its turn in the current launch. | Nothing. |
 | **interrupted** (yellow) | A job for this file was started and didn't finish: stopped by you, or cut short by a crash, a closed lid or a killed process. Its work so far is kept in `JOBS/`. | **Resume** or **Discard**, see [Interruptions](#interruptions-and-resuming). |
-| **own settings** (grey, next to **interrupted**) | The interrupted job was started with settings that differ from the ones now in the sidebar. The tooltip lists them (height, CRF, preset, GB, model). **Resume** will use those original settings, not the current ones. | To redo it with the new settings, **Discard** it first, then start it again. |
+| **own settings** (grey, next to **interrupted**) | The interrupted job was started with settings that differ from the ones now in the sidebar. The tooltip lists them (height, CRF, preset, GB, model). Disk space alone doesn't turn it on: it's recalculated at every launch. **Resume** will use those original settings, not the current ones. | To redo it with the new settings, **Discard** it first, then start it again. |
 | **done** (blue) | The output for this file, with exactly the current settings, exists in `OUTPUT/`. Ticking it does nothing: it's skipped. | To redo it, change a setting or the model, or move the output away. |
 | **done** with a tooltip | The file was produced with exactly these settings, but the output is no longer in `OUTPUT/` (you probably moved it to your library). | Nothing, unless you want it again: tick it and confirm in the bottom bar (see [Already processed](#already-processed-files-redo-or-dont-redo)). |
 | **1 warning** / **n warnings** (yellow, next to **done**) | The job finished, but left notes. Hover for the text. | Read them. Usually informational. |
@@ -124,7 +124,7 @@ The red chip names the obstacle in two or three words. The tooltip, and the row'
 | **upscale too small** | The source is already at, or larger than, the output height, or the enlargement is below the 1.25× minimum. It would cost the hours of a full upscale for a handful of extra pixels. | Raise **Output height** in the sidebar, or turn on **Allow upscales below the minimum** (see [03. The interface](03-interface.md)). |
 | **can't reach 1080p** (or another height) | The selected model can't get that high from this source. A plain lanczos resize would have to cover the last stretch, which is enlargement with no added detail. The tooltip suggests a model that can, or the highest honest target. | Pick the model it suggests, or lower **Output height**. |
 | **unsupported scale** | The model doesn't support the scale that would be needed. | Pick another model. |
-| **can't be processed** | Any other reason, for example an interlaced or telecined source (AnimeUp doesn't de-interlace: prepare it with a dedicated tool first). | Read the tooltip. |
+| **can't be processed** | Any other reason the plan can't be built. | Read the tooltip. |
 
 ## The estimate
 
@@ -198,7 +198,7 @@ On a **done** file, the panel adds a **Job completed** group under the output na
 | **· n to process** + (i) | Appears only when fewer files will actually start than you ticked. The (i) breaks it down: **To process**, **In progress**, **Waiting for their turn**, **Already done**, **Cannot be processed**. |
 | **· Estimate ≈ …** + (i) | The most likely total for the files that will start, **including the pauses between files** if you set **Pause between files** in the sidebar. The (i) shows **Most likely** and **Possible duration … to …**. |
 | Small print | "The minimum time applies when deduplication finds repeated frames, which are common in animation.", followed by the calibration note. |
-| **Start processing** | Starts the launch. Disabled when there's nothing to process or the machine is busy. |
+| **Start processing** | Starts the launch. Disabled when there's nothing to process, the machine is busy, or a calibration is running (a line in the bar says so). |
 
 The calibration note tells you where the numbers come from:
 
@@ -362,6 +362,7 @@ If the sidebar differs from the original settings, the row shows the **own setti
 **Resume** is disabled:
 
 - while another job (or a queue rest) is using the machine: one job at a time;
+- while a calibration is running: the two would share the GPU, and the calibration would save wrong numbers;
 - while the file's analysis isn't ready yet. Hover for "This file's analysis isn't ready yet: Resume becomes available as soon as the report arrives." This can happen right after reopening AnimeUp.
 
 ### Discard
@@ -385,9 +386,11 @@ If the queue had more files after the one that was cut, they don't restart by th
 
 If a job exists in `JOBS/` for a file that's no longer in `INPUT/` (you moved the source, or it was a test started from the command line), it can't have a row. It appears in a separate section at the top, **In progress (outside INPUT)**, as a card with its name, **running** or **interrupted**, its model and a progress bar. Running cards also show the latest log line. An interrupted card says **resume it by starting the same file again**: put the source back in `INPUT/` and it gets its row, with Resume and Discard, back.
 
-### Files left with warnings
+### Finished files with a leftover work folder
 
-A job can finish, with its output in `OUTPUT/`, but leave its work folder behind. The row then says **finished with warnings · output in OUTPUT, the work folder is kept for inspection**. The output is usable: check its warnings in the row's details. The folder in `JOBS/` is kept so that what happened can be investigated. Once you're satisfied with the output, you can delete that folder by hand (see [07. Output files and folders](07-output-and-folders.md)).
+A job can finish, with its output in `OUTPUT/`, but leave its work folder behind. AnimeUp itself only keeps that folder when the output is **damaged** (see below), and then the output isn't left under its proper name. So a leftover next to a good output comes from somewhere else: an older version of AnimeUp, which kept the folder for warnings too, a cleanup that was cut short, or `--tieni-temp` on the command line. The row then says **finished · output in OUTPUT; its work folder was left behind in JOBS, Discard frees the space**.
+
+The output is usable. **Discard** sits under the processing time, with the same two-step confirmation as on interrupted rows: it deletes only that folder in `JOBS/` ("Work folder deleted: the output in OUTPUT is untouched."). The output and the source file are never touched. Like every Discard, it's disabled while the machine is busy.
 
 ### Damaged output (`.PARZIALE.mkv`)
 

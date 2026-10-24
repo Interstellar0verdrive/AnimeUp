@@ -48,13 +48,13 @@ At the top of the tab, one bar sums up the whole folder.
 | **N files in INPUT** | How many video files AnimeUp found. |
 | **HH:MM:SS of video** | The total running time of all those files. |
 | **N ≥ 560p** chip | Files whose height is 560 pixels or more. |
-| **N below threshold** chip | Files below 560p. |
-| **N warnings** chip (yellow) | How many *files* have at least one analysis warning (not the total number of warnings). Only shown when at least one file has a warning. |
+| **N below 560p** chip | Files below 560p. |
+| **N files with warnings** chip (yellow) | How many *files* have at least one analysis warning (not the total number of warnings: that's the **N warnings** chip on each row). Only shown when at least one file has a warning. |
 | **analysis X/Y** + bar | Shown while the analysis is running, or while some files are still unanalysed: how many files are done out of the total. |
 | **Re-analyse all** button | Shown in place of the counter when nothing is being analysed. |
 
 !!! note "Which threshold?"
-    560p is where AnimeUp's model recommendation changes: from 560p up there's real detail worth preserving, and **Real-CUGAN no-denoise** is recommended. Below it, **Real-ESRGAN animevideov3** is the safer base. "Below threshold" isn't a quality verdict or an error. It only tells you how your folder splits between the two cases. See [05. Compare](05-compare.md) and [The models](deep-dives/models.md).
+    560p is where AnimeUp's model recommendation changes: from 560p up there's real detail worth preserving, and **Real-CUGAN no-denoise** is recommended. Below it, **Real-ESRGAN animevideov3** is the safer base. "Below 560p" isn't a quality verdict or an error. It only tells you how your folder splits between the two cases. See [05. Compare](05-compare.md) and [The models](deep-dives/models.md).
 
 ### Re-analyse all
 
@@ -167,8 +167,8 @@ These are all the warnings the analysis can raise. Most of them describe somethi
 | ***N* frames missing (*G* gaps in the sequence)**: the rip is incomplete. Gaps will be filled by repeating the previous frame so the duration doesn't change. | Constant frame rate, but frames are missing. | Handled as described, so audio stays in sync. A better source is still preferable if you have one. |
 | **The container declares *X* fps but the timestamps say *Y* fps.** Using the measured value. | The header and the actual timestamps disagree. | Handled: AnimeUp trusts the measured timestamps. Nothing to do. |
 | **Non-standard frame rate (*X*)**: probably an inaccurate rip. Check the preview result. | The measured rate doesn't match any standard rate (23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60, 12, 15, 16) within 0.1%. | Processing goes ahead at the measured rate. Run a short test in [Compare](05-compare.md) and check the motion looks right. |
-| **Interlaced content**: without deinterlacing, the model would upscale the combing lines into permanent artefacts. | Most frames are interlaced. | **Not handled.** AnimeUp doesn't deinterlace. Prepare the file with a dedicated tool first, then put the result back in `INPUT/`. |
-| **3:2 telecine detected**: the content is 23.976 inside a 29.97 container. Inverse telecine is needed to get back the original frames. | Film content padded with repeated fields. | **Not handled.** AnimeUp doesn't do inverse telecine either. Same remedy as for interlaced content. |
+| **Interlaced content**: AnimeUp doesn't deinterlace, and the model would upscale the combing lines into permanent artefacts. Prepare the file with a dedicated tool first, then put it back in INPUT. | Most frames are interlaced. | **Not handled.** AnimeUp doesn't deinterlace. Prepare the file with a dedicated tool first, then put the result back in `INPUT/`. |
+| **3:2 telecine detected**: the content is 23.976 inside a 29.97 container. AnimeUp doesn't do inverse telecine: recover the original frames with a dedicated tool first, then put the file back in INPUT. | Film content padded with repeated fields. | **Not handled.** AnimeUp doesn't do inverse telecine either. Same remedy as for interlaced content. |
 | **Non-square pixels (SAR *x:y*)**: the output will be normalised to *W*x*H* so the image isn't distorted. | Anamorphic video (common on DVDs). | Handled: the short axis is stretched to the correct shape, and no real pixels are thrown away. Nothing to do. |
 | **mov_text subtitles**: they can't be copied into MKV and will be converted to SRT. | MP4-style subtitles. | Handled: converted to SRT in the output. Styling, if any, is lost. |
 | **No usable video track**: this file can't be processed. | The file has no readable video. | Remove it from `INPUT/`, or check that it plays in a normal player. |

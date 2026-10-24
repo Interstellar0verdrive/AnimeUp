@@ -52,7 +52,8 @@ from animeup import __version__  # noqa: E402
 from animeup import i18n, library, monitor, preview, taratura  # noqa: E402
 from animeup.i18n import t, tn  # noqa: E402
 from animeup.models import (  # noqa: E402
-    ALTEZZA_INCERTA, CATALOG, CLEAN_SOURCE_MIN_HEIGHT, recommend)
+    ALTEZZA_INCERTA, CATALOG, CLEAN_SOURCE_MIN_HEIGHT, altezza_minima,
+    recommend)
 from animeup.paths import PATHS  # noqa: E402
 from animeup.ffmpeg import FFmpegError  # noqa: E402
 from animeup.plan import PlanError, build_plan  # noqa: E402
@@ -200,12 +201,26 @@ SEZIONI = ["Sorgenti", "Confronto", "Lavorazione"]
 # e indietro fra le fasce.
 # Una funzione e non una costante: i testi si leggono nella lingua attiva al
 # momento del disegno, e la lingua si cambia mentre l'app gira.
-def perche_generale() -> tuple[tuple[str, str, str, str], ...]:
+# L'altezza d'uscita serve alla fascia di mezzo: il denoise leggero esiste
+# solo a x2, e la regola lo suggeriva anche dove non arriva al bersaglio (a
+# 1080p, da 380 a 539 righe), contraddicendo la scheda «non arriva» lì sopra.
+# Con «forza» acceso il piano lo accetta lo stesso, e la regola torna piena.
+def perche_generale(altezza_uscita: int, forza: bool = False
+                    ) -> tuple[tuple[str, str, str, str], ...]:
+    minimo = altezza_minima("cugan-denoise", altezza_uscita)
+    if forza or minimo <= ALTEZZA_INCERTA:
+        mezzo = ("giallo", t("conf.pg.mezzo_modello"), t("conf.pg.mezzo_testo"))
+    elif minimo < CLEAN_SOURCE_MIN_HEIGHT:
+        mezzo = ("giallo", t("conf.pg.mezzo_modello_da", minimo=minimo),
+                 t("conf.pg.mezzo_testo_da", minimo=minimo,
+                   altezza=altezza_uscita))
+    else:
+        mezzo = ("verde", "animevideov3",
+                 t("conf.pg.mezzo_testo_mai", altezza=altezza_uscita))
     return (
         (t("conf.pg.sotto_fascia", altezza=ALTEZZA_INCERTA), "verde",
          "animevideov3", t("conf.pg.sotto_testo")),
-        (f"{ALTEZZA_INCERTA}p–{CLEAN_SOURCE_MIN_HEIGHT}p", "giallo",
-         t("conf.pg.mezzo_modello"), t("conf.pg.mezzo_testo")),
+        (f"{ALTEZZA_INCERTA}p–{CLEAN_SOURCE_MIN_HEIGHT}p", *mezzo),
         (t("conf.pg.sopra_fascia", altezza=CLEAN_SOURCE_MIN_HEIGHT), "verde",
          "CUGAN no-denoise", t("conf.pg.sopra_testo")),
     )
@@ -3076,6 +3091,22 @@ def _modello_usato(esito: dict | None) -> str | None:
     return None
 
 
+# Le impostazioni che NON si confrontano col file sospeso, e che «Riporta la
+# sidebar…» non rimette. Lo spazio su disco si ricalcola dallo spazio libero a
+# ogni avvio, quindi non coincideva quasi mai con quello salvato: l'avviso
+# scattava per lui e basta, e il ripristino rimetteva un valore vecchio,
+# misurato su un disco che nel frattempo e' cambiato. E non conta per la
+# ripresa: Riprendi adotta comunque la griglia di blocchi salvata.
+_FUORI_DAL_CONFRONTO = ("disco",)
+
+
+def _diversi_dal_sospeso(ricetta: dict, attuali: dict) -> list[str]:
+    """Le impostazioni della sidebar diverse da quelle del file sospeso."""
+    return sorted(k for k in _IMPOSTAZIONI_DEFAULT
+                  if k in ricetta and k not in _FUORI_DAL_CONFRONTO
+                  and ricetta[k] != attuali.get(k))
+
+
 def _ripristina_parametri(ricetta: dict) -> None:
     """Riporta la sidebar ai parametri di un file sospeso.
 
@@ -3089,7 +3120,7 @@ def _ripristina_parametri(ricetta: dict) -> None:
     """
     puliti = _impostazioni_pulite(ricetta)
     for chiave in _IMPOSTAZIONI_DEFAULT:
-        if chiave in ricetta:
+        if chiave in ricetta and chiave not in _FUORI_DAL_CONFRONTO:
             st.session_state[f"w_{chiave}"] = puliti[chiave]
 
 
@@ -3702,8 +3733,11 @@ def sidebar() -> dict:
         _aiuto_a_destra(t("sb.forza_aiuto"), t("sb.disabilitato"))
 
     with st.sidebar.container(key="swApprof"):
+        # Spento davvero come gli altri, non solo ingrigito dal CSS della
+        # sidebar congelata: grigio e basta restava raggiungibile da tastiera.
         approfondita = st.toggle(t("sb.approf"),
-                                 key="w_approfondita")
+                                 key="w_approfondita",
+                                 disabled=congelata)
         _aiuto_a_destra(t("sb.approf_aiuto"), t("sb.abilitato"))
 
     st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.sistema')}</div>",
@@ -3828,8 +3862,7 @@ def sidebar() -> dict:
     # ripristino a un click per chi vuole riallineare la sidebar.
     if not congelata:
         ricetta = _ricetta_sospesa()
-        diversi = sorted(k for k in _IMPOSTAZIONI_DEFAULT
-                         if k in ricetta and ricetta[k] != attuali[k])
+        diversi = _diversi_dal_sospeso(ricetta, attuali)
         if diversi:
             # GIALLO e non grigio: e' un avviso, non una didascalia. Col
             # grigio della nota di congelamento si leggeva come testo di
@@ -3938,14 +3971,20 @@ def page_sorgenti(cfg: dict) -> None:
     if alta:
         chip.append(f"<span class='au-tag au-dim'>{alta} &ge; "
                     f"{CLEAN_SOURCE_MIN_HEIGHT}p</span>")
+    # La soglia scritta nella chip: «N sotto soglia» lasciava indovinare
+    # quale, mentre la chip accanto la dice («≥ 560p»).
     if len(files) - alta:
         chip.append(f"<span class='au-tag au-dim'>"
-                    f"{t('src.sotto_soglia', n=len(files) - alta)}</span>")
+                    f"{t('src.sotto_soglia', n=len(files) - alta, soglia=CLEAN_SOURCE_MIN_HEIGHT)}"
+                    "</span>")
+    # Conta i FILE, non gli avvisi: chiave sua e parole sue, perche' la chip
+    # della riga ha lo stesso aspetto ma conta gli avvisi di quel file, e con
+    # lo stesso «N avvisi» due numeri diversi si leggevano come uno.
     con_avvisi = sum(1 for f in files
                      if (r := library.cached_report(Path(f["path"]))) and r.warnings())
     if con_avvisi:
         chip.append(f"<span class='au-tag au-warn'>"
-                    f"{tn('src.avvisi', con_avvisi)}</span>")
+                    f"{tn('src.file_con_avvisi', con_avvisi)}</span>")
     analizzati = sum(1 for f in files
                      if library.cached_report(Path(f["path"])) is not None)
     # Lo stato dell'analisi serve gia' qui, per la fascia in alto. La coda
@@ -4535,7 +4574,8 @@ def page_confronto(cfg: dict) -> None:
                     f"<div class='au-p-fascia'>{esc(fascia)}</div>"
                     f"<div><span class='au-p-mod'>{esc(modello)}</span>"
                     f"<span class='au-p-testo'> — {esc(testo)}</span></div></div>"
-                    for fascia, colore, modello, testo in perche_generale())
+                    for fascia, colore, modello, testo in perche_generale(
+                        plan.target_height, bool(cfg.get("forza"))))
                 + "</div>", unsafe_allow_html=True)
             st.markdown("<div class='au-hint' style='margin-top:14px'>"
                         f"{t('conf.regola_nota')}</div>", unsafe_allow_html=True)
@@ -5613,6 +5653,10 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
     catena_ora = monitor.catena()
     gpu_occupata = (any(l.vivo for l in lavori_tutti)
                     or pausa_ora is not None or catena_ora is not None)
+    # Una taratura in volo blocca Avvia e Riprendi ma NON entra in
+    # `gpu_occupata`: quella descrive una catena di lavorazione (righe in
+    # coda, Ferma tutto, caselle spente), e la taratura non ne ha nessuna.
+    tarando = taratura.in_corso()
     # I file che aspettano il loro turno nella catena in corso: la riga
     # mostra "in coda". Copre il comando corrente; in un lancio spezzato su
     # più modelli, i gruppi successivi compariranno quando tocca a loro.
@@ -6073,10 +6117,14 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
             # Se la ricetta salvata differisce dalla sidebar, la chip lo
             # dice: Riprendi userà la ricetta (blindato), non la sidebar.
             ricetta = _leggi_parametri(lav.cartella if lav else None)
+            # Lo spazio no, come nell'avviso della sidebar: si ricalcola a
+            # ogni avvio e la chip sarebbe accesa quasi sempre per lui (vedi
+            # `_FUORI_DAL_CONFRONTO`). Nel fumetto resta, come parte della
+            # ricetta.
             if ricetta and any(
                     k in ricetta and ricetta[k] != cfg.get(k)
-                    for k in ("altezza", "crf", "preset", "disco",
-                              "dedup", "denoise", "forza")):
+                    for k in ("altezza", "crf", "preset", "dedup",
+                              "denoise", "forza")):
                 descr = " · ".join(filter(None, [
                     f"{ricetta.get('altezza')}p" if "altezza" in ricetta else "",
                     f"CRF {ricetta.get('crf')}" if "crf" in ricetta else "",
@@ -6151,11 +6199,14 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
         # va ripresa o buttata anche se il file non e' ancora analizzato,
         # altrimenti quei gigabyte non sono piu' raggiungibili da nessuna
         # parte dell'interfaccia.
-        if interrotto and not concluso:
-            armato_via = st.session_state.get("conferma_scarta")
-            scarta_in_conferma = (isinstance(armato_via, tuple)
-                                  and armato_via[0] == chiave
-                                  and time.time() - armato_via[1] < 10)
+        # Lo stesso vale per la cartella rimasta in JOBS accanto a un'uscita
+        # gia' in OUTPUT (`concluso`): niente Riprendi, ma lo Scarta si', o
+        # quei GB restavano raggiungibili solo dal Finder.
+        armato_via = st.session_state.get("conferma_scarta")
+        scarta_in_conferma = (interrotto and isinstance(armato_via, tuple)
+                              and armato_via[0] == chiave
+                              and time.time() - armato_via[1] < 10)
+        if interrotto and (not concluso or scarta_in_conferma):
             if scarta_in_conferma:
                 # Stesso schema del Ferma: conferma nel pulsante stesso,
                 # rosso pieno, scadenza da sola in 10 secondi.
@@ -6167,7 +6218,10 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     if (lav is not None
                             and PATHS.work in lav.cartella.parents):
                         shutil.rmtree(lav.cartella, ignore_errors=True)
-                        st.toast(t("lavb.scartata"))
+                        # Su una riga conclusa non torna "come nuova":
+                        # l'uscita resta, se ne va solo il residuo.
+                        st.toast(t("lavb.residuo_scartato") if concluso
+                                 else t("lavb.scartata"))
                     st.rerun()
             else:
                 # Riprendere = rilanciare lo stesso file: la pipeline
@@ -6185,12 +6239,14 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                                # Lo Scarta invece resta sempre disponibile:
                                # non gli serve il piano, e serve a liberare
                                # i gigabyte.
-                               disabled=gpu_occupata or piano is None,
-                               help=(None if piano is not None else
+                               disabled=(gpu_occupata or piano is None
+                                         or tarando),
+                               help=(t("lavb.taratura_blocca") if tarando
+                                     else None if piano is not None else
                                      t("lavb.riprendi_attesa"))):
-                    _riprendi(piano, lav.cartella if lav else None, cfg)
-                    st.session_state["appena_avviata"] = True
-                    st.session_state["attesa_avvio"] = time.time()
+                    if _riprendi(piano, lav.cartella if lav else None, cfg):
+                        st.session_state["appena_avviata"] = True
+                        st.session_state["attesa_avvio"] = time.time()
                 if lav is not None and c[6].button(
                         t("lavb.scarta"), key=f"scarta{i}",
                         use_container_width=True,
@@ -6229,6 +6285,19 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                               f"{t('lavb.finito_in', durata=stima_hm(secondi))}"
                               f"{perche_riprese}</div>",
                               unsafe_allow_html=True)
+            # Uscita fatta ma cartella di lavoro ancora in JOBS: oggi la
+            # pipeline la tiene solo per un difetto (e allora l'uscita diventa
+            # .PARZIALE, quindi qui non si arriva), percio' e' un residuo —
+            # una versione vecchia che la teneva per gli avvisi, una pulizia
+            # interrotta, `--tieni-temp`. Si libera con lo stesso Scarta in
+            # due passi delle lavorazioni a meta'.
+            if concluso and lav is not None and c[6].button(
+                    t("lavb.scarta"), key=f"scarta{i}",
+                    use_container_width=True,
+                    disabled=gpu_occupata,
+                    help=t("lavb.scarta_residuo_aiuto")):
+                st.session_state["conferma_scarta"] = (chiave, time.time())
+                st.rerun()
         elif not elaborando and piano is not None:
             # Il valore PIÙ PROBABILE, come nella fascia: la forchetta
             # scritta con la barra ("05h 08m / 07h 49m") non diceva quali
@@ -6299,7 +6368,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                         lav.cartella.name, _turno_previsto(piano, lav))
                     dett = None
                 elif concluso:
-                    dett = t("lavb.concluso_avvisi")
+                    dett = t("lavb.concluso_residuo")
                 else:
                     dett = t("lavb.fermo_al", quota=f"{lav.frazione:.0%}",
                              fatti=lav.fatti, totale=lav.totale)
@@ -6402,6 +6471,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
         pausa_ora = monitor.pausa()
         gpu_occupata = (any(l.vivo for l in lavori_tutti)
                         or pausa_ora is not None or catena_ora is not None)
+        tarando = taratura.in_corso()
         in_coda_ora = (set(catena_ora.get("in_coda") or [])
                        if catena_ora else set())
         with st.container(key="barra"):
@@ -6650,6 +6720,12 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                         f"{tn('lavb.rifatti', len(rifatti), nomi=_nomi(rifatti))}"
                         "</div>",
                         unsafe_allow_html=True)
+                # Il perche' dell'Avvia spento si dice a parole, non solo nel
+                # fumetto: un pulsante grigio senza motivo sembra un guasto.
+                if tarando:
+                    a.markdown(f"<div class='au-riga-forse'>"
+                               f"{t('lavb.taratura_blocca')}</div>",
+                               unsafe_allow_html=True)
                 # La didascalia diceva a parole proprio quello che ora l'estremo
                 # basso calcola: descriveva un valore che non veniva mostrato.
                 a.markdown(f"<span class='au-meta'>{t('lavb.tempo_minimo')} "
@@ -6663,7 +6739,9 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     # diverse le facevano leggere come importanze diverse.
                     if st.button(t("lavb.avvia"), type="primary",
                                  use_container_width=True,
-                                 disabled=not piani or gpu_occupata):
+                                 disabled=not piani or gpu_occupata or tarando,
+                                 help=(t("lavb.taratura_blocca") if tarando
+                                       else None)):
                         # Il consenso a rifare si CONSUMA col lancio — ma solo
                         # se il lancio c'è stato davvero. `_avvia` esce presto
                         # se manca il lanciatore o se la shell muore subito:
@@ -6983,7 +7061,7 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
         st.markdown("".join(pezzi), unsafe_allow_html=True)
 
 
-def _riprendi(piano, cartella: Path | None, cfg: dict) -> None:
+def _riprendi(piano, cartella: Path | None, cfg: dict) -> bool:
     """Riprendi BLINDATO: usa i parametri scritti nella cartella di
     lavorazione (parametri.json, li scrive la CLI a ogni lancio), ignorando
     la sidebar del momento — così riprendere non può mai buttare il lavoro
@@ -6992,12 +7070,11 @@ def _riprendi(piano, cartella: Path | None, cfg: dict) -> None:
     come è sempre stato."""
     ricetta = _leggi_parametri(cartella)
     if not ricetta:
-        _avvia([piano], cfg)
-        return
+        return _avvia([piano], cfg)
     unione = {**cfg, **{k: ricetta[k] for k in
                         ("altezza", "crf", "preset", "disco",
                          "dedup", "denoise", "forza") if k in ricetta}}
-    _avvia([piano], unione, modello=ricetta.get("modello"))
+    return _avvia([piano], unione, modello=ricetta.get("modello"))
 
 
 def _avvia(piani, cfg: dict, modello: str | None = None) -> bool:
@@ -7017,6 +7094,16 @@ def _avvia(piani, cfg: dict, modello: str | None = None) -> bool:
     Si usa una sola shell con i comandi separati da `;` (non `&&`): un gruppo
     che fallisce non deve impedire al successivo di partire.
     """
+    # Mai insieme a una taratura: si dividerebbero la GPU, e la taratura
+    # salverebbe numeri falsi su cui poi poggiano tutte le stime. La guardia
+    # sta QUI e non solo sui pulsanti: Avvia, Riprendi e qualunque via futura
+    # passano da questa funzione, e un pulsante disegnato un attimo prima che
+    # la taratura partisse (un'altra scheda del browser) resterebbe attivo.
+    # Il blocco opposto, la taratura rifiutata durante una lavorazione, sta
+    # nella sua modale.
+    if taratura.in_corso():
+        st.error(t("lav.avvia_taratura"), icon="⚠️")
+        return False
     registro = PATHS.logs / "lavorazione.log"
     registro.parent.mkdir(parents=True, exist_ok=True)
 

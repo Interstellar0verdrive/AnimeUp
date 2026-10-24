@@ -30,7 +30,7 @@ AnimeUp is for people who keep a local anime library at DVD or web-rip resolutio
 
 !!! info "What AnimeUp is not"
     - It isn't a real-time player filter: an episode takes from minutes to hours, depending on its resolution, the model and your Mac.
-    - It doesn't deinterlace or inverse-telecine: an interlaced or telecined source is flagged and refused, and you prepare it with a dedicated tool first.
+    - It doesn't deinterlace or inverse-telecine: an interlaced or telecined source is flagged (the job would still run, upscaling the combing lines), and you prepare it with a dedicated tool first.
     - It runs **one job at a time**. Two upscalers on the same GPU only slow each other down, so the interface queues files rather than running them in parallel.
 
 ## The path at a glance

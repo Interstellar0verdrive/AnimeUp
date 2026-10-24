@@ -195,8 +195,8 @@ The names in brackets are the settings that differ. It's information, not a warn
 
 Under the note is a button, **Reset the sidebar to the paused file's parameters**. It copies that job's values back into the sidebar, for when you want new jobs to match the interrupted one. If several jobs are interrupted, the note refers to the most recent one. The note is hidden while the sidebar is locked.
 
-!!! note "Disk space often shows up as different"
-    **Max disk space per file (GB)** is recalculated from free space every time you open AnimeUp, and an interrupted job has itself used some disk. So this setting often appears in the list of differences. It doesn't matter for resuming: a resumed job keeps the chunk layout it started with.
+!!! note "Disk space is left out"
+    **Max disk space per file (GB)** is recalculated from free space every time you open AnimeUp, so it almost never matches the value saved with an interrupted job. It isn't compared, and **Reset the sidebar…** doesn't copy it back: an old value measured on a disk that has changed since would be wrong. It doesn't matter for resuming either: a resumed job keeps the chunk layout it started with.
 
 ## "N system dependencies"
 

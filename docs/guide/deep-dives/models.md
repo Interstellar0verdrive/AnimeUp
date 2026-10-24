@@ -103,7 +103,7 @@ This mostly concerns **Real-CUGAN light denoise**, which only exists at x2. It c
 | 2160p | 1080 lines |
 
 !!! warning "Light denoise and 1080p in the middle band"
-    At a 1080p target, light denoise can't reach from sources between 380 and 539 lines, which is most of the band where it's suggested as *worth checking*. On those files it shows *can't reach 1080p*. If you want to try it there, lower **Output height** to 720p, or turn on **Allow upscales below the minimum** and accept that lanczos covers the gap (the plan then carries a "Forced:" warning).
+    At a 1080p target, light denoise can't reach from sources between 380 and 539 lines, which is most of the middle band. On those files it shows *can't reach 1080p*, and the general rule in Compare only suggests it from 540p up. If you want to try it there, lower **Output height** to 720p, or turn on **Allow upscales below the minimum** and accept that lanczos covers the gap (the plan then carries a "Forced:" warning).
 
 Two more limits from the plan apply to every model:
 

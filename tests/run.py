@@ -1958,7 +1958,10 @@ def _stato_riga_coerente():
     assert 'not esito.get("difettosa")' in sorgente
     assert "elif difettosa:" in sorgente
     # Riprendi senza referto leggeva `piano.model_key` su None.
-    assert "disabled=gpu_occupata or piano is None" in sorgente
+    assert "disabled=(gpu_occupata or piano is None" in sorgente
+    # Sulla riga conclusa con la cartella rimasta c'e' lo Scarta, mai il
+    # Riprendi: quello resta legato a `interrotto and not concluso`.
+    assert "if interrotto and (not concluso or scarta_in_conferma):" in sorgente
 
     def stato(uscita, pagella, difetto, interrotto):
         fatta = uscita
@@ -4862,6 +4865,255 @@ def _() -> None:
     assert i18n.attiva() == i18n.PREDEFINITA
     i18n.imposta("it")
     assert i18n.t("tab.Sorgenti") == "Sorgenti"
+
+
+def _app_pezzi(*nomi: str) -> list:
+    """Le funzioni (e le costanti) di ui/app.py coi nomi dati, pronte per
+    `exec`: l'app intera non si importa fuori da Streamlit."""
+    import ast as _ast
+    albero = _ast.parse((ROOT / "ui" / "app.py").read_text())
+    pezzi = [n for n in albero.body
+             if (isinstance(n, _ast.FunctionDef) and n.name in nomi)
+             or (isinstance(n, _ast.Assign)
+                 and any(getattr(b, "id", None) in nomi for b in n.targets))]
+    assert len(pezzi) == len(nomi), f"non trovo tutti {nomi} in ui/app.py"
+    return pezzi
+
+
+def _esegui_app(pezzi: list, ambiente: dict) -> dict:
+    import ast as _ast
+    exec(compile(_ast.Module(body=pezzi, type_ignores=[]), "app", "exec"),
+         ambiente)
+    return ambiente
+
+
+@caso("con una taratura in corso Avvia e Riprendi non partono")
+def _() -> None:
+    """Le due cose si dividerebbero la GPU e la taratura salverebbe numeri
+    falsi. La taratura rifiutava gia' di partire durante una lavorazione;
+    il contrario no: `taratura.in_corso()` non veniva mai guardato."""
+    import ast as _ast
+    import types as _types
+    from animeup import taratura
+
+    # 1. Il marcatore: vivo se il PID esiste, morto se no.
+    with tempfile.TemporaryDirectory() as tmp:
+        radice = Path(tmp)
+        finti = _types.SimpleNamespace(root=radice)
+        assert not taratura.in_corso(finti), "nessun marcatore, eppure in corso"
+        marcatore = radice / ".cache" / "taratura" / "in-corso.lock"
+        marcatore.parent.mkdir(parents=True)
+        marcatore.write_text(str(os.getpid()))
+        assert taratura.in_corso(finti), "il PID e' vivo ma non risulta in corso"
+
+    # 2. `_avvia` si ferma PRIMA di lanciare qualunque cosa.
+    class _Lanciato(Exception):
+        pass
+
+    def _vietato(*_a, **_k):
+        raise _Lanciato()
+
+    errori: list[str] = []
+    stato = {"tarando": True}
+    ambiente = _esegui_app(_app_pezzi("_avvia", "_riprendi"), {
+        "taratura": _types.SimpleNamespace(in_corso=lambda: stato["tarando"]),
+        "st": _types.SimpleNamespace(error=lambda m, **_k: errori.append(m)),
+        "t": i18n.t,
+        # Oltre la guardia la prima cosa che si tocca e' il registro: se ci
+        # si arriva, la guardia non ha fermato niente.
+        "PATHS": _types.SimpleNamespace(
+            logs=type("Registri", (), {"__truediv__": _vietato})()),
+        "_leggi_parametri": lambda _c: {},
+        "Path": Path,
+    })
+    assert ambiente["_avvia"]([], {}) is False, "Avvia e' partito durante la taratura"
+    assert ambiente["_riprendi"](None, None, {}) is False, \
+        "Riprendi e' partito durante la taratura"
+    assert errori and all("taratura" in e for e in errori), errori
+    stato["tarando"] = False
+    try:
+        ambiente["_avvia"]([], {})
+    except _Lanciato:
+        pass
+    else:
+        raise AssertionError("senza taratura la guardia blocca lo stesso")
+
+    # 3. I pulsanti sono spenti, non solo la funzione che chiamano.
+    albero = _ast.parse((ROOT / "ui" / "app.py").read_text())
+    spenti = set()
+    for n in _ast.walk(albero):
+        if not (isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)
+                and n.func.attr == "button" and n.args
+                and isinstance(n.args[0], _ast.Call)
+                and isinstance(n.args[0].args[0], _ast.Constant)):
+            continue
+        disab = next((k.value for k in n.keywords if k.arg == "disabled"), None)
+        if disab is not None and any(isinstance(x, _ast.Name) and x.id == "tarando"
+                                     for x in _ast.walk(disab)):
+            spenti.add(n.args[0].args[0].value)
+    assert {"lavb.avvia", "lavb.riprendi"} <= spenti, \
+        f"pulsanti spenti durante la taratura: {sorted(spenti)}"
+
+
+@caso("una riga conclusa con la cartella rimasta in JOBS si puo' scartare")
+def _() -> None:
+    """La riga diceva «concluso con avvisi … la cartella resta per
+    controllo», ma gli avvisi non trattengono piu' la cartella (solo i
+    difetti, e allora l'uscita diventa .PARZIALE). E non aveva Scarta: quei
+    GB non si liberavano dall'interfaccia."""
+    import ast as _ast
+    from animeup.pipeline import JobResult
+    # Il presupposto dell'etichetta: un avviso non trattiene la cartella.
+    campi = {f: None for f in JobResult.__dataclass_fields__}
+    r = JobResult(**{**campi, "frames_written": 10, "frames_expected": 10,
+                  "warnings": ["nota"], "difetti": []})
+    assert r.ok, "un avviso trattiene di nuovo la cartella: rivedi l'etichetta"
+
+    for lingua in ("en", "it"):
+        i18n.imposta(lingua)
+        testo = i18n.t("lavb.concluso_residuo")
+        assert "JOBS" in testo and i18n.t("lavb.scarta") in testo, testo
+        assert not any(p in testo.lower() for p in ("warning", "avvis")), testo
+    i18n.imposta("it")
+
+    albero = _ast.parse((ROOT / "ui" / "app.py").read_text())
+    trovato = False
+    for n in _ast.walk(albero):
+        if not (isinstance(n, _ast.BoolOp) and isinstance(n.op, _ast.And)):
+            continue
+        nomi = [v.id for v in n.values if isinstance(v, _ast.Name)]
+        pulsanti = [v for v in n.values if isinstance(v, _ast.Call)
+                    and getattr(v.func, "attr", "") == "button"
+                    and _ast.dump(v.args[0]).count("lavb.scarta")]
+        if "concluso" in nomi and pulsanti:
+            trovato = True
+    assert trovato, "nessuno Scarta sulle righe concluse con la cartella in JOBS"
+
+
+@caso("lo spazio su disco non conta come differenza col file sospeso")
+def _() -> None:
+    """Si ricalcola a ogni avvio, quindi non coincideva mai con quello
+    salvato: l'avviso in sidebar scattava per lui e basta, e «Riporta la
+    sidebar…» rimetteva uno spazio vecchio."""
+    import ast as _ast
+    pezzi = _app_pezzi("_IMPOSTAZIONI_DEFAULT", "_FUORI_DAL_CONFRONTO",
+                       "_diversi_dal_sospeso", "_ripristina_parametri")
+    stato: dict = {}
+
+    class _St:
+        session_state = stato
+
+    ambiente = _esegui_app(pezzi, {"st": _St,
+                                   "_impostazioni_pulite": lambda r: dict(r)})
+    fabbrica = ambiente["_IMPOSTAZIONI_DEFAULT"]
+    assert "disco" in fabbrica, "lo spazio non e' piu' un'impostazione?"
+    diversi = ambiente["_diversi_dal_sospeso"]
+    attuali = dict(fabbrica, disco=120)
+    assert diversi(dict(fabbrica, disco=80), attuali) == [], \
+        "solo lo spazio e' diverso, eppure scatta l'avviso"
+    altro = 20 if fabbrica["crf"] != 20 else 21
+    assert diversi(dict(fabbrica, disco=80, crf=altro), attuali) == ["crf"]
+    ambiente["_ripristina_parametri"](dict(fabbrica, disco=80, crf=altro))
+    assert "w_disco" not in stato, "il ripristino rimette uno spazio vecchio"
+    assert stato.get("w_crf") == altro, "il ripristino non rimette piu' il CRF"
+
+
+@caso("gli avvisi su telecine e interlacciato non promettono una correzione")
+def _() -> None:
+    """Dicevano «va applicato l'inverse telecine», come se ci pensasse
+    AnimeUp: che invece non deinterlaccia e non fa inverse telecine."""
+    from animeup.plan import Plan
+    assert "ivtc" in Plan.__dict__, "Plan.ivtc sparito: rivedi questo caso"
+    for lingua, strumento, promesse in (
+            ("en", "dedicated tool", ("is needed", "will be")),
+            ("it", "strumento dedicato", ("va applicato", "verrà"))):
+        i18n.imposta(lingua)
+        for chiave in ("probe.telecine", "probe.interlacciato"):
+            testo = i18n.t(chiave)
+            assert "AnimeUp" in testo and strumento in testo, f"{lingua} {chiave}: {testo}"
+            assert not any(p in testo.lower() for p in promesse), f"{lingua} {chiave}: {testo}"
+    i18n.imposta("it")
+
+
+@caso("la regola generale non consiglia il denoise leggero dove non arriva")
+def _() -> None:
+    """Il denoise leggero esiste solo a x2: a 1080p non arriva dai sorgenti
+    fra 380 e 539 righe, proprio la fascia in cui la regola lo consigliava."""
+    import dataclasses
+    from animeup.models import altezza_minima
+    from animeup.plan import PlanError
+    from animeup.models import ALTEZZA_INCERTA, CLEAN_SOURCE_MIN_HEIGHT
+
+    # 1. La soglia coincide con quella del piano, al pixel.
+    r = probe_source(CAMPIONI / "clip20s.mkv", with_fields=False)
+    for uscita in (720, 1080):
+        minimo = altezza_minima("cugan-denoise", uscita)
+        for h in (minimo - 2, minimo):
+            g = dataclasses.replace(r.geometry, width=h * 4 // 3 // 2 * 2,
+                                    height=h, display_width=h * 4 // 3 // 2 * 2,
+                                    display_height=h, sar=Fraction(1))
+            prova = dataclasses.replace(r, geometry=g)
+            try:
+                build_plan(prova, target_height=uscita, model_key="cugan-denoise")
+                arriva = True
+            except PlanError:
+                arriva = False
+            assert arriva == (h >= minimo), \
+                f"{h}p -> {uscita}p: piano {arriva}, soglia {minimo}"
+
+    # 2. La regola segue l'altezza d'uscita.
+    ambiente = _esegui_app(_app_pezzi("perche_generale"), {
+        "t": i18n.t, "altezza_minima": altezza_minima,
+        "ALTEZZA_INCERTA": ALTEZZA_INCERTA,
+        "CLEAN_SOURCE_MIN_HEIGHT": CLEAN_SOURCE_MIN_HEIGHT})
+    regola = ambiente["perche_generale"]
+
+    def mezzo(*a, **k):
+        return regola(*a, **k)[1]
+
+    assert mezzo(720)[2] == i18n.t("conf.pg.mezzo_modello"), mezzo(720)
+    a1080 = mezzo(1080)
+    assert "540" in a1080[2] and "540" in a1080[3], a1080
+    assert mezzo(1080, forza=True)[2] == i18n.t("conf.pg.mezzo_modello")
+    a1440 = mezzo(1440)
+    assert a1440[1] == "verde" and a1440[2] == "animevideov3", a1440
+
+
+@caso("le chip della fascia dei Sorgenti dicono cosa contano")
+def _() -> None:
+    """«N avvisi» in alto contava i FILE, quello sulla riga gli avvisi del
+    file: stesso aspetto, significato diverso. E «N sotto soglia» non
+    diceva quale soglia."""
+    from animeup.models import CLEAN_SOURCE_MIN_HEIGHT
+    i18n.imposta("en")
+    assert i18n.tn("src.file_con_avvisi", 2) == "2 files with warnings"
+    assert i18n.tn("src.file_con_avvisi", 1) == "1 file with warnings"
+    assert str(CLEAN_SOURCE_MIN_HEIGHT) in i18n.t(
+        "src.sotto_soglia", n=3, soglia=CLEAN_SOURCE_MIN_HEIGHT)
+    i18n.imposta("it")
+    app = (ROOT / "ui" / "app.py").read_text()
+    assert "tn('src.file_con_avvisi', con_avvisi)" in app, \
+        "la chip della fascia non usa piu' il conteggio dei file"
+
+
+@caso("con la sidebar congelata ogni interruttore e' spento davvero")
+def _() -> None:
+    """«Analisi approfondita» era solo ingrigito dal CSS: raggiungibile da
+    tastiera mentre gli altri erano `disabled`."""
+    import ast as _ast
+    albero = _ast.parse((ROOT / "ui" / "app.py").read_text())
+    senza = []
+    for n in _ast.walk(albero):
+        if not (isinstance(n, _ast.Call) and getattr(n.func, "attr", "") == "toggle"):
+            continue
+        chiave = next((k.value.value for k in n.keywords if k.arg == "key"
+                       and isinstance(k.value, _ast.Constant)), "")
+        if not chiave.startswith("w_"):
+            continue
+        if not any(k.arg == "disabled" and _ast.dump(k.value).count("congelata")
+                   for k in n.keywords):
+            senza.append(chiave)
+    assert not senza, f"interruttori non spenti con la sidebar congelata: {senza}"
 
 
 def main() -> int:
