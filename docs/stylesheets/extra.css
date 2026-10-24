@@ -78,6 +78,26 @@
   }
 }
 
+/* Material treats the custom System scheme as light unless its code palette is set explicitly. */
+@media (prefers-color-scheme: dark) {
+  [data-md-color-scheme="animeup-auto"] {
+    --md-code-hl-variable-color: #c6cbd2;
+    --md-code-hl-string-color: #2fb170;
+    --md-code-hl-color: #2977ff;
+    --md-code-hl-comment-color: #c6cbd2;
+    --md-code-hl-punctuation-color: #c6cbd2;
+    --md-code-hl-color--light: #2977ff1a;
+    --md-code-hl-constant-color: #9383e2;
+    --md-code-hl-generic-color: #c6cbd2;
+    --md-code-hl-keyword-color: #6791e0;
+    --md-code-hl-operator-color: #c6cbd2;
+    --md-code-hl-name-color: #e8eaed;
+    --md-code-hl-special-color: #f06090;
+    --md-code-hl-number-color: #e6695b;
+    --md-code-hl-function-color: #c973d9;
+  }
+}
+
 [data-md-color-scheme="slate"] .md-header,
 [data-md-color-scheme="animeup-auto"] .md-header,
 [data-md-color-scheme="default"] .md-header {
@@ -210,6 +230,18 @@
 .md-typeset .highlight,
 .md-typeset pre > code {
   background-color: var(--animeup-surface);
+}
+
+.md-typeset .md-code__nav {
+  background-color: var(--animeup-surface);
+}
+
+.md-typeset .md-code__button {
+  color: var(--animeup-muted);
+}
+
+.md-typeset .md-code__button:is(:hover, :focus-visible) {
+  color: var(--animeup-accent);
 }
 
 .md-typeset h1,
