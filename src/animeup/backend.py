@@ -279,7 +279,7 @@ def upscale_dir(
     if log is not None:
         with log.open("a") as fh:
             fh.write(f"\n[upscale] {' '.join(cmd)}\n")
-            fh.write(f"[upscale] attesi {expected}, prodotti {produced}, {seconds:.1f}s\n")
+            fh.write(f"[upscale] expected {expected}, produced {produced}, {seconds:.1f}s\n")
             for line in stderr.splitlines():
                 if line.strip() and not line.rstrip().endswith("%"):
                     fh.write(f"[upscale] {line}\n")

@@ -3565,30 +3565,39 @@ def _chiedi_aggiornamento() -> None:
     if not stato:
         return
     try:
-        (Path(stato) / "aggiornamento-richiesta").write_text(str(time.time()))
+        (Path(stato) / "update-request").write_text(str(time.time()))
         st.session_state["aggiornamento_chiesto"] = True
     except OSError:
         pass
 
 
-def _file_cartella_dati() -> Path | None:
-    """Dove l'app per macOS legge la cartella dei dati al prossimo avvio."""
-    stato = os.environ.get("ANIMEUP_STATO")
-    return Path(stato) / "cartella_dati" if stato else None
+# Le due cartelle che l'utente sceglie: per ciascuna il file in cui l'app per
+# macOS la legge al prossimo avvio, la variabile con cui segnala una scelta
+# che ha dovuto saltare (disco non collegato) e i testi.
+_CARTELLE = {
+    "input": ("input-folder", "ANIMEUP_INPUT_MISSING", "sb.cartella_in"),
+    "output": ("output-folder", "ANIMEUP_OUTPUT_MISSING", "sb.cartella_out"),
+}
 
 
-def _scegli_cartella_dati() -> None:
+def _cartella_attuale(quale: str) -> Path:
+    return PATHS.input if quale == "input" else PATHS.output
+
+
+def _scegli_cartella(quale: str) -> None:
     """Il selettore di cartelle di macOS, aperto dal server (che gira su
-    questo stesso Mac). Annullare non cambia niente."""
+    questo stesso Mac). Annullare non cambia niente. Scelta una cartella,
+    l'app riavvia il server su quella e la pagina si ricarica da sola."""
+    file, _, testo = _CARTELLE[quale]
     esito = subprocess.run(
         ["osascript", "-e",
-         f'POSIX path of (choose folder with prompt "{t("sb.cartella_prompt")}")'],
+         f'POSIX path of (choose folder with prompt "{t(testo + "_prompt")}")'],
         capture_output=True, text=True, check=False)
     scelta = esito.stdout.strip()
-    file = _file_cartella_dati()
-    if esito.returncode == 0 and scelta and file is not None:
-        file.parent.mkdir(parents=True, exist_ok=True)
-        file.write_text(str(Path(scelta).resolve()) + "\n")
+    stato = os.environ.get("ANIMEUP_STATO")
+    if esito.returncode == 0 and scelta and stato:
+        Path(stato).mkdir(parents=True, exist_ok=True)
+        (Path(stato) / file).write_text(str(Path(scelta).resolve()) + "\n")
         st.session_state["cartella_cambiata"] = str(Path(scelta).resolve())
 
 
@@ -3608,33 +3617,44 @@ def _breve(percorso: str | Path) -> str:
     return str(percorso).replace(str(Path.home()), "~", 1)
 
 
-def _nota_cartella_assente() -> str | None:
-    """La cartella scelta che l'app ha dovuto saltare (disco non collegato)."""
-    assente = os.environ.get("ANIMEUP_CARTELLA_ASSENTE")
-    if not assente:
-        return None
-    return t("sb.cartella_assente", scelta=_breve(assente), attuale=_breve(PATHS.root))
+def _note_cartelle_assenti() -> list[str]:
+    """Le cartelle scelte che l'app ha dovuto saltare (disco non collegato)."""
+    note = []
+    for quale, (_, variabile, _) in _CARTELLE.items():
+        assente = os.environ.get(variabile)
+        if assente:
+            note.append(t("sb.cartella_assente", scelta=_breve(assente),
+                          attuale=_breve(_cartella_attuale(quale))))
+    return note
 
 
-def _riga_cartella_dati(congelata: bool) -> None:
-    """La cartella dei dati dell'app: dove sta, e come cambiarla.
+def _riga_cartella(quale: str, congelata: bool) -> None:
+    """Una delle due cartelle: dove sta, e come cambiarla.
 
     Stesso disegno della riga Taratura: etichetta e link sulla stessa riga,
-    il percorso sotto. Scelta una cartella, l'app riavvia il server su
-    quella (lo nota da `cartella_dati`) e la pagina si ricarica da sola.
+    il percorso sotto.
     """
-    with st.sidebar.container(key="cCartellaRiga"):
+    _, variabile, testo = _CARTELLE[quale]
+    with st.sidebar.container(key=f"cCartellaRiga_{quale}"):
         st.markdown(
             "<div class='au-tar-riga' style='padding-right: 58px'>"
-            f"<span>{t('sb.cartella')}{_icona_perche(t('sb.cartella_aiuto'))}</span>"
+            f"<span>{t(testo)}{_icona_perche(t(testo + '_aiuto'))}</span>"
             "</div>", unsafe_allow_html=True)
-        st.button(t("sb.cartella_cambia"), key="apriCartella",
-                  disabled=congelata, on_click=_scegli_cartella_dati)
-    st.sidebar.markdown(f"<div class='au-meta au-cartella'>{esc(_breve(PATHS.root))}</div>",
-                        unsafe_allow_html=True)
-    if (nota := _nota_cartella_assente()):
+        st.button(t("sb.cartella_cambia"), key=f"apriCartella_{quale}",
+                  disabled=congelata, on_click=_scegli_cartella, args=(quale,))
+    st.sidebar.markdown(
+        f"<div class='au-meta au-cartella'>{esc(_breve(_cartella_attuale(quale)))}</div>",
+        unsafe_allow_html=True)
+    if (assente := os.environ.get(variabile)):
+        nota = t("sb.cartella_assente", scelta=_breve(assente),
+                 attuale=_breve(_cartella_attuale(quale)))
         st.sidebar.markdown(f"<div class='au-nota-viva au-nota-avviso'>{esc(nota)}</div>",
                             unsafe_allow_html=True)
+
+
+def _righe_cartelle(congelata: bool) -> None:
+    _riga_cartella("input", congelata)
+    _riga_cartella("output", congelata)
     nuova = st.session_state.get("cartella_cambiata")
     if nuova:
         st.sidebar.caption(t("sb.cartella_riavvia", cartella=_breve(nuova)))
@@ -3906,11 +3926,10 @@ def sidebar() -> dict:
                                   disabled=congelata)
         _aiuto_a_destra(t("sb.controlla_agg_aiuto"), t("sb.abilitato"))
 
-    # La cartella dei dati si sceglie solo nell'app: nella modalita' a
-    # cartella i dati stanno accanto al programma (o in ANIMEUP_ROOT, che e'
-    # una variabile da Terminale).
+    # Le cartelle si scelgono solo nell'app: nella modalita' a cartella
+    # stanno accanto al programma (o dove dicono le variabili da Terminale).
     if os.environ.get("ANIMEUP_APP") == "1":
-        _riga_cartella_dati(congelata)
+        _righe_cartelle(congelata)
 
     voce_tar = taratura.carica()
     if voce_tar:
@@ -4056,7 +4075,7 @@ def page_sorgenti(cfg: dict) -> None:
     if not files:
         st.markdown(f"#### {t('src.vuoto_titolo')}")
         st.info(t("src.vuoto_testo", cartella=PATHS.input))
-        if (nota := _nota_cartella_assente()):
+        for nota in _note_cartelle_assenti():
             st.warning(nota)
         app = os.environ.get("ANIMEUP_APP") == "1"
         st.caption(t("src.vuoto_cartella_app" if app else "src.vuoto_cartella_cartella"))
@@ -4068,7 +4087,7 @@ def page_sorgenti(cfg: dict) -> None:
         if app:
             c2.button(t("src.scegli_cartella"), key="sceltaCartellaVuoto",
                       icon=":material/drive_folder_upload:",
-                      on_click=_scegli_cartella_dati)
+                      on_click=_scegli_cartella, args=("input",))
             if st.session_state.get("cartella_cambiata"):
                 st.caption(t("sb.cartella_riavvia",
                              cartella=_breve(st.session_state["cartella_cambiata"])))

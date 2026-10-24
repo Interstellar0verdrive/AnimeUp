@@ -1,6 +1,6 @@
 // Updater.swift - installs a newer AnimeUp from the GitHub release.
 //
-// The interface only asks (it writes `<state>/aggiornamento-richiesta`); the
+// The interface only asks (it writes `<state>/update-request`); the
 // app does the rest by itself and trusts nothing in that request: it asks
 // GitHub for the latest release, downloads the app zip, checks it against the
 // SHA256 GitHub publishes for that file, checks the app inside (identifier,
@@ -57,7 +57,7 @@ struct Release {
 enum Updater {
     /// The file the interface writes when the user clicks "Install update".
     static func requestFile(state: URL) -> URL {
-        state.appendingPathComponent("aggiornamento-richiesta")
+        state.appendingPathComponent("update-request")
     }
 
     /// Numeric comparison of "1.5.10" and "v1.5.2" style versions.

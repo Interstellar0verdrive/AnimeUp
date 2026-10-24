@@ -4,10 +4,17 @@
 // The .app bundle is treated as read-only (it gets replaced whole on every
 // update), so everything AnimeUp downloads or generates goes elsewhere:
 //
-//   state  ~/Library/Application Support/AnimeUp   Python, venv, caches, bin/, logs/
-//   data   ~/Movies/AnimeUp (or <state>/cartella_dati)   INPUT/OUTPUT/JOBS/registri
+//   state   ~/Library/Application Support/AnimeUp   Python, venv, bin/, logs/,
+//                                                   records/ (history, settings,
+//                                                   calibration), cache/
+//   input   ~/Movies/AnimeUp/INPUT  (or <state>/input-folder)   videos to process
+//   output  ~/Movies/AnimeUp/OUTPUT (or <state>/output-folder)  finished videos,
+//                                                   logs/ and JOBS/ inside
 //
-// The bash launcher learns both through ANIMEUP_STATO and ANIMEUP_ROOT.
+// The bash launcher learns them through ANIMEUP_STATO, ANIMEUP_INPUT and
+// ANIMEUP_OUTPUT. ANIMEUP_ROOT is the folder the defaults live in: before
+// 1.6 it held everything, and the program moves what it finds there into
+// the new places on first launch.
 
 import Foundation
 
@@ -30,14 +37,20 @@ struct AppPaths {
     let launcher: URL
     /// Per-user state folder (Python, venv, caches, downloaded tools, logs).
     let state: URL
-    /// Per-user data folder (INPUT, OUTPUT, JOBS, registri).
+    /// The base folder: the defaults INPUT and OUTPUT live here, and so did
+    /// everything else before 1.6.
     let data: URL
+    /// Videos to process.
+    let input: URL
+    /// Finished videos (with logs/ and JOBS/ inside).
+    let output: URL
     /// `<state>/logs/app.log`: launcher and server output, appended.
     let logFile: URL
-    /// The folder the user chose, when it isn't reachable now (an external
-    /// drive that isn't connected): `data` is then the default folder, and
-    /// the interface says so.
-    let unavailableData: String?
+    /// A folder the user chose that isn't reachable now (an external drive
+    /// that isn't connected): the default is used instead, and the interface
+    /// says so.
+    let unavailableInput: String?
+    let unavailableOutput: String?
 
     enum Failure: Error {
         case missingProgram(String)
@@ -60,9 +73,17 @@ struct AppPaths {
             ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
         let state = support.appendingPathComponent("AnimeUp", isDirectory: true)
         let logs = state.appendingPathComponent("logs", isDirectory: true)
-        let (data, unavailable) = dataFolder(state: state)
+        let (data, unavailableData) = dataFolder(state: state)
+        // A base folder chosen before 1.6 that is gone now: both folders
+        // inside it are missing too, unless chosen on their own since.
+        let (input, unavailableInput) = folder(state: state, file: "input-folder",
+            fallback: data.appendingPathComponent("INPUT", isDirectory: true),
+            missing: unavailableData.map { $0 + "/INPUT" })
+        let (output, unavailableOutput) = folder(state: state, file: "output-folder",
+            fallback: data.appendingPathComponent("OUTPUT", isDirectory: true),
+            missing: unavailableData.map { $0 + "/OUTPUT" })
 
-        for dir in [state, logs, data] {
+        for dir in [state, logs, input, output] {
             do {
                 try fm.createDirectory(at: dir, withIntermediateDirectories: true)
             } catch {
@@ -70,31 +91,47 @@ struct AppPaths {
             }
         }
         return AppPaths(program: program, launcher: launcher, state: state, data: data,
+                        input: input, output: output,
                         logFile: logs.appendingPathComponent("app.log"),
-                        unavailableData: unavailable)
+                        unavailableInput: unavailableInput,
+                        unavailableOutput: unavailableOutput)
     }
 
-    /// The text of `<state>/cartella_dati`, the folder the user chose in the
-    /// interface; nil when they never chose one.
-    static func chosenDataFolder(state: URL) -> String? {
-        let pointer = state.appendingPathComponent("cartella_dati")
+    /// What the interface has chosen, all in one value: when it changes, the
+    /// server restarts on the new folders.
+    static func choices(state: URL) -> [String?] {
+        ["cartella_dati", "input-folder", "output-folder"].map { chosen(state: state, file: $0) }
+    }
+
+    /// The folder written in `<state>/<file>` by the interface's folder
+    /// picker; nil when the user never chose one. `cartella_dati` is the
+    /// single data folder of 1.5, still honoured as the base folder.
+    static func chosen(state: URL, file: String) -> String? {
+        let pointer = state.appendingPathComponent(file)
         guard let text = try? String(contentsOf: pointer, encoding: .utf8) else { return nil }
         let line = text.split(whereSeparator: \.isNewline).first.map(String.init) ?? ""
         let path = (line.trimmingCharacters(in: .whitespaces) as NSString).expandingTildeInPath
         return path.hasPrefix("/") ? path : nil
     }
 
-    /// The data folder: the one chosen in the interface if it's reachable,
-    /// otherwise ~/Movies/AnimeUp. The second value is the chosen folder when
-    /// it had to be skipped.
+    /// The base folder: the one chosen in 1.5 if it's reachable, otherwise
+    /// ~/Movies/AnimeUp. The second value is the chosen folder when it had
+    /// to be skipped.
     private static func dataFolder(state: URL) -> (URL, String?) {
         let fm = FileManager.default
         let movies = fm.urls(for: .moviesDirectory, in: .userDomainMask).first
             ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Movies")
         let fallback = movies.appendingPathComponent("AnimeUp", isDirectory: true)
-        guard let chosen = chosenDataFolder(state: state) else { return (fallback, nil) }
-        let url = URL(fileURLWithPath: chosen, isDirectory: true)
-        return isReachable(url) ? (url, nil) : (fallback, chosen)
+        return folder(state: state, file: "cartella_dati", fallback: fallback, missing: nil)
+    }
+
+    /// The folder chosen in `<state>/<file>` if it's reachable, otherwise
+    /// `fallback`; the second value names the choice that was skipped.
+    private static func folder(state: URL, file: String, fallback: URL,
+                               missing: String?) -> (URL, String?) {
+        guard let path = chosen(state: state, file: file) else { return (fallback, missing) }
+        let url = URL(fileURLWithPath: path, isDirectory: true)
+        return isReachable(url) ? (url, nil) : (fallback, path)
     }
 
     /// A folder is usable if it exists, or if it can be created because its
@@ -115,17 +152,21 @@ struct AppPaths {
 // MARK: - Language
 
 /// English or Italian, with the same rule as the bash launcher: Italian only
-/// if `<data>/registri/impostazioni.json` says `"lingua": "it"`.
+/// if `<state>/records/settings.json` says `"language": "it"` (before 1.6:
+/// `"lingua"` in `<data>/registri/impostazioni.json`).
 nonisolated(unsafe) var italian = false
 
-func detectLanguage(data: URL) {
-    let file = data.appendingPathComponent("registri/impostazioni.json")
-    guard let raw = try? Data(contentsOf: file),
-          let json = try? JSONSerialization.jsonObject(with: raw) as? [String: Any] else {
-        italian = false
+func detectLanguage(state: URL, data: URL) {
+    for (file, key) in [(state.appendingPathComponent("records/settings.json"), "language"),
+                        (data.appendingPathComponent("registri/impostazioni.json"), "lingua")] {
+        guard let raw = try? Data(contentsOf: file),
+              let json = try? JSONSerialization.jsonObject(with: raw) as? [String: Any] else {
+            continue
+        }
+        italian = (json[key] as? String) == "it"
         return
     }
-    italian = (json["lingua"] as? String) == "it"
+    italian = false
 }
 
 /// One string in both languages: `tr("English", "Italiano")`.
