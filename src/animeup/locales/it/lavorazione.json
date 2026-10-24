@@ -4,7 +4,7 @@
   "lav.fmt_data_alle": "%d/%m/%Y alle %H:%M",
   "lav.fmt_decimale": ",",
   "lav.nota_tarata": "Stime tarate su questo Mac il {data}.",
-  "lav.nota_fabbrica": "Stime di fabbrica: con «./animeup taratura» si adattano a questo Mac in ~10 minuti.",
+  "lav.nota_fabbrica": "Stime di fabbrica: con «Esegui ora» accanto a Taratura, nella barra laterale, si adattano a questo Mac in ~10 minuti.",
   "lav.vuoto": "Nessun file in INPUT.",
   "lav.chiudi": "Chiudi",
   "lav.fine_titolo": "Elaborazione terminata",
@@ -48,7 +48,7 @@
   "lav.tar_interrotta": "Taratura interrotta: {errore}",
   "lav.tar_salvata": "La taratura è stata completata con successo e salvata in `registri/taratura.json`.",
   "lav.tar_da_ora": "Da questo momento, tutte le stime su questo Mac utilizzeranno i valori aggiornati.",
-  "lav.tar_ripetibile": "È possibile ripetere la taratura in qualsiasi momento tramite l'apposito link nella barra laterale.",
+  "lav.tar_ripetibile": "È possibile ripetere la taratura in qualsiasi momento con il pulsante «Ripeti» accanto a Taratura, nella barra laterale.",
   "lav.tar_nota_scarto": "Nota: lo scarto è verso la taratura precedente se esiste, altrimenti verso i numeri di fabbrica.",
   "lav.av_scrittura": "scrittura del file finale{perc}",
   "lav.av_ultimo_blocco": "ultimo blocco in codifica{perc} (CPU)",
@@ -103,5 +103,6 @@
   "lav.pausa_senza_processo": "la lavorazione non ha più un processo a cui parlare",
   "lav.pausa_non_risponde": "la lavorazione non risponde più",
   "lav.pausa_niente": "in questo istante non c'è niente da mettere in pausa (la lavorazione sta cambiando fase)",
-  "lav.pausa_marcatore": "non riesco a scrivere il marcatore di pausa"
+  "lav.pausa_marcatore": "non riesco a scrivere il marcatore di pausa",
+  "lav.tar_passo": "· {n} di {totale}"
 }

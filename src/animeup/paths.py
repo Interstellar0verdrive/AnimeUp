@@ -13,13 +13,21 @@ from functools import cached_property
 from pathlib import Path
 
 
+def code_root() -> Path:
+    """La cartella del programma: lanciatore, sorgenti e bin/."""
+    # src/animeup/paths.py -> src/animeup -> src -> root
+    return Path(__file__).resolve().parents[2]
+
+
 def project_root() -> Path:
-    """Radice del progetto: la cartella che contiene bin/, src/, INPUT/..."""
+    """Radice dei DATI: INPUT/, OUTPUT/, JOBS/, registri/...
+
+    Coincide con quella del programma, salvo un ANIMEUP_ROOT impostato.
+    """
     env = os.environ.get("ANIMEUP_ROOT")
     if env:
         return Path(env).resolve()
-    # src/animeup/paths.py -> src/animeup -> src -> root
-    return Path(__file__).resolve().parents[2]
+    return code_root()
 
 
 class MissingToolError(RuntimeError):
@@ -43,11 +51,22 @@ class Paths:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = (root or project_root()).resolve()
+        # I binari stanno col PROGRAMMA, non coi dati. Con ANIMEUP_ROOT su una
+        # cartella di soli dati si cercavano dentro di lei, dove non ci sono:
+        # si ripiegava su quelli di sistema (o su niente), mentre lanciatore e
+        # setup li mettono accanto al codice. Una radice passata a mano (test,
+        # strumenti) resta invece autosufficiente, bin/ compreso.
+        self._bin = (self.root if root is not None else code_root()) / "bin"
 
     # --- cartelle ---------------------------------------------------------
     @property
     def bin(self) -> Path:
-        return self.root / "bin"
+        return self._bin
+
+    @property
+    def campioni(self) -> Path:
+        """I clip liberi della taratura: viaggiano col programma, come bin/."""
+        return self._bin.parent / "campioni"
 
     @property
     def models(self) -> Path:

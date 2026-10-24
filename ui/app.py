@@ -488,9 +488,9 @@ STYLE = f"""
      garantisce il contatore stesso. */
   [role="dialog"]:has(.au-tar-passo) h2 > span {{ margin-right: 0; }}
   [role="dialog"] h2::after {{ margin-left: 7px; }}
-  [role="dialog"]:has(.au-tar-p1) h2::after {{ content: "· 1 di 3"; }}
-  [role="dialog"]:has(.au-tar-p2) h2::after {{ content: "· 2 di 3"; }}
-  [role="dialog"]:has(.au-tar-p3) h2::after {{ content: "· 3 di 3"; }}
+  /* Il contatore «· 1 di 3» lo scrive `_modale_taratura`, nella lingua
+     del momento: qui, in un CSS calcolato una volta all'avvio, restava
+     in italiano anche con l'interfaccia in inglese. */
   .au-tar-avviso {{ display: flex; gap: 9px; align-items: flex-start; }}
   .au-tar-avviso svg {{ color: {GIALLO}; flex: 0 0 auto; margin-top: 3px; }}
   [class*="st-key-cTarValori"] table {{ width: 100%; }}
@@ -3405,7 +3405,8 @@ def _contenuto_taratura() -> None:
             # ripiega su segmenti uguali, che e' brutto ma non rotto.
             try:
                 tappe = [costo for _, costo in taratura.preventivo()]
-            except (AttributeError, OSError, ValueError):
+            except (AttributeError, OSError, ValueError,
+                    subprocess.CalledProcessError):
                 tappe = []
             barra = st.empty()
 
@@ -3447,7 +3448,8 @@ def _contenuto_taratura() -> None:
             try:
                 st.session_state["tar_nuova"] = taratura.esegui(
                     avanzamento=_avanzamento)
-            except (OSError, RuntimeError, FileNotFoundError) as errore:
+            except (OSError, RuntimeError, FileNotFoundError,
+                    subprocess.CalledProcessError) as errore:
                 st.error(t("lav.tar_interrotta", errore=errore))
                 return
             barra.markdown(
@@ -3515,6 +3517,10 @@ def _contenuto_taratura() -> None:
 
 # Come per la fine coda: il titolo si traduce all'apertura, non all'avvio.
 def _modale_taratura() -> None:
+    st.markdown("<style>" + "".join(
+        f'[role="dialog"]:has(.au-tar-p{n}) h2::after '
+        f'{{ content: "{t("lav.tar_passo", n=n, totale=3)}"; }}'
+        for n in (1, 2, 3)) + "</style>", unsafe_allow_html=True)
     st.dialog(t("lav.tar_titolo"), width="large")(_contenuto_taratura)()
 
 

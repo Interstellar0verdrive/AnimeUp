@@ -4,7 +4,7 @@
   "lav.fmt_data_alle": "%Y-%m-%d at %H:%M",
   "lav.fmt_decimale": ".",
   "lav.nota_tarata": "Estimates calibrated on this Mac on {data}.",
-  "lav.nota_fabbrica": "Factory estimates: run \"./animeup taratura\" to tune them to this Mac in ~10 minutes.",
+  "lav.nota_fabbrica": "Factory estimates: use \"Run now\" next to Calibration in the sidebar to tune them to this Mac in ~10 minutes.",
   "lav.vuoto": "No files in INPUT.",
   "lav.chiudi": "Close",
   "lav.fine_titolo": "Processing finished",
@@ -48,7 +48,7 @@
   "lav.tar_interrotta": "Calibration interrupted: {errore}",
   "lav.tar_salvata": "Calibration completed and saved to `registri/taratura.json`.",
   "lav.tar_da_ora": "From now on, every estimate on this Mac uses the updated values.",
-  "lav.tar_ripetibile": "You can recalibrate at any time from the link in the sidebar.",
+  "lav.tar_ripetibile": "You can recalibrate at any time with the Redo button next to Calibration in the sidebar.",
   "lav.tar_nota_scarto": "Note: the change is measured against the previous calibration if there is one, otherwise against the factory figures.",
   "lav.av_scrittura": "writing the final file{perc}",
   "lav.av_ultimo_blocco": "encoding the last chunk{perc} (CPU)",
@@ -103,5 +103,6 @@
   "lav.pausa_senza_processo": "the job no longer has a process to talk to",
   "lav.pausa_non_risponde": "the job isn't responding any more",
   "lav.pausa_niente": "there's nothing to pause right now (the job is changing phase)",
-  "lav.pausa_marcatore": "couldn't write the pause marker"
+  "lav.pausa_marcatore": "couldn't write the pause marker",
+  "lav.tar_passo": "· {n} of {totale}"
 }

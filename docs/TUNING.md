@@ -160,8 +160,9 @@ write limit.
 The right value **can't be written here**, because it changes with the disk:
 an internal SSD and an external USB drive don't saturate at the same point.
 That's why, since 1.2, calibration **tries it on the spot** instead of
-declaring it: a dedicated step processes the same clip with 2, 4, 6 and 8
-threads and keeps the best, with two safeguards written into the code:
+declaring it: a dedicated step processes the same clip with 2, 4, 6, 8, 12 and 16
+threads (never more than the Mac has cores, and always including the core
+count itself) and keeps the best, with two safeguards written into the code:
 
 - each candidate is compared **with the baseline**, never with the current
   best, otherwise the order of the trials changed the result (the same
