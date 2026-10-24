@@ -208,6 +208,10 @@ boundaries.
 
 ## How to check on new material
 
+> **Note:** the `PROVE/` bench scripts were used during development and are
+> not included in this repository. The section is kept because it documents
+> what the parameters were checked against.
+
 The test bench in `PROVE/banco.py` generates about fifty files that **don't
 resemble** the ones it was tuned on: resolutions from 96×64 to 2560×1440,
 seven non-square pixel conventions (8:9, 10:11, 16:15, 32:27, 64:45, 118:81,

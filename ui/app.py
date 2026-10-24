@@ -2886,12 +2886,12 @@ def _valore_a_destra(regole: list[str], chiave: str, testo: str) -> None:
 
 # Le impostazioni della sidebar vivono anche su disco: al riavvio tornano
 # quelle dell'ultima sessione, non i default (prima "quando riapro mi dà i
-# default... al 99% butta lavoro fatto" — Alberto). Il file sta nei registri,
+# default... al 99% butta lavoro fatto" — Interstellar0verdrive). Il file sta nei registri,
 # accanto alle pagelle.
 # Sotto questa soglia non si lavora: i soli fotogrammi sorgente di un
 # episodio da 24 minuti a 720p ne occupano 31, e un blocco ci si aggiunge.
 # Offrire 10 GB nel cursore significava offrire un'impostazione con cui
-# nessun file puo' essere lavorato. (Soglia proposta da Alberto l'11/08.)
+# nessun file puo' essere lavorato. (Soglia proposta da Interstellar0verdrive l'11/08.)
 MINIMO_SPAZIO_GB = 50
 
 
@@ -3721,7 +3721,7 @@ def sidebar() -> dict:
     _disco_ora = st.session_state.get("w_disco", _tetto_max)
     # Il valore ricordato non entra piu' nel disco di oggi: si abbassa e lo si
     # DICE. Un'impostazione corretta in silenzio e' un'impostazione che
-    # l'utente crede ancora di avere. (Chiesto da Alberto l'11/08.)
+    # l'utente crede ancora di avere. (Chiesto da Interstellar0verdrive l'11/08.)
     if _disco_ora > _tetto_max:
         st.sidebar.markdown(
             f"<div class='au-nota-viva au-nota-congelo'>"
@@ -4855,7 +4855,7 @@ def _spezzoni(plan, path: Path, cfg: dict,
                     unsafe_allow_html=True)
         # Niente nota sulla taratura qui: si sa gia' (la dice la sidebar), e
         # allungava la colonna di centro disallineando le tre del Confronto
-        # (chiesto da Alberto il 2026-08-10).
+        # (chiesto da Interstellar0verdrive il 2026-08-10).
         if not prescelti or not varianti:
             st.markdown(f"<span class='au-hint'>{t('conf.seleziona')}</span>",
                         unsafe_allow_html=True)
@@ -6157,7 +6157,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                                use_container_width=True):
                     st.session_state.pop("conferma_scarta", None)
                     # Guardia: si butta SOLO una cartella dentro
-                    # LAVORAZIONI. Sorgente e OUTPUT non si toccano mai.
+                    # JOBS. Sorgente e OUTPUT non si toccano mai.
                     if (lav is not None
                             and PATHS.work in lav.cartella.parents):
                         shutil.rmtree(lav.cartella, ignore_errors=True)

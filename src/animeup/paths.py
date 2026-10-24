@@ -62,7 +62,7 @@ class Paths:
         return self.root / "OUTPUT"
 
     # Convenzione dei nomi su disco (voluta dall'utente): MAIUSCOLO per le
-    # cartelle che l'utente tocca (INPUT, OUTPUT, LAVORAZIONI), minuscolo per
+    # cartelle che l'utente tocca (INPUT, OUTPUT, JOBS), minuscolo per
     # quelle interne (anteprime, registri). I nomi qui sono l'unica verità:
     # nessun altro punto del codice li conosce per esteso.
 
@@ -78,13 +78,20 @@ class Paths:
         lavorazioni interrotte riprendibili, ed è una cartella che l'utente
         ha il diritto di guardare (e di pesare, quando occupa 19 GB).
         """
-        return self.root / "LAVORAZIONI"
+        return self.root / "JOBS"
 
     @property
     def previews(self) -> Path:
         return self.root / "anteprime"
 
     def ensure_dirs(self) -> None:
+        # Fino alla 1.3.2 la cartella delle lavorazioni si chiamava
+        # LAVORAZIONI: con l'interfaccia in inglese e' diventata JOBS. Una
+        # cartella vecchia si rinomina e basta, cosi' le lavorazioni
+        # interrotte restano dove l'app le cerca.
+        vecchia = self.root / "LAVORAZIONI"
+        if vecchia.is_dir() and not self.work.exists():
+            vecchia.rename(self.work)
         for d in (self.input, self.output, self.logs, self.work, self.previews):
             d.mkdir(parents=True, exist_ok=True)
 

@@ -18,7 +18,7 @@ AnimeUp/
 │   —— le TUE cartelle (MAIUSCOLE: qui si mette e si prende) ——
 ├── INPUT/           ← metti qui gli episodi da elaborare (.mkv, .mp4…)
 ├── OUTPUT/          ← qui compaiono i file upscalati
-├── LAVORAZIONI/     ← lavorazioni in corso o interrotte, riprendibili.
+├── JOBS/            ← lavorazioni in corso o interrotte, riprendibili.
 │                      Una sottocartella per episodio; si svuota da sola
 │                      a lavoro finito. Se pesa tanto è perché un lavoro
 │                      è a metà: riprendilo o cancella la sua cartella.
@@ -66,7 +66,7 @@ AnimeUp/
    `lsof -ti :8899 | xargs kill`
 
 **Interruzioni**: chiudere il Mac, un crash, un kill — niente panico. La
-lavorazione resta in `LAVORAZIONI/` e la riga mostra "interrotto", con due
+lavorazione resta in `JOBS/` e la riga mostra "interrotto", con due
 pulsanti:
 
 - **Riprendi** è *blindato*: rilancia coi parametri con cui il file era
@@ -119,7 +119,7 @@ allegati (font dei fansub compresi). Un file che finisce con avvisi gravi
 viene rinominato `.PARZIALE.mkv` invece di spacciarsi per buono: rilanciando
 si rifà.
 
-### LAVORAZIONI/
+### JOBS/
 Una cartella per lavorazione, nominata `<episodio> <data> <impronta>`.
 Dentro: `frames/` (fotogrammi estratti), `chunk*-in/-up` (blocco in
 elaborazione), `segments/` (pezzi già codificati), `state.json` (lo stato
@@ -233,8 +233,8 @@ tenere INPUT/OUTPUT altrove.
 
 | Sintomo | Cosa fare |
 |---|---|
-| voglio FERMARE una lavorazione in corso | **Ferma** sulla riga del file interrompe solo quello (il resto del lancio prosegue); **Ferma tutto** nella barra in basso interrompe il file in corso e annulla i successivi. In entrambi i casi il file interrotto resta riprendibile. Senza interfaccia: `kill $(cat "LAVORAZIONI/<cartella>/in-corso.lock")` |
-| "un'altra lavorazione è già in corso" ma non c'è | il lucchetto è di un processo morto: si sblocca da solo al lancio successivo; se insiste, cancella `in-corso.lock` in quella cartella di LAVORAZIONI |
+| voglio FERMARE una lavorazione in corso | **Ferma** sulla riga del file interrompe solo quello (il resto del lancio prosegue); **Ferma tutto** nella barra in basso interrompe il file in corso e annulla i successivi. In entrambi i casi il file interrotto resta riprendibile. Senza interfaccia: `kill $(cat "JOBS/<cartella>/in-corso.lock")` |
+| "un'altra lavorazione è già in corso" ma non c'è | il lucchetto è di un processo morto: si sblocca da solo al lancio successivo; se insiste, cancella `in-corso.lock` in quella cartella di JOBS |
 | file `.PARZIALE.mkv` in OUTPUT | la lavorazione ha avvisi gravi: rilancia il file, si rifà da dove può |
 | anteprime con blocchi verdi/rosa | cache vecchia di un file corrotto ai seek: cancella la sottocartella in `anteprime/` e rigenera |
 | la UI non parte: porta occupata | `lsof -ti :8899 \| xargs kill`, oppure `./animeup ui --porta 8900` |

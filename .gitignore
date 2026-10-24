@@ -14,10 +14,10 @@ bin/
 # --- user data: the folders ship empty ---
 INPUT/*
 OUTPUT/*
-LAVORAZIONI/*
+JOBS/*
 !INPUT/.gitkeep
 !OUTPUT/.gitkeep
-!LAVORAZIONI/.gitkeep
+!JOBS/.gitkeep
 anteprime/
 registri/
 
