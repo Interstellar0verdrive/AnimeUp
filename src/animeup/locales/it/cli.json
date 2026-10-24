@@ -180,5 +180,6 @@
   "cli.rep.tick.uno": "{n} tick",
   "cli.rep.tick.altri": "{n} tick",
   "cli.ui.rete": "Accetta connessioni anche dagli altri dispositivi della rete (di fabbrica l'interfaccia si apre solo da questo Mac).",
-  "cli.ui.senza_browser": "Non aprire il browser (lo usa l'app per macOS, che mostra l'interfaccia in una finestra sua)."
+  "cli.ui.senza_browser": "Non aprire il browser (lo usa l'app per macOS, che mostra l'interfaccia in una finestra sua).",
+  "cli.compare.aiuto": "Esegue il confronto delle clip chiesto dall'interfaccia (uso interno)."
 }

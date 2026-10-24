@@ -4467,13 +4467,13 @@ def _confronto_ordine_e_indicatori():
         "sparita l'avvertenza che l'occhio decide e i numeri no")
 
     # la proiezione deve tenere conto della deduplica, non ignorarla.
-    # Controllo sul TESTO e non sul comportamento: `_quota_dedup` vive in
-    # `ui/app.py`, che importandolo eseguirebbe l'intera pagina Streamlit.
-    # Verifica quindi che il fattore sia applicato dove va applicato — la
-    # prova di mutazione ha mostrato che senza questa riga togliere il
-    # fattore passava inosservato.
-    assert "def _quota_dedup(" in app
-    assert "* (1 - _quota_dedup(plan)[0])" in app, (
+    # Controllo sul TESTO: la proiezione si calcola nel processo del
+    # confronto (`confronto._riassunto`). Verifica che il fattore sia
+    # applicato dove va applicato — la prova di mutazione ha mostrato che
+    # senza questa riga togliere il fattore passava inosservato.
+    motore = (ROOT / "src" / "animeup" / "confronto.py").read_text()
+    assert "def quota_dedup(" in (ROOT / "src" / "animeup" / "preview.py").read_text()
+    assert "* (1 - quota[0])" in motore, (
         "la proiezione sull'episodio intero non moltiplica piu' per la "
         "quota di deduplica: torna a promettere ore che non servono")
     # Si cerca il TESTO RESO, non la frase in generale: il commento del
@@ -4784,6 +4784,37 @@ def _() -> None:
         assert not (radice / "LAVORAZIONI").exists()
         assert (p.work / "episodio 2026-08-10 abcd1234").is_dir()
         assert p.work == (radice / "OUTPUT" / "JOBS").resolve(), p.work
+
+
+@caso("il confronto in un processo suo: uno alla volta, e chi muore risulta interrotto")
+def _() -> None:
+    """Il confronto girava dentro la pagina e un clic lo uccideva. Ora gira
+    staccato: la pagina deve capire se e' vivo, rifiutarne un secondo, e non
+    credere vivo per sempre un processo morto (Mac spento a meta')."""
+    import json as _json
+    from animeup import confronto
+    from animeup.paths import Paths
+    with tempfile.TemporaryDirectory() as tmp:
+        p = Paths(Path(tmp))
+        assert confronto.stato(p) is None and not confronto.in_corso(p)
+        c = confronto.cartella(p)
+        c.mkdir(parents=True)
+        vivo = {"state": "running", "pid": os.getpid(), "file": "/x/a.mkv",
+                "total": 4, "done": 1, "fraction": 0.5, "results": []}
+        (c / "status.json").write_text(_json.dumps(vivo))
+        assert confronto.in_corso(p), "un confronto vivo non risulta in corso"
+        assert confronto.avvia({"file": "/x/b.mkv"}, p) is False, \
+            "partito un secondo confronto mentre il primo gira"
+        morto = dict(vivo, pid=999999)
+        (c / "status.json").write_text(_json.dumps(morto))
+        assert confronto.stato(p)["state"] == confronto.INTERROTTO
+        assert not confronto.in_corso(p)
+        assert confronto.ferma(p) is False, "fermato un confronto che non c'e'"
+        (c / "status.json").write_text("{rotto")
+        assert confronto.stato(p) is None
+    app = (ROOT / "ui" / "app.py").read_text()
+    assert "conf.fragile" not in app and "def _genera(" not in app, \
+        "il confronto gira ancora dentro la pagina"
 
 
 @caso("la disposizione di prima della 1.6 passa a quella nuova senza perdere niente")

@@ -201,8 +201,8 @@ class Paths:
         from .migrazione import migra
 
         migra(self)
-        for d in (self.input, self.output, self.logs, self.work,
-                  self.previews, self.analisi):
+        for d in (self.input, self.output, self.logs, self.job_logs,
+                  self.work, self.previews, self.analisi):
             d.mkdir(parents=True, exist_ok=True)
 
     # --- binari esterni ---------------------------------------------------

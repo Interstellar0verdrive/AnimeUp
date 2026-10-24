@@ -71,7 +71,6 @@
   "conf.avanzamento": "Progress",
   "conf.pronto": "Comparison ready: the clips are below ↓",
   "conf.avvio": "starting...",
-  "conf.fragile": "<b>Careful!</b> Don't touch the interface while it's working: any click (or leaving the page) interrupts processing. If that happens, click \"{pulsante}\" again: it picks up where it left off, and the clips already done are kept.",
   "conf.dedup.spenta": "off",
   "conf.dedup.misurata": "{pct}, measured on this file",
   "conf.dedup.storico": "{pct} expected, from previously processed files of similar length",
@@ -101,5 +100,11 @@
   "conf.percorso": "Paths of the generated files",
   "conf.originale_ingrandito": "Upscaled original",
   "conf.file_eti": "{nome} file:",
-  "conf.apri_finder": "Open the folder in Finder"
+  "conf.apri_finder": "Open the folder in Finder",
+  "conf.gia_in_corso": "A comparison is already running: wait for it to finish, or stop it.",
+  "conf.ferma": "Stop",
+  "conf.ferma_conferma": "Confirm stop?",
+  "conf.fermato": "Comparison stopped. The clips already processed are kept: click the button again to finish the rest.",
+  "conf.interrotto": "The last comparison was cut short (the Mac was shut down, or the process ended). The clips already processed are kept: click “{pulsante}” to finish the rest.",
+  "conf.altro_file": "Running on another file: {nome}"
 }

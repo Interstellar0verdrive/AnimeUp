@@ -703,6 +703,17 @@ def ui(
     ])
 
 
+@app.command(name="compare", hidden=True, help=t("cli.compare.aiuto"))
+def compare() -> None:
+    """Il confronto delle clip chiesto dall'interfaccia (vedi `confronto`).
+
+    Nascosto: lo lancia la pagina Confronto, staccato dalla sessione, cosi'
+    un clic o un ricaricamento non lo interrompono piu'.
+    """
+    from . import confronto
+    raise typer.Exit(confronto.esegui())
+
+
 @app.command(help=t("cli.version.aiuto"))
 def version() -> None:
     """Mostra la versione."""

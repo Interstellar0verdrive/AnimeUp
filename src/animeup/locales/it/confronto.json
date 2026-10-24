@@ -71,7 +71,6 @@
   "conf.avanzamento": "Avanzamento",
   "conf.pronto": "Confronto pronto: le clip sono qui sotto ↓",
   "conf.avvio": "avvio...",
-  "conf.fragile": "<b>Attenzione!</b> Mentre lavora, non toccare l'interfaccia: qualunque click (o l'uscita dalla pagina) interrompe l'elaborazione. Se succede, riclicca \"{pulsante}\": il processo riparte da dove era arrivato, le clip già pronte vengono recuperate.",
   "conf.dedup.spenta": "deduplica spenta",
   "conf.dedup.misurata": "deduplica {pct}, misurata su questo file",
   "conf.dedup.storico": "deduplica attesa {pct}, dai file già lavorati di durata simile",
@@ -101,5 +100,11 @@
   "conf.percorso": "Percorso dei file generati",
   "conf.originale_ingrandito": "Originale ingrandito",
   "conf.file_eti": "File {nome}:",
-  "conf.apri_finder": "Apri la cartella nel Finder"
+  "conf.apri_finder": "Apri la cartella nel Finder",
+  "conf.gia_in_corso": "C'è già un confronto in corso: aspetta che finisca, oppure fermalo.",
+  "conf.ferma": "Ferma",
+  "conf.ferma_conferma": "Confermi lo stop?",
+  "conf.fermato": "Confronto fermato. Le clip già elaborate restano: premi di nuovo il pulsante per finire le altre.",
+  "conf.interrotto": "L'ultimo confronto si è interrotto (Mac spento, o processo terminato). Le clip già elaborate restano: premi «{pulsante}» per finire le altre.",
+  "conf.altro_file": "In corso su un altro file: {nome}"
 }
