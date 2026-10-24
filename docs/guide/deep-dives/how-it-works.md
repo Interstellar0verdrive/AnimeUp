@@ -109,7 +109,7 @@ The map is then **audited** by an independent check on the structure actually us
 
 How much it saves depends entirely on the material. On real files it skipped 11% to 57% of frames.
 
-## 6. Why chunks
+## 6. Why chunks { #why-chunks }
 
 The upscaled frames of one episode would need hundreds of gigabytes as PNG. So after extraction the frames are processed in **chunks**, one after another. Each chunk goes through:
 
