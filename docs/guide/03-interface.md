@@ -160,6 +160,14 @@ Minutes of rest between one file and the next, to give the CPU and GPU a break d
 - **0** turns it off (the slider then reads "none").
 - The default is 5 minutes so that marathon runs get their breaks without you having to remember. (On the command line, `./animeup run --pausa` defaults to 0. See the [command-line reference](reference/command-line.md).)
 
+### Check for updates
+
+On by default. Once a day AnimeUp asks GitHub for the latest release; if there's a newer one, a note appears at the top of the sidebar, *AnimeUp x.y.z is available. Download it*, linking to the release page. Nothing is downloaded or installed automatically, and it's the only connection AnimeUp makes by itself after the first launch. Turn it off here if you prefer.
+
+### Data folder (app only)
+
+In the app, the **System** section also shows where your files live (by default `~/Movies/AnimeUp`) with a **Change…** button that opens the macOS folder picker. The new folder is used from the next launch; files already in the old one aren't moved. In the portable folder this row doesn't exist: the data stays next to the program (see [`ANIMEUP_ROOT`](07-output-and-folders.md#keeping-data-somewhere-else-animeup_root) for the Terminal way).
+
 ### Calibration
 
 At the bottom of System, the **Calibration** row shows when this Mac was last calibrated (a calendar icon with date and time, or **Never**) and a button: **Run now** the first time, **Redo** afterwards. The button opens the calibration window. Calibration times this Mac on the sample clip (models, extraction and encoding) and adapts every estimate to its real speed. It takes about 10 minutes, with the GPU idle. Everything about it is in [02. Calibrate your Mac](02-calibration.md).
@@ -209,6 +217,10 @@ If a warning chip like **2 system dependencies** appears near the bottom of the 
 Then check with `./animeup doctor`. When everything is in place the chip disappears: AnimeUp says nothing when all is well. See [Troubleshooting](reference/troubleshooting.md) if `setup` fails.
 
 ## Close AnimeUp
+
+!!! note "In the app"
+    The app has no **Close AnimeUp** button: quit it like any Mac app, with **⌘Q** or **AnimeUp → Quit AnimeUp**. Jobs keep running in the background, exactly as described below.
+
 
 ![The Close AnimeUp confirmation at the bottom of the sidebar, with "Sure? Close" and "Cancel"](img/sidebar-close.png)
 
