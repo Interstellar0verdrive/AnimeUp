@@ -3073,11 +3073,15 @@ def _scheda_modello_dice_solo_upscale():
 
     testo = (ROOT / "ui" / "app.py").read_text()
     i = testo.index("plan.frames / velocita")
-    intorno = testo[i:i + 200]
-    assert "(solo fasi di upscale)" in intorno, (
+    # La frase sta nel catalogo: qui si lega la formula alla sua chiave.
+    intorno = testo[i - 200:i + 200]
+    assert "t('conf.velocita'" in intorno, (
+        "la scheda del modello non usa piu' la frase del solo upscale")
+    frase = i18n.catalogo("it")["conf.velocita"]
+    assert "(solo fasi di upscale)" in frase, (
         "la scheda del modello e' tornata a dire qualcosa d'altro: quel "
         "numero e' il solo upscale e deve dirlo")
-    assert "per l'intero file" not in intorno, (
+    assert "per l'intero file" not in frase, (
         "«per l'intero file» sulla scheda: e' la stessa frase del riquadro "
         "EPISODIO INTERO, che pero' mostra il TOTALE")
 
@@ -3919,7 +3923,7 @@ def _tabella_indicatori_disegna():
 
     sorgente = (ROOT / "ui" / "app.py").read_text()
     albero = _ast.parse(sorgente)
-    voluti = ("_tabella_confronto", "SPIEGA_INDICATORI")
+    voluti = ("_tabella_confronto", "_spiega_indicatori")
     pezzi = [n for n in albero.body
              if (isinstance(n, _ast.FunctionDef) and n.name in voluti)
              or (isinstance(n, _ast.Assign)
@@ -3934,7 +3938,7 @@ def _tabella_indicatori_disegna():
             uscita.append(html)
 
     ambiente = {"st": _St, "esc": lambda s: str(s),
-                "stima_hm": lambda s: f"{s:.0f}s"}
+                "stima_hm": lambda s: f"{s:.0f}s", "t": i18n.t}
     exec(compile(_ast.Module(body=pezzi, type_ignores=[]), "app", "exec"),
          ambiente)
     tabella = ambiente["_tabella_confronto"]
@@ -3945,7 +3949,7 @@ def _tabella_indicatori_disegna():
 
     # 1. Entrambi gli indicatori: due colonne e due spiegazioni.
     uscita.clear()
-    tabella(_righe((1.0, 1.0), (2.5, 3.0)), (0.3, "deduplica 30%"))
+    tabella(_righe((1.0, 1.0), (2.5, 3.0)), (0.3, "misurata"))
     tutto = "".join(uscita)
     assert "dettaglio fine" in tutto and "rumore nelle aree piatte" in tutto
     assert "250%" in tutto and "300%" in tutto, (
@@ -3955,7 +3959,7 @@ def _tabella_indicatori_disegna():
     # 2. Rumore non misurabile su NESSUNO: la colonna sparisce del tutto,
     #    e con lei la sua spiegazione — ma il dettaglio resta.
     uscita.clear()
-    tabella(_righe((1.0, None), (2.5, None)), (0.0, "deduplica spenta"))
+    tabella(_righe((1.0, None), (2.5, None)), (0.0, "spenta"))
     tutto = "".join(uscita)
     assert "dettaglio fine" in tutto, (
         "sparito anche il dettaglio fine: era il difetto di partenza, un "
@@ -4332,7 +4336,9 @@ def _spezzoni_sparsi():
     app = (ROOT / "ui" / "app.py").read_text()
     assert "escludi=gia_visti" in app, (
         "il secondo lotto non esclude le posizioni gia' mostrate")
-    assert "Trova altri 8 spezzoni" in app, (
+    assert 't("conf.trova_altri") if gia_visti' in app, (
+        "il pulsante non dice piu' che cerchera' spezzoni DIVERSI")
+    assert i18n.catalogo("it")["conf.trova_altri"] == "Trova altri 8 spezzoni", (
         "il pulsante non dice piu' che cerchera' spezzoni DIVERSI")
 
 
@@ -4352,12 +4358,14 @@ def _confronto_ordine_e_indicatori():
     assert preview.ordine_lettura({"pippo": 1, "cugan": 1}) == ["cugan", "pippo"]
 
     app = (ROOT / "ui" / "app.py").read_text()
+    # Le frasi stanno nel catalogo italiano, non piu' nel codice.
+    testi = "\n".join(i18n.catalogo("it").values())
     for pezzo in ("Dettaglio fine", "Rumore nelle aree piatte",
                   "effetto plastica", "piu' dettaglio non significa piu' fedele"):
-        assert pezzo in app, (
+        assert pezzo in testi, (
             f"sparita la spiegazione degli indicatori: «{pezzo}». Due "
             f"percentuali senza istruzioni non dicono niente a nessuno")
-    assert "Il giudice resta" in app, (
+    assert "Il giudice resta" in testi, (
         "sparita l'avvertenza che l'occhio decide e i numeri no")
 
     # la proiezione deve tenere conto della deduplica, non ignorarla.
