@@ -277,6 +277,9 @@ def upscale_dir(
     seconds = time.monotonic() - start
 
     if log is not None:
+        # La cartella dei log (OUTPUT/logs) nasce col primo file lavorato:
+        # un confronto fatto prima di qualunque lavorazione la trova assente.
+        log.parent.mkdir(parents=True, exist_ok=True)
         with log.open("a") as fh:
             fh.write(f"\n[upscale] {' '.join(cmd)}\n")
             fh.write(f"[upscale] expected {expected}, produced {produced}, {seconds:.1f}s\n")

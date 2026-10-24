@@ -50,7 +50,8 @@ import streamlit as st  # noqa: E402
 
 from animeup import __version__, su_disco  # noqa: E402
 from animeup import (  # noqa: E402
-    aggiornamenti, i18n, library, monitor, preview, primo_avvio, taratura)
+    aggiornamenti, confronto, i18n, library, monitor, preview, primo_avvio,
+    taratura)
 from animeup.i18n import t, tn  # noqa: E402
 from animeup.models import (  # noqa: E402
     ALTEZZA_INCERTA, CATALOG, CLEAN_SOURCE_MIN_HEIGHT, altezza_minima,
@@ -5081,7 +5082,8 @@ def _spezzoni(plan, path: Path, cfg: dict,
                          f"<b>{hms(totale)}</b></div>")
             st.markdown("".join(righe), unsafe_allow_html=True)
             premi = st.button(t("conf.elabora"), type="primary",
-                              use_container_width=True)
+                              use_container_width=True,
+                              disabled=confronto.in_corso())
     with destra:
         st.markdown(f"<div class='au-eyebrow au-sez-int'>{t('conf.avanzamento')}</div>",
                     unsafe_allow_html=True)
@@ -5099,158 +5101,96 @@ def _spezzoni(plan, path: Path, cfg: dict,
             # sopra la barra di un lavoro in corso, con la freccia che punta
             # a quella barra invece che alle clip, e' fuorviante (segnalato
             # dall'utente il 12/08, al secondo giro di confronto).
-            if st.session_state.get(f"risultati_{path}") and not premi:
-                st.markdown(f"<div class='au-hint'>{t('conf.pronto')}</div>",
-                            unsafe_allow_html=True)
-        if premi:
-            _genera(plan, prescelti, varianti, path, zona)
+            if premi:
+                _avvia_confronto(cfg, plan.source.geometry.height, path, prescelti, varianti)
+            _carica_esito_confronto(path)
+            _avanzamento_confronto(str(path))
 
     _risultati(path)
 
 
-def _genera(plan, candidati, varianti, path: Path, zona) -> None:
-    with zona:
-        barra = st.progress(0.0, t("conf.avvio"))
-        # La verita', detta prima che faccia male: qualunque interazione
-        # fa ripartire lo script di Streamlit e il giro muore (limite del
-        # suo modello di esecuzione, non nostro). Insieme al limite si
-        # dice pero' anche la rete di salvataggio: la ripresa riusa le
-        # clip gia' fatte.
-        nota_fragile = st.empty()
-        nota_fragile.markdown(
-            "<div class='au-hint'>"
-            f"{t('conf.fragile', pulsante=t('conf.elabora'))}</div>",
-            unsafe_allow_html=True)
-    # La barra nasce nella zona riservata sotto la CTA, che con una lista
-    # di spezzoni lunga sta sotto la piega: senza scroll "parte ma non si
-    # vede niente" (visto dall'utente). Stessa ricetta dello scroll ai
-    # risultati, solo all'inizio invece che alla fine. Il piccolo ritardo
-    # lascia alla barra il tempo di esistere nel DOM.
-    st.iframe(
-        "<script>setTimeout(()=>{"
-        "const z=window.parent.document.querySelector('.st-key-zonaEsito');"
-        "if(z)z.scrollIntoView({behavior:'smooth',block:'center'});"
-        "},200);</script>", height=1)
-    # La percentuale è VERA: le varianti completate più la frazione di
-    # fotogrammi della variante in corso (lo stesso contatore delle barre di
-    # Lavorazione). Prima avanzava solo a variante finita, e con clip da uno
-    # o due minuti l'una "sembra ferma da un bel po'" (detto dall'utente).
-    totale, risultati = len(candidati) * len(varianti), []
-    stato = {"fatte": 0, "testo": t("conf.avvio")}
-    from streamlit.runtime.scriptrunner import get_script_run_ctx
-    contesto = get_script_run_ctx()
+def _avvia_confronto(cfg: dict, altezza: int, path: Path, candidati,
+                     varianti) -> None:
+    """Chiede il confronto al processo di fondo (vedi `confronto`).
 
-    def _ridisegna(frazione: float = 0.0) -> None:
-        quota = min((stato["fatte"] + min(frazione, 1.0)) / totale, 1.0)
-        barra.progress(quota, f"{stato['testo']} · {quota:.0%}")
+    Le stesse impostazioni con cui la pagina ha costruito il suo piano, cosi'
+    il processo ne costruisce uno identico.
+    """
+    nota = _deduplica_dei_file_avviati().get(path.name) if cfg["dedup"] else None
+    richiesta = {
+        "file": str(path),
+        "plan": {"altezza": cfg["altezza"], "crf": cfg["crf"],
+                 "preset": cfg["preset"], "disco": cfg["disco"],
+                 "dedup": cfg["dedup"], "denoise": cfg["denoise"],
+                 "forza": cfg["forza"], "modello": model_for(str(path), altezza),
+                 "dedup_nota": list(nota) if nota else None},
+        "clips": [{"kind": c.kind.value, "start_frame": c.start_frame,
+                   "frames": c.frames, "motion": c.motion,
+                   "brightness": c.brightness, "reason": c.reason}
+                  for c in candidati],
+        "models": [v.key for v in varianti if not v.is_reference],
+        "reference": any(v.is_reference for v in varianti),
+    }
+    if confronto.avvia(richiesta):
+        st.session_state.pop("conf_ferma_conferma", None)
+    else:
+        st.warning(t("conf.gia_in_corso"), icon="⚠️")
 
-    guasti: list[str] = []
-    for cand in candidati:
-        def passo(label: str, _c=cand):
-            stato["testo"] = (f"{t(f'conf.tipo.{_c.kind.value}')} "
-                              f"{_c.timecode} — {label}")
-            _ridisegna()
 
-        def frazione(fatti_f: int, attesi_f: int):
-            # Arriva dal thread di sorveglianza di `upscale_dir`: senza il
-            # contesto di Streamlit le chiamate a `st.progress` sono no-op
-            # silenziosi ("missing ScriptRunContext" nel log, misurato) e la
-            # barra restava a 0% per tutta la variante.
-            from streamlit.runtime.scriptrunner import add_script_run_ctx
-            add_script_run_ctx(threading.current_thread(), contesto)
-            _ridisegna(fatti_f / attesi_f if attesi_f else 0.0)
+def _carica_esito_confronto(path: Path) -> None:
+    """Porta in pagina l'esito dell'ultimo confronto, se riguarda questo file.
 
-        def variante_finita():
-            stato["fatte"] += 1
-            _ridisegna()
-
-        # Uno spezzone che non si elabora non deve portarsi via la scheda
-        # intera: si segnala e si va avanti con gli altri, che sono
-        # indipendenti fra loro.
-        # Dentro il `try` ci va anche `crop_sheet`: protetta la sola `render`,
-        # un montaggio dei ritagli fallito portava giù lo stesso la scheda.
-        try:
-            res = preview.render(plan, cand, varianti, on_step=passo,
-                                 on_progress=frazione, on_done=variante_finita)
-            if res.files:
-                preview.crop_sheet(res, plan)
-                risultati.append(res)
-        except Exception as exc:                       # noqa: BLE001
-            guasti.append(f"{t(f'conf.tipo.{cand.kind.value}')} "
-                          f"{cand.timecode}: {exc}")
-            continue
-    barra.empty()
-    nota_fragile.empty()
-    with zona:
-        for g in guasti:
-            st.error(g, icon="⚠️")
-        if risultati and not st.session_state.get(f"risultati_{path}"):
-            # Solo alla PRIMA generazione: rigenerando, la zona espone gia'
-            # il "pronto" dalla sessione e questo sarebbe un doppione.
+    L'esito vive su disco (`cache/compare/status.json`): sopravvive a un
+    ricaricamento e alla finestra chiusa, cosa che i risultati tenuti solo
+    in sessione non facevano.
+    """
+    s = confronto.stato()
+    if not s or s.get("file") != str(path) or s.get("state") == confronto.IN_CORSO:
+        if st.session_state.get(f"risultati_{path}"):
             st.markdown(f"<div class='au-hint'>{t('conf.pronto')}</div>",
                         unsafe_allow_html=True)
-            # Lo scroll porta "Risultati" circa a meta' finestra (un filo
-            # sopra): block center sull'ancora piu' una spintarella.
-            st.iframe(
-                "<script>const M=window.parent.document;"
-                "M.querySelector('.au-ancora-risultati')?.scrollIntoView("
-                "{behavior:'smooth', block:'center'});"
-                "setTimeout(()=>{const s=M.querySelector("
-                "'[data-testid=\"stMain\"]');"
-                "if(s)s.scrollBy({top:90,behavior:'smooth'});},700);"
-                "</script>", height=1)
-
-    st.session_state[f"risultati_{path}"] = [
-        {"cartella": str(r.folder), "file": {k: str(v) for k, v in r.files.items()},
-         "foglio": str(r.crop_sheet) if r.crop_sheet else None,
-         # Il range completo (inizio - fine), non solo l'inizio: stesso
-         # formato delle card di scelta (chiesto dall'utente).
-         # Tipo e range e non il titolo gia' scritto: il titolo si compone
-         # al disegno, nella lingua di quel momento.
-         "tipo": r.candidate.kind.value,
-         "intervallo": r.candidate.timecode_range,
-         # Quanto ci ha messo OGNI modello su questo spezzone e cosa
-         # significherebbe sull'episodio intero. La proiezione tiene conto
-         # della DEDUPLICA: prima si scriveva «stima senza deduplica, di
-         # solito si finisce prima», che su un file al 33% sbagliava di
-         # quattro ore e mezza — e la deduplica ormai o e' misurata sul file
-         # o e' stimata sui file simili, quindi non c'e' motivo di ignorarla.
-         "modelli": [
-             {"chiave": k, "nome": CATALOG[k].short,
-              "secondi": r.tempi[k],
-              "intero": r.tempi[k] * plan.frames / max(r.candidate.frames, 1)
-                        * (1 - _quota_dedup(plan)[0]),
-              "metriche": r.metriche.get(k)}
-             for k in preview.ordine_lettura(r.tempi)
-             if k in CATALOG and r.tempi.get(k, 0) >= 5
-         ],
-         "dedup": _quota_dedup(plan)}
-        for r in risultati
-    ]
+        return
+    if s.get("results"):
+        st.session_state[f"risultati_{path}"] = s["results"]
+        st.markdown(f"<div class='au-hint'>{t('conf.pronto')}</div>",
+                    unsafe_allow_html=True)
+    if s.get("state") == confronto.FERMATO:
+        st.info(t("conf.fermato"), icon="⏹️")
+    elif s.get("state") == confronto.INTERROTTO:
+        st.warning(t("conf.interrotto", pulsante=t("conf.elabora")), icon="⚠️")
+    for g in s.get("failures") or []:
+        st.error(g, icon="⚠️")
 
 
-def _quota_dedup(plan) -> tuple[float, str]:
-    """(quanta deduplica applicare alla proiezione, da dove viene).
+@st.fragment(run_every=2)
+def _avanzamento_confronto(path: str) -> None:
+    """La barra del confronto in corso, riletta ogni due secondi.
 
-    Tre casi, in ordine di forza: misurata su QUESTO file (la mappa esiste
-    gia' su disco), attesa dai file simili gia' lavorati, oppure nessuna —
-    che e' anche il caso della deduplica spenta, dove ignorarla e' giusto.
-
-    La provenienza e' un codice e non la frase: il risultato resta in
-    sessione, e la frase si scrive al disegno nella lingua di quel momento
-    (vedi `_tabella_confronto`).
+    Quando il processo finisce si ridisegna la pagina intera, che porta in
+    pagina i risultati.
     """
-    d = getattr(plan, "dedup", None)
-    if d is None or not d.enabled:
-        return 0.0, "spenta"
-    if getattr(d, "misurata", False):
-        return d.expected_ratio, "misurata"
-    storico = getattr(plan, "dedup_storico", None)
-    if storico is not None:
-        return storico.attesa, "storico"
-    if d.expected_ratio:
-        return d.expected_ratio, "prevista"
-    return 0.0, "ignota"
+    s = confronto.stato()
+    if not s or s.get("state") != confronto.IN_CORSO:
+        if st.session_state.pop("conf_seguito", None):
+            st.rerun()
+        return
+    st.session_state["conf_seguito"] = True
+    totale = max(int(s.get("total") or 0), 1)
+    quota = min((int(s.get("done") or 0) + float(s.get("fraction") or 0)) / totale, 1.0)
+    testo = s.get("text") or t("conf.avvio")
+    st.progress(quota, f"{testo} · {quota:.0%}")
+    if s.get("file") != path:
+        st.caption(t("conf.altro_file", nome=Path(s["file"]).name))
+    # Due clic, come gli altri Ferma: il primo chiede conferma per dieci
+    # secondi, il secondo ferma davvero.
+    if time.time() - st.session_state.get("conf_ferma_conferma", 0) > 10:
+        if st.button(t("conf.ferma"), key="ferma_confronto"):
+            st.session_state["conf_ferma_conferma"] = time.time()
+            st.rerun(scope="fragment")
+    elif st.button(t("conf.ferma_conferma"), key="ferma_confronto_ok", type="primary"):
+        st.session_state.pop("conf_ferma_conferma", None)
+        confronto.ferma()
+        st.rerun(scope="fragment")
 
 
 # Una funzione e non un dizionario fisso: i testi seguono la lingua attiva.

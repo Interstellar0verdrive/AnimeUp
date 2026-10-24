@@ -970,3 +970,27 @@ def open_comparison(left: Path, right: Path) -> tuple[bool, str]:
         return True, t("mot.preview.aperto_iina")
 
     return False, t("mot.preview.nessuno_strumento")
+
+
+def quota_dedup(plan) -> tuple[float, str]:
+    """(quanta deduplica applicare alla proiezione, da dove viene).
+
+    Tre casi, in ordine di forza: misurata su QUESTO file (la mappa esiste
+    gia' su disco), attesa dai file simili gia' lavorati, oppure nessuna —
+    che e' anche il caso della deduplica spenta, dove ignorarla e' giusto.
+
+    La provenienza e' un codice e non la frase: il risultato resta in
+    sessione, e la frase si scrive al disegno nella lingua di quel momento
+    (vedi `_tabella_confronto` nell'interfaccia).
+    """
+    d = getattr(plan, "dedup", None)
+    if d is None or not d.enabled:
+        return 0.0, "spenta"
+    if getattr(d, "misurata", False):
+        return d.expected_ratio, "misurata"
+    storico = getattr(plan, "dedup_storico", None)
+    if storico is not None:
+        return storico.attesa, "storico"
+    if d.expected_ratio:
+        return d.expected_ratio, "prevista"
+    return 0.0, "ignota"

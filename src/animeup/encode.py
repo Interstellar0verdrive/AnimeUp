@@ -41,7 +41,7 @@ def _run(cmd: list[str], log: Path | None,
             cmd, -1, t("mot.encode.timeout", ore=TETTO_SECONDI // 3600)
         ) from exc
     if log is not None:
-        # Su un'installazione nuova `registri/` puo' non esistere ancora: da
+        # Su un'installazione nuova `OUTPUT/logs/` puo' non esistere ancora: da
         # riga di comando nessuno l'ha creata, e il log faceva fallire una
         # codifica riuscita.
         log.parent.mkdir(parents=True, exist_ok=True)
