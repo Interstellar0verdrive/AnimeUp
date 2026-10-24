@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AnimeUp · Mockup UI v2</title>
+<style>
+/* ============================================================
+   TOKEN — nomi allineati al tema Streamlit 1.61.
+   ============================================================ */
+:root{
+  --primaryColor:#2AC9DE;
+  --primaryHover:#55D8EA;
+  --primaryActive:#1FB2C6;
+  --primaryBg:rgba(42,201,222,.10);
+  --backgroundColor:#101113;
+  --secondaryBackgroundColor:#17191C;
+  --surfaceHover:#1C1F23;
+  --insetBackground:#131518;
+  --sidebarBackground:#1A1D21;         /* v2: schiarita di un passo */
+  --textColor:#E8EAED;
+  --textSecondary:#9BA1A9;
+  --textTertiary:#686E76;
+  --borderColor:#26292E;
+  --borderStrong:#33373D;
+  --codeBackgroundColor:#15171A;
+  --codeTextColor:#C6CBD2;
+
+  --greenColor:#45D483;  --greenBackgroundColor:rgba(69,212,131,.10);  --greenTextColor:#7FE3AC;
+  --yellowColor:#F2B84B; --yellowBackgroundColor:rgba(242,184,75,.10); --yellowTextColor:#F5CB78;
+  --redColor:#F26D6D;    --redBackgroundColor:rgba(242,109,109,.10);   --redTextColor:#F59B9B;
+  --grayColor:#8A9099;   --grayBackgroundColor:#1C1F23;                --grayTextColor:#B7BCC3;
+
+  --baseRadius:8px;
+  --buttonRadius:6px;
+  --chipRadius:999px;
+
+  --font:"Inter",-apple-system,"SF Pro Text","Segoe UI",sans-serif;
+  --codeFont:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{
+  font-family:var(--font);
+  background:var(--backgroundColor);
+  color:var(--textColor);
+  line-height:1.5;
+  display:flex;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:rgba(42,201,222,.25)}
+button{font-family:var(--font)}
+
+.mono{font-family:var(--codeFont);font-variant-numeric:tabular-nums}
+.dim{color:var(--textSecondary)}
+.faint{color:var(--textTertiary)}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar{
+  width:296px;flex:none;
+  background:var(--sidebarBackground);
+  border-right:1px solid var(--borderStrong);
+  padding:28px 22px 32px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.sidebar h2{font-size:13px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
+.sidebar .lede{font-size:12px;color:var(--textSecondary);line-height:1.5;margin-bottom:26px}
+
+.sb-group{margin-bottom:26px}
+.sb-group + .sb-group{border-top:1px solid var(--borderStrong);padding-top:22px}
+.sb-group > h3{
+  font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--textTertiary);margin-bottom:14px;
+}
+.field{margin-bottom:18px}
+.field:last-child{margin-bottom:0}
+.field-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.field-head label{font-size:12.5px;color:var(--textColor)}
+.field-head .val{font-family:var(--codeFont);font-size:12px;color:var(--codeTextColor);font-variant-numeric:tabular-nums}
+
+.slider{position:relative;height:14px;display:flex;align-items:center}
+.slider .track{height:3px;width:100%;background:#3A3F46;border-radius:2px;overflow:hidden}
+.slider .fill{height:100%;background:var(--primaryColor)}
+.slider .thumb{
+  position:absolute;top:50%;transform:translate(-50%,-50%);
+  width:12px;height:12px;border-radius:50%;
+  background:var(--primaryColor);
+  box-shadow:0 0 0 3px rgba(42,201,222,.15);
+}
+
+.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.toggle-row:last-child{margin-bottom:0}
+.toggle-row label{font-size:12.5px}
+.tg{width:30px;height:17px;border-radius:999px;flex:none;position:relative}
+.tg::after{content:"";position:absolute;top:2px;width:13px;height:13px;border-radius:50%}
+.tg.on{background:var(--primaryColor)}
+.tg.on::after{left:15px;background:#0B2A2F}
+.tg.off{background:#3A3F46}
+.tg.off::after{left:2px;background:#9BA1A9}
+.toggle-row .off + label{color:var(--textSecondary)}
+
+.sb-status{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--codeFont);font-size:11px;color:var(--greenTextColor);
+  background:var(--greenBackgroundColor);border:1px solid rgba(69,212,131,.25);
+  border-radius:var(--chipRadius);padding:3px 10px;
+}
+.sb-status::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--greenColor)}
+
+/* ============================================================
+   MAIN + STEPPER
+   ============================================================ */
+.main{flex:1;min-width:0;padding:28px 48px 64px;max-width:1280px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand{display:flex;align-items:center;gap:11px}
+.brand svg{display:block}
+.brand .name{font-size:19px;font-weight:600;letter-spacing:-.02em}
+.brand .name em{font-style:normal;color:var(--primaryColor)}
+.brand .tag{font-size:12px;color:var(--textTertiary);margin-left:2px;padding-left:13px;border-left:1px solid var(--borderColor)}
+
+/* v2: stepper a segmenti pieni, molto più presente */
+.steps{display:flex;gap:8px;margin:22px 0 0}
+.step{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 22px;
+  font-size:14px;color:var(--textSecondary);
+  background:var(--secondaryBackgroundColor);
+  border:1px solid var(--borderColor);
+  border-radius:var(--baseRadius);
+  cursor:pointer;user-select:none;
+  transition:color .12s,border-color .12s,background .12s;
+}
+.step .n{
+  font-family:var(--codeFont);font-size:11px;
+  width:22px;height:22px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--borderStrong);color:var(--textTertiary);
+}
+.step:hover{color:var(--textColor);border-color:var(--borderStrong)}
+.step.active{
+  color:var(--textColor);font-weight:600;
+  background:var(--primaryBg);
+  border-color:rgba(42,201,222,.45);
+}
+.step.active .n{background:var(--primaryColor);border-color:var(--primaryColor);color:#08262B;font-weight:600}
+
+.view{display:none;padding-top:26px;animation:enter .18s ease-out}
+.view.on{display:block}
+@keyframes enter{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .view,.panel{animation:none}
+  .dot.busy{animation:none}
+}
+
+.section-h{font-size:18px;font-weight:600;letter-spacing:-.01em;margin-bottom:4px}
+.section-lede{font-size:13px;color:var(--textSecondary);max-width:72ch;margin-bottom:24px}
+
+/* ============================================================
+   CHIP · PULSANTI · CHECKBOX (comuni)
+   ============================================================ */
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--codeFont);font-size:11px;font-variant-numeric:tabular-nums;
+  padding:3px 10px;border-radius:var(--chipRadius);
+  background:var(--grayBackgroundColor);color:var(--grayTextColor);
+  border:1px solid var(--borderColor);
+}
+.chip.warn{background:var(--yellowBackgroundColor);color:var(--yellowTextColor);border-color:rgba(242,184,75,.25)}
+.chip.ok{background:var(--greenBackgroundColor);color:var(--greenTextColor);border-color:rgba(69,212,131,.25)}
+.chip.busy{background:var(--primaryBg);color:var(--primaryHover);border-color:rgba(42,201,222,.3)}
+
+.btn{
+  font-size:12.5px;font-weight:500;
+  border-radius:var(--buttonRadius);padding:8px 18px;cursor:pointer;border:1px solid transparent;
+  transition:background .12s,color .12s,border-color .12s;
+}
+.btn.primary{background:var(--primaryColor);color:#08262B;font-weight:600}
+.btn.primary:hover{background:var(--primaryHover)}
+.btn.primary:active{background:var(--primaryActive)}
+.btn.secondary{background:none;border-color:var(--borderStrong);color:var(--codeTextColor)}
+.btn.secondary:hover{background:var(--grayBackgroundColor);color:var(--textColor)}
+
+.cb{
+  width:15px;height:15px;flex:none;border-radius:4px;
+  border:1.5px solid var(--borderStrong);position:relative;cursor:pointer;
+}
+.cb.on{background:var(--primaryColor);border-color:var(--primaryColor)}
+.cb.on::after{
+  content:"";position:absolute;left:3.5px;top:1px;
+  width:5px;height:8px;border:solid #08262B;border-width:0 1.8px 1.8px 0;
+  transform:rotate(42deg);
+}
+
+.icon-btn{
+  width:28px;height:28px;border-radius:var(--buttonRadius);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--textTertiary);border:1px solid transparent;cursor:pointer;
+  background:none;transition:background .12s,color .12s;
+}
+.icon-btn:hover{background:var(--grayBackgroundColor);color:var(--textColor)}
+.icon-btn svg{display:block}
+
+.ghost-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:11.5px;color:var(--textSecondary);
+  background:none;border:1px solid var(--borderColor);border-radius:var(--buttonRadius);
+  padding:4px 11px;cursor:pointer;transition:color .12s,border-color .12s,background .12s;
+}
+.ghost-btn:hover{color:var(--textColor);border-color:var(--borderStrong);background:var(--grayBackgroundColor)}
+
+/* select finto (in Streamlit: selectbox nativo ricolorato) */
+.select{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--secondaryBackgroundColor);
+  border:1px solid var(--borderStrong);border-radius:var(--buttonRadius);
+  padding:9px 14px;font-size:13px;cursor:pointer;
+  transition:border-color .12s;
+}
+.select:hover{border-color:#40454C}
+.select .caret{color:var(--textTertiary)}
+
+/* ============================================================
+   VISTA 1 · SORGENTI
+   ============================================================ */
+.summary{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  background:var(--secondaryBackgroundColor);
+  border:1px solid var(--borderColor);border-radius:var(--baseRadius);
+  padding:12px 18px;margin-bottom:28px;
+}
+.summary .lead{font-size:13.5px;font-weight:600}
+.summary .lead span{font-weight:400;color:var(--textSecondary)}
+.summary .spacer{flex:1}
+.mini-progress{display:flex;align-items:center;gap:10px;font-family:var(--codeFont);font-size:11px;color:var(--textSecondary)}
+.mini-progress .bar{width:120px;height:3px;border-radius:2px;background:#3A3F46;overflow:hidden}
+.mini-progress .bar i{display:block;height:100%;width:31%;background:var(--primaryColor)}
+
+/* griglia condivisa da intestazione e righe.
+   v2: l'intestazione replica lo stesso box-model delle righe
+   (bordo sx 3px + bordo 1px + padding 16px) così le colonne combaciano. */
+.list-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 92px 64px 300px 28px;
+  gap:16px;align-items:center;
+}
+.list-head{
+  border-left:3px solid transparent;
+  border-right:1px solid transparent;
+  padding:0 16px 8px 17px;             /* 3+1+16 = 20 come le righe */
+  font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--textTertiary);
+}
+.list-head .num{text-align:right}
+
+.rows{display:flex;flex-direction:column;gap:8px}
+.row{
+  background:var(--secondaryBackgroundColor);
+  border:1px solid var(--borderColor);
+  border-left:3px solid var(--borderStrong);
+  border-radius:var(--baseRadius);
+  transition:background .12s,border-color .12s;
+}
+.row:hover{background:var(--surfaceHover);border-color:var(--borderStrong)}
+.row .head{padding:11px 16px;cursor:pointer}
+.row.is-done{border-left-color:var(--greenColor)}
+.row.is-warn{border-left-color:var(--yellowColor)}
+.row.is-busy{border-left-color:var(--primaryColor)}
+.row.is-idle{border-left-color:#3A3F46}
+.row.is-idle .head{opacity:.72}
+.row.is-open{border-color:var(--borderStrong)}
+
+.fname{min-width:0}
+.fname .title{
+  font-size:14px;font-weight:500;line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.fname .meta{margin-top:3px;font-family:var(--codeFont);font-size:11.5px;color:var(--textTertiary)}
+
+.cell-num{font-family:var(--codeFont);font-size:13px;color:var(--codeTextColor);font-variant-numeric:tabular-nums;text-align:right}
+
+/* v2: la cella analisi va a capo invece di tagliare la chip */
+.cell-analysis{font-family:var(--codeFont);font-size:11.5px;color:var(--textSecondary);min-width:0}
+.cell-analysis .line{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px}
+.cell-analysis .warnchip{
+  display:inline-flex;align-items:center;gap:5px;flex:none;
+  font-size:10.5px;padding:2px 8px;border-radius:var(--chipRadius);
+  background:var(--yellowBackgroundColor);color:var(--yellowTextColor);
+  border:1px solid rgba(242,184,75,.25);
+}
+.cell-analysis .warnchip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--yellowColor)}
+
+.dot{width:6px;height:6px;border-radius:50%;flex:none}
+.dot.busy{background:var(--primaryColor);animation:pulse 1.2s ease-in-out infinite}
+.dot.idle{background:#4A5058}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.busy-track{margin-top:6px;height:3px;border-radius:2px;background:#3A3F46;overflow:hidden;max-width:220px}
+.busy-track i{display:block;height:100%;width:62%;background:var(--primaryColor)}
+.cell-analysis .busy-label{color:var(--primaryHover)}
+
+.chev svg{transition:transform .15s}
+.row.is-open .chev svg{transform:rotate(180deg)}
+
+.panel{
+  border-top:1px solid var(--borderColor);
+  background:var(--insetBackground);
+  border-radius:0 0 var(--baseRadius) var(--baseRadius);
+  padding:18px 24px 22px 21px;
+  animation:enter .18s ease-out;
+}
+.panel-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.panel-top .h{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--textTertiary)}
+.pgroup{margin-bottom:18px}
+.pgroup:last-of-type{margin-bottom:0}
+.pgroup > h4{
+  display:flex;align-items:center;gap:12px;
+  font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--textSecondary);margin-bottom:11px;
+}
+.pgroup > h4::after{content:"";flex:1;height:1px;background:var(--borderColor)}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 28px}
+.pv dt{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--textTertiary);margin-bottom:2px}
+.pv dd{font-family:var(--codeFont);font-size:12.5px;font-variant-numeric:tabular-nums}
+.pv dd.warn{color:var(--yellowTextColor)}
+
+.banner{
+  margin-top:18px;display:flex;gap:10px;align-items:flex-start;
+  background:var(--yellowBackgroundColor);
+  border:1px solid rgba(242,184,75,.2);
+  border-left:3px solid var(--yellowColor);
+  border-radius:var(--buttonRadius);
+  padding:10px 14px;font-size:12px;color:var(--yellowTextColor);line-height:1.5;
+}
+.banner svg{flex:none;margin-top:2px}
+
+/* ============================================================
+   VISTA 2 · CONFRONTO
+   ============================================================ */
+.filebox{max-width:760px;margin-bottom:20px}
+.filebox > label{
+  display:block;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--textTertiary);margin-bottom:8px;
+}
+
+.stats{
+  display:flex;gap:0;margin:22px 0 30px;
+  border:1px solid var(--borderColor);border-radius:var(--baseRadius);
+  background:var(--secondaryBackgroundColor);
+  width:fit-content;
+}
+.stat{padding:14px 26px}
+.stat + .stat{border-left:1px solid var(--borderColor)}
+.stat dt{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--textTertiary);margin-bottom:3px}
+.stat dd{font-family:var(--codeFont);font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat dd small{font-size:12px;color:var(--textSecondary)}
+
+.models{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.model{
+  background:var(--secondaryBackgroundColor);
+  border:1px solid var(--borderColor);border-radius:var(--baseRadius);
+  padding:14px 16px;
+}
+.model .m-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+.model .m-name{font-size:13.5px;font-weight:600}
+.model .m-desc{font-size:12px;color:var(--textSecondary);line-height:1.5;margin-bottom:8px}
+.model .m-speed{font-family:var(--codeFont);font-size:11px;color:var(--textTertiary)}
+.model.reco{border-color:rgba(242,184,75,.3)}
+
+.why{
+  display:flex;align-items:center;gap:9px;
+  font-size:12.5px;color:var(--textSecondary);
+  border:1px solid var(--borderColor);border-radius:var(--buttonRadius);
+  padding:9px 14px;cursor:pointer;margin-bottom:30px;max-width:760px;
+  transition:color .12s,border-color .12s;
+}
+.why:hover{color:var(--textColor);border-color:var(--borderStrong)}
+
+.findbar{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+
+.clips{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
+.clip{
+  background:var(--secondaryBackgroundColor);
+  border:1px solid var(--borderColor);border-radius:var(--baseRadius);
+  padding:8px;cursor:pointer;
+  transition:border-color .12s,background .12s;
+}
+.clip:hover{border-color:var(--borderStrong)}
+.clip.sel{border-color:rgba(42,201,222,.55);background:var(--primaryBg)}
+.clip .thumb{aspect-ratio:16/9;border-radius:5px;margin-bottom:9px;position:relative;overflow:hidden}
+.clip .thumb::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);border-radius:5px}
+.clip .c-head{display:flex;align-items:center;gap:8px;padding:0 3px;margin-bottom:5px}
+.clip .c-type{font-size:11.5px;font-weight:600}
+.clip .c-tc{font-family:var(--codeFont);font-size:11px;color:var(--textSecondary);font-variant-numeric:tabular-nums;margin-left:auto}
+.clip .c-desc{font-size:11px;color:var(--textTertiary);line-height:1.45;padding:0 3px 3px}
+
+.launch{
+  display:grid;grid-template-columns:1fr 300px;gap:32px;align-items:start;
+  border-top:1px solid var(--borderColor);padding-top:24px;
+}
+.launch h4{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--textTertiary);margin-bottom:10px}
+.mselect{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:var(--secondaryBackgroundColor);
+  border:1px solid var(--borderStrong);border-radius:var(--buttonRadius);
+  padding:7px 10px;margin-bottom:12px;max-width:520px;
+}
+.mtag{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:12px;padding:3px 6px 3px 10px;border-radius:5px;
+  background:var(--primaryBg);color:var(--primaryHover);
+  border:1px solid rgba(42,201,222,.3);
+}
+.mtag .x{font-size:12px;cursor:pointer;opacity:.7;padding:0 3px}
+.mtag .x:hover{opacity:1}
+.check-row{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--textSecondary)}
+.est-line{display:flex;justify-content:space-between;font-size:12.5px;color:var(--textSecondary);padding:5px 0}
+.est-line b{font-family:var(--codeFont);font-weight:500;color:var(--textColor);font-variant-numeric:tabular-nums}
+.est-total{border-top:1px solid var(--borderColor);margin-top:6px;padding-top:10px}
+.launch .btn.primary{margin-top:14px;width:100%}
+
+/* ============================================================
+   VISTA 3 · LAVORAZIONE
+   ============================================================ */
+.toolbar{display:flex;gap:10px;margin-bottom:20px}
+
+.jgrid{
+  display:grid;
+  grid-template-columns:15px minmax(0,1fr) 92px 64px 250px 150px;
+  gap:16px;align-items:center;
+}
+.jhead{
+  border-left:3px solid transparent;border-right:1px solid transparent;
+  padding:0 16px 8px 17px;
+  font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--textTertiary);
+}
+.jhead .num{text-align:right}
+.jrow{
+  background:var(--secondaryBackgroundColor);
+  border:1px solid var(--borderColor);
+  border-left:3px solid var(--borderStrong);
+  border-radius:var(--baseRadius);
+  padding:11px 16px;
+  transition:background .12s,border-color .12s;
+}
+.jrow:hover{background:var(--surfaceHover);border-color:var(--borderStrong)}
+.jrow.sel{border-left-color:var(--primaryColor);background:#191F22}
+.jrow:not(.sel) .fname .title{color:var(--textSecondary)}
+.msel{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--backgroundColor);
+  border:1px solid var(--borderStrong);border-radius:var(--buttonRadius);
+  padding:6px 11px;font-size:12px;cursor:pointer;
+  transition:border-color .12s;
+}
+.msel:hover{border-color:#40454C}
+.msel .mname{font-family:var(--codeFont);font-size:11.5px}
+.msel .tag{font-size:10px;padding:1px 7px;border-radius:var(--chipRadius);flex:none}
+.msel .tag.reco{background:var(--greenBackgroundColor);color:var(--greenTextColor)}
+.msel .tag.try{background:var(--yellowBackgroundColor);color:var(--yellowTextColor)}
+.msel .caret{color:var(--textTertiary);flex:none}
+.jrow:not(.sel) .msel{opacity:.55}
+.cell-est{font-family:var(--codeFont);font-size:11.5px;color:var(--codeTextColor);font-variant-numeric:tabular-nums;text-align:right}
+
+.dedup-note{font-size:11.5px;color:var(--textTertiary);margin:14px 0 0;max-width:70ch}
+
+.runbar{
+  position:sticky;bottom:0;margin-top:24px;
+  display:flex;align-items:center;gap:18px;
+  background:rgba(16,17,19,.92);backdrop-filter:blur(8px);
+  border-top:1px solid var(--borderStrong);
+  padding:14px 4px;
+}
+.runbar .r-lead{font-size:13.5px;font-weight:600}
+.runbar .r-est{font-family:var(--codeFont);font-size:12px;color:var(--textSecondary);font-variant-numeric:tabular-nums}
+.runbar .spacer{flex:1}
+
+/* ============================================================
+   SPEC RAPIDA
+   ============================================================ */
+.spec{margin-top:56px;border-top:1px dashed var(--borderStrong);padding-top:24px}
+.spec > h2{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--textTertiary);margin-bottom:20px}
+.spec-row{display:flex;gap:40px;flex-wrap:wrap;margin-bottom:24px}
+.spec-cell h5{font-size:11px;font-weight:500;color:var(--textSecondary);margin-bottom:10px}
+.spec-cell .items{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.edge-sample{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--textSecondary)}
+.edge-sample i{width:3px;height:22px;border-radius:2px;display:block}
+
+footer{margin-top:40px;font-family:var(--codeFont);font-size:10.5px;color:var(--textTertiary)}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <h2>Impostazioni comuni</h2>
+  <p class="lede">Valgono per tutti i file. Il modello si sceglie per singolo file nella scheda Lavorazione.</p>
+
+  <div class="sb-group">
+    <h3>Uscita</h3>
+    <div class="field">
+      <div class="field-head"><label>Altezza finale</label><span class="val">1080 px</span></div>
+      <div class="slider"><div class="track"><div class="fill" style="width:46%"></div></div><div class="thumb" style="left:46%"></div></div>
+    </div>
+    <div class="field">
+      <div class="field-head"><label>CRF (x265)</label><span class="val">18</span></div>
+      <div class="slider"><div class="track"><div class="fill" style="width:35%"></div></div><div class="thumb" style="left:35%"></div></div>
+    </div>
+    <div class="field">
+      <div class="field-head"><label>Preset x265</label><span class="val">slower</span></div>
+      <div class="slider"><div class="track"><div class="fill" style="width:72%"></div></div><div class="thumb" style="left:72%"></div></div>
+    </div>
+  </div>
+
+  <div class="sb-group">
+    <h3>Pre-elaborazione</h3>
+    <div class="toggle-row"><span class="tg on"></span><label>Deduplica fotogrammi</label></div>
+    <div class="toggle-row"><span class="tg off"></span><label>Denoise prima dell'upscale</label></div>
+    <div class="toggle-row"><span class="tg off"></span><label>Procedi sotto la soglia minima</label></div>
+  </div>
+
+  <div class="sb-group">
+    <h3>Sistema</h3>
+    <div class="field">
+      <div class="field-head"><label>Spazio per blocco</label><span class="val">40 GB</span></div>
+      <div class="slider"><div class="track"><div class="fill" style="width:28%"></div></div><div class="thumb" style="left:28%"></div></div>
+    </div>
+    <span class="sb-status">cartella autonoma</span>
+  </div>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main class="main">
+
+  <header class="topbar">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+        <rect x="1"  y="13" width="8"  height="8"  rx="1.5" fill="#2AC9DE" opacity=".3"/>
+        <rect x="7"  y="7"  width="9"  height="9"  rx="1.5" fill="#2AC9DE" opacity=".55"/>
+        <rect x="13" y="1"  width="8"  height="8"  rx="1.5" fill="#2AC9DE"/>
+      </svg>
+      <span class="name">Anime<em>Up</em></span>
+      <span class="tag">upscaler locale · Apple Silicon</span>
+    </div>
+  </header>
+
+  <nav class="steps">
+    <div class="step active" data-v="v1" onclick="show('v1',this)"><span class="n">1</span>Sorgenti</div>
+    <div class="step" data-v="v2" onclick="show('v2',this)"><span class="n">2</span>Confronto</div>
+    <div class="step" data-v="v3" onclick="show('v3',this)"><span class="n">3</span>Lavorazione</div>
+  </nav>
+
+  <!-- ════════ VISTA 1 · SORGENTI ════════ -->
+  <section class="view on" id="v1">
+
+    <div class="summary">
+      <span class="lead">16 file in INPUT <span>· 04:10:35 di video</span></span>
+      <span class="chip">12 ≥ 560p</span>
+      <span class="chip">4 sotto soglia</span>
+      <span class="chip warn">2 avvisi</span>
+      <span class="spacer"></span>
+      <span class="mini-progress"><span>analisi 5/16</span><span class="bar"><i></i></span></span>
+    </div>
+
+    <div class="list-grid list-head">
+      <div>File</div>
+      <div class="num">Risoluzione</div>
+      <div class="num">Durata</div>
+      <div>Analisi</div>
+      <div></div>
+    </div>
+
+    <div class="rows">
+
+      <article class="row is-warn is-open">
+        <div class="head list-grid">
+          <div class="fname">
+            <div class="title">The Qwaser of Stigmata - S02E01 [480p] - La principessa d'argento Lily.mkv</div>
+            <div class="meta">hevc · 132 MB</div>
+          </div>
+          <div class="cell-num">720×400</div>
+          <div class="cell-num">24:47</div>
+          <div class="cell-analysis">
+            <div class="line"><span>23.976 cfr · 8 bit 4:2:0 · 1 audio</span><span class="warnchip">1 avviso</span></div>
+          </div>
+          <button class="icon-btn chev" aria-label="Chiudi dettagli">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-top">
+            <span class="h">Dettagli analisi</span>
+            <button class="ghost-btn">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M10 6a4 4 0 1 1-1.2-2.9M10 1v2.5H7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Rianalizza
+            </button>
+          </div>
+
+          <div class="pgroup">
+            <h4>Tempi</h4>
+            <dl class="pgrid">
+              <div class="pv"><dt>Framerate</dt><dd>23.976 (24000/1001)</dd></div>
+              <div class="pv"><dt>Ritmo</dt><dd>cfr</dd></div>
+              <div class="pv"><dt>Fotogrammi</dt><dd>35 658</dd></div>
+              <div class="pv"><dt>Durata</dt><dd>00:24:47</dd></div>
+            </dl>
+          </div>
+
+          <div class="pgroup">
+            <h4>Immagine</h4>
+            <dl class="pgrid">
+              <div class="pv"><dt>Geometria</dt><dd>720×400</dd></div>
+              <div class="pv"><dt>Pixel</dt><dd class="warn">SAR 79/80 → 720×406</dd></div>
+              <div class="pv"><dt>Formato</dt><dd>yuv420p · 8 bit</dd></div>
+              <div class="pv"><dt>Colore</dt><dd class="warn">non taggato</dd></div>
+            </dl>
+          </div>
+
+          <div class="pgroup">
+            <h4>Tracce</h4>
+            <dl class="pgrid">
+              <div class="pv"><dt>Audio</dt><dd>1</dd></div>
+              <div class="pv"><dt>Sottotitoli</dt><dd>0</dd></div>
+              <div class="pv"><dt>Capitoli</dt><dd>0</dd></div>
+              <div class="pv"><dt>Campi</dt><dd>progressivo</dd></div>
+            </dl>
+          </div>
+
+          <div class="banner">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1.5 13 12H1L7 1.5Z" stroke="#F2B84B" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 5.5V8.2M7 10.2v.1" stroke="#F2B84B" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span>Pixel non quadri (SAR 79/80): l'uscita verrà normalizzata a 720×406 per non deformare l'immagine.</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="row is-warn">
+        <div class="head list-grid">
+          <div class="fname">
+            <div class="title">The Qwaser of Stigmata - S02E02 [480p] - La locazione della Maddalena.mkv</div>
+            <div class="meta">hevc · 206 MB</div>
+          </div>
+          <div class="cell-num">720×400</div>
+          <div class="cell-num">24:35</div>
+          <div class="cell-analysis">
+            <div class="line"><span>23.976 cfr · 8 bit 4:2:0 · 1 audio</span><span class="warnchip">1 avviso</span></div>
+          </div>
+          <button class="icon-btn chev" aria-label="Apri dettagli">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <article class="row is-done">
+        <div class="head list-grid">
+          <div class="fname">
+            <div class="title">The Qwaser of Stigmata - S02E03 [360p] - La trappola di quarzo.mkv</div>
+            <div class="meta">hevc · 150 MB</div>
+          </div>
+          <div class="cell-num">512×288</div>
+          <div class="cell-num">24:46</div>
+          <div class="cell-analysis">
+            <div class="line"><span>23.976 cfr · 8 bit 4:2:0 · 1 audio</span></div>
+          </div>
+          <button class="icon-btn chev" aria-label="Apri dettagli">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <article class="row is-done">
+        <div class="head list-grid">
+          <div class="fname">
+            <div class="title">[Omnivium] Koyomimonogatari - 06 [720p][Hi444PP][Opus][A6D20693].mkv</div>
+            <div class="meta">h264 · 408 MB</div>
+          </div>
+          <div class="cell-num">1280×720</div>
+          <div class="cell-num">14:58</div>
+          <div class="cell-analysis">
+            <div class="line"><span>23.976 cfr · 10 bit 4:4:4 · bt709 · 1a 1s 3c</span></div>
+          </div>
+          <button class="icon-btn chev" aria-label="Apri dettagli">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <article class="row is-busy">
+        <div class="head list-grid">
+          <div class="fname">
+            <div class="title">[Omnivium] Koyomimonogatari - 07 [720p][Hi444PP][Opus][E78D3622].mkv</div>
+            <div class="meta">h264 · 354 MB</div>
+          </div>
+          <div class="cell-num">1280×720</div>
+          <div class="cell-num">12:10</div>
+          <div class="cell-analysis">
+            <div class="line"><span class="dot busy"></span><span class="busy-label">analisi in corso · 62%</span></div>
+            <div class="busy-track"><i></i></div>
+          </div>
+          <button class="icon-btn chev" aria-label="Apri dettagli">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <article class="row is-idle">
+        <div class="head list-grid">
+          <div class="fname">
+            <div class="title">[Omnivium] Koyomimonogatari - 08 [720p][Hi444PP][Opus][C34A3504].mkv</div>
+            <div class="meta">h264 · 209 MB</div>
+          </div>
+          <div class="cell-num">1280×720</div>
+          <div class="cell-num">12:13</div>
+          <div class="cell-analysis">
+            <div class="line"><span class="dot idle"></span><span>in coda</span></div>
+          </div>
+          <button class="icon-btn chev" aria-label="Apri dettagli">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </article>
+
+      <article class="row is-idle">
+        <div class="head list-grid">
+          <div class="fname">
+            <div class="title">[Omnivium] Koyomimonogatari - 09 [720p][Hi444PP][Opus][563CEEE4].mkv</div>
+            <div class="meta">h264 · 284 MB</div>
+          </div>
+          <div class="cell-num">1280×720</div>
+          <div class="cell-num">12:45</div>
+          <div class="cell-analysis">
+            <div class="line"><span class="dot idle"></span><span>in coda</span></div>
+          </div>
+          <button class="icon-btn chev" aria-label="Apri dettagli">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ════════ VISTA 2 · CONFRONTO ════════ -->
+  <section class="view" id="v2">
+
+    <h2 class="section-h">Prova i modelli su un file</h2>
+    <p class="section-lede">Non è un'anteprima del risultato finale: elabora spezzoni di dieci secondi con modelli diversi, così scegli guardando invece che fidandoti. Un file alla volta.</p>
+
+    <div class="filebox">
+      <label>File da provare</label>
+      <div class="select">
+        <span>The Qwaser of Stigmata - S02E01 [480p] - La principessa d'argento Lily.mkv</span>
+        <span class="caret">▾</span>
+      </div>
+    </div>
+
+    <dl class="stats">
+      <div class="stat"><dt>Sorgente</dt><dd>720×400</dd></div>
+      <div class="stat"><dt>Uscita</dt><dd>1916×1080</dd></div>
+      <div class="stat"><dt>Episodio intero</dt><dd>02:47–06:00 <small>h</small></dd></div>
+    </dl>
+
+    <div class="models">
+      <div class="model">
+        <div class="m-head"><span class="m-name">animevideov3</span></div>
+        <p class="m-desc">Veloce, linee nettissime, spiana la texture di fondo.</p>
+        <span class="m-speed">~1.08 Mpx/s</span>
+      </div>
+      <div class="model reco">
+        <div class="m-head"><span class="m-name">CUGAN no-denoise</span><span class="chip warn">da provare</span></div>
+        <p class="m-desc">Conserva texture e sfumature; conserva però anche il rumore.</p>
+        <span class="m-speed">~0.85 Mpx/s</span>
+      </div>
+      <div class="model">
+        <div class="m-head"><span class="m-name">CUGAN denoise leggero</span></div>
+        <p class="m-desc">Come sopra ma con pulizia leggera, per sorgenti sporchi.</p>
+        <span class="m-speed">~0.85 Mpx/s</span>
+      </div>
+    </div>
+
+    <div class="why">
+      <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M4.5 2.5L8 6l-3.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Perché è consigliato quello
+    </div>
+
+    <div class="findbar">
+      <button class="btn primary">Trova gli spezzoni difficili</button>
+      <span class="chip ok">8 spezzoni individuati</span>
+    </div>
+
+    <div class="clips">
+      <div class="clip">
+        <div class="thumb" style="background:linear-gradient(120deg,#9fc7e8,#e8f2fa 70%)"></div>
+        <div class="c-head"><span class="cb"></span><span class="c-type">luminoso</span><span class="c-tc">09:14</span></div>
+        <p class="c-desc">Bordi ad alto contrasto (luminosità 216) — mette alla prova linee nette e aloni.</p>
+      </div>
+      <div class="clip sel">
+        <div class="thumb" style="background:radial-gradient(circle at 50% 55%, #145252 0 7%, #05070a 60%)"></div>
+        <div class="c-head"><span class="cb on"></span><span class="c-type">scuro</span><span class="c-tc">09:24</span></div>
+        <p class="c-desc">Scena scura (luminosità 18) con movimento — banding nei gradienti, rumore amplificato.</p>
+      </div>
+      <div class="clip">
+        <div class="thumb" style="background:linear-gradient(135deg,#f0c8a8,#f8e5d5)"></div>
+        <div class="c-head"><span class="cb"></span><span class="c-type">luminoso</span><span class="c-tc">16:37</span></div>
+        <p class="c-desc">Bordi ad alto contrasto (luminosità 215) — linee nette, aloni sui bordi.</p>
+      </div>
+      <div class="clip">
+        <div class="thumb" style="background:linear-gradient(135deg,#16202a,#090b0e)"></div>
+        <div class="c-head"><span class="cb"></span><span class="c-type">scuro</span><span class="c-tc">17:43</span></div>
+        <p class="c-desc">Scena scura (luminosità 38) con movimento — banding e rumore amplificato.</p>
+      </div>
+      <div class="clip">
+        <div class="thumb" style="background:linear-gradient(100deg,#3a6ea8,#8fd0e8 60%,#e8f2fa)"></div>
+        <div class="c-head"><span class="cb"></span><span class="c-type">movimento</span><span class="c-tc">22:40</span></div>
+        <p class="c-desc">Movimento 228 contro 77 di media — sfarfallio temporale, dettaglio instabile.</p>
+      </div>
+      <div class="clip">
+        <div class="thumb" style="background:linear-gradient(120deg,#8a5a20,#d8a84a)"></div>
+        <div class="c-head"><span class="cb"></span><span class="c-type">movimento</span><span class="c-tc">22:52</span></div>
+        <p class="c-desc">Movimento 223 contro 77 di media — sfarfallio temporale, dettaglio instabile.</p>
+      </div>
+      <div class="clip sel">
+        <div class="thumb" style="background:linear-gradient(135deg,#f0b8a0,#f8ddd0)"></div>
+        <div class="c-head"><span class="cb on"></span><span class="c-type">statico</span><span class="c-tc">23:16</span></div>
+        <p class="c-desc">Quasi fermo (movimento 4) — è qui che si vedono texture di fondo e banding.</p>
+      </div>
+      <div class="clip">
+        <div class="thumb" style="background:linear-gradient(135deg,#c86840,#e89860)"></div>
+        <div class="c-head"><span class="cb"></span><span class="c-type">statico</span><span class="c-tc">24:11</span></div>
+        <p class="c-desc">Quasi fermo (movimento 4) — texture di fondo, banding sulle sfumature.</p>
+      </div>
+    </div>
+
+    <div class="launch">
+      <div>
+        <h4>Modelli da provare</h4>
+        <div class="mselect">
+          <span class="mtag">CUGAN no-denoise <span class="x">×</span></span>
+          <span class="faint" style="font-size:12px">aggiungi…</span>
+        </div>
+        <div class="check-row"><span class="cb on"></span> Includi l'originale solo ingrandito</div>
+      </div>
+      <div>
+        <h4>Quanto ci vuole</h4>
+        <div class="est-line"><span>2 spezzoni × 1 modello</span><b>08:20</b></div>
+        <div class="est-line"><span>originale ingrandito</span><b>01:20</b></div>
+        <div class="est-line est-total"><span>stima totale</span><b>09:40</b></div>
+        <button class="btn primary">Elabora gli spezzoni</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ VISTA 3 · LAVORAZIONE ════════ -->
+  <section class="view" id="v3">
+
+    <h2 class="section-h">Scegli i file e avvia</h2>
+    <p class="section-lede">Spunta cosa elaborare e conferma il modello di ciascuno. Il modello è preselezionato in base alla risoluzione.</p>
+
+    <div class="toolbar">
+      <button class="btn secondary">Seleziona tutti</button>
+      <button class="btn secondary">Deseleziona tutti</button>
+    </div>
+
+    <div class="jgrid jhead">
+      <div></div>
+      <div>File</div>
+      <div class="num">Risoluzione</div>
+      <div class="num">Durata</div>
+      <div>Modello</div>
+      <div class="num">Stima</div>
+    </div>
+
+    <div class="rows">
+
+      <div class="jrow jgrid sel">
+        <span class="cb on"></span>
+        <div class="fname">
+          <div class="title">The Qwaser of Stigmata - S02E01 [480p] - La principessa d'argento Lily.mkv</div>
+        </div>
+        <div class="cell-num">720×400</div>
+        <div class="cell-num">24:47</div>
+        <div class="msel"><span class="mname">CUGAN no-denoise</span><span class="tag try">da provare</span><span class="caret">▾</span></div>
+        <div class="cell-est">02:47–06:00</div>
+      </div>
+
+      <div class="jrow jgrid sel">
+        <span class="cb on"></span>
+        <div class="fname">
+          <div class="title">The Qwaser of Stigmata - S02E02 [480p] - La locazione della Maddalena.mkv</div>
+        </div>
+        <div class="cell-num">720×400</div>
+        <div class="cell-num">24:35</div>
+        <div class="msel"><span class="mname">CUGAN no-denoise</span><span class="tag try">da provare</span><span class="caret">▾</span></div>
+        <div class="cell-est">02:47–05:58</div>
+      </div>
+
+      <div class="jrow jgrid">
+        <span class="cb"></span>
+        <div class="fname">
+          <div class="title">The Qwaser of Stigmata - S02E03 [360p] - La trappola di quarzo.mkv</div>
+        </div>
+        <div class="cell-num">512×288</div>
+        <div class="cell-num">24:46</div>
+        <div class="msel"><span class="mname">animevideov3</span><span class="tag reco">consigliato</span><span class="caret">▾</span></div>
+        <div class="cell-est">—</div>
+      </div>
+
+      <div class="jrow jgrid">
+        <span class="cb"></span>
+        <div class="fname">
+          <div class="title">The Qwaser of Stigmata - S02E04 [360p] - Gabbia di spine.mkv</div>
+        </div>
+        <div class="cell-num">512×288</div>
+        <div class="cell-num">24:35</div>
+        <div class="msel"><span class="mname">animevideov3</span><span class="tag reco">consigliato</span><span class="caret">▾</span></div>
+        <div class="cell-est">—</div>
+      </div>
+
+      <div class="jrow jgrid">
+        <span class="cb"></span>
+        <div class="fname">
+          <div class="title">[Omnivium] Koyomimonogatari - 01 [720p][Hi444PP][Opus][5BEA0980].mkv</div>
+        </div>
+        <div class="cell-num">1280×720</div>
+        <div class="cell-num">13:42</div>
+        <div class="msel"><span class="mname">CUGAN no-denoise</span><span class="tag reco">consigliato</span><span class="caret">▾</span></div>
+        <div class="cell-est">—</div>
+      </div>
+
+      <div class="jrow jgrid">
+        <span class="cb"></span>
+        <div class="fname">
+          <div class="title">[Omnivium] Koyomimonogatari - 02 [720p][Hi444PP][Opus][AF2ED860].mkv</div>
+        </div>
+        <div class="cell-num">1280×720</div>
+        <div class="cell-num">13:42</div>
+        <div class="msel"><span class="mname">CUGAN no-denoise</span><span class="tag reco">consigliato</span><span class="caret">▾</span></div>
+        <div class="cell-est">—</div>
+      </div>
+
+    </div>
+
+    <p class="dedup-note">Il minimo vale se la deduplica trova i fotogrammi ripetuti che l'animazione di solito ha; il massimo se non ne trova nessuno.</p>
+
+    <div class="runbar">
+      <span class="r-lead">2 file selezionati</span>
+      <span class="r-est">stima 05:34:52–11:59:27 · picco 40 GB</span>
+      <span class="spacer"></span>
+      <button class="btn secondary">Rivedi i piani</button>
+      <button class="btn primary">Avvia la lavorazione</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ SPEC RAPIDA ══════════════ -->
+  <section class="spec">
+    <h2>Spec rapida · stati (promemoria, non fa parte della UI)</h2>
+    <div class="spec-row">
+      <div class="spec-cell">
+        <h5>Bordo di stato riga</h5>
+        <div class="items">
+          <span class="edge-sample"><i style="background:#3A3F46"></i>in coda</span>
+          <span class="edge-sample"><i style="background:var(--primaryColor)"></i>in corso / selezionata</span>
+          <span class="edge-sample"><i style="background:var(--greenColor)"></i>analizzato</span>
+          <span class="edge-sample"><i style="background:var(--yellowColor)"></i>avviso</span>
+        </div>
+      </div>
+      <div class="spec-cell">
+        <h5>Chip</h5>
+        <div class="items">
+          <span class="chip">12 ≥ 560p</span>
+          <span class="chip warn">2 avvisi</span>
+          <span class="chip ok">fatto</span>
+          <span class="chip busy">in corso</span>
+        </div>
+      </div>
+      <div class="spec-cell">
+        <h5>Pulsanti</h5>
+        <div class="items">
+          <button class="btn primary">Primario</button>
+          <button class="btn secondary">Secondario</button>
+          <button class="ghost-btn">Ghost</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>mockup statico v2 · streamlit 1.61 · tema + css · le tre schede si commutano cliccando lo stepper</footer>
+</main>
+
+<script>
+function show(id, el){
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === id));
+  document.querySelectorAll('.step').forEach(s => s.classList.toggle('active', s === el));
+}
+</script>
+
+</body>
+</html>

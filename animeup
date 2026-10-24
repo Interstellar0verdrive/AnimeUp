@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+# ==========================================================================
+#  animeup - launcher portabile
+#
+#  Tutto vive dentro questa cartella: Python, dipendenze, cache, binari.
+#  Nessuna dipendenza da Homebrew o dal Python di sistema.
+#  Sposta la cartella su un altro Mac e funziona identico.
+# ==========================================================================
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# --- tutto l'ambiente Python confinato nella cartella del progetto ---
+export UV_PYTHON_INSTALL_DIR="$ROOT/.python"
+export UV_CACHE_DIR="$ROOT/.cache/uv"
+export UV_PROJECT_ENVIRONMENT="$ROOT/.venv"
+export UV_PYTHON_DOWNLOADS=automatic   # si auto-ripara su una macchina nuova
+export UV_PYTHON_PREFERENCE=only-managed
+# Solo se non l'ha gia' impostata l'utente: sovrascriverla rendeva impossibile
+# lavorare fuori dalla cartella del progetto, e chi ci provava vedeva work/ e
+# OUTPUT/ finire qui dentro senza un avviso.
+export ANIMEUP_ROOT="${ANIMEUP_ROOT:-$ROOT}"
+
+# --- cartella scaricata da Internet: via la quarantena di macOS ---
+# Estraendo lo zip della release, macOS marca ogni file come "scaricato", e
+# Gatekeeper bloccherebbe al primo avvio i binari non firmati da uno
+# sviluppatore Apple (uv, i motori ncnn, ffmpeg), uno per uno e senza dire
+# come uscirne. Si toglie la marca alla SOLA cartella del progetto: chi ha
+# aperto questo launcher ha già scelto di fidarsene.
+if xattr -p com.apple.quarantine "$ROOT/animeup" >/dev/null 2>&1; then
+  echo "Cartella scaricata da Internet: tolgo la quarantena di macOS ai suoi file." >&2
+  xattr -dr com.apple.quarantine "$ROOT" 2>/dev/null || true
+fi
+
+UV="$ROOT/bin/uv"
+# Versione fissata e checksum della release ufficiale: è quella con cui il
+# progetto è provato, e un download diverso non si installa.
+UV_VERSION="0.11.4"
+UV_SHA256="9b9cb6c6f58c3246dbf3351ed4e97c500bc3266f5f237d2fd620b66e1c31dc56"
+UV_URL="https://github.com/astral-sh/uv/releases/download/$UV_VERSION/uv-aarch64-apple-darwin.tar.gz"
+
+scarica_uv() {
+  local tmp
+  tmp="$(mktemp -d)"
+  echo "Scarico uv $UV_VERSION (gestore dell'ambiente Python, ~20 MB)..." >&2
+  if curl -fsSL "$UV_URL" -o "$tmp/uv.tar.gz" \
+     && [[ "$(shasum -a 256 "$tmp/uv.tar.gz" | cut -d' ' -f1)" == "$UV_SHA256" ]] \
+     && tar -xzf "$tmp/uv.tar.gz" -C "$tmp"; then
+    mkdir -p "$ROOT/bin"
+    cp "$tmp/uv-aarch64-apple-darwin/uv" "$UV" && chmod +x "$UV"
+  fi
+  rm -rf "$tmp"
+  [[ -x "$UV" ]]
+}
+
+if [[ ! -x "$UV" ]]; then
+  # fallback: uv di sistema, e si auto-vendorizza per la prossima volta;
+  # altrimenti lo si scarica (solo Apple Silicon: è l'unica build fissata)
+  if command -v uv >/dev/null 2>&1; then
+    mkdir -p "$ROOT/bin"
+    cp "$(command -v uv)" "$UV" && chmod +x "$UV"
+  elif [[ "$(uname -m)" != "arm64" ]] || ! scarica_uv; then
+    cat >&2 <<'EOF'
+ERRORE: bin/uv mancante, nessun uv nel PATH e download non riuscito.
+
+uv e' il gestore che crea l'ambiente Python dentro questa cartella.
+Installalo una volta sola con:
+
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+poi rilancia ./animeup: verra' copiato in bin/ e la cartella tornera'
+completamente autonoma.
+EOF
+    exit 1
+  fi
+fi
+
+# --- primo avvio: messaggio esplicito, altrimenti uv lavora in silenzio ---
+if [[ ! -d "$ROOT/.venv" ]]; then
+  echo "Primo avvio: preparo l'ambiente dentro la cartella (una volta sola)..." >&2
+fi
+
+# Se l'ambiente e' gia' pronto si esegue direttamente, senza passare da uv:
+# cosi' un comando che fallisce non puo' essere rieseguito per errore.
+#
+# La versione precedente rilanciava il comando "in offline" a OGNI uscita non
+# nulla, non solo per assenza di rete. Bastava un Ctrl-C o un'opzione sbagliata
+# perche' l'intera lavorazione ripartisse da capo una seconda volta.
+#
+# Si invoca il modulo e non lo script `.venv/bin/animeup`, che ha uno shebang
+# con il percorso assoluto di quando e' stato creato: dopo un trasloco della
+# cartella punterebbe a un python inesistente. E si verifica prima che
+# l'ambiente funzioni davvero, cosi' su una macchina nuova o dopo uno
+# spostamento si ricade sulla preparazione invece di fallire.
+#
+# NON basta che `import animeup` riesca: bisogna che importi QUESTA cartella.
+# L'ambiente virtuale contiene un file `.pth` con il percorso assoluto di
+# `src/`, che la copia si porta dietro. Finche' il primo disco resta montato
+# l'importazione riesce — dal disco VECCHIO — quindi `uv sync` non partiva mai
+# e non si riparava niente. Il risultato era il peggiore possibile: nessun
+# errore, e l'interfaccia (che si mette `src/` in testa al percorso da sola)
+# che calcolava i piani col codice nuovo mentre la lavorazione girava con
+# quello vecchio, scrivendo per giunta work/ e OUTPUT/ sull'altro disco.
+PY="$ROOT/.venv/bin/python"
+CONTROLLO='import animeup,os,sys; sys.exit(0 if os.path.realpath(animeup.__file__).startswith(os.path.realpath(sys.argv[1])+os.sep) else 1)'
+if [[ -x "$PY" ]] && "$PY" -c "$CONTROLLO" "$ROOT" >/dev/null 2>&1; then
+  exec "$PY" -m animeup.cli "$@"
+fi
+
+# Ambiente assente o incompleto: lo si prepara. Qui uv puo' aver bisogno della
+# rete, ed e' l'unico punto in cui ha senso segnalarlo.
+if ! "$UV" sync --project "$ROOT" --quiet; then
+  cat >&2 <<EOF
+ERRORE: preparazione dell'ambiente fallita.
+
+Al primo avvio su una macchina nuova serve una connessione per scaricare
+Python e le dipendenze dentro questa cartella. Una volta fatto, funziona
+anche offline.
+EOF
+  exit 1
+fi
+
+exec "$PY" -m animeup.cli "$@"

@@ -1,0 +1,27 @@
+# --- macOS ---
+.DS_Store
+
+# --- self-contained runtime (created on first launch) ---
+.venv/
+.python/
+.cache/
+__pycache__/
+*.pyc
+
+# --- third-party binaries and models: downloaded by `./animeup setup` ---
+bin/
+
+# --- user data: the folders ship empty ---
+INPUT/*
+OUTPUT/*
+LAVORAZIONI/*
+!INPUT/.gitkeep
+!OUTPUT/.gitkeep
+!LAVORAZIONI/.gitkeep
+anteprime/
+registri/
+
+# --- local working material ---
+_WIP/
+Screenshots/
+RIPRENDI_QUI.md
