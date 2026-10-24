@@ -4,6 +4,7 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     private var paths: AppPaths?
+    private let dockIcon = DockIcon()
     private var server: ServerProcess?
     /// PID of a server we found already running at launch (left over from a
     /// crash) and reused instead of starting a new one.
@@ -25,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     // MARK: Launch
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        dockIcon.start()
         do {
             let p = try AppPaths.resolve()
             paths = p

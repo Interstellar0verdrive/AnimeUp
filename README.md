@@ -1,3 +1,5 @@
+<img src="macos/icon/AnimeUp-Dark-1024.png" alt="AnimeUp icon" width="128" align="right">
+
 # AnimeUp
 
 [![tests](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml/badge.svg)](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml)

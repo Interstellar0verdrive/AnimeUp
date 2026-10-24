@@ -63,10 +63,9 @@ jobs:
       - name: Test
         run: ./animeup test
 
-      # L'app per macOS: deve compilare e impacchettarsi a ogni push. Pillow
-      # (per l'icona) e' nell'ambiente appena preparato dal setup.
+      # L'app per macOS: deve compilare e impacchettarsi a ogni push.
       - name: Build the macOS app
         run: |
-          PYTHON="$PWD/.venv/bin/python" tools/build_app.sh dist
+          tools/build_app.sh dist
           test -x dist/AnimeUp.app/Contents/MacOS/AnimeUp
           codesign --verify --deep --strict dist/AnimeUp.app
