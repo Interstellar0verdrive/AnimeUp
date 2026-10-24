@@ -3569,12 +3569,6 @@ def sidebar() -> dict:
     # (e le avanzate globali non meno delle altre): un titolo-madre
     # "Impostazioni" con la nota di stato sotto — così copre TUTTO — e due
     # sezioni sorelle, "Di base" e "Avanzate".
-    # La lingua prima di tutto, e con l'etichetta nelle due lingue: chi si
-    # ritrova l'interfaccia in una lingua che non legge deve poterla
-    # trovare lo stesso. Non si congela: non tocca nessuna lavorazione.
-    lingua = st.sidebar.selectbox(
-        "Language · Lingua", list(i18n.LINGUE), key="w_lingua",
-        format_func=i18n.LINGUE.get, help=t("sb.lingua_aiuto"))
     st.sidebar.markdown(f"<div class='au-sb-titolo'>{t('sb.titolo')}</div>",
                         unsafe_allow_html=True)
     # Il posto dell'avviso «file sospeso» sta QUI, in alto, anche se il suo
@@ -3643,6 +3637,17 @@ def sidebar() -> dict:
     st.sidebar.markdown(f"<div class='au-sb-sezione'>{t('sb.di_base')}</div>",
                         unsafe_allow_html=True)
     regole: list[str] = []
+
+    # La lingua in testa alle impostazioni di base (scelto dall'utente), con
+    # l'etichetta nelle due lingue: chi si ritrova l'interfaccia in una
+    # lingua che non legge deve poterla trovare lo stesso. Non si congela:
+    # non tocca nessuna lavorazione.
+    _etichetta_sb("Language · Lingua", t("sb.lingua_aiuto"),
+                  predefinito=i18n.LINGUE[i18n.PREDEFINITA])
+    with st.sidebar.container(key="cLingua"):
+        lingua = st.selectbox(
+            "Language · Lingua", list(i18n.LINGUE), key="w_lingua",
+            format_func=i18n.LINGUE.get, label_visibility="collapsed")
 
     st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.uscita')}</div>",
                         unsafe_allow_html=True)
