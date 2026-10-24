@@ -11,9 +11,21 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- tutto l'ambiente Python confinato nella cartella del progetto ---
-export UV_PYTHON_INSTALL_DIR="$ROOT/.python"
-export UV_CACHE_DIR="$ROOT/.cache/uv"
-export UV_PROJECT_ENVIRONMENT="$ROOT/.venv"
+# Dove vive cio' che AnimeUp scarica o genera (Python, ambiente, cache, i
+# binari di bin/). Di fabbrica e' la cartella stessa del programma; l'app per
+# macOS lo sposta in ~/Library/Application Support/AnimeUp, perche' il
+# pacchetto .app va trattato come sola lettura e si sostituisce intero a ogni
+# aggiornamento.
+STATO="${ANIMEUP_STATO:-$ROOT}"
+export ANIMEUP_STATO="$STATO"
+mkdir -p "$STATO"
+export UV_PYTHON_INSTALL_DIR="$STATO/.python"
+export UV_CACHE_DIR="$STATO/.cache/uv"
+export UV_PROJECT_ENVIRONMENT="$STATO/.venv"
+if [[ "$STATO" != "$ROOT" ]]; then
+  # Niente __pycache__ dentro il programma: puo' essere di sola lettura.
+  export PYTHONPYCACHEPREFIX="$STATO/.cache/pycache"
+fi
 export UV_PYTHON_DOWNLOADS=automatic   # si auto-ripara su una macchina nuova
 export UV_PYTHON_PREFERENCE=only-managed
 # Solo se non l'ha gia' impostata l'utente: sovrascriverla rendeva impossibile
@@ -50,7 +62,7 @@ if xattr -p com.apple.quarantine "$ROOT/animeup" >/dev/null 2>&1; then
   xattr -dr com.apple.quarantine "$ROOT" 2>/dev/null || true
 fi
 
-UV="$ROOT/bin/uv"
+UV="$STATO/bin/uv"
 # Versione fissata e checksum della release ufficiale: è quella con cui il
 # progetto è provato, e un download diverso non si installa.
 UV_VERSION="0.11.4"
@@ -65,7 +77,7 @@ scarica_uv() {
   if curl -fsSL "$UV_URL" -o "$tmp/uv.tar.gz" \
      && [[ "$(shasum -a 256 "$tmp/uv.tar.gz" | cut -d' ' -f1)" == "$UV_SHA256" ]] \
      && tar -xzf "$tmp/uv.tar.gz" -C "$tmp"; then
-    mkdir -p "$ROOT/bin"
+    mkdir -p "$STATO/bin"
     cp "$tmp/uv-aarch64-apple-darwin/uv" "$UV" && chmod +x "$UV"
   fi
   rm -rf "$tmp"
@@ -76,7 +88,7 @@ if [[ ! -x "$UV" ]]; then
   # fallback: uv di sistema, e si auto-vendorizza per la prossima volta;
   # altrimenti lo si scarica (solo Apple Silicon: è l'unica build fissata)
   if command -v uv >/dev/null 2>&1; then
-    mkdir -p "$ROOT/bin"
+    mkdir -p "$STATO/bin"
     cp "$(command -v uv)" "$UV" && chmod +x "$UV"
   elif [[ "$(uname -m)" != "arm64" ]] || ! scarica_uv; then
     if [[ "$LINGUA" == "it" ]]; then
@@ -109,7 +121,7 @@ EOF
 fi
 
 # --- primo avvio: messaggio esplicito, altrimenti uv lavora in silenzio ---
-if [[ ! -d "$ROOT/.venv" ]]; then
+if [[ ! -d "$STATO/.venv" ]]; then
   dire "Primo avvio: preparo l'ambiente dentro la cartella (una volta sola)..." \
        "First launch: setting up the environment inside the folder (only once)..."
 fi
@@ -135,7 +147,7 @@ fi
 # errore, e l'interfaccia (che si mette `src/` in testa al percorso da sola)
 # che calcolava i piani col codice nuovo mentre la lavorazione girava con
 # quello vecchio, scrivendo per giunta work/ e OUTPUT/ sull'altro disco.
-PY="$ROOT/.venv/bin/python"
+PY="$STATO/.venv/bin/python"
 CONTROLLO='import animeup,os,sys; sys.exit(0 if os.path.realpath(animeup.__file__).startswith(os.path.realpath(sys.argv[1])+os.sep) else 1)'
 if [[ -x "$PY" ]] && "$PY" -c "$CONTROLLO" "$ROOT" >/dev/null 2>&1; then
   exec "$PY" -m animeup.cli "$@"
@@ -143,7 +155,11 @@ fi
 
 # Ambiente assente o incompleto: lo si prepara. Qui uv puo' aver bisogno della
 # rete, ed e' l'unico punto in cui ha senso segnalarlo.
-if ! "$UV" sync --project "$ROOT" --quiet; then
+# Fuori dalla cartella del programma il lock non si tocca (--frozen): il
+# programma puo' essere di sola lettura, e il lock e' quello della release.
+SYNC_EXTRA=()
+[[ "$STATO" != "$ROOT" ]] && SYNC_EXTRA=(--frozen)
+if ! "$UV" sync --project "$ROOT" --quiet ${SYNC_EXTRA[@]+"${SYNC_EXTRA[@]}"}; then
   if [[ "$LINGUA" == "it" ]]; then
     cat >&2 <<EOF
 ERRORE: preparazione dell'ambiente fallita.

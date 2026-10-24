@@ -640,6 +640,9 @@ def test() -> None:
 @app.command(help=t("cli.ui.aiuto"))
 def ui(
     porta: Annotated[int, typer.Option("--porta", help=t("cli.ui.porta"))] = 8899,
+    rete: Annotated[bool, typer.Option("--rete", help=t("cli.ui.rete"))] = False,
+    senza_browser: Annotated[bool, typer.Option(
+        "--senza-browser", help=t("cli.ui.senza_browser"))] = False,
 ) -> None:
     """Apre l'interfaccia nel browser.
 
@@ -681,9 +684,18 @@ def ui(
     # un SIGTERM al padre lo lasciava vivo e in ascolto sulla porta, e il
     # riavvio successivo falliva. Senza padre non ci sono orfani.
     os.environ["ANIMEUP_ROOT"] = str(PATHS.root)
+    # Streamlit legge il tema da `.streamlit/` nella cartella CORRENTE: si
+    # parte da quella del programma, da qualunque posto si sia lanciati (l'app
+    # per macOS non parte da li').
+    os.chdir(codice)
     os.execv(sys.executable, [
         sys.executable, "-m", "streamlit", "run", str(app_py),
-        "--server.port", str(porta), "--server.headless", "false",
+        "--server.port", str(porta),
+        "--server.headless", "true" if senza_browser else "false",
+        # Di fabbrica solo da questo Mac: prima il server rispondeva anche
+        # agli altri dispositivi della rete, cioe' chiunque in casa (o in un
+        # wifi pubblico) poteva avviare e fermare lavorazioni.
+        "--server.address", "0.0.0.0" if rete else "127.0.0.1",
         "--browser.gatherUsageStats", "false",
     ])
 
