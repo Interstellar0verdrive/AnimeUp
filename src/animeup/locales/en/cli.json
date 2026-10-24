@@ -74,7 +74,7 @@
   "cli.setup.architettura": "Architecture {arch} isn't handled automatically: copy the binaries and models into bin/ by hand.",
   "cli.setup.gia_tutti": "All binaries and models are already in bin/.",
   "cli.setup.verranno": "To make the folder self-contained, these will be downloaded:",
-  "cli.setup.voce_ffmpeg": "  · {nome}  (static build)  from  {url}",
+  "cli.setup.voce_ffmpeg": "  · {nome}  (static build {versione})  from  {url}",
   "cli.setup.voce_ncnn": "  · {nome}  + models  from  {url}",
   "cli.setup.peso": "About {mb} MB in total. They'll go into bin/ and won't leave the folder.",
   "cli.setup.procedo": "Go ahead with the download? [y/N]",

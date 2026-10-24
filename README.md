@@ -184,8 +184,8 @@ cd AnimeUp
 The launcher also fetches [uv](https://github.com/astral-sh/uv), the tool
 that sets up the private Python environment, if you don't have it. Every
 third-party download comes from a pinned official release and is verified
-with SHA256. The one exception is FFmpeg, which comes from a rolling
-snapshot and is checked for the encoders and filters AnimeUp needs.
+with SHA256, FFmpeg included (release 9.0.2), and FFmpeg is also checked
+for the encoders and filters AnimeUp needs.
 
 ## Why FFmpeg isn't bundled
 
@@ -221,7 +221,7 @@ thanks to all of them.
 | [realcugan-ncnn-vulkan](https://github.com/nihui/realcugan-ncnn-vulkan) by nihui | Real-CUGAN inference binary (release [20220728](https://github.com/nihui/realcugan-ncnn-vulkan/releases/tag/20220728)) | MIT ([text](LICENSES/realcugan-ncnn-vulkan.txt)) |
 | [ncnn](https://github.com/Tencent/ncnn) by Tencent | Neural network inference framework inside both binaries | BSD-3-Clause ([text](LICENSES/ncnn.txt)) |
 | [MoltenVK](https://github.com/KhronosGroup/MoltenVK) | Vulkan-on-Metal layer linked into both binaries | Apache-2.0 ([text](LICENSES/MoltenVK.txt)) |
-| [FFmpeg](https://ffmpeg.org), static macOS builds by [Martin Riedl](https://ffmpeg.martin-riedl.de) | Decoding, analysis, encoding (x265), remuxing. **Downloaded on first launch, not distributed.** | GPLv3 for this build |
+| [FFmpeg](https://ffmpeg.org) 9.0.2, static macOS build by [Martin Riedl](https://ffmpeg.martin-riedl.de) | Decoding, analysis, encoding (x265), remuxing. **Downloaded on first launch, not distributed.** | GPLv3 for this build |
 | [uv](https://github.com/astral-sh/uv) by Astral | Self-contained Python runtime and dependencies | MIT / Apache-2.0 ([MIT](LICENSES/uv-MIT.txt), [Apache](LICENSES/uv-APACHE.txt)) |
 | [video-compare](https://github.com/pixop/video-compare) by Pixop | Optional side-by-side player for the Compare tab. **Not distributed**: installed separately by the user. | GPL-2.0 |
 | [IINA](https://iina.io) | Optional fallback player for the Compare tab. **Not distributed.** | GPL-3.0 |
