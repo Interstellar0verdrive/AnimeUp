@@ -1,5 +1,8 @@
 # AnimeUp
 
+[![tests](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml/badge.svg)](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml)
+[![latest release](https://img.shields.io/github/v/release/Interstellar0verdrive/AnimeUp)](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest)
+
 **Local, offline anime upscaler for Apple Silicon Macs.**
 AnimeUp batch-upscales anime episodes to 1080p and beyond with
 [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) and
@@ -11,6 +14,12 @@ difficult clips, and running long, resumable jobs.
 Everything lives in one folder: Python, dependencies, binaries and models.
 No Homebrew and no system Python are needed. Copy the folder to another Mac
 and it works the same way there.
+
+![A 360p frame upscaled to 1080p: plain upscale on the left, Real-ESRGAN animevideov3 on the right](docs/images/before-after.png)
+<sub>1:1 crop of a 360p source upscaled to 1080p: plain upscale (left) vs.
+Real-ESRGAN animevideov3 (right), as shown in AnimeUp's Compare tab. Footage:
+[Morevna Episode 3](https://archive.org/details/morevna-ep3), © Morevna
+Project, CC BY-SA 3.0.</sub>
 
 > **Language note:** the user interface is available in English and Italian
 > (selectable in the sidebar; English by default). The in-depth docs are the
@@ -117,21 +126,34 @@ snapshot and is checked for the encoders and filters AnimeUp needs.
 1. **Copy** your episodes (`.mkv`, `.mp4`, …) into `INPUT/`.
 2. **Sources**: check the analysis of each file (resolution, frame rate,
    warnings). Click a row to expand it.
-3. **Compare** (recommended for the first episode of a series): let AnimeUp
-   find difficult clips, render them with the candidate models and compare
-   the results.
+
+   ![Sources tab: four files analysed, one row expanded with timing, image and track details](docs/images/sources.png)
+
+3. **Compare** (recommended for the first episode of a series): AnimeUp
+   recommends a model for the file's resolution, finds difficult clips (dark,
+   bright, static, fast motion), renders them with the models you pick and
+   shows the results side by side, with 1:1 crops and one-click
+   [video-compare](#optional-video-compare).
+
+   ![Compare tab: the eight difficult clips found in the episode, two of them selected](docs/images/clips.png)
+
 4. **Processing**: tick the files, confirm the suggested model and start the
    job. The GPU runs one job at a time. Progress, fps and the remaining time
    appear on each file's row.
+
+   ![Processing tab: a job running, with its phase, progress and the time left for the whole queue](docs/images/running.png)
+
 5. The finished files appear in `OUTPUT/` under their original name plus the
    parameters, for example
-   `Episode 01 [upscale 1080p cugan x3 crf18 dd].mkv`. A report sums up the
+   `Episode 01 [upscale 1080p cugan x3 crf18 dd].mkv`. A summary sums up the
    whole queue at the end.
-6. **To quit**, click **Chiudi AnimeUp** ("Close AnimeUp") at the bottom of
-   the sidebar. Running jobs keep going even if you close the browser or
-   the Terminal. You'll find them again on the next launch.
+6. **To quit**, click **Close AnimeUp** at the bottom of the sidebar. Running
+   jobs keep going even if you close the browser or the Terminal. You'll find
+   them again on the next launch.
 
-<!-- Screenshots will be added with the English UI. -->
+The interface is in English and Italian: switch with **Language · Lingua** at
+the top of the sidebar. More screenshots and every detail are in the
+[user guide](docs/USER_GUIDE.md).
 
 ### Folders
 
@@ -157,6 +179,10 @@ snapshot and is checked for the encoders and filters AnimeUp needs.
 ./animeup test            # regression tests
 ```
 
+The tests need no private material: without the maintainer's sample videos
+they generate small synthetic clips with FFmpeg, and they run on every push
+via GitHub Actions.
+
 ## Why FFmpeg isn't bundled
 
 The static FFmpeg build AnimeUp uses is compiled with x264 and x265, which
@@ -174,7 +200,9 @@ licence texts in [`LICENSES/`](LICENSES).
 ## License
 
 AnimeUp is released under the [MIT License](LICENSE).
-Third-party components keep their own licences (see below).
+Third-party components keep their own licences (see below). The images in
+`docs/images/` contain frames from Morevna Episode 3 and are licensed
+CC BY-SA 3.0, like the footage.
 
 ## Credits & third-party licenses
 
@@ -200,6 +228,7 @@ thanks to all of them.
 | [Inter](https://github.com/rsms/inter) by Rasmus Andersson | UI typeface | SIL OFL 1.1 ([text](LICENSES/Inter-OFL.txt)) |
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | UI monospace typeface | SIL OFL 1.1 ([text](LICENSES/JetBrainsMono-OFL.txt)) |
 | [Big Buck Bunny](https://peach.blender.org) © 2008 Blender Foundation | 20-second sample clip in `campioni/`, used for calibration | CC BY 3.0 |
+| [Morevna Episode 3](https://archive.org/details/morevna-ep3) © Morevna Project | Footage in the screenshots and the before/after image in `docs/images/`, which are therefore CC BY-SA 3.0 as well | CC BY-SA 3.0 |
 
 Python dependencies are installed by uv from PyPI on first launch and are
 not part of this repository.

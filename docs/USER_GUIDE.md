@@ -8,6 +8,9 @@ folder: copy it to another Mac and it works exactly the same.
 
 ---
 
+Screenshots use footage from [Morevna Episode 3](https://archive.org/details/morevna-ep3)
+(© Morevna Project, CC BY-SA 3.0).
+
 ## The map
 
 ```
@@ -51,20 +54,36 @@ AnimeUp/
 3. **Sources** — check the analysis of each file: resolution, frame rate,
    warnings (truncated files, odd formats). Each row expands like an
    accordion.
+
+   ![Sources tab](images/sources.png)
 4. **Compare** *(recommended the first time you work on a series)* — try the
    models on 10-second difficult clips and choose by looking, rather than
    taking it on trust.
+
+   ![Compare tab: model cards and the "Which model should I choose?" guide](images/compare.png)
+
+   ![The difficult clips found in the episode](images/clips.png)
+
+   ![Results: time per model, image indicators and the video-compare buttons](images/results.png)
+
+   ![1:1 crop sheet: plain upscale, Real-ESRGAN animevideov3, Real-CUGAN no-denoise](images/crop-sheet.png)
 5. **Processing** — tick the files, confirm the proposed model, press Start.
    One job at a time: the GPU can't be shared. Progress, fps and time
    remaining appear in the file's row. The time remaining also includes the
    encoding passes for the chunks still to come, not just the upscale: they
    account for a good half of the work on an episode, and leaving them out
    made the estimate promise far less than the job would actually take.
+
+   ![Processing tab: files selected, each with its model and estimate](images/processing.png)
+
+   ![A job running: progress, phase, chunk and the time left for the whole queue](images/running.png)
 6. The result lands in `OUTPUT/` with the original name plus the
    parameters, e.g. `Episodio [upscale 1080p cugan x3 crf18 dd].mkv`. When
    the queue is finished a **summary** appears: how many files, how long it
    took, average deduplication, warnings and — if there are any — which
    files were not completed.
+
+   ![The end-of-queue summary](images/summary.png)
 7. **To close**: the **"Close AnimeUp"** button at the bottom of the sidebar
    (it shuts down the server; close the browser and Terminal whenever you
    like afterwards). Alternatively, close the Terminal window opened in
