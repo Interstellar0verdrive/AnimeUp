@@ -76,7 +76,7 @@ class JobResult:
         stimata: il file è stato interrotto e ripreso» — una nota sul
         CRONOMETRO che si portava dietro trenta giga.
 
-        Lo scenario, descritto da Alberto prima che lo verificassi: una coda
+        Lo scenario, descritto da Interstellar0verdrive prima che lo verificassi: una coda
         di tre film, i primi due chiudono con un avviso, e il terzo trova il
         disco pieno. Non è un crash — il controllo di spazio lo rifiuta prima
         di estrarre — ma la catena scrive «Fallito» e prosegue col prossimo,

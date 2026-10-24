@@ -35,6 +35,9 @@ from animeup import i18n  # noqa: E402
 # I casi controllano anche testi a schermo, scritti in italiano: la lingua si
 # fissa qui, invece di dipendere da cosa ha scelto l'utente nella sidebar.
 i18n.imposta("it")
+# Anche per i sottoprocessi (`./animeup ...`): leggono la lingua da soli, e
+# senza questo parlerebbero quella salvata nelle impostazioni dell'utente.
+os.environ["ANIMEUP_LANG"] = "it"
 
 CAMPIONI = ROOT / "_WIP" / "_TESTING"
 FFMPEG = str(PATHS.ffmpeg.path)
@@ -1684,7 +1687,7 @@ class _PathsFinti:
     """Un `Paths` quel tanto che basta a `cli._scrivi_catena` e `_scrivi_esito`."""
 
     def __init__(self, radice: Path) -> None:
-        self.work = radice / "LAVORAZIONI"
+        self.work = radice / "JOBS"
         self.logs = radice / "registri"
         self.output = radice / "OUTPUT"
         for d in (self.work, self.logs, self.output):
@@ -3104,7 +3107,7 @@ def _avviso_non_conserva():
     in parte stimata: il file e' stato interrotto e ripreso» — una nota sul
     cronometro che si portava dietro trenta giga. Con una coda di film,
     bastavano due avvisi per riempire un disco da 1 TB e far fallire tutto il
-    resto della coda (scenario descritto da Alberto, verificato nel codice).
+    resto della coda (scenario descritto da Interstellar0verdrive, verificato nel codice).
 
     La regola: si conserva per un DIFETTO — il file prodotto e' inservibile e
     serve capire perche' — non per una nota."""
@@ -3293,7 +3296,7 @@ def _storico_guarda_i_simili():
 
     radice = Path(tempfile.mkdtemp())
     (radice / "registri").mkdir()
-    (radice / "LAVORAZIONI").mkdir()
+    (radice / "JOBS").mkdir()
     righe = [{"dedup": q, "fotogrammi": f, "secondi": 100.0, "previsti": 100.0}
              for q, f in [(0.322, 18098), (0.257, 15657), (0.365, 17508),
                           (0.352, 17580), (0.276, 18343), (0.325, 19472),
@@ -3317,7 +3320,7 @@ def _storico_guarda_i_simili():
     # La lavorazione VIVA entra prima di lasciare una pagella: e' il punto
     # che salva la coda quando il primo file dell'infornata non somiglia a
     # niente di gia' visto.
-    cartella = radice / "LAVORAZIONI" / "in-corso"
+    cartella = radice / "JOBS" / "in-corso"
     cartella.mkdir()
     (cartella / "dedup.json").write_text(json.dumps(
         {"total": 34000, "keep": list(range(31000))}))
@@ -3518,7 +3521,7 @@ def _correzione_per_taglia():
 
     radice = Path(tempfile.mkdtemp())
     (radice / "registri").mkdir()
-    (radice / "LAVORAZIONI").mkdir()
+    (radice / "JOBS").mkdir()
     # sei episodi veri e tre clip di prova, con i rapporti misurati
     righe = ([{"secondi": 100.0 * r, "previsti": 100.0, "fotogrammi": f,
                "dedup": 0.3}
@@ -4430,7 +4433,7 @@ def _niente_doppioni_nello_storico():
 
     radice = Path(tempfile.mkdtemp())
     (radice / "registri").mkdir()
-    (radice / "LAVORAZIONI").mkdir()
+    (radice / "JOBS").mkdir()
     righe = [{"secondi": 100.0, "previsti": 100.0, "fotogrammi": n, "dedup": q}
              for q, n in [(0.26, 17000), (0.32, 17500),
                           (0.36, 18000), (0.41, 18500)]]
@@ -4438,7 +4441,7 @@ def _niente_doppioni_nello_storico():
         "\n".join(json.dumps(r) for r in righe))
     p = Paths(radice)
 
-    c = radice / "LAVORAZIONI" / "con-avvisi"
+    c = radice / "JOBS" / "con-avvisi"
     c.mkdir()
     (c / "dedup.json").write_text(json.dumps(
         {"total": 17000, "keep": list(range(round(17000 * 0.74)))}))
@@ -4448,7 +4451,7 @@ def _niente_doppioni_nello_storico():
 
     # ...ma una lavorazione NUOVA, che una pagella non ce l'ha ancora, deve
     # entrare eccome: e' tutto il senso di guardare le mappe vive.
-    c2 = radice / "LAVORAZIONI" / "in-corso"
+    c2 = radice / "JOBS" / "in-corso"
     c2.mkdir()
     (c2 / "dedup.json").write_text(json.dumps(
         {"total": 17600, "keep": list(range(round(17600 * 0.95)))}))
@@ -4459,7 +4462,7 @@ def _niente_doppioni_nello_storico():
     # Il riconoscimento non puo' essere il solo conteggio dei fotogrammi:
     # due puntate della stessa serie possono averlo identico (Koyomi 01 e 02
     # hanno entrambe 19.712 fotogrammi, con deduplica 41,0% e 35,9%).
-    c3 = radice / "LAVORAZIONI" / "stessa-taglia-altra-dedup"
+    c3 = radice / "JOBS" / "stessa-taglia-altra-dedup"
     c3.mkdir()
     (c3 / "dedup.json").write_text(json.dumps(
         {"total": 17000, "keep": list(range(round(17000 * 0.59)))}))
@@ -4491,7 +4494,7 @@ def _finestra_dopo_il_filtro():
 
     radice = Path(tempfile.mkdtemp())
     (radice / "registri").mkdir()
-    (radice / "LAVORAZIONI").mkdir()
+    (radice / "JOBS").mkdir()
     # Le clip devono essere PIU' della finestra, o il taglio non si vede:
     # con esattamente dieci, togliere il `[:FINESTRA]` non cambia niente e
     # la mutazione passa inosservata (provato in audit).
@@ -4520,7 +4523,7 @@ def _finestra_dopo_il_filtro():
     # per una riga storta in un registro (trovato in audit il 12/08).
     sporco = Path(tempfile.mkdtemp())
     (sporco / "registri").mkdir()
-    (sporco / "LAVORAZIONI").mkdir()
+    (sporco / "JOBS").mkdir()
     (sporco / "registri" / "esiti.jsonl").write_text("\n".join(
         ["{rotta", "", "null", "12345", "[]", '"testo"']
         + [json.dumps(r) for r in righe[:3]]))
@@ -4624,6 +4627,7 @@ def _() -> None:
     """Una chiave assente non rompe la pagina: mostra la chiave stessa. Che
     e' peggio, perche' nessuno se ne accorge prima di averla vista."""
     from animeup.probe import FieldMode
+    from animeup.preview import Kind
     import ast
     sezioni = ast.literal_eval(next(
         r.split("=", 1)[1] for r in (ROOT / "ui" / "app.py").read_text().splitlines()
@@ -4632,7 +4636,8 @@ def _() -> None:
     attese = (_chiavi_usate()
               | {f"tab.{s}" for s in sezioni}
               | {f"enum.ritmo.{v.value}" for v in Timebase}
-              | {f"enum.campi.{v.value}" for v in FieldMode})
+              | {f"enum.campi.{v.value}" for v in FieldMode}
+              | {f"conf.tipo.{v.value}" for v in Kind})
     mancanti = sorted(attese - i18n.catalogo(i18n.PREDEFINITA).keys())
     assert not mancanti, mancanti
 
@@ -4676,6 +4681,24 @@ def _() -> None:
     assert not errori, "\n".join(errori)
 
 
+@caso("la cartella LAVORAZIONI di prima della 1.4 diventa JOBS, col contenuto")
+def _() -> None:
+    """Rinominata la cartella, una lavorazione interrotta sotto il nome vecchio
+    sarebbe sparita dall'elenco senza un avviso."""
+    from animeup.paths import Paths
+    with tempfile.TemporaryDirectory() as tmp:
+        radice = Path(tmp)
+        (radice / "LAVORAZIONI" / "episodio 2026-08-10 abcd1234").mkdir(parents=True)
+        Paths(radice).ensure_dirs()
+        assert not (radice / "LAVORAZIONI").exists()
+        assert (radice / "JOBS" / "episodio 2026-08-10 abcd1234").is_dir()
+        # Con entrambe presenti non si tocca niente: meglio una cartella in
+        # piu' che un'unione fatta a indovinare.
+        (radice / "LAVORAZIONI").mkdir()
+        Paths(radice).ensure_dirs()
+        assert (radice / "LAVORAZIONI").is_dir() and (radice / "JOBS").is_dir()
+
+
 @caso("la lingua salvata torna al riavvio, e una sconosciuta non rompe niente")
 def _() -> None:
     import json as _json
@@ -4686,14 +4709,25 @@ def _() -> None:
         import animeup.paths as _paths
         salvato = _paths.PATHS
         _paths.PATHS = radice
+        # Il resto della suite forza l'italiano dall'ambiente: qui si prova
+        # proprio cio' che l'ambiente scavalca, quindi lo si toglie.
+        forzata = os.environ.pop("ANIMEUP_LANG", None)
         try:
             assert i18n.preferita() == i18n.PREDEFINITA
             (radice.logs / "impostazioni.json").write_text(_json.dumps({"lingua": "it"}))
             assert i18n.preferita() == "it"
             (radice.logs / "impostazioni.json").write_text(_json.dumps({"lingua": "xx"}))
             assert i18n.preferita() == i18n.PREDEFINITA
+            # L'ambiente vince sul salvato.
+            (radice.logs / "impostazioni.json").write_text(_json.dumps({"lingua": "en"}))
+            os.environ["ANIMEUP_LANG"] = "it"
+            assert i18n.preferita() == "it"
         finally:
             _paths.PATHS = salvato
+            if forzata is None:
+                os.environ.pop("ANIMEUP_LANG", None)
+            else:
+                os.environ["ANIMEUP_LANG"] = forzata
     i18n.imposta("en")
     assert i18n.t("tab.Sorgenti") == "Sources"
     assert i18n.tn("src.avvisi", 1) == "1 warning"

@@ -139,7 +139,7 @@ snapshot and is checked for the encoders and filters AnimeUp needs.
 |---|---|
 | `INPUT/` | Your source episodes. Never modified. |
 | `OUTPUT/` | Finished files. |
-| `LAVORAZIONI/` | Jobs in progress or interrupted ("work"), one subfolder per episode. A subfolder deletes itself when its job finishes cleanly. |
+| `JOBS/` | Jobs in progress or interrupted, one subfolder per episode. A subfolder deletes itself when its job finishes cleanly. |
 | `anteprime/` | Cache for the Compare tab ("previews"). Safe to delete at any time. |
 | `registri/` | Logs, plus job history, calibration and settings ("records"). |
 | `bin/` | FFmpeg, the ncnn upscalers, the models and uv. |

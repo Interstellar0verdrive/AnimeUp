@@ -201,6 +201,10 @@ proprio perché tre punti non bastano a tracciare due confini.
 
 ## Come verificare su materiale nuovo
 
+> **Nota:** gli script del banco in `PROVE/` sono serviti durante lo
+> sviluppo e non sono inclusi nel repository. La sezione resta perché
+> documenta su cosa sono stati verificati i parametri.
+
 Il banco in `PROVE/banco.py` genera una cinquantina di file che **non
 assomigliano** a quelli su cui si è tarato: risoluzioni da 96×64 a 2560×1440,
 sette convenzioni di pixel non quadri (8:9, 10:11, 16:15, 32:27, 64:45,
