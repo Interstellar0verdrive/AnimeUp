@@ -4776,6 +4776,33 @@ def _() -> None:
         assert (radice / "LAVORAZIONI").is_dir() and (radice / "JOBS").is_dir()
 
 
+@caso("con ANIMEUP_ROOT i dati vanno altrove, ma i binari restano col programma")
+def _() -> None:
+    """Puntando ANIMEUP_ROOT a una cartella di soli dati, bin/ veniva cercato
+    li': ffmpeg e i motori sparivano e la sidebar segnava «dipendenze dal
+    sistema», mentre il lanciatore li cercava (giustamente) accanto al codice."""
+    from animeup.paths import Paths, code_root
+    vecchio = os.environ.get("ANIMEUP_ROOT")
+    with tempfile.TemporaryDirectory() as tmp:
+        os.environ["ANIMEUP_ROOT"] = tmp
+        try:
+            p = Paths()
+            assert p.root == Path(tmp).resolve(), p.root
+            assert p.input == Path(tmp).resolve() / "INPUT"
+            assert p.bin == code_root() / "bin", p.bin
+            # Anche il clip della taratura viaggia col programma: cercato
+            # nella cartella dati, la taratura dall'interfaccia restava appesa.
+            assert p.campioni == code_root() / "campioni", p.campioni
+            assert (p.campioni / "bbb-480p.mkv").is_file()
+        finally:
+            if vecchio is None:
+                os.environ.pop("ANIMEUP_ROOT", None)
+            else:
+                os.environ["ANIMEUP_ROOT"] = vecchio
+        # Una radice esplicita resta autosufficiente: i test ci contano.
+        assert Paths(Path(tmp)).bin == Path(tmp).resolve() / "bin"
+
+
 @caso("la lingua salvata torna al riavvio, e una sconosciuta non rompe niente")
 def _() -> None:
     import json as _json

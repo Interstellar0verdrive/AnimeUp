@@ -733,7 +733,10 @@ def taratura() -> None:
 
         try:
             voce = modulo.esegui(avanzamento=avanzamento)
-        except FileNotFoundError as errore:
+        # Non il solo file mancante: «gia' in corso», un upscale incompleto o
+        # un ffprobe che fallisce finivano in un traceback Python invece che
+        # in una riga che dice cosa e' successo.
+        except (OSError, RuntimeError, subprocess.CalledProcessError) as errore:
             dire(str(errore), "red")
             raise typer.Exit(1)
         barra.update(compito, completed=100, description=t("cli.tar.fatto_barra"))

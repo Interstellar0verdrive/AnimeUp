@@ -154,7 +154,8 @@ stesso tetto su GPU diverse, che è la firma di un limite di scrittura.
 Il valore giusto **non è scrivibile qui**, perché cambia col disco: un SSD
 interno e un disco esterno via USB non hanno lo stesso punto di saturazione.
 Per questo dalla 1.2 la taratura lo **prova sul posto** invece di dichiararlo:
-un passo dedicato elabora lo stesso spezzone con 2, 4, 6 e 8 thread e tiene il
+un passo dedicato elabora lo stesso spezzone con 2, 4, 6, 8, 12 e 16 thread (mai più dei core
+del Mac, e sempre anche il numero dei core) e tiene il
 migliore, con due cautele scritte nel codice:
 
 - si confronta ogni candidato **con la base**, mai col migliore corrente,

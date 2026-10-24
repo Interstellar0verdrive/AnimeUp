@@ -151,7 +151,7 @@ def preventivo(paths: Paths | None = None, *,
     si vuole: chi guarda il cronometro li rimette in riga strada facendo.
     """
     p = paths or PATHS
-    sorgente = clip or (p.root / "campioni" / CLIP)
+    sorgente = clip or (p.campioni / CLIP)
     larghezza, altezza, pacchetti = _misura_clip(p, sorgente)
     src_mpx = larghezza * altezza / 1_000_000
     n_previsto = min(FOTOGRAMMI_MISURA, pacchetti)
@@ -315,7 +315,7 @@ def esegui(paths: Paths | None = None, *, clip: Path | None = None,
     quando il lavoro vero e' a un terzo.
     """
     p = paths or PATHS
-    sorgente = clip or (p.root / "campioni" / CLIP)
+    sorgente = clip or (p.campioni / CLIP)
     if not sorgente.is_file():
         raise FileNotFoundError(t("mot.taratura.clip_mancante", percorso=sorgente,
                                   clip=CLIP))

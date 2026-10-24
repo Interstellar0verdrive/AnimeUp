@@ -23,7 +23,7 @@ Project, CC BY-SA 3.0.</sub>
 
 > **Language note:** the user interface is available in English and Italian
 > (selectable in the sidebar; English by default). The in-depth docs are the
-> [user guide](docs/USER_GUIDE.md) and the [tuning notes](docs/TUNING.md);
+> [user guide](docs/guide/index.md) and the [tuning notes](docs/TUNING.md);
 > Italian versions are in [docs/it/](docs/it/)
 > ([LEGGIMI.md](docs/it/LEGGIMI.md), [TARATURE.md](docs/it/TARATURE.md)).
 
@@ -63,6 +63,72 @@ Project, CC BY-SA 3.0.</sub>
 - Disk space: upscaling extracts frames to disk, and a single episode can
   temporarily take tens of GB. The UI shows the space it needs and lets you
   set a cap.
+
+## How it works
+
+0. **Calibrate** *(optional, recommended on first launch)*: in the sidebar,
+   **Calibration → Run now** times this Mac on a sample clip for about ten
+   minutes, so every time estimate is based on your hardware instead of
+   factory figures. See [Calibrate your Mac](docs/guide/02-calibration.md).
+1. **Copy** your episodes (`.mkv`, `.mp4`, …) into `INPUT/`.
+2. **Sources**: check the analysis of each file (resolution, frame rate,
+   warnings). Click a row to expand it.
+
+   ![Sources tab: four files analysed, one row expanded with timing, image and track details](docs/images/sources.png)
+
+3. **Compare** (recommended for the first episode of a series): AnimeUp
+   recommends a model for the file's resolution, finds difficult clips (dark,
+   bright, static, fast motion), renders them with the models you pick and
+   shows the results side by side, with 1:1 crops and one-click
+   [video-compare](#optional-video-compare).
+
+   ![Compare tab: the eight difficult clips found in the episode, two of them selected](docs/images/clips.png)
+
+4. **Processing**: tick the files, confirm the suggested model and start the
+   job. The GPU runs one job at a time. Progress, fps and the remaining time
+   appear on each file's row.
+
+   ![Processing tab: a job running, with its phase, progress and the time left for the whole queue](docs/images/running.png)
+
+5. The finished files appear in `OUTPUT/` under their original name plus the
+   parameters, for example
+   `Episode 01 [upscale 1080p cugan x3 crf18 dd].mkv`. A summary sums up the
+   whole queue at the end.
+6. **To quit**, click **Close AnimeUp** at the bottom of the sidebar. Running
+   jobs keep going even if you close the browser or the Terminal. You'll find
+   them again on the next launch.
+
+The interface is in English and Italian: switch with **Language · Lingua** at
+the top of the sidebar. More screenshots and every detail are in the
+[user guide](docs/guide/index.md).
+
+### Folders
+
+| Folder | What it's for |
+|---|---|
+| `INPUT/` | Your source episodes. Never modified. |
+| `OUTPUT/` | Finished files. |
+| `JOBS/` | Jobs in progress or interrupted, one subfolder per episode. A subfolder deletes itself when its job finishes cleanly. |
+| `anteprime/` | Cache for the Compare tab ("previews"). Safe to delete at any time. |
+| `registri/` | Logs, plus job history, calibration and settings ("records"). |
+| `bin/` | FFmpeg, the ncnn upscalers, the models and uv. |
+
+### Command line
+
+```bash
+./animeup ui              # web UI (port 8899; --porta N to change it)
+./animeup analyze FILE    # analyse a source
+./animeup plan FILE       # show what would be done, without doing it
+./animeup run FILE        # run a job from the terminal (same pipeline as the UI)
+./animeup taratura        # calibrate time estimates on this Mac (~10 min)
+./animeup doctor          # check that the folder is self-contained
+./animeup setup           # (re)download missing binaries and models
+./animeup test            # regression tests
+```
+
+The tests need no private material: without the maintainer's sample videos
+they generate small synthetic clips with FFmpeg, and they run on every push
+via GitHub Actions.
 
 ## Installation
 
@@ -120,68 +186,6 @@ that sets up the private Python environment, if you don't have it. Every
 third-party download comes from a pinned official release and is verified
 with SHA256. The one exception is FFmpeg, which comes from a rolling
 snapshot and is checked for the encoders and filters AnimeUp needs.
-
-## How it works
-
-1. **Copy** your episodes (`.mkv`, `.mp4`, …) into `INPUT/`.
-2. **Sources**: check the analysis of each file (resolution, frame rate,
-   warnings). Click a row to expand it.
-
-   ![Sources tab: four files analysed, one row expanded with timing, image and track details](docs/images/sources.png)
-
-3. **Compare** (recommended for the first episode of a series): AnimeUp
-   recommends a model for the file's resolution, finds difficult clips (dark,
-   bright, static, fast motion), renders them with the models you pick and
-   shows the results side by side, with 1:1 crops and one-click
-   [video-compare](#optional-video-compare).
-
-   ![Compare tab: the eight difficult clips found in the episode, two of them selected](docs/images/clips.png)
-
-4. **Processing**: tick the files, confirm the suggested model and start the
-   job. The GPU runs one job at a time. Progress, fps and the remaining time
-   appear on each file's row.
-
-   ![Processing tab: a job running, with its phase, progress and the time left for the whole queue](docs/images/running.png)
-
-5. The finished files appear in `OUTPUT/` under their original name plus the
-   parameters, for example
-   `Episode 01 [upscale 1080p cugan x3 crf18 dd].mkv`. A summary sums up the
-   whole queue at the end.
-6. **To quit**, click **Close AnimeUp** at the bottom of the sidebar. Running
-   jobs keep going even if you close the browser or the Terminal. You'll find
-   them again on the next launch.
-
-The interface is in English and Italian: switch with **Language · Lingua** at
-the top of the sidebar. More screenshots and every detail are in the
-[user guide](docs/USER_GUIDE.md).
-
-### Folders
-
-| Folder | What it's for |
-|---|---|
-| `INPUT/` | Your source episodes. Never modified. |
-| `OUTPUT/` | Finished files. |
-| `JOBS/` | Jobs in progress or interrupted, one subfolder per episode. A subfolder deletes itself when its job finishes cleanly. |
-| `anteprime/` | Cache for the Compare tab ("previews"). Safe to delete at any time. |
-| `registri/` | Logs, plus job history, calibration and settings ("records"). |
-| `bin/` | FFmpeg, the ncnn upscalers, the models and uv. |
-
-### Command line
-
-```bash
-./animeup ui              # web UI (port 8899; --porta N to change it)
-./animeup analyze FILE    # analyse a source
-./animeup plan FILE       # show what would be done, without doing it
-./animeup run FILE        # run a job from the terminal (same pipeline as the UI)
-./animeup taratura        # calibrate time estimates on this Mac (~10 min)
-./animeup doctor          # check that the folder is self-contained
-./animeup setup           # (re)download missing binaries and models
-./animeup test            # regression tests
-```
-
-The tests need no private material: without the maintainer's sample videos
-they generate small synthetic clips with FFmpeg, and they run on every push
-via GitHub Actions.
 
 ## Why FFmpeg isn't bundled
 
