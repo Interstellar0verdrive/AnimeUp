@@ -4,7 +4,10 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     private var paths: AppPaths?
-    private let dockIcon = DockIcon()
+    /// What `<state>/cartella_dati` said when the server was started: when
+    /// the interface changes it, the server restarts on the new folder.
+    private var dataChoice: String?
+    private var dataWatch: Timer?
     private var server: ServerProcess?
     /// PID of a server we found already running at launch (left over from a
     /// crash) and reused instead of starting a new one.
@@ -26,7 +29,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     // MARK: Launch
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        dockIcon.start()
         do {
             let p = try AppPaths.resolve()
             paths = p
@@ -151,6 +153,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         mainWindow?.window?.makeKeyAndOrderFront(nil)
         preparing?.close()
         preparing = nil
+        watchDataFolder()
+    }
+
+    // MARK: Data folder
+
+    /// The interface writes the newly chosen folder to `<state>/cartella_dati`;
+    /// the server reads the data folder only when it starts, so the app
+    /// restarts it on the new one. A look every 2 s is plenty for a choice
+    /// made through a folder picker.
+    private func watchDataFolder() {
+        guard let paths else { return }
+        dataChoice = AppPaths.chosenDataFolder(state: paths.state)
+        dataWatch?.invalidate()
+        dataWatch = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            guard let self, let paths = self.paths, self.ready, !self.quitting else { return }
+            let now = AppPaths.chosenDataFolder(state: paths.state)
+            if now != self.dataChoice { self.switchDataFolder() }
+        }
+    }
+
+    private func switchDataFolder() {
+        dataWatch?.invalidate()
+        let old = server
+        server = nil                      // its exit is expected: no alert
+        old?.writeLog("[app] data folder changed: restarting the server\n")
+        old?.terminate()
+        if let pid = adoptedPID {
+            kill(pid, SIGTERM)
+            adoptedPID = nil
+        }
+        do {
+            let p = try AppPaths.resolve()
+            paths = p
+            detectLanguage(data: p.data)
+        } catch {
+            startupFailed(title: tr("AnimeUp could not start", "AnimeUp non è riuscito ad avviarsi"),
+                          lines: [describe(error)])
+            return
+        }
+        startServer()
     }
 
     // MARK: Failures
@@ -236,6 +278,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     func applicationWillTerminate(_ notification: Notification) {
         quitting = true
         pollTimer?.invalidate()
+        dataWatch?.invalidate()
         // Only the server: upscaling jobs run in their own sessions and are
         // left alone.
         server?.terminate()

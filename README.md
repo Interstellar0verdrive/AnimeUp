@@ -154,7 +154,7 @@ via GitHub Actions.
    works offline.
 4. Your files live in **`~/Movies/AnimeUp`** (INPUT, OUTPUT, JOBS…); you can
    choose another folder, an external drive included, in the sidebar under
-   *System → Data folder*. AnimeUp's own tools and environment live in
+   *System → Data folder* (AnimeUp switches to it right away and remembers it). AnimeUp's own tools and environment live in
    `~/Library/Application Support/AnimeUp` (about 1 GB).
 
 Quit with **⌘Q**: running jobs keep going in the background and reappear

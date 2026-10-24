@@ -4,9 +4,9 @@
   "sb.controlla_agg": "Controlla gli aggiornamenti",
   "sb.controlla_agg_aiuto": "Una volta al giorno AnimeUp chiede a GitHub qual è l'ultima release e, se ce n'è una più nuova, mostra una nota in cima alla barra laterale con il link. Non scarica né installa niente da solo. È l'unica connessione che AnimeUp fa da sé dopo il primo avvio.",
   "sb.cartella": "Cartella dei dati",
-  "sb.cartella_aiuto": "Dove stanno i tuoi file: INPUT, OUTPUT, JOBS e i registri di AnimeUp (impostazioni, taratura, storico). Può stare anche su un disco esterno. Il cambio vale dal prossimo avvio, e i file già presenti non vengono spostati.",
+  "sb.cartella_aiuto": "Dove stanno i tuoi file: INPUT, OUTPUT, JOBS e i registri di AnimeUp (impostazioni, taratura, storico). Può stare anche su un disco esterno. AnimeUp passa subito alla nuova cartella e se la ricorda; i file già presenti nella vecchia non vengono spostati. Se all'avvio la cartella scelta non è disponibile (un disco scollegato), AnimeUp usa ~/Movies/AnimeUp e te lo dice.",
   "sb.cartella_prompt": "Scegli la cartella per i dati di AnimeUp (INPUT, OUTPUT, JOBS…)",
-  "sb.cartella_riavvia": "Dal prossimo avvio: {cartella}. Esci e riapri AnimeUp per usarla; i file già presenti non vengono spostati.",
+  "sb.cartella_riavvia": "Passo a {cartella}…",
   "sb.cartella_cambia": "Cambia…",
   "pa.titolo": "Benvenuto in AnimeUp",
   "pa.intro": "Un ultimo passo prima della prima lavorazione: AnimeUp ha bisogno dei suoi strumenti video, che tiene in una cartella sua e non condivide con il resto del Mac.",
@@ -16,5 +16,10 @@
   "pa.scarica": "Scarica e continua (circa {mb} MB)",
   "pa.in_corso": "Scarico e verifico gli strumenti…",
   "pa.errore": "Il download non è andato a buon fine. Controlla la connessione e riprova; quanto già scaricato resta.",
-  "pa.riprova": "Riprova"
+  "pa.riprova": "Riprova",
+  "sb.cartella_assente": "La cartella dei dati {scelta} non è disponibile (il disco è collegato?). Per ora AnimeUp usa {attuale}.",
+  "src.vuoto_cartella_app": "I tuoi file possono stare dove vuoi, anche su un disco esterno: scegli un'altra cartella da qui o nella barra laterale, in Sistema → Cartella dei dati. AnimeUp se la ricorda.",
+  "src.vuoto_cartella_cartella": "È la cartella INPUT dentro la cartella di AnimeUp.",
+  "src.apri_input": "Apri nel Finder",
+  "src.scegli_cartella": "Scegli un'altra cartella…"
 }
