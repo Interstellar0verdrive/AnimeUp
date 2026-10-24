@@ -467,6 +467,7 @@
 }
 
 .md-typeset :is(.admonition, details):is(.note, .info, .tip, .warning, .success, .danger) {
+  border-color: var(--animeup-border);
   border-left-color: var(--admonition-color);
 }
 
