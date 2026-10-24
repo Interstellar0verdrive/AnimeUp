@@ -198,19 +198,17 @@ SEZIONI = ["Sorgenti", "Confronto", "Lavorazione"]
 # Dalla risoluzione più bassa alla più alta, nello stesso verso in cui sono
 # ordinati i modelli: chi legge segue una scala sola invece di saltare avanti
 # e indietro fra le fasce.
-PERCHE_GENERALE = (
-    (f"Sotto i {ALTEZZA_INCERTA}p", "verde", "animevideov3",
-     "non c'e' quasi dettaglio vero da conservare: i CUGAN ingrandirebbero "
-     "gli artefatti insieme al disegno."),
-    (f"{ALTEZZA_INCERTA}p–{CLEAN_SOURCE_MIN_HEIGHT}p", "giallo",
-     "animevideov3 è la scelta più sicura; in alternativa, si può "
-     "valutare CUGAN con denoise leggero",
-     "questa fascia è senza vincitore: dipende da quanto è sporco il file "
-     "originale, e si decide guardando i file di prova nel Confronto."),
-    (f"Sopra i {CLEAN_SOURCE_MIN_HEIGHT}p", "verde", "CUGAN no-denoise",
-     "c'e' dettaglio vero da conservare: linee più definite e texture "
-     "intatte, dove animevideov3 spiana."),
-)
+# Una funzione e non una costante: i testi si leggono nella lingua attiva al
+# momento del disegno, e la lingua si cambia mentre l'app gira.
+def perche_generale() -> tuple[tuple[str, str, str, str], ...]:
+    return (
+        (t("conf.pg.sotto_fascia", altezza=ALTEZZA_INCERTA), "verde",
+         "animevideov3", t("conf.pg.sotto_testo")),
+        (f"{ALTEZZA_INCERTA}p–{CLEAN_SOURCE_MIN_HEIGHT}p", "giallo",
+         t("conf.pg.mezzo_modello"), t("conf.pg.mezzo_testo")),
+        (t("conf.pg.sopra_fascia", altezza=CLEAN_SOURCE_MIN_HEIGHT), "verde",
+         "CUGAN no-denoise", t("conf.pg.sopra_testo")),
+    )
 
 # I colori NON stanno qui: stanno in `.streamlit/config.toml` (i token di
 # Streamlit) e nel blocco `:root` del CSS più sotto (quelli che Streamlit non
@@ -4301,16 +4299,14 @@ def _dettagli(rep) -> None:
 
 def page_confronto(cfg: dict) -> None:
     st.markdown(
-        "<div class='au-sezione'>Confronto dei modelli</div>"
-        "<div class='au-hint' style='margin-bottom:20px'>Non è un'anteprima del "
-        "risultato finale: elabora spezzoni di dieci secondi con modelli "
-        "diversi, in modo da scegliere in base al risultato visivo, senza "
-        "affidarsi soltanto alle indicazioni. Un file alla volta.</div>",
+        f"<div class='au-sezione'>{t('conf.titolo')}</div>"
+        "<div class='au-hint' style='margin-bottom:20px'>"
+        f"{t('conf.intro')}</div>",
         unsafe_allow_html=True)
 
     files = load_library()
     if not files:
-        st.info("Nessun file in INPUT.")
+        st.info(t("conf.nessun_file"))
         return
 
     # La selezione vive nella CHIAVE del widget, non in un doppione che poi
@@ -4333,9 +4329,9 @@ def page_confronto(cfg: dict) -> None:
         f"{{ width: clamp(360px, calc({piu_lungo}ch + 72px), 100%); }}</style>",
         unsafe_allow_html=True)
     with st.container(key="campoFile"):
-        st.markdown("<div class='au-eyebrow au-sez'>File da provare</div>",
+        st.markdown(f"<div class='au-eyebrow au-sez'>{t('conf.file_da_provare')}</div>",
                     unsafe_allow_html=True)
-        prescelto = st.selectbox("File da provare", percorsi,
+        prescelto = st.selectbox(t("conf.file_da_provare"), percorsi,
                                  key="file_confronto",
                                  format_func=lambda pth: nomi[pth],
                                  label_visibility="collapsed")
@@ -4345,8 +4341,7 @@ def page_confronto(cfg: dict) -> None:
     # Misurati il 12/08: 8,9s su un 360p, 37s su un 720p, 49s su un 1080p,
     # tutti episodi da circa 25 minuti. Il "~15 secondi" di prima era una
     # sottostima di tre volte sul caso peggiore.
-    with st.spinner("Analisi del sorgente (la prima volta da 10 a 50 secondi "
-                    "secondo la risoluzione, poi immediata)..."):
+    with st.spinner(t("conf.analisi")):
         try:
             plan = plan_for(path, cfg, entry["height"])
         except (PlanError, OSError, FFmpegError, ValueError) as exc:
@@ -4365,12 +4360,13 @@ def page_confronto(cfg: dict) -> None:
               else stima_hm(plan.est_total_seconds))
     st.markdown(
         "<div class='au-stat'>"
-        f"<div><dt>Sorgente</dt><dd>{esc(entry['resolution'])}</dd></div>"
-        f"<div><dt>Uscita</dt><dd>{plan.target_width}×{plan.target_height}</dd></div>"
+        f"<div><dt>{t('conf.stat_sorgente')}</dt><dd>{esc(entry['resolution'])}</dd></div>"
+        f"<div><dt>{t('conf.stat_uscita')}</dt>"
+        f"<dd>{plan.target_width}×{plan.target_height}</dd></div>"
         # Due durate e non una: senza spiegazione sembrano un errore. Il
         # suggerimento è nativo del browser (`title`) perché qui il markup è
         # nostro e quello di Streamlit vive solo dentro i suoi controlli.
-        f"<div><dt>Episodio intero"
+        f"<div><dt>{t('conf.stat_episodio')}"
         f"<span class='au-perche' tabindex='0'>"
         # Lo stesso disegno del suggerimento nativo della sidebar, copiato dal
         # DOM: cerchio, gancio e punto, tratto da 2. Un "?" scritto come testo
@@ -4381,11 +4377,7 @@ def page_confronto(cfg: dict) -> None:
         "<circle cx='12' cy='12' r='10'></circle>"
         "<path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path>"
         "<line x1='12' y1='17' x2='12.01' y2='17'></line></svg>"
-        + _bolla("Quanto costerebbe elaborare l'episodio per intero con "
-                 "queste impostazioni. Sono due perché dipende da quanti "
-                 "fotogrammi ripetuti trova la deduplica: il minimo se ne "
-                 "trova quanti ne ha di solito un anime, il massimo se non "
-                 "ne trova nessuno.") +
+        + _bolla(t("conf.stat_episodio_aiuto")) +
         "</span></dt>"
         # Niente suffisso "h": il nuovo formato porta già le unità dentro
         # ("02h 30m"), e un "h" in coda le raddoppierebbe.
@@ -4415,9 +4407,9 @@ def page_confronto(cfg: dict) -> None:
     # stava solo sul vincitore, e nella fascia intermedia "da verificare"
     # finiva sul consigliato stesso — il contrario di quello che significa.
     giudizi = (plan.recommendation.giudizi or {}) if plan.recommendation else {}
-    CHIP = {"ok": "<span class='au-tag au-ok'>consigliato</span>",
-            "verifica": "<span class='au-tag au-warn'>da verificare</span>",
-            "no": "<span class='au-tag au-err'>sconsigliato</span>"}
+    CHIP = {"ok": f"<span class='au-tag au-ok'>{t('conf.chip_ok')}</span>",
+            "verifica": f"<span class='au-tag au-warn'>{t('conf.chip_verifica')}</span>",
+            "no": f"<span class='au-tag au-err'>{t('conf.chip_no')}</span>"}
     BORDO_SCHEDA = {"ok": " au-consigliato", "verifica": " au-verifica",
                     "no": " au-sconsigliato"}
     schede = []
@@ -4429,8 +4421,9 @@ def page_confronto(cfg: dict) -> None:
             # L'impossibilita' vince sul giudizio: e' aritmetica, non
             # opinione. E niente velocita': la stima di un'opzione
             # impossibile e' solo pubblicita' ingannevole.
-            chip = (f"<span class='au-tag au-dim'>non arriva a "
-                    f"{plan.target_height}p</span>")
+            chip = ("<span class='au-tag au-dim'>"
+                    f"{t('conf.chip_non_arriva', altezza=plan.target_height)}"
+                    "</span>")
         # Alla scala che QUESTO modello userebbe davvero, non a quella del
         # piano: CUGAN denoise leggero esiste solo a scala 2, quindi chiedendo
         # la scala del piano non trovava niente e restava senza velocità.
@@ -4458,8 +4451,8 @@ def page_confronto(cfg: dict) -> None:
             # il solo upscale e' il numero giusto: deduplica e codifica sono
             # identiche qualunque modello si scelga, e sommarle appiattirebbe
             # proprio la differenza che si sta guardando.
-            + (f"<div class='au-m-vel'>~{velocita:.1f} fotogrammi/s ≈ "
-               f"{stima_hm(plan.frames / velocita)} (solo fasi di upscale)"
+            + (f"<div class='au-m-vel'>"
+               f"{t('conf.velocita', fps=f'{velocita:.1f}', durata=stima_hm(plan.frames / velocita))}"
                f"</div>"
                if velocita and not morta else "")
             + "</div>")
@@ -4469,7 +4462,7 @@ def page_confronto(cfg: dict) -> None:
     # nudo — infatti la card finiva 6px SOPRA l'etichetta. Insieme, la
     # distanza è quella dichiarata e basta.
     st.markdown(
-        "<div class='au-eyebrow au-sez-int'>Modelli disponibili</div>"
+        f"<div class='au-eyebrow au-sez-int'>{t('conf.modelli_disponibili')}</div>"
         f"<div class='au-modelli'>{''.join(schede)}</div>",
         unsafe_allow_html=True)
     # Prima QUESTO caso, poi la regola generale. L'accordion diceva solo la
@@ -4488,70 +4481,58 @@ def page_confronto(cfg: dict) -> None:
     dubbio = bool(rec and not rec.sicuro
                   and not praticabili.get("cugan-denoise"))
     with st.container(key=("perche_att" if dubbio else "perche_ok")):
-        with st.expander("Quale modello scegliere?"):
+        with st.expander(t("conf.quale_modello")):
             if rec:
                 # Tre frasi, non un muro: in quale fascia sei, cosa usare,
                 # cosa fare se la fascia è incerta.
                 h = plan.source.geometry.height
                 if h >= CLEAN_SOURCE_MIN_HEIGHT:
-                    fascia_t = f"sopra i {CLEAN_SOURCE_MIN_HEIGHT}p"
-                    scelta = "Usa Real-CUGAN no-denoise"
-                    spiega = ("Il sorgente ha dettaglio vero da conservare: "
-                              "CUGAN tiene linee e texture che animevideov3 "
-                              "spianerebbe.")
+                    fascia_t = t("conf.caso.sopra_fascia",
+                                 altezza=CLEAN_SOURCE_MIN_HEIGHT)
+                    scelta = t("conf.caso.sopra_scelta")
+                    spiega = t("conf.caso.sopra_spiega")
                 elif h >= ALTEZZA_INCERTA:
-                    fascia_t = (f"fra {ALTEZZA_INCERTA}p e "
-                                f"{CLEAN_SOURCE_MIN_HEIGHT}p")
+                    fascia_t = t("conf.caso.mezzo_fascia", da=ALTEZZA_INCERTA,
+                                 a=CLEAN_SOURCE_MIN_HEIGHT)
                     if praticabili.get("cugan-denoise"):
                         # L'alternativa della fascia non arriva al bersaglio
                         # con le impostazioni attuali: niente "dipende", e
                         # si dice PERCHE' il dubbio non esiste piu'.
-                        scelta = "Usa Real-ESRGAN animevideov3"
-                        spiega = (f"In questa fascia di solito si valuta "
-                                  f"anche CUGAN denoise leggero, ma da {h}p "
-                                  f"non arriva a {plan.target_height}p con "
-                                  "le impostazioni attuali: la scelta resta "
-                                  "animevideov3.")
+                        scelta = t("conf.caso.usa_esrgan")
+                        spiega = t("conf.caso.mezzo_bloccato", h=h,
+                                   altezza=plan.target_height)
                     else:
                         # Il titolo è la domanda vera di questa fascia, non
                         # un "usa X" che contraddirebbe il "dipende" sotto.
-                        scelta = "animevideov3 o CUGAN denoise leggero?"
-                        spiega = ("In questa fascia non c'e' un vincitore: "
-                                  "dipende da quanto è sporco il file "
-                                  "originale. animevideov3 è la base che "
-                                  "sbaglia meno; se il file merita più "
-                                  "dettaglio, verifica CUGAN denoise leggero "
-                                  "qui sotto, scegliendo alcuni spezzoni e "
-                                  "mettendo a confronto questi due modelli.")
+                        scelta = t("conf.caso.mezzo_scelta")
+                        spiega = t("conf.caso.mezzo_spiega")
                 else:
-                    fascia_t = f"sotto i {ALTEZZA_INCERTA}p"
-                    scelta = "Usa Real-ESRGAN animevideov3"
-                    spiega = ("A questa risoluzione non c'e' quasi dettaglio "
-                              "autentico da conservare: contano gli artefatti "
-                              "evitati, e animevideov3 ne fa molti meno.")
+                    fascia_t = t("conf.caso.sotto_fascia",
+                                 altezza=ALTEZZA_INCERTA)
+                    scelta = t("conf.caso.usa_esrgan")
+                    spiega = t("conf.caso.sotto_spiega")
                 colore = "verde" if not dubbio else "giallo"
                 st.markdown(
                     f"<div class='au-p-caso au-p-{colore}'>"
-                    f"<div class='au-eyebrow'>Questo file · {h}p · "
-                    f"{esc(fascia_t)}</div>"
+                    f"<div class='au-eyebrow'>"
+                    f"{esc(t('conf.caso.questo_file', h=h, fascia=fascia_t))}</div>"
                     f"<div class='au-p-scelta'>{esc(scelta)}</div>"
                     f"<div class='au-p-motivo'>{esc(spiega)}</div></div>",
                     unsafe_allow_html=True)
             # La regola generale STA nell'accordion: fuori era un secondo
             # blocco che fluttuava da solo sotto un pannello chiuso.
             st.markdown("<div class='au-eyebrow' style='margin:18px 0 10px'>"
-                        "La regola, in generale</div>", unsafe_allow_html=True)
+                        f"{t('conf.regola')}</div>", unsafe_allow_html=True)
             st.markdown(
                 "<div class='au-p-regole'>" + "".join(
                     f"<div class='au-p-riga au-p-{colore}'>"
                     f"<div class='au-p-fascia'>{esc(fascia)}</div>"
                     f"<div><span class='au-p-mod'>{esc(modello)}</span>"
                     f"<span class='au-p-testo'> — {esc(testo)}</span></div></div>"
-                    for fascia, colore, modello, testo in PERCHE_GENERALE)
+                    for fascia, colore, modello, testo in perche_generale())
                 + "</div>", unsafe_allow_html=True)
-            st.markdown("<div class='au-hint' style='margin-top:14px'>Non è "
-                        "una teoria: viene dal confronto a 1:1 di diverse "
-                        "lavorazioni reali.</div>", unsafe_allow_html=True)
+            st.markdown("<div class='au-hint' style='margin-top:14px'>"
+                        f"{t('conf.regola_nota')}</div>", unsafe_allow_html=True)
 
     _spezzoni(plan, path, cfg, praticabili)
 
@@ -4629,15 +4610,15 @@ def _spezzoni(plan, path: Path, cfg: dict,
         if candidati_gia := st.session_state.get(chiave):
             esito.markdown(
                 f"<span class='au-tag au-ok'>"
-                f"{len(candidati_gia)} spezzoni individuati</span>",
+                f"{tn('conf.individuati', len(candidati_gia))}</span>",
                 unsafe_allow_html=True)
         # L'etichetta dice cosa fara' ADESSO: la prima volta cerca, dalla
         # seconda in poi cerca ALTRO. Senza, premerlo di nuovo sembrava
         # rifare la stessa cosa (e prima la rifaceva davvero).
         gia_visti = tuple(st.session_state.get(f"visti_{path}") or ())
         premuto = avvio.button(
-            "Trova altri 8 spezzoni" if gia_visti
-            else "Trova gli spezzoni difficili",
+            t("conf.trova_altri") if gia_visti
+            else t("conf.trova"),
             type="primary", use_container_width=True)
     if premuto:
         # La durata annunciata era "circa tre minuti": misurata, sta fra 28s
@@ -4654,16 +4635,13 @@ def _spezzoni(plan, path: Path, cfg: dict,
                           f"<span class='au-rotella'></span>{esc(testo)}"
                           f"</div>", unsafe_allow_html=True)
 
-        _passo("Scansione del sorgente: meno di un minuto...")
+        _passo(t("conf.scansione"))
         try:
             nuovi = preview.find_candidates(
                 plan, per_kind=2, on_step=_passo, escludi=gia_visti)
             if not nuovi:
                 area.empty()
-                st.warning("Non ci sono altri spezzoni abbastanza diversi da "
-                           "quelli gia' trovati: il file e' troppo corto "
-                           "oppure e' tutto molto simile a se stesso.",
-                           icon="ℹ️")
+                st.warning(t("conf.nessun_altro"), icon="ℹ️")
                 return
             # I nuovi si AGGIUNGONO: chi ha chiesto altri spezzoni vuole
             # scegliere fra piu' scene, non ricominciare da capo. Ma solo i
@@ -4673,10 +4651,7 @@ def _spezzoni(plan, path: Path, cfg: dict,
             nuovi = preview.solo_nuovi(avuti, nuovi)
             if not nuovi:
                 area.empty()
-                st.warning("Non ci sono altri spezzoni abbastanza diversi da "
-                           "quelli gia' trovati: il file e' troppo corto "
-                           "oppure e' tutto molto simile a se stesso.",
-                           icon="ℹ️")
+                st.warning(t("conf.nessun_altro"), icon="ℹ️")
                 return
             tutti = avuti + nuovi
             st.session_state[chiave] = tutti
@@ -4689,21 +4664,18 @@ def _spezzoni(plan, path: Path, cfg: dict,
                                     PATHS)
         except Exception as exc:                   # noqa: BLE001
             area.empty()
-            st.error(f"Non è stato possibile analizzare il sorgente: {exc}",
-                     icon="⚠️")
+            st.error(t("conf.errore_analisi", errore=exc), icon="⚠️")
             return
         st.rerun()
 
     candidati = st.session_state.get(chiave)
     if candidati is None:
         st.markdown(
-            "<span class='au-hint'>Gli spezzoni vengono scelti da soli nei punti "
-            "dove i modelli si comportano diversamente: scene ferme (texture e "
-            "banding), movimento rapido (sfarfallio), scene scure (gradienti) e "
-            "luminose (bordi netti).</span>", unsafe_allow_html=True)
+            f"<span class='au-hint'>{t('conf.spiega_spezzoni')}</span>",
+            unsafe_allow_html=True)
         return
     if not candidati:
-        st.warning("Nessuno spezzone individuato: il file è troppo breve.")
+        st.warning(t("conf.nessuno_spezzone"))
         return
 
     thumbs = st.session_state.setdefault(f"thumbs_{path}", {})
@@ -4724,7 +4696,7 @@ def _spezzoni(plan, path: Path, cfg: dict,
                           f"<span class='au-rotella'></span>{esc(testo)}"
                           f"</div>", unsafe_allow_html=True)
 
-        _passo(f"Estraggo {len(mancanti)} spezzoni da guardare...")
+        _passo(tn("conf.estraggo", len(mancanti)))
         for cand in mancanti:
             # La durata sta nel nome: cambiarla senza cambiare il nome
             # avrebbe continuato a servire i ritagli vecchi dalla cache.
@@ -4762,8 +4734,10 @@ def _spezzoni(plan, path: Path, cfg: dict,
                     # dell'etichetta (vedi `regole_clip`): dentro l'etichetta
                     # sarebbe una stringa sola e non si potrebbe spingere a
                     # destra, perché Streamlit non accetta markup lì.
+                    # Il tipo resta l'identificativo italiano (nomi dei
+                    # file, cassa): si traduce solo la scritta.
                     acceso = st.checkbox(
-                        cand.kind.value.capitalize(),
+                        t(f"conf.tipo.{cand.kind.value}").capitalize(),
                         value=cand.slug in scelti, key=f"c_{path}_{cand.slug}")
                     regole_clip.append(
                         f'.st-key-clip{inizio + j} [data-testid="stWidgetLabel"]'
@@ -4773,8 +4747,9 @@ def _spezzoni(plan, path: Path, cfg: dict,
                     else:
                         scelti.discard(cand.slug)
                     st.markdown(
-                        f"<div class='au-c-desc'>{esc(cand.reason)} — mette alla "
-                        f"prova {esc(cand.kind.tests)}.</div>",
+                        f"<div class='au-c-desc'>"
+                        f"{esc(t('conf.c_desc', motivo=cand.reason, prove=cand.kind.tests))}"
+                        "</div>",
                         unsafe_allow_html=True)
 
     st.markdown("<style>" + "\n".join(regole_clip) + "</style>",
@@ -4790,7 +4765,7 @@ def _spezzoni(plan, path: Path, cfg: dict,
         sinistra, centro, destra = st.columns([0.8, 0.9, 1.5], gap="large")
     with sinistra:
         with st.container(key="campoModelli"):
-            st.markdown("<div class='au-eyebrow au-sez'>Modelli da provare</div>",
+            st.markdown(f"<div class='au-eyebrow au-sez'>{t('conf.modelli_da_provare')}</div>",
                         unsafe_allow_html=True)
             # Tre caselle e non un multiselect: le opzioni sono TRE, fisse e
             # note — la tendina coi tag era cerimonia (detto dall'utente).
@@ -4850,9 +4825,9 @@ def _spezzoni(plan, path: Path, cfg: dict,
                     continue
                 aiuto = praticabili[k]
                 if sconsigliate_vive:
-                    aiuto += (" Nota: " + " e ".join(sconsigliate_vive)
-                              + " resta selezionabile, ma per questo file "
-                              "è comunque sconsigliato.")
+                    aiuto += " " + t(
+                        "conf.nota_sconsigliate",
+                        modelli=t("conf.e").join(sconsigliate_vive))
                 aiuti[k] = aiuto
             chiavi = [k for k in CATALOG
                       if st.checkbox(CATALOG[k].short,
@@ -4866,10 +4841,9 @@ def _spezzoni(plan, path: Path, cfg: dict,
                 st.session_state[f"modelli_{path}"] = set(chiavi)
         # Stessa storia per l'originale: spento e poi ritrovato acceso.
         riferimento = st.checkbox(
-            "Includi l'originale solo ingrandito",
+            t("conf.includi_originale"),
             value=st.session_state.get(f"originale_{path}", True),
-            help="Senza riferimento non si distingue il dettaglio reale da "
-                 "quello inventato dal modello.")
+            help=t("conf.includi_aiuto"))
         st.session_state[f"originale_{path}"] = riferimento
 
     prescelti = [c for c in candidati if c.slug in scelti]
@@ -4877,14 +4851,14 @@ def _spezzoni(plan, path: Path, cfg: dict,
 
     premi = False
     with centro:
-        st.markdown("<div class='au-eyebrow au-sez-int'>Quanto ci vuole</div>",
+        st.markdown(f"<div class='au-eyebrow au-sez-int'>{t('conf.quanto')}</div>",
                     unsafe_allow_html=True)
         # Niente nota sulla taratura qui: si sa gia' (la dice la sidebar), e
         # allungava la colonna di centro disallineando le tre del Confronto
         # (chiesto da Alberto il 2026-08-10).
         if not prescelti or not varianti:
-            st.markdown("<span class='au-hint'>Seleziona almeno uno spezzone e "
-                        "un modello.</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='au-hint'>{t('conf.seleziona')}</span>",
+                        unsafe_allow_html=True)
         else:
             # Scomposta e non un totale solo: il riferimento è l'unica voce
             # che si può togliere, e senza vederne il costo non si può
@@ -4895,22 +4869,21 @@ def _spezzoni(plan, path: Path, cfg: dict,
             ns, nm = len(prescelti), len(modelli)
             solo_modelli = preview.estimate_seconds(plan, prescelti, modelli)
             totale = preview.estimate_seconds(plan, prescelti, varianti)
-            righe = [f"<div class='au-stima'><span>{ns} "
-                     f"{'spezzone' if ns == 1 else 'spezzoni'} × {nm} "
-                     f"{'modello' if nm == 1 else 'modelli'}</span>"
+            righe = [f"<div class='au-stima'><span>{tn('conf.n_spezzoni', ns)}"
+                     f" × {tn('conf.n_modelli', nm)}</span>"
                      f"<b>{hms(solo_modelli)}</b></div>"]
             if riferimento:
-                righe.append("<div class='au-stima'><span>originale "
-                             f"ingrandito</span><b>{hms(totale - solo_modelli)}"
+                righe.append(f"<div class='au-stima'><span>{t('conf.stima_originale')}"
+                             f"</span><b>{hms(totale - solo_modelli)}"
                              "</b></div>")
-            righe.append("<div class='au-stima au-stima-tot'><span>stima totale"
-                         f" · {ns * len(varianti)} file</span>"
+            righe.append("<div class='au-stima au-stima-tot'><span>"
+                         f"{tn('conf.stima_totale', ns * len(varianti))}</span>"
                          f"<b>{hms(totale)}</b></div>")
             st.markdown("".join(righe), unsafe_allow_html=True)
-            premi = st.button("Elabora gli spezzoni", type="primary",
+            premi = st.button(t("conf.elabora"), type="primary",
                               use_container_width=True)
     with destra:
-        st.markdown("<div class='au-eyebrow au-sez-int'>Avanzamento</div>",
+        st.markdown(f"<div class='au-eyebrow au-sez-int'>{t('conf.avanzamento')}</div>",
                     unsafe_allow_html=True)
         # La zona esiste GIA' PRIMA del click (segnaposto + altezza dal
         # CSS): al click barra e nota compaiono qui, nella terza colonna,
@@ -4927,8 +4900,8 @@ def _spezzoni(plan, path: Path, cfg: dict,
             # a quella barra invece che alle clip, e' fuorviante (segnalato
             # dall'utente il 12/08, al secondo giro di confronto).
             if st.session_state.get(f"risultati_{path}") and not premi:
-                st.markdown("<div class='au-hint'>Confronto pronto: le clip "
-                            "sono qui sotto ↓</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='au-hint'>{t('conf.pronto')}</div>",
+                            unsafe_allow_html=True)
         if premi:
             _genera(plan, prescelti, varianti, path, zona)
 
@@ -4937,7 +4910,7 @@ def _spezzoni(plan, path: Path, cfg: dict,
 
 def _genera(plan, candidati, varianti, path: Path, zona) -> None:
     with zona:
-        barra = st.progress(0.0, "avvio...")
+        barra = st.progress(0.0, t("conf.avvio"))
         # La verita', detta prima che faccia male: qualunque interazione
         # fa ripartire lo script di Streamlit e il giro muore (limite del
         # suo modello di esecuzione, non nostro). Insieme al limite si
@@ -4945,11 +4918,8 @@ def _genera(plan, candidati, varianti, path: Path, zona) -> None:
         # clip gia' fatte.
         nota_fragile = st.empty()
         nota_fragile.markdown(
-            "<div class='au-hint'><b>Attenzione!</b> Mentre lavora, non "
-            "toccare l'interfaccia: qualunque click (o l'uscita dalla "
-            "pagina) interrompe l'elaborazione. Se succede, riclicca "
-            "\"Elabora gli spezzoni\": il processo riparte da dove era "
-            "arrivato, le clip già pronte vengono recuperate.</div>",
+            "<div class='au-hint'>"
+            f"{t('conf.fragile', pulsante=t('conf.elabora'))}</div>",
             unsafe_allow_html=True)
     # La barra nasce nella zona riservata sotto la CTA, che con una lista
     # di spezzoni lunga sta sotto la piega: senza scroll "parte ma non si
@@ -4966,7 +4936,7 @@ def _genera(plan, candidati, varianti, path: Path, zona) -> None:
     # Lavorazione). Prima avanzava solo a variante finita, e con clip da uno
     # o due minuti l'una "sembra ferma da un bel po'" (detto dall'utente).
     totale, risultati = len(candidati) * len(varianti), []
-    stato = {"fatte": 0, "testo": "avvio..."}
+    stato = {"fatte": 0, "testo": t("conf.avvio")}
     from streamlit.runtime.scriptrunner import get_script_run_ctx
     contesto = get_script_run_ctx()
 
@@ -4977,7 +4947,8 @@ def _genera(plan, candidati, varianti, path: Path, zona) -> None:
     guasti: list[str] = []
     for cand in candidati:
         def passo(label: str, _c=cand):
-            stato["testo"] = f"{_c.kind.value} {_c.timecode} — {label}"
+            stato["testo"] = (f"{t(f'conf.tipo.{_c.kind.value}')} "
+                              f"{_c.timecode} — {label}")
             _ridisegna()
 
         def frazione(fatti_f: int, attesi_f: int):
@@ -5005,7 +4976,8 @@ def _genera(plan, candidati, varianti, path: Path, zona) -> None:
                 preview.crop_sheet(res, plan)
                 risultati.append(res)
         except Exception as exc:                       # noqa: BLE001
-            guasti.append(f"{cand.kind.value} {cand.timecode}: {exc}")
+            guasti.append(f"{t(f'conf.tipo.{cand.kind.value}')} "
+                          f"{cand.timecode}: {exc}")
             continue
     barra.empty()
     nota_fragile.empty()
@@ -5015,8 +4987,8 @@ def _genera(plan, candidati, varianti, path: Path, zona) -> None:
         if risultati and not st.session_state.get(f"risultati_{path}"):
             # Solo alla PRIMA generazione: rigenerando, la zona espone gia'
             # il "pronto" dalla sessione e questo sarebbe un doppione.
-            st.markdown("<div class='au-hint'>Confronto pronto: le clip "
-                        "sono qui sotto ↓</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='au-hint'>{t('conf.pronto')}</div>",
+                        unsafe_allow_html=True)
             # Lo scroll porta "Risultati" circa a meta' finestra (un filo
             # sopra): block center sull'ancora piu' una spintarella.
             st.iframe(
@@ -5033,8 +5005,10 @@ def _genera(plan, candidati, varianti, path: Path, zona) -> None:
          "foglio": str(r.crop_sheet) if r.crop_sheet else None,
          # Il range completo (inizio - fine), non solo l'inizio: stesso
          # formato delle card di scelta (chiesto dall'utente).
-         "titolo": (f"{r.candidate.kind.value} · "
-                    f"{r.candidate.timecode_range}"),
+         # Tipo e range e non il titolo gia' scritto: il titolo si compone
+         # al disegno, nella lingua di quel momento.
+         "tipo": r.candidate.kind.value,
+         "intervallo": r.candidate.timecode_range,
          # Quanto ci ha messo OGNI modello su questo spezzone e cosa
          # significherebbe sull'episodio intero. La proiezione tiene conto
          # della DEDUPLICA: prima si scriveva «stima senza deduplica, di
@@ -5056,39 +5030,32 @@ def _genera(plan, candidati, varianti, path: Path, zona) -> None:
 
 
 def _quota_dedup(plan) -> tuple[float, str]:
-    """(quanta deduplica applicare alla proiezione, come chiamarla).
+    """(quanta deduplica applicare alla proiezione, da dove viene).
 
     Tre casi, in ordine di forza: misurata su QUESTO file (la mappa esiste
     gia' su disco), attesa dai file simili gia' lavorati, oppure nessuna —
     che e' anche il caso della deduplica spenta, dove ignorarla e' giusto.
+
+    La provenienza e' un codice e non la frase: il risultato resta in
+    sessione, e la frase si scrive al disegno nella lingua di quel momento
+    (vedi `_tabella_confronto`).
     """
     d = getattr(plan, "dedup", None)
     if d is None or not d.enabled:
-        return 0.0, "deduplica spenta"
+        return 0.0, "spenta"
     if getattr(d, "misurata", False):
-        return d.expected_ratio, f"deduplica {d.expected_ratio:.0%}, misurata su questo file"
+        return d.expected_ratio, "misurata"
     storico = getattr(plan, "dedup_storico", None)
     if storico is not None:
-        return storico.attesa, (f"deduplica attesa {storico.attesa:.0%}, dai file "
-                                f"già lavorati di durata simile")
+        return storico.attesa, "storico"
     if d.expected_ratio:
-        return d.expected_ratio, f"deduplica prevista {d.expected_ratio:.0%}"
-    return 0.0, "deduplica attiva ma non ancora quantificata: si finira' prima"
+        return d.expected_ratio, "prevista"
+    return 0.0, "ignota"
 
 
-SPIEGA_INDICATORI = {
-    0: "<b>Dettaglio fine</b>: quanta micro-struttura c'e' rispetto "
-       "all'originale ingrandito, che vale 100%. Sopra il 100% il modello "
-       "ha ricostruito contorni che l'ingrandimento semplice non aveva; "
-       "sotto, li ha persi, ed e' l'effetto plastica. Fra due modelli conta "
-       "la DISTANZA: pochi punti non si vedono a occhio, il doppio si.",
-    1: "<b>Rumore nelle aree piatte</b>: lo stesso conto, ma solo dove "
-       "l'immagine e' quasi uniforme — nero pieno, zone bruciate e campiture "
-       "a tinta unita escluse, perche' li' ogni modello darebbe zero. Sopra "
-       "il 100% il modello aggiunge grana o aloni, sotto pulisce: nessuno "
-       "dei due e' meglio in assoluto, dipende da quanto e' sporco il "
-       "sorgente.",
-}
+# Una funzione e non un dizionario fisso: i testi seguono la lingua attiva.
+def _spiega_indicatori() -> dict[int, str]:
+    return {0: t("conf.spiega_dettaglio"), 1: t("conf.spiega_rumore")}
 
 
 def _tabella_confronto(modelli: list[dict], dedup,
@@ -5105,15 +5072,21 @@ def _tabella_confronto(modelli: list[dict], dedup,
     """
     # Solo il NOME della deduplica: la quota e' gia' applicata a
     # `m["intero"]` da chi ha costruito le righe.
-    _, come = (dedup or (0.0, ""))
+    quota, codice = (dedup or (0.0, ""))
+    pct = f"{quota:.0%}"
+    come = {"spenta": t("conf.dedup.spenta"),
+            "misurata": t("conf.dedup.misurata", pct=pct),
+            "storico": t("conf.dedup.storico", pct=pct),
+            "prevista": t("conf.dedup.prevista", pct=pct),
+            "ignota": t("conf.dedup.ignota")}.get(codice, "")
     piu_veloce = min(m["secondi"] for m in modelli)
     righe = []
     for m in modelli:
         scarto = ""
         if len(modelli) > 1:
             d = m["secondi"] / piu_veloce - 1
-            scarto = ("il piu' veloce" if d < 0.005
-                      else f"+{d:.0%} di tempo")
+            scarto = (t("conf.piu_veloce") if d < 0.005
+                      else t("conf.piu_tempo", pct=f"{d:.0%}"))
         righe.append(
             f"<tr><td class='au-cnf-nome'>{esc(m['nome'])}</td>"
             f"<td>{stima_hm(m['secondi'])}</td>"
@@ -5121,13 +5094,11 @@ def _tabella_confronto(modelli: list[dict], dedup,
             f"<td class='au-cnf-scarto'>{esc(scarto)}</td></tr>")
     st.markdown(
         "<table class='au-cnf'>"
-        "<thead><tr><th>modello</th><th>su questo spezzone</th>"
-        "<th>episodio intero</th><th></th></tr></thead>"
+        f"<thead><tr><th>{t('conf.th_modello')}</th><th>{t('conf.th_spezzone')}</th>"
+        f"<th>{t('conf.th_episodio')}</th><th></th></tr></thead>"
         f"<tbody>{''.join(righe)}</tbody></table>"
-        f"<div class='au-hint' style='margin:6px 0 2px'>La proiezione "
-        f"sull'episodio intero tiene conto della {esc(come)}. Lo spezzone e' "
-        f"scelto fra i piu' difficili del file, quindi il ritmo vero sul "
-        f"resto dell'episodio e' di solito un po' migliore.</div>",
+        f"<div class='au-hint' style='margin:6px 0 2px'>"
+        f"{esc(t('conf.proiezione', come=come))}</div>",
         unsafe_allow_html=True)
 
     # Una colonna si disegna solo se qualcuno ha un numero da metterci: una
@@ -5138,20 +5109,16 @@ def _tabella_confronto(modelli: list[dict], dedup,
         return q[i] if q and len(q) > i else None
 
     colonne = [(i, testo) for i, testo in
-               ((0, "dettaglio fine"), (1, "rumore nelle aree piatte"))
+               ((0, t("conf.col_dettaglio")), (1, t("conf.col_rumore")))
                if any(_c(m, i) is not None for m in modelli)]
     if not colonne:
         # Niente indicatori: si dice PERCHE'. Sparire in silenzio manda a
         # cercare un difetto dove non c'e' — ed e' esattamente il modo in cui
         # il difetto vero era rimasto invisibile fino all'audit del 12/08.
         st.markdown(
-            "<div class='au-hint' style='margin:10px 0 2px'>Indicatori "
-            "sull'immagine non disponibili: " +
-            ("servono i fotogrammi dell'originale ingrandito come termine di "
-             "paragone, e questo confronto non lo comprende."
-             if not riferimento else
-             "su questo fotogramma non ci sono aree abbastanza uniformi da "
-             "misurare. Il confronto a grandezza reale resta qui sotto.") +
+            "<div class='au-hint' style='margin:10px 0 2px'>" +
+            (t("conf.ind_no_rif") if not riferimento
+             else t("conf.ind_no_aree")) +
             "</div>", unsafe_allow_html=True)
         return
     voci = []
@@ -5164,26 +5131,23 @@ def _tabella_confronto(modelli: list[dict], dedup,
             else "<td>—</td>" for i, _t in colonne)
         voci.append(
             f"<tr><td class='au-cnf-nome'>{esc(m['nome'])}</td>{celle}</tr>")
-    intestazioni = "".join(f"<th>{t}</th>" for _i, t in colonne)
+    # `testo` e non `t`: `t` e' la funzione dei testi.
+    intestazioni = "".join(f"<th>{testo}</th>" for _i, testo in colonne)
+    spiega = _spiega_indicatori()
     st.markdown(
-        "<div class='au-eyebrow' style='margin:14px 0 6px'>Indicatori "
-        "sull'immagine</div>"
+        "<div class='au-eyebrow' style='margin:14px 0 6px'>"
+        f"{t('conf.indicatori')}</div>"
         "<table class='au-cnf'>"
-        f"<thead><tr><th>modello</th>{intestazioni}</tr></thead>"
+        f"<thead><tr><th>{t('conf.th_modello')}</th>{intestazioni}</tr></thead>"
         f"<tbody>{''.join(voci)}</tbody></table>"
         # Le righe che spiegano come si leggono: senza, due percentuali non
         # dicono niente a nessuno (chiesto dall'utente il 12/08). Si spiega
         # solo cio' che si sta mostrando.
         "<div class='au-hint' style='margin:8px 0 2px'>"
-        + "<br>".join(SPIEGA_INDICATORI[i] for i, _t in colonne) +
+        + "<br>".join(spiega[i] for i, _t in colonne) +
         "</div>"
         "<div class='au-hint' style='margin:6px 0 2px;opacity:.85'>"
-        "Da prendere per quello che sono: un originale ad alta risoluzione "
-        "con cui confrontarsi non esiste — si stanno inventando pixel — "
-        "quindi <b>piu' dettaglio non significa piu' fedele</b>. Servono a "
-        "mettere in fila i modelli fra loro su questo fotogramma, non a dare "
-        "un voto, e una scena diversa puo' ribaltarli. Il giudice resta "
-        "l'occhio: il confronto a grandezza reale e' qui sotto."
+        f"{t('conf.avvertenza')}"
         "</div>",
         unsafe_allow_html=True)
 
@@ -5208,15 +5172,17 @@ def _risultati(path: Path) -> None:
     # ogni diff futuro. L'uscita sta in fondo alla funzione.
     blocco_risultati.__enter__()
     st.markdown(
-        "<div class='au-sezione'>Risultati</div>"
-        f"<div class='au-hint' style='margin-bottom:14px'>I file sono in "
-        f"<code>{PATHS.previews.name}/</code>. Il giudizio sul movimento si "
-        "dà in video-compare, che si apre con un clic: i ritagli qui sotto "
-        "sono a dimensione nativa e servono al colpo d'occhio.</div>",
+        f"<div class='au-sezione'>{t('conf.risultati')}</div>"
+        f"<div class='au-hint' style='margin-bottom:14px'>"
+        f"{t('conf.risultati_nota', cartella=PATHS.previews.name)}</div>",
         unsafe_allow_html=True)
 
     for res in risultati:
-        with st.expander(res["titolo"], expanded=True):
+        # `titolo` e' il formato di prima: risultati rimasti in sessione da
+        # un giro precedente all'aggiornamento.
+        titolo = (t(f"conf.tipo.{res['tipo']}") + f" · {res['intervallo']}"
+                  if "tipo" in res else res.get("titolo", ""))
+        with st.expander(titolo, expanded=True):
             # GERARCHIA: prima l'AZIONE (aprire il confronto vero), poi la
             # prova visiva (il foglio 1:1), in coda i numeri e il percorso.
             # Prima le proiezioni stavano in cima e i pulsanti, appiccicati
@@ -5232,12 +5198,12 @@ def _risultati(path: Path) -> None:
             coppie = [(a, b) for i, a in enumerate(nomi) for b in nomi[i + 1:]]
             if coppie:
                 st.markdown("<div class='au-eyebrow' style='margin:16px 0 "
-                            "8px'>Confronto in video-compare</div>",
+                            f"8px'>{t('conf.video_compare')}</div>",
                             unsafe_allow_html=True)
                 for col, (x, y) in zip(st.columns(len(coppie)), coppie):
-                    lx = "originale" if x == "originale" else CATALOG[x].short
-                    ly = "originale" if y == "originale" else CATALOG[y].short
-                    if col.button(f"Apri {lx} ↔ {ly}",
+                    lx = t("conf.originale") if x == "originale" else CATALOG[x].short
+                    ly = t("conf.originale") if y == "originale" else CATALOG[y].short
+                    if col.button(t("conf.apri_coppia", a=lx, b=ly),
                                   key=f"cmp_{res['cartella']}_{x}_{y}",
                                   type="primary"):
                         ok, msg = preview.open_comparison(
@@ -5245,7 +5211,7 @@ def _risultati(path: Path) -> None:
                         (st.success if ok else st.error)(msg)
             if res["foglio"]:
                 st.markdown("<div class='au-eyebrow' style='margin:18px 0 "
-                            "8px'>Confronto su frame statico</div>",
+                            f"8px'>{t('conf.frame_statico')}</div>",
                             unsafe_allow_html=True)
                 # Alla larghezza NATURALE del PNG. Con `use_container_width` il
                 # browser lo riscalava da 1.1x a 2.2x con interpolazione
@@ -5257,28 +5223,26 @@ def _risultati(path: Path) -> None:
                     with Image.open(res["foglio"]) as im:
                         larghezza = im.width
                     st.image(res["foglio"], width=larghezza)
-                    st.markdown("<span class='au-hint'>Ritagli a dimensione "
-                                "reale (1:1). Se il foglio esce dal riquadro, "
-                                "aprilo a parte: ridurlo lo renderebbe "
-                                "inutile.</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='au-hint'>{t('conf.ritagli_nota')}"
+                                "</span>", unsafe_allow_html=True)
                 except Exception:                          # noqa: BLE001
                     st.image(res["foglio"])
             # L'elenco ESPLICITO dei file prodotti, uno per riga, e la via
             # breve alla cartella: prima c'era solo il percorso in un
             # caption muto (chiesto dall'utente).
             righe_file = ["<div class='au-eyebrow' style='margin:14px 0 "
-                          "6px'>Percorso dei file generati</div>"]
+                          f"6px'>{t('conf.percorso')}</div>"]
             for k_f, v_f in res["file"].items():
-                nome_f = ("Originale ingrandito" if k_f == "originale"
+                nome_f = (t("conf.originale_ingrandito") if k_f == "originale"
                           else CATALOG[k_f].label)
                 # Un font solo (il mono di au-meta): etichetta piena e in
                 # grassetto, percorso normale e grigio.
                 righe_file.append(
                     f"<div class='au-meta' style='margin-top:2px'>"
-                    f"<b class='au-file-eti'>File {esc(nome_f)}:</b> "
+                    f"<b class='au-file-eti'>{esc(t('conf.file_eti', nome=nome_f))}</b> "
                     f"{esc(str(v_f))}</div>")
             st.markdown("".join(righe_file), unsafe_allow_html=True)
-            if st.button("Apri la cartella nel Finder",
+            if st.button(t("conf.apri_finder"),
                          key=f"finder_conf_{res['cartella']}",
                          icon=":material/folder_open:"):
                 subprocess.run(["open", str(res["cartella"])], check=False)
