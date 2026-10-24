@@ -21,6 +21,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from .models import CATALOG
 from .paths import PATHS, Paths
 from .pipeline import _processo_vivo
 
@@ -28,10 +29,12 @@ _SEGMENTO = re.compile(r"seg(\d{8})-(\d{8})\.mkv")
 _CODA_DIR = re.compile(r" \d{4}-\d{2}-\d{2} [0-9a-f]{8}$")
 # La firma in state.json è una catena di campi separati da `|`; qui servono
 # solo posizioni fisse: [4] fotogrammi totali, [5] modello del binario.
+# Il nome mostrato è il `short` del catalogo, letto al momento: tradotto
+# nella lingua attiva, e non una copia che può restare indietro.
 _MODELLI_LEGGIBILI = (
     ("animevideov3", "animevideov3"),
-    ("denoise1x", "CUGAN denoise leggero"),
-    ("no-denoise", "CUGAN no-denoise"),
+    ("denoise1x", "cugan-denoise"),
+    ("no-denoise", "cugan"),
 )
 
 
@@ -142,9 +145,9 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
     sorgente = parti[0] if parti else ""
     totale = int(parti[4]) if len(parti) > 5 and parti[4].isdigit() else 0
     modello = parti[5] if len(parti) > 5 else "?"
-    for pezzo, leggibile in _MODELLI_LEGGIBILI:
+    for pezzo, chiave in _MODELLI_LEGGIBILI:
         if pezzo in modello:
-            modello = leggibile
+            modello = CATALOG[chiave].short
             break
 
     # Il fotogramma più avanzato: fine dell'ultimo segmento codificato, o il

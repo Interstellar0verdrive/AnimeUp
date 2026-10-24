@@ -100,10 +100,12 @@ class Paths:
             return Tool(name, Path(system), vendored=False)
 
         if required:
-            raise MissingToolError(
-                f"Binario '{name}' non trovato né in {self.bin} né nel PATH.\n"
-                f"Per rendere la cartella davvero portabile lancia:  ./animeup setup"
-            )
+            # Import qui e non in testa: vedi `i18n.preferita`, che importa
+            # `paths` a sua volta.
+            from .i18n import t
+
+            raise MissingToolError(t("mot.paths.binario_mancante", nome=name,
+                                     cartella=self.bin))
         return None
 
     @cached_property

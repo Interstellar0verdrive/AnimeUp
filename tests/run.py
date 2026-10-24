@@ -661,7 +661,10 @@ def _() -> None:
                for lingua in i18n.LINGUE]
     assert not any(r in out.stdout for r in rifiuti), \
         "--forza non viene passato a build_plan: rifiuta comunque"
-    assert "Forzato" in out.stdout, \
+    # La CLI parla la lingua salvata nelle impostazioni, non quella fissata
+    # qui per i test: l'avviso si cerca nella sua.
+    forzato = i18n.catalogo(i18n.preferita())["mot.plan.forzato"].split(":")[0]
+    assert forzato in out.stdout, \
         "--forza passa ma l'avviso non arriva a schermo"
 
 
