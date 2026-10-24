@@ -655,7 +655,11 @@ def _() -> None:
          str(CAMPIONI / "clip20s.mkv")],
         capture_output=True, text=True, timeout=300,
     )
-    assert "non elaborabile" not in out.stdout, \
+    # Il rifiuto si cerca in tutte e due le lingue: il lanciatore parla
+    # quella salvata, che qui non e' fissata.
+    rifiuti = [i18n.catalogo(lingua)["cli.non_elaborabile"].format(nome="", errore="")
+               for lingua in i18n.LINGUE]
+    assert not any(r in out.stdout for r in rifiuti), \
         "--forza non viene passato a build_plan: rifiuta comunque"
     assert "Forzato" in out.stdout, \
         "--forza passa ma l'avviso non arriva a schermo"
