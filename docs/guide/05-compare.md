@@ -195,7 +195,7 @@ When it's done, the column says *Comparison ready: the clips are below ↓* and 
 
 ## Results
 
-The **Results** section has one expandable panel per clip, titled with its type and range (e.g. *Motion · 00:05 - 00:15*), open by default. A note reminds you the files are in `anteprime/`, and that motion is best judged in video-compare.
+The **Results** section has one expandable panel per clip, titled with its type and range (e.g. *Motion · 00:05 - 00:15*), open by default. A note reminds you the files are in AnimeUp's Compare cache (`cache/previews/`), and that motion is best judged in video-compare.
 
 ![Compare: the Results panel with the time table and the image indicators](img/compare-results.png)
 
@@ -259,24 +259,24 @@ At the bottom of each panel, every file produced is listed with its full path (*
 
 ## Where the files go
 
-Everything Compare produces lives in `anteprime/` inside the AnimeUp folder:
+Everything Compare produces lives in `cache/previews/`, inside AnimeUp's own data (the AnimeUp folder in the portable version, `~/Library/Application Support/AnimeUp` in the app):
 
 | Path | Content |
 |---|---|
-| `anteprime/<file name + code>/<height>p-<crf>-x<scale>-<preset>/<clip>/` | One folder per clip and per set of settings (with `-dn` added when denoise is on). |
+| `cache/previews/<file name + code>/<height>p-<crf>-x<scale>-<preset>/<clip>/` | One folder per clip and per set of settings (with `-dn` added when denoise is on). |
 | …`/animevideov3.mkv`, `cugan.mkv`, `cugan-denoise.mkv` | The clip processed by each model. |
-| …`/originale.mkv` | The plain-upscaled original. |
-| …`/confronto_1a1.png` | The 1:1 crop sheet. |
-| …`/tempi.json` | The measured time per model, so the projection survives a reuse. |
-| `anteprime/.spezzoni/` | The saved clip scans and the small preview videos of the cards. |
+| …`/original.mkv` | The plain-upscaled original. |
+| …`/comparison_1to1.png` | The 1:1 crop sheet. |
+| …`/timings.json` | The measured time per model, so the projection survives a reuse. |
+| `cache/previews/clips/` | The saved clip scans and the small preview videos of the cards. |
 
-The clip folders take their names from the internal clip type (`movimento`, `statico`, `scuro`, `luminoso`) plus the start time, e.g. `movimento_00m05s`. The MKV files are ordinary video files: you can copy them out to show someone.
+The clip folders take their names from the internal clip type (`motion`, `static`, `dark`, `bright`) plus the start time, e.g. `motion_00m05s`. The MKV files are ordinary video files: you can copy them out to show someone.
 
-!!! tip "You can empty anteprime/ at any time"
+!!! tip "You can empty cache/previews/ at any time"
     It's only a cache. At worst, the next clip scan for a file is redone (under a minute per episode) and the clips are processed again. See [07. Output files and folders](07-output-and-folders.md).
 
 !!! note "Results after a reload"
-    The **Results** section lives in the open page. If you reload the browser or restart AnimeUp, the clip selection and the results disappear from the page, but the files stay in `anteprime/`. Select the same clips and models and press **Process the clips**, and they come back almost instantly, without being reprocessed.
+    The **Results** section lives in the open page. If you reload the browser or restart AnimeUp, the clip selection and the results disappear from the page, but the files stay in `cache/previews/`. Select the same clips and models and press **Process the clips**, and they come back almost instantly, without being reprocessed.
 
 ## Making the decision
 

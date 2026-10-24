@@ -7,13 +7,15 @@ Prima tutto stava in una cartella (`INPUT/`, `OUTPUT/`, `JOBS/`,
     nomi e chiavi in inglese; le cache in `cache/`;
   - le lavorazioni (`JOBS/`) e i log di ogni file (`logs/`) vanno dentro
     OUTPUT, sullo stesso disco dei video finiti;
+  - le clip del confronto (`anteprime/`) si scartano: sono una cache, con
+    nomi di file italiani, e il confronto le rifa' quando servono;
   - i marcatori dentro le lavorazioni prendono il nome inglese, cosi' una
     lavorazione interrotta con la 1.5 si riprende con la 1.6.
 
 Ogni passo controlla da se' se c'e' qualcosa da fare: rilanciarla non fa
 niente, e un passo che fallisce (disco pieno, permessi) lascia i file dove
 stavano invece di perderli. Nessun passo cancella dati che non abbia prima
-riscritto altrove.
+riscritto altrove, salvo le cache.
 """
 
 from __future__ import annotations
@@ -196,29 +198,21 @@ def _jobs(paths, radice: Path) -> None:
 
 
 def _anteprime(paths, radice: Path) -> None:
-    vecchia = radice / "anteprime"
-    if vecchia.is_dir():
-        _sposta_file(vecchia, paths.previews)
-    if not paths.previews.is_dir():
-        return
-    if (paths.previews / ".spezzoni").is_dir():
-        _sposta_file(paths.previews / ".spezzoni", paths.previews / "clips")
-    for cartella in paths.previews.iterdir():
-        if not cartella.is_dir():
-            continue
-        if (cartella / "tempi.json").exists():
-            _sposta_file(cartella / "tempi.json", cartella / "timings.json")
-        for straccio in cartella.glob("*.inlavorazione.mkv"):
-            straccio.unlink(missing_ok=True)
+    # Una cache: originale.mkv, confronto_1a1.png, cartelle "movimento_…".
+    # Tradurla file per file non vale il rischio; il confronto la rifa'.
+    shutil.rmtree(radice / "anteprime", ignore_errors=True)
 
 
 def _provvisori(paths, radice: Path) -> None:
-    # Il video che si sta scrivendo porta un suffisso finche' non e' finito.
+    # Il video che si sta scrivendo porta un suffisso finche' non e' finito;
+    # quello che non ha passato i controlli finali ne porta un altro.
     for cartella in {paths.output, radice / "OUTPUT"}:
         if cartella.is_dir():
             for f in cartella.glob("*.inlavorazione"):
                 f.rename(f.with_name(f.name[:-len(".inlavorazione")]
                                      + ".incomplete"))
+            for f in cartella.glob("*.PARZIALE.*"):
+                f.rename(f.with_name(f.name.replace(".PARZIALE.", ".DEFECTIVE.")))
 
 
 def _taratura_in_corso(paths, radice: Path) -> None:

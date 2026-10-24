@@ -187,7 +187,8 @@ def _misure_vive(p: Paths) -> list[tuple[float, int]]:
     from . import monitor
     fuori: list[tuple[float, int]] = []
     try:
-        cartelle = sorted(d for d in p.work.iterdir() if d.is_dir())
+        cartelle = sorted(d for d in p.work.iterdir()
+                          if d.is_dir() and not d.name.startswith("."))
     except OSError:
         return fuori
     for cartella in cartelle:

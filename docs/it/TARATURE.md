@@ -74,21 +74,21 @@ inutili del tipo «ma allora il numero scritto qui è sbagliato?».
 
 1. **Valori di fabbrica, sostituiti dalla misura.** Servono solo finché la
    macchina non è stata tarata. Fatta la taratura, il numero scritto nel
-   codice non viene più letto: vince `registri/taratura.json`. Il valore di
-   fabbrica è un compromesso fra macchine diverse, quindi è *normale* che non
-   coincida con nessuna in particolare.
+   codice non viene più letto: vince `records/calibration.json`, fra i dati
+   di AnimeUp. Il valore di fabbrica è un compromesso fra macchine diverse,
+   quindi è *normale* che non coincida con nessuna in particolare.
 2. **Valori scavalcati dalla storia.** Riguardano i contenuti, non
-   l'hardware. Appena ci sono pagelle in `esiti.jsonl`, si usa quello che
-   questi file hanno fatto davvero invece del valore teorico.
+   l'hardware. Appena ci sono pagelle in `records/history.jsonl`, si usa
+   quello che questi file hanno fatto davvero invece del valore teorico.
 3. **Costanti vere.** Non le sostituisce niente: valgono sempre, su ogni
    macchina e con ogni materiale.
 
 | costante | dove | evidenza | vale finché | effetto se sbaglia |
 |---|---|---|---|---|
-| `FPS_CODIFICA = 8.0` | `plan.py` | 9,28 fps misurati su 240 fotogrammi 1080p, macchina scarica | **fino alla taratura** → `codifica_fps` | intervallo di tempo spostato |
+| `FPS_CODIFICA = 8.0` | `plan.py` | 9,28 fps misurati su 240 fotogrammi 1080p, macchina scarica | **fino alla taratura** → `encoding_fps` | intervallo di tempo spostato |
 | `throughput` del catalogo | `models.py` | dai log di lavorazioni vere | **fino alla taratura** → `mpxs` | intervallo di tempo |
 | estrazione 60 f/s, scansione 200 f/s | `plan.py` (in linea) | misure iniziali | **fino alla taratura** | intervallo di tempo |
-| `MPX_TARATURA` | `plan.py` | dimensione dello spezzone di prova | **fino alla taratura** → `mpx_misura` | scala male fra risoluzioni |
+| `MPX_TARATURA` | `plan.py` | dimensione dello spezzone di prova | **fino alla taratura** → `sample_mpx` | scala male fra risoluzioni |
 | `DEDUP_MASSIMO = 0.60` | `plan.py` | osservati 57%, 46%, 41%, 28%, 11% | **fino alla prima pagella** → deduplica osservata | estremo ottimista dell'intervallo |
 | `MARGINE_PESSIMISTA = 1.25` | `plan.py` | le misure sono medie; una scena mossa costa di più | **sempre** | tetto dell'intervallo |
 | `BYTES_PER_PIXEL_SOURCE = 1.05` | `plan.py` | misurato 0,93–1,08 | **sempre** | vedi nota sotto |
@@ -180,7 +180,7 @@ mai tarata si parte da un valore prudente (4, comunque non oltre il numero di
 core) invece che dal massimo: un default aggressivo su una macchina piccola
 paga il costo della saturazione senza il beneficio.
 
-**Perché non basta la taratura per stimare un turno di codifica.** `codifica_fps`
+**Perché non basta la taratura per stimare un turno di codifica.** `encoding_fps`
 misura la codifica pura, ma il turno fra un blocco e il successivo comprende
 anche la ricostruzione dei fotogrammi duplicati. Misurato su una lavorazione a
 quattro blocchi: 234 secondi previsti dalla taratura contro 280, 463 e 303

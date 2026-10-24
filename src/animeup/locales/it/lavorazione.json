@@ -46,7 +46,7 @@
   "lav.tar_preparazione": "preparazione…",
   "lav.tar_finito": "finito",
   "lav.tar_interrotta": "Taratura interrotta: {errore}",
-  "lav.tar_salvata": "La taratura è stata completata con successo e salvata in `registri/taratura.json`.",
+  "lav.tar_salvata": "La taratura è stata completata con successo e salvata in `records/calibration.json`.",
   "lav.tar_da_ora": "Da questo momento, tutte le stime su questo Mac utilizzeranno i valori aggiornati.",
   "lav.tar_ripetibile": "È possibile ripetere la taratura in qualsiasi momento con il pulsante «Ripeti» accanto a Taratura, nella barra laterale.",
   "lav.tar_nota_scarto": "Nota: lo scarto è verso la taratura precedente se esiste, altrimenti verso i numeri di fabbrica.",

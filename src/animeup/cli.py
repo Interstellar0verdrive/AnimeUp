@@ -452,7 +452,7 @@ def run_cmd(
             if result.difettosa:
                 for d in result.difetti:
                     dire(f"  ! {d}", "red")
-                guasto = result.output.with_suffix(".PARZIALE" + result.output.suffix)
+                guasto = result.output.with_suffix(".DEFECTIVE" + result.output.suffix)
                 guasto.unlink(missing_ok=True)
                 try:
                     result.output.rename(guasto)

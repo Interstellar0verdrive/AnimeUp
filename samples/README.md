@@ -2,7 +2,7 @@
 
 Freely licensed video files, used by calibration (`./animeup taratura`)
 and safe to redistribute. No copyrighted content: this folder ships with
-the project. (Italian version: [LEGGIMI.md](LEGGIMI.md).)
+the project.
 
 ## bbb-480p.mkv
 

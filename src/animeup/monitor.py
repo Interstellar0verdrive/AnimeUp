@@ -334,7 +334,9 @@ def lavori(paths: Paths | None = None) -> list[StatoLavoro]:
         return []
     trovati = []
     for cartella in p.work.iterdir():
-        if not cartella.is_dir():
+        # Le cartelle col punto non sono lavorazioni: prenotazioni dello
+        # spazio, il lavoro di una taratura in corso.
+        if not cartella.is_dir() or cartella.name.startswith("."):
             continue
         lavoro = _leggi(cartella, p.job_logs)
         if lavoro is not None:

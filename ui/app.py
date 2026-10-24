@@ -5393,7 +5393,7 @@ def _risultati(path: Path) -> None:
             if modelli:
                 _tabella_confronto(
                     modelli, res.get("dedup"),
-                    riferimento="originale" in (res.get("file") or {}))
+                    riferimento="original" in (res.get("file") or {}))
             nomi = preview.ordine_lettura(res["file"])
             coppie = [(a, b) for i, a in enumerate(nomi) for b in nomi[i + 1:]]
             if coppie:
@@ -5401,8 +5401,8 @@ def _risultati(path: Path) -> None:
                             f"8px'>{t('conf.video_compare')}</div>",
                             unsafe_allow_html=True)
                 for col, (x, y) in zip(st.columns(len(coppie)), coppie):
-                    lx = t("conf.originale") if x == "originale" else CATALOG[x].short
-                    ly = t("conf.originale") if y == "originale" else CATALOG[y].short
+                    lx = t("conf.originale") if x == "original" else CATALOG[x].short
+                    ly = t("conf.originale") if y == "original" else CATALOG[y].short
                     if col.button(t("conf.apri_coppia", a=lx, b=ly),
                                   key=f"cmp_{res['cartella']}_{x}_{y}",
                                   type="primary"):
@@ -5433,7 +5433,7 @@ def _risultati(path: Path) -> None:
             righe_file = ["<div class='au-eyebrow' style='margin:14px 0 "
                           f"6px'>{t('conf.percorso')}</div>"]
             for k_f, v_f in res["file"].items():
-                nome_f = (t("conf.originale_ingrandito") if k_f == "originale"
+                nome_f = (t("conf.originale_ingrandito") if k_f == "original"
                           else CATALOG[k_f].label)
                 # Un font solo (il mono di au-meta): etichetta piena e in
                 # grassetto, percorso normale e grigio.
@@ -6075,7 +6075,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
             except (PlanError, OSError, FFmpegError, ValueError) as exc:
                 errore = exc
         # "Fatto" = l'USCITA esiste, punto. Un'uscita difettosa viene
-        # rinominata .PARZIALE, quindi qui non esiste e non inganna.
+        # rinominata .DEFECTIVE, quindi qui non esiste e non inganna.
         # (La pagella — durata reale, avvisi, modello, nome dell'uscita — è
         # gia' stata letta piu' sopra: da lei nasce il modello della riga.)
         # "Fatto" sono DUE cose diverse, e tenerle insieme costava caro.
@@ -6099,7 +6099,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
         # DUE condizioni, non una. La pagella si scrive anche quando l'uscita
         # e' risultata DIFETTOSA (vedi cli.py: `_scrivi_esito` sta fuori
         # dall'else), e in quel caso il file buono non esiste — e' stato
-        # rinominato .PARZIALE apposta perche' il rilancio lo rifaccia.
+        # rinominato .DEFECTIVE apposta perche' il rilancio lo rifaccia.
         # Senza `not difettosa` un episodio mutilato veniva mostrato come
         # fatto e tenuto FUORI dalla coda: esattamente il danno permanente
         # che quella rinomina esiste per impedire (audit del 2026-08-10).
@@ -6119,7 +6119,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
         # anche il lavoro archiviato altrove.
         risulta_fatta = fatta or gia_prodotta
         # L'ultima lavorazione ha prodotto un file ROTTO (uscita messa da
-        # parte come .PARZIALE). Non e' "fatto" e non e' "mai toccato": e' la
+        # parte come .DEFECTIVE). Non e' "fatto" e non e' "mai toccato": e' la
         # cosa piu' importante che quella riga abbia da dire, e senza questa
         # chip spariva del tutto dall'interfaccia.
         difettosa = bool(piano is not None and esito
@@ -6441,7 +6441,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                               unsafe_allow_html=True)
             # Uscita fatta ma cartella di lavoro ancora in JOBS: oggi la
             # pipeline la tiene solo per un difetto (e allora l'uscita diventa
-            # .PARZIALE, quindi qui non si arriva), percio' e' un residuo —
+            # .DEFECTIVE, quindi qui non si arriva), percio' e' un residuo —
             # una versione vecchia che la teneva per gli avvisi, una pulizia
             # interrotta, `--tieni-temp`. Si libera con lo stesso Scarta in
             # due passi delle lavorazioni a meta'.

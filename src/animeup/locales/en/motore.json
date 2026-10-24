@@ -110,7 +110,7 @@
   "mot.taratura.salvataggio_poco": "{testa} — tried {provati}: the best gained only {guadagno}, below the threshold that makes a change worthwhile.",
   "mot.taratura.salvataggio_nessuno": "{testa} — tried {provati}, none did better.",
   "mot.taratura.salvataggio_cambiato": "{testa} instead of {predefinito}: {guadagno} on upscaling at the high scales, with identical output.",
-  "mot.taratura.clip_mancante": "sample clip missing: {percorso}. campioni/{clip} is required (see campioni/README.md).",
+  "mot.taratura.clip_mancante": "sample clip missing: {percorso}. samples/{clip} is required (see samples/README.md).",
   "mot.taratura.gia_in_corso": "a calibration is already running on this machine: wait for it to finish (it carries on even with the window closed).",
   "mot.taratura.estrazione_fallita": "extraction failed: no frames produced",
   "mot.taratura.upscale_incompleto": "{modello} x{scala}: produced {fatti} of {attesi} frames — measurement unreliable, calibration stopped"
