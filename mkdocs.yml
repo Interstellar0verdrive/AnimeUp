@@ -86,9 +86,5 @@ extra_css:
 extra_javascript:
   - javascripts/theme-select.js
 
-copyright: >-
-  AnimeUp code: <a href="https://github.com/Interstellar0verdrive/AnimeUp/blob/main/LICENSE">MIT</a>.
-  Guide images featuring <a href="https://archive.org/details/morevna-ep3">Morevna Episode 3</a>:
-  &copy; Morevna Project, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>.
-  <a href="https://peach.blender.org/">Big Buck Bunny</a>:
-  &copy; 2008 Blender Foundation, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.
+extra:
+  generator: false

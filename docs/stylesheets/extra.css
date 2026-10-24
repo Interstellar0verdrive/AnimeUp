@@ -483,17 +483,8 @@
   color: var(--animeup-success);
 }
 
-.md-footer-meta__inner {
-  color: var(--animeup-muted);
-  line-height: 1.6;
-}
-
-.md-footer-meta .md-copyright {
-  color: var(--animeup-muted);
-}
-
-.md-footer-meta .md-copyright a {
-  color: var(--animeup-link);
+.md-footer-meta {
+  display: none;
 }
 
 /* Keep chapter navigation inside the reading column, like the guide content. */

@@ -101,5 +101,7 @@ Step 2 is optional but recommended: without it AnimeUp still works, but every ti
 
 <small>Screenshots in this guide show footage from
 [Morevna Episode 3](https://archive.org/details/morevna-ep3) (© Morevna
-Project, CC BY-SA 3.0) and [Big Buck Bunny](https://peach.blender.org)
-(© 2008 Blender Foundation, CC BY 3.0); the images are CC BY-SA 3.0.</small>
+Project, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/))
+and [Big Buck Bunny](https://peach.blender.org) (© 2008 Blender Foundation,
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)); the images are
+CC BY-SA 3.0.</small>
