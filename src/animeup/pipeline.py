@@ -22,10 +22,11 @@ from datetime import datetime
 from pathlib import Path
 
 from . import dedup as dd
+from . import su_disco
 from . import encode as enc
 from .backend import upscale_dir
 from .i18n import t
-from .paths import PATHS, Paths
+from .paths import PATHS, Paths, gb_liberi
 from .plan import Plan
 
 
@@ -117,8 +118,8 @@ class JobError(RuntimeError):
 #  Due file e non uno perché rispondono a domande diverse: il primo è uno
 #  stato ("adesso è fermo?"), il secondo è un totale che sopravvive alle
 #  pause successive.
-SOSPESO = ".sospeso"
-PAUSE_TOTALI = ".pause_totali"
+SOSPESO = ".suspended"
+PAUSE_TOTALI = ".paused_seconds"
 
 
 def sospensione(work: Path) -> float:
@@ -139,7 +140,7 @@ def sospensione(work: Path) -> float:
     except (OSError, ValueError):
         pass
     try:
-        dati = json.loads((work / SOSPESO).read_text())
+        dati = su_disco.leggi(work / SOSPESO)
         da = float(dati.get("da") or 0)
         if da:
             totale += max(0.0, time.time() - da)
@@ -205,7 +206,9 @@ def identita_sorgente(path: Path, root: Path) -> str:
     progetto per ottenere lo stesso effetto.
 
     Per i file dentro il progetto si usa quindi il percorso RELATIVO alla
-    radice, che la copia conserva. Per quelli fuori resta l'assoluto: non c'e'
+    radice, che la copia conserva. La radice e' la cartella che contiene
+    INPUT: con la disposizione di sempre l'identita' resta `INPUT/<nome>`,
+    anche dopo che la 1.6 ha separato INPUT da OUTPUT. Per quelli fuori resta l'assoluto: non c'e'
     niente di meglio, ed è comunque il caso raro.
     """
     try:
@@ -477,7 +480,7 @@ class Job:
         # del nome il lavoro già fatto restava orfano.
         base = safe_name(
             plan.source.path.stem,
-            identita_sorgente(plan.source.path, self.paths.root),
+            identita_sorgente(plan.source.path, self.paths.input.parent),
         )
         impronta = base.rsplit(" ", 1)[-1]
         # Impronta della convenzione PRECEDENTE (percorso assoluto). Va ancora
@@ -533,7 +536,7 @@ class Job:
     def __load_state(self) -> None:
         if self.state_path.is_file():
             try:
-                state = json.loads(self.state_path.read_text())
+                state = su_disco.leggi(self.state_path)
             except (json.JSONDecodeError, OSError, ValueError, UnicodeDecodeError):
                 state = {}
             if isinstance(state, dict):
@@ -591,7 +594,7 @@ class Job:
 
     def _save_state(self) -> None:
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
-        _scrivi_atomico(self.state_path, json.dumps(self.state, indent=2))
+        _scrivi_atomico(self.state_path, su_disco.dumps(self.state, indent=2))
 
     # --- esecuzione -------------------------------------------------------
     def run(self, progress: Progress | None = None) -> JobResult:
@@ -622,12 +625,12 @@ class Job:
             # rifiuto per spazio insufficiente, che avviene prima ancora del
             # controllo del lucchetto.
             if self._lucchetto_mio:
-                (self.work / "in-corso.lock").unlink(missing_ok=True)
+                (self.work / "running.lock").unlink(missing_ok=True)
                 self._lucchetto_mio = False
             # Un'eccezione qui dentro nasconderebbe l'errore vero (per esempio
             # il disco pieno che ha fatto fallire la lavorazione).
             try:
-                _rilascia(self.paths.work / ".prenotazioni")
+                _rilascia(self.paths.work / ".reservations")
             except OSError:
                 pass
 
@@ -643,7 +646,7 @@ class Job:
         # Si controlla PRIMA di cominciare. Riempire il disco a metà
         # lavorazione non rovina solo questo file: blocca il sistema e può
         # corrompere lo stato di altri lavori in corso.
-        libero_gb = shutil.disk_usage(self.paths.root).free / 1_073_741_824
+        libero_gb = gb_liberi(self.paths.output)
         gia_fatto = sum(
             f.stat().st_size for f in self.frames_dir.glob("*.png")
         ) / 1_073_741_824 if self.frames_dir.is_dir() else 0.0
@@ -663,7 +666,7 @@ class Job:
                                errore=exc.strerror or exc)) from exc
 
         self.paths.work.mkdir(parents=True, exist_ok=True)
-        registro = self.paths.work / ".prenotazioni"
+        registro = self.paths.work / ".reservations"
         altrui = sum(_prenotazioni(registro).values())
         if serve > libero_gb - altrui:
             raise JobError(
@@ -698,7 +701,7 @@ class Job:
         # `os.link` invece è atomico e fallisce se la destinazione esiste: il
         # contenuto viene scritto PRIMA che il lucchetto sia visibile, quindi
         # non può mai essere letto vuoto.
-        lock = self.work / "in-corso.lock"
+        lock = self.work / "running.lock"
         provvisorio = self.work / f".lock-{os.getpid()}"
         for _tentativo in range(3):
             provvisorio.unlink(missing_ok=True)
@@ -767,7 +770,7 @@ class Job:
                 self.frames_dir = self.work / "frames"
                 self.segments_dir = self.work / "segments"
                 self.state_path = self.work / "state.json"
-                lock = self.work / "in-corso.lock"
+                lock = self.work / "running.lock"
             except OSError:
                 pass          # si continua con la vecchia: peggio, ma funziona
 
@@ -1147,7 +1150,7 @@ class Job:
         liberare spazio.
         """
         try:
-            libero = shutil.disk_usage(self.paths.root).free / 1_073_741_824
+            libero = gb_liberi(self.paths.output)
         except OSError:
             return ""
         if libero < 2.0:

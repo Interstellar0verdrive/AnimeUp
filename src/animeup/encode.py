@@ -209,7 +209,7 @@ def concat_and_mux(
     # La rinomina sullo stesso volume è atomica: o il file intero, o niente.
     # `-f matroska` esplicito: senza estensione .mkv ffmpeg non saprebbe
     # quale contenitore usare.
-    provvisorio = plan.output.with_name(plan.output.name + ".inlavorazione")
+    provvisorio = plan.output.with_name(plan.output.name + ".incomplete")
     cmd = [
         str(p.ffmpeg.path), "-hide_banner", "-v", "error", "-y",
         "-f", "concat", "-safe", "0", "-i", str(listing),

@@ -5,7 +5,7 @@ versione in uso. Niente aggiornamento automatico: si mostra una nota con il
 link alla pagina della release, e l'utente decide. Il controllo è l'unica
 connessione che AnimeUp fa da solo dopo il primo avvio, ed è spegnibile.
 
-Il risultato vive in `registri/aggiornamenti.json`, così un riavvio non ripete
+Il risultato vive in `records/update-check.json`, così un riavvio non ripete
 la richiesta e l'interfaccia legge un file invece di aspettare la rete: la
 richiesta vera gira in un thread, e la nota compare al giro successivo.
 """
@@ -19,7 +19,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-from . import __version__
+from . import __version__, su_disco
 from .paths import PATHS
 
 REPO = "Interstellar0verdrive/AnimeUp"
@@ -31,7 +31,7 @@ _in_volo = threading.Lock()
 
 
 def _file() -> Path:
-    return PATHS.logs / "aggiornamenti.json"
+    return PATHS.logs / "update-check.json"
 
 
 def versione(testo: str) -> tuple[int, ...] | None:
@@ -43,7 +43,7 @@ def versione(testo: str) -> tuple[int, ...] | None:
 
 def _leggi() -> dict:
     try:
-        dati = json.loads(_file().read_text())
+        dati = su_disco.leggi(_file())
     except (OSError, ValueError):
         return {}
     return dati if isinstance(dati, dict) else {}
@@ -52,7 +52,7 @@ def _leggi() -> dict:
 def _scrivi(dati: dict) -> None:
     try:
         _file().parent.mkdir(parents=True, exist_ok=True)
-        _file().write_text(json.dumps(dati, indent=2))
+        _file().write_text(su_disco.dumps(dati, indent=2))
     except OSError:
         pass
 

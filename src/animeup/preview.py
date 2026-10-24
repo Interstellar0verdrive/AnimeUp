@@ -244,7 +244,7 @@ def _schedario(plan: Plan, per_kind: int, seconds: int, p: Paths,
     firma = (f"{plan.source.path.name}|{st.st_size}|{int(st.st_mtime)}"
              f"|{per_kind}|{seconds}|lotto{lotto}|r{REGOLA_SCELTA}")
     h = hashlib.sha1(firma.encode()).hexdigest()[:12]
-    return p.previews / ".spezzoni" / f"{plan.source.path.stem[:60]}-{h}.json"
+    return p.previews / "clips" / f"{plan.source.path.stem[:60]}-{h}.json"
 
 
 def deposito(plan: Plan, per_kind: int = 2, seconds: int = DEFAULT_SECONDS,
@@ -580,14 +580,14 @@ def render(
     # nuova, accumulando duplicati in anteprime/.
     base = safe_name(
         plan.source.path.stem,
-        identita_sorgente(plan.source.path, p.root),
+        identita_sorgente(plan.source.path, p.input.parent),
         con_data=False,
     )
     folder = p.previews / base / firma / candidate.slug
     folder.mkdir(parents=True, exist_ok=True)
     result = PreviewResult(candidate=candidate, folder=folder)
 
-    for straccio in folder.glob("*.inlavorazione.mkv"):
+    for straccio in folder.glob("*.incomplete.mkv"):
         straccio.unlink(missing_ok=True)
 
     def _intera(f: Path) -> bool:
@@ -615,7 +615,7 @@ def render(
     # stessa firma di parametri, quindi il tempo resta rappresentativo.
     tempi_salvati: dict = {}
     try:
-        dati_t = json.loads((folder / "tempi.json").read_text())
+        dati_t = json.loads((folder / "timings.json").read_text())
         if isinstance(dati_t, dict):
             tempi_salvati = {k: float(v) for k, v in dati_t.items()}
     except (OSError, ValueError, TypeError):
@@ -679,7 +679,7 @@ def render(
                 if callable(on_done):
                     on_done()
                 continue
-            provvisorio = out.with_name(f"{variant.key}.inlavorazione.mkv")
+            provvisorio = out.with_name(f"{variant.key}.incomplete.mkv")
             if variant.is_reference:
                 enc.encode_segment(plan, frames, provvisorio, paths=p)
             else:
@@ -704,7 +704,7 @@ def render(
     result.seconds = time.monotonic() - started
     try:
         unione = {**tempi_salvati, **result.tempi}
-        (folder / "tempi.json").write_text(json.dumps(unione, indent=2))
+        (folder / "timings.json").write_text(json.dumps(unione, indent=2))
     except OSError:
         pass
     return result

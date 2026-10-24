@@ -12,7 +12,7 @@ prodotto, così il caricamento del modello resta fuori dal conto (era già
 successo: un campione breve aveva fatto misurare 0.57 Mpx/s a un modello
 che in produzione ne fa 0.85, vedi models.py).
 
-Il risultato vive in registri/taratura.json, chiavato sul CHIP: una copia
+Il risultato vive in records/calibration.json, chiavato sul CHIP: una copia
 della cartella portata su un altro Mac non sporca le stime di nessuno,
 perché ogni macchina legge solo la propria voce.
 """
@@ -28,6 +28,7 @@ from pathlib import Path
 
 from .i18n import t
 from .models import CATALOG
+from . import su_disco
 from .paths import PATHS, Paths
 
 CLIP = "bbb-480p.mkv"
@@ -194,7 +195,7 @@ def in_corso(paths: Paths | None = None) -> bool:
     import os
 
     p = paths or PATHS
-    marcatore = p.root / ".cache" / "taratura" / "in-corso.lock"
+    marcatore = p.cache / "calibration" / "running.lock"
     try:
         pid = int(marcatore.read_text().strip())
     except (OSError, ValueError):
@@ -209,14 +210,14 @@ def in_corso(paths: Paths | None = None) -> bool:
 
 
 def _file(p: Paths) -> Path:
-    return p.logs / "taratura.json"
+    return p.taratura
 
 
 def carica(paths: Paths | None = None, *, macchina: str | None = None) -> dict | None:
     """La voce di taratura di QUESTA macchina, o None se non è mai stata fatta."""
     p = paths or PATHS
     try:
-        dati = json.loads(_file(p).read_text())
+        dati = su_disco.leggi(_file(p))
     except (OSError, ValueError):
         return None
     voce = dati.get("macchine", {}).get(macchina or chip())
@@ -322,10 +323,10 @@ def esegui(paths: Paths | None = None, *, clip: Path | None = None,
     if in_corso(p):
         raise RuntimeError(t("mot.taratura.gia_in_corso"))
 
-    lavoro = p.root / ".cache" / "taratura"
+    lavoro = p.cache / "calibration"
     shutil.rmtree(lavoro, ignore_errors=True)
     (lavoro / "frames").mkdir(parents=True)
-    (lavoro / "in-corso.lock").write_text(str(os.getpid()))
+    (lavoro / "running.lock").write_text(str(os.getpid()))
     try:
         return _giro(p, sorgente, lavoro, avanzamento)
     finally:
@@ -685,14 +686,14 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
     }
 
     try:
-        dati = json.loads(_file(p).read_text())
+        dati = su_disco.leggi(_file(p))
     except (OSError, ValueError):
         dati = {}
     dati.setdefault("versione", 1)
     dati.setdefault("macchine", {})[chip()] = voce
     p.logs.mkdir(parents=True, exist_ok=True)
     provvisorio = _file(p).with_suffix(".json.tmp")
-    provvisorio.write_text(json.dumps(dati, indent=2))
+    provvisorio.write_text(su_disco.dumps(dati, indent=2))
     provvisorio.replace(_file(p))
 
     return voce

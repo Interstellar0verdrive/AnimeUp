@@ -13,7 +13,7 @@ l'italiano la lingua "vera" e l'inglese una traduzione che può mancare.
 Con le chiavi le due lingue sono pari, e un test verifica che abbiano le
 stesse voci con gli stessi segnaposto.
 
-La lingua si sceglie nella sidebar e si salva in `registri/impostazioni.json`
+La lingua si sceglie nella sidebar e si salva in `records/settings.json`
 (chiave `lingua`), lo stesso file delle altre preferenze: così la riga di
 comando parla la stessa lingua dell'interfaccia senza un'altra impostazione.
 """
@@ -56,10 +56,11 @@ def preferita() -> str:
         return forzata
     # Import qui e non in testa: `paths` non deve dipendere dai testi, e
     # chi importa solo i cataloghi (i test) non deve risolvere la radice.
+    from . import su_disco
     from .paths import PATHS
 
     try:
-        dati = json.loads((PATHS.logs / "impostazioni.json").read_text())
+        dati = su_disco.leggi(PATHS.impostazioni)
     except (OSError, ValueError):
         return PREDEFINITA
     lingua = dati.get("lingua") if isinstance(dati, dict) else None

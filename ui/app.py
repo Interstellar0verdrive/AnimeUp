@@ -48,14 +48,14 @@ sys.path.insert(0, str(CODICE / "src"))
 
 import streamlit as st  # noqa: E402
 
-from animeup import __version__  # noqa: E402
+from animeup import __version__, su_disco  # noqa: E402
 from animeup import (  # noqa: E402
     aggiornamenti, i18n, library, monitor, preview, primo_avvio, taratura)
 from animeup.i18n import t, tn  # noqa: E402
 from animeup.models import (  # noqa: E402
     ALTEZZA_INCERTA, CATALOG, CLEAN_SOURCE_MIN_HEIGHT, altezza_minima,
     recommend)
-from animeup.paths import PATHS  # noqa: E402
+from animeup.paths import PATHS, gb_liberi  # noqa: E402
 from animeup.ffmpeg import FFmpegError  # noqa: E402
 from animeup.plan import PlanError, build_plan  # noqa: E402
 from animeup.probe import FieldMode  # noqa: E402
@@ -2926,7 +2926,7 @@ def _tetto_spazio() -> tuple[int, int]:
     «servono almeno N GB, liberi M» — non un cursore che sparisce.
     """
     try:
-        libero = int(shutil.disk_usage(PATHS.root).free / 1_073_741_824)
+        libero = int(gb_liberi(PATHS.output))
     except OSError:
         return 120, 120
     return max(MINIMO_SPAZIO_GB + 1,
@@ -2968,7 +2968,7 @@ def _predefiniti() -> dict:
 
 
 def _impostazioni_file() -> Path:
-    return PATHS.logs / "impostazioni.json"
+    return PATHS.impostazioni
 
 
 def _impostazioni_carica() -> dict:
@@ -2976,7 +2976,7 @@ def _impostazioni_carica() -> dict:
     versione futura non deve poter rompere i widget (che con un valore fuori
     scala sollevano eccezione, non avvisano)."""
     try:
-        dati = json.loads(_impostazioni_file().read_text())
+        dati = su_disco.leggi(_impostazioni_file())
     except (OSError, ValueError):
         dati = {}
     puliti = _impostazioni_pulite(dati)
@@ -3054,7 +3054,7 @@ def _impostazioni_pulite(dati: object) -> dict:
 def _impostazioni_scrivi(cfg: dict) -> None:
     try:
         _impostazioni_file().parent.mkdir(parents=True, exist_ok=True)
-        _impostazioni_file().write_text(json.dumps(
+        _impostazioni_file().write_text(su_disco.dumps(
             {k: cfg[k] for k in _IMPOSTAZIONI_DEFAULT}, indent=2))
     except OSError:
         pass
@@ -3065,7 +3065,7 @@ def _leggi_parametri(cartella: Path | None) -> dict:
     if cartella is None:
         return {}
     try:
-        dati = json.loads((cartella / "parametri.json").read_text())
+        dati = su_disco.leggi(cartella / "parameters.json")
         return dati if isinstance(dati, dict) else {}
     except (OSError, ValueError):
         return {}
@@ -3130,7 +3130,7 @@ def _ricetta_sospesa() -> dict:
     for lav in monitor.lavori():
         if lav.vivo:
             continue
-        f = lav.cartella / "parametri.json"
+        f = lav.cartella / "parameters.json"
         try:
             mt = f.stat().st_mtime
         except OSError:
@@ -3169,7 +3169,7 @@ def _tocca_modelli(path: str) -> None:
 
 
 def _lancio_visto_file() -> Path:
-    return PATHS.logs / ".ultimo-lancio-visto"
+    return PATHS.logs / ".last-launch-seen"
 
 
 def _lancio_da_mostrare() -> dict | None:
@@ -4882,7 +4882,7 @@ def _spezzoni(plan, path: Path, cfg: dict,
             # La durata sta nel nome: cambiarla senza cambiare il nome
             # avrebbe continuato a servire i ritagli vecchi dalla cache.
             secondi = int(round(cand.frames / cand.fps))
-            base = (PATHS.previews / ".spezzoni"
+            base = (PATHS.previews / "clips"
                     / f"{path.stem}_{cand.slug}_{secondi}s")
             clip = preview.animation(
                 plan, cand, base.with_suffix(".mp4"), on_step=_passo)
@@ -7239,7 +7239,7 @@ def _avvia(piani, cfg: dict, modello: str | None = None) -> bool:
     if taratura.in_corso():
         st.error(t("lav.avvia_taratura"), icon="⚠️")
         return False
-    registro = PATHS.logs / "lavorazione.log"
+    registro = PATHS.registro_coda
     registro.parent.mkdir(parents=True, exist_ok=True)
 
     per_modello: dict[str, list] = {}
@@ -7353,7 +7353,7 @@ def _ferma(lav, *, tutto: bool) -> None:
     dopo un crash il numero può essere stato riciclato da un processo
     innocente, e il monitor non può accorgersene.
     """
-    lock = lav.cartella / "in-corso.lock"
+    lock = lav.cartella / "running.lock"
     try:
         pid = int(lock.read_text().strip())
     except (OSError, ValueError):
@@ -7421,7 +7421,7 @@ def _pausa(lav, *, riprendi: bool) -> str:
     """
     from animeup.pipeline import SOSPESO, PAUSE_TOTALI
 
-    lock = lav.cartella / "in-corso.lock"
+    lock = lav.cartella / "running.lock"
     try:
         pid = int(lock.read_text().strip())
     except (OSError, ValueError):
@@ -7434,7 +7434,7 @@ def _pausa(lav, *, riprendi: bool) -> str:
         # Prima si risveglia, poi si toglie il marcatore: se qualcosa va
         # storto in mezzo, resta il segno di cosa c'e' da risvegliare.
         try:
-            dati = json.loads(marcatore.read_text())
+            dati = su_disco.loads(marcatore.read_text())
         except (OSError, ValueError, json.JSONDecodeError):
             dati = {}
         for p in dati.get("pids") or _operai_sotto(pid):
@@ -7468,7 +7468,7 @@ def _pausa(lav, *, riprendi: bool) -> str:
     # cose, meglio un marcatore senza pausa (si vede e si toglie) che dei
     # processi congelati senza nessuno che sappia quali sono.
     try:
-        marcatore.write_text(json.dumps({"da": time.time(), "pids": operai}))
+        marcatore.write_text(su_disco.dumps({"da": time.time(), "pids": operai}))
     except OSError:
         return t("lav.pausa_marcatore")
     for p in operai:
