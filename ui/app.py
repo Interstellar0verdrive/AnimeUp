@@ -3931,6 +3931,13 @@ def sidebar() -> dict:
     # La fascia è ANCORATA in fondo alla sidebar (sticky): prima il
     # pulsante finiva fuori dall'area di scroll e per trovarlo bisognava
     # sapere che c'era — il contenuto ora le scorre sotto.
+    # Nell'app per macOS si esce dal menu (⌘Q), che ferma il server e chiude
+    # la finestra insieme: il pulsante spegnerebbe solo il server, lasciando
+    # la finestra vuota davanti all'utente.
+    if os.environ.get("ANIMEUP_APP") == "1":
+        return {"altezza": altezza, "crf": crf, "dedup": dedup, "preset": preset,
+                "denoise": denoise, "disco": disco, "forza": forza, "pausa": pausa,
+                "approfondita": approfondita}
     with st.sidebar.container(key="spegnimento"):
         conferma_off = st.session_state.get("conferma_spegni")
         spegni_armato = (isinstance(conferma_off, float)
