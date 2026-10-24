@@ -3851,7 +3851,8 @@ def sidebar() -> dict:
     # La voce di manutenzione: data dell'ultima taratura e l'ingresso alla
     # modale. Vive in Sistema perche' e' della macchina, non del lavoro.
     with st.sidebar.container(key="swAggiorn"):
-        controlla_agg = st.toggle(t("sb.controlla_agg"), key="w_aggiornamenti")
+        controlla_agg = st.toggle(t("sb.controlla_agg"), key="w_aggiornamenti",
+                                  disabled=congelata)
         _aiuto_a_destra(t("sb.controlla_agg_aiuto"), t("sb.abilitato"))
 
     # La cartella dei dati si sceglie solo nell'app: nella modalita' a
