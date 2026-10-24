@@ -3,15 +3,15 @@
   if (!select) return;
 
   const paletteIds = {
-    slate: "__palette_0",
-    "animeup-auto": "__palette_1",
-    default: "__palette_2",
+    "animeup-auto": "__palette_0",
+    default: "__palette_1",
+    slate: "__palette_2",
   };
   const favicon = document.querySelector('link[rel="icon"]');
   const systemLight = window.matchMedia("(prefers-color-scheme: light)");
 
   const sync = () => {
-    const scheme = document.body.dataset.mdColorScheme || "slate";
+    const scheme = document.body.dataset.mdColorScheme || "animeup-auto";
     if (scheme in paletteIds) select.value = scheme;
     const light = scheme === "default" || (scheme === "animeup-auto" && systemLight.matches);
     if (favicon) favicon.href = light ? select.dataset.faviconLight : select.dataset.faviconDark;
