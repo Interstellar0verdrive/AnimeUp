@@ -98,7 +98,7 @@ This expandable panel answers the question in two parts.
 
 When the choice is genuinely open (the middle band, with light denoise reachable), the whole panel turns **yellow**. That's the case where you should open it and run a test.
 
-**The general rule** follows: the same three bands, for all files. Below 380p, animevideov3. Between 380p and 560p, animevideov3 as the safe choice with CUGAN light denoise worth considering. Above 560p, CUGAN no-denoise. As the panel notes, this comes from 1:1 comparisons of several real jobs, not from theory.
+**The general rule** follows: the same three bands, for all files. Below 380p, animevideov3. Between 380p and 560p, animevideov3 as the safe choice with CUGAN light denoise worth considering. Above 560p, CUGAN no-denoise. The middle band follows your **Output height**, because light denoise only exists at 2×: at 1080p it's suggested only from 540p up (and the text says so), at 1440p or higher it drops out of the band and animevideov3 is the only advice. With **Allow upscales below the minimum** on, the full rule comes back. As the panel notes, this comes from 1:1 comparisons of several real jobs, not from theory.
 
 ![Compare: the Which model should I choose? panel expanded](img/compare-which-model.png)
 

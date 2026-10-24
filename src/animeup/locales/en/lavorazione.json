@@ -93,6 +93,7 @@
   "lav.det_cartella": "Folder",
   "lav.det_finder": "{cartella} · show in Finder",
   "lav.avvia_no_lanciatore": "Launcher not found at {percorso}: the job didn't start.",
+  "lav.avvia_taratura": "A calibration is running: the job would share the GPU with it, and the calibration would save wrong numbers. Wait for it to finish, then start again.",
   "lav.avvia_fallito": "The job didn't start (exit code {codice}). More details in the log: `{registro}`",
   "lav.avvia_gruppo": "{n} with {modello}",
   "lav.avvia_sequenza": "one after another",

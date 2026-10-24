@@ -79,6 +79,8 @@ Click **Run now** (or **Redo**) to open the **Calibrate estimates** window.
 
 The button is greyed out while a job is running, queued, or in the pause between files: the whole sidebar is locked then (see [03. The interface](03-interface.md)). Wait for the queue to finish, or stop it with **Stop all** in the Processing tab.
 
+It works the other way round too: while a calibration is running, **Start processing** and **Resume** in the Processing tab are disabled, with a line in the bottom bar that says why. That holds even if you close the calibration window, since the calibration carries on in the background until it saves.
+
 ## The calibration window
 
 The window goes through three stages in place: what it does, the stopwatch, and the results.

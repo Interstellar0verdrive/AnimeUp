@@ -44,7 +44,7 @@ Find the symptom, read what it means, apply the fix. Nothing on this page can da
 |---|---|---|
 | *No videos in INPUT* | Nothing AnimeUp recognises in `INPUT/`. | Copy `.mkv`, `.mp4`, `.mov`, `.avi`, `.m4v`, `.ts` or `.webm` files into `INPUT/`. |
 | *File probably truncated…* | The video stops before the duration the container declares. | The output would end there too. Get a complete copy of the file if you can. |
-| *Interlaced content…* or *3:2 telecine detected…* | AnimeUp doesn't deinterlace or inverse-telecine, and refuses the file. | Prepare it with a dedicated tool, then put the result back in `INPUT/`. |
+| *Interlaced content…* or *3:2 telecine detected…* | AnimeUp doesn't deinterlace or inverse-telecine. It flags the file but doesn't refuse it: processed as it is, the combing lines end up upscaled in the output. | Prepare it with a dedicated tool, then put the result back in `INPUT/`. |
 | *No usable video track* | The file has no video AnimeUp can read. | Check the file in a player; it can't be processed. |
 | A file changed but its analysis didn't | Results are saved by file name. | **Re-analyse** on its row, or **Re-analyse all**. |
 
@@ -74,7 +74,7 @@ More warnings, and what each means, are in [04. Sources](../04-sources.md).
 | A row stays **interrupted** | Stopped, crashed, or the Mac slept or shut down. | **Resume** continues with the original parameters; **Discard** throws the partial work away. See [06. Processing](../06-processing.md). |
 | A row says **needs redoing**, or `OUTPUT/` contains a `.PARZIALE.mkv` | The final checks found a defect, so the output was set aside instead of keeping its proper name. | Run the file again: it's redone. |
 | A file marked **done** asks to be redone | It was processed, but its output is no longer in `OUTPUT/` (moved or archived). | Confirm only if you want it again. |
-| `JOBS/` takes a lot of space | A job is half-finished, or finished with warnings and kept for inspection. | Resume or **Discard** it; a folder of a finished job can be deleted by hand. |
+| `JOBS/` takes a lot of space | A job is half-finished, or a finished job left its work folder behind. | Resume or **Discard** it: finished rows with a leftover folder have their own **Discard**. |
 | Estimates are far from the real time | Uncalibrated Mac, or the first files of a new kind of material. | Calibrate (see below). Estimates also learn from every finished file. |
 
 ### Stopping a job without the interface
