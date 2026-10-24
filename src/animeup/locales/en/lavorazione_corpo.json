@@ -20,7 +20,7 @@
   "lavb.chip_pausa_aiuto": "The processes are frozen where they were: no GPU, no CPU. On resume they continue from exactly this point, and the time spent paused isn't counted in the file's duration.",
   "lavb.chip_in_corso": "in progress",
   "lavb.chip_da_rifare": "needs redoing",
-  "lavb.chip_da_rifare_aiuto": "The last job produced an incomplete file: the output was set aside as .PARZIALE instead of staying in OUTPUT under its proper name. If you run it again, the file is redone from scratch.",
+  "lavb.chip_da_rifare_aiuto": "The last job produced an incomplete file: the output was set aside as .DEFECTIVE instead of staying in OUTPUT under its proper name. If you run it again, the file is redone from scratch.",
   "lavb.chip_fatto": "done",
   "lavb.chip_fatto_spostato": "The file was produced, but the output is no longer in OUTPUT: it was probably moved. Ticking it again redoes it from scratch.",
   "lavb.avvisi.uno": "{n} warning",

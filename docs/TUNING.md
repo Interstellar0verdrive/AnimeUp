@@ -78,21 +78,21 @@ wrong?".
 
 1. **Factory estimates, replaced by measurement.** They only matter until
    the machine has been calibrated. Once calibration is done, the number
-   written in the code is no longer read: `registri/taratura.json` wins. The
+   written in the code is no longer read: `records/calibration.json` wins. The
    factory value is a compromise across different machines, so it's
    *normal* for it not to match any particular one.
 2. **Values overridden by history.** These are about content, not hardware.
-   As soon as there are job reports in `esiti.jsonl`, what those files
+   As soon as there are job reports in `history.jsonl`, what those files
    actually did is used instead of the theoretical value.
 3. **True constants.** Nothing replaces them: they always apply, on every
    machine and with every kind of material.
 
 | constant | where | evidence | applies until | effect if it's wrong |
 |---|---|---|---|---|
-| `FPS_CODIFICA = 8.0` | `plan.py` | 9.28 fps measured on 240 1080p frames, idle machine | **until calibration** → `codifica_fps` | time range shifted |
+| `FPS_CODIFICA = 8.0` | `plan.py` | 9.28 fps measured on 240 1080p frames, idle machine | **until calibration** → `encoding_fps` | time range shifted |
 | catalogue `throughput` | `models.py` | from the logs of real jobs | **until calibration** → `mpxs` | time range |
 | extraction 60 f/s, scan 200 f/s | `plan.py` (inline) | initial measurements | **until calibration** | time range |
-| `MPX_TARATURA` | `plan.py` | size of the test clip | **until calibration** → `mpx_misura` | scales badly across resolutions |
+| `MPX_TARATURA` | `plan.py` | size of the test clip | **until calibration** → `sample_mpx` | scales badly across resolutions |
 | `DEDUP_MASSIMO = 0.60` | `plan.py` | observed 57%, 46%, 41%, 28%, 11% | **until the first job report** → observed deduplication | optimistic end of the range |
 | `MARGINE_PESSIMISTA = 1.25` | `plan.py` | the measurements are averages; a busy scene costs more | **always** | upper bound of the range |
 | `BYTES_PER_PIXEL_SOURCE = 1.05` | `plan.py` | measured 0.93–1.08 | **always** | see note below |
@@ -187,7 +187,7 @@ more than the number of cores) rather than from the maximum: an aggressive
 default on a small machine pays the cost of saturation without the benefit.
 
 **Why calibration alone isn't enough to estimate an encoding pass.**
-`codifica_fps` measures pure encoding, but the pass between one chunk and the
+`encoding_fps` measures pure encoding, but the pass between one chunk and the
 next also includes rebuilding the duplicate frames. Measured on a four-chunk
 job: 234 seconds predicted by calibration against 280, 463 and 303 measured,
 i.e. an underestimate of 49%. That's why, for the time remaining, the

@@ -99,10 +99,11 @@ def estrai_finestra(p: Paths, src: Path, start: float, resto: list[str],
 
 
 class Kind(str, Enum):
-    STATIC = "statico"
-    MOTION = "movimento"
-    DARK = "scuro"
-    BRIGHT = "luminoso"
+    # I valori finiscono nei nomi delle cartelle delle clip: in inglese.
+    STATIC = "static"
+    MOTION = "motion"
+    DARK = "dark"
+    BRIGHT = "bright"
 
     @property
     def tests(self) -> str:
@@ -152,11 +153,11 @@ class Candidate:
 class Variant:
     """Una configurazione da confrontare."""
 
-    key: str            # chiave nel catalogo, oppure "originale"
+    key: str            # chiave nel catalogo, oppure "original"
 
     @property
     def is_reference(self) -> bool:
-        return self.key == "originale"
+        return self.key == "original"
 
     @property
     def label(self) -> str:
@@ -167,7 +168,7 @@ class Variant:
         return CATALOG[self.key].label
 
 
-REFERENCE = Variant("originale")
+REFERENCE = Variant("original")
 
 
 def scale_for(key: str, plan: Plan) -> int:
@@ -715,7 +716,7 @@ def render(
 # dal piu' leggero al piu' pesante — animevideov3 prima di CUGAN (chiesto
 # dall'utente il 12/08). Un ordine solo, deciso qui, o le tre viste si
 # contraddicono e il confronto diventa un esercizio di memoria.
-ORDINE = ("originale", "animevideov3", "cugan", "cugan-denoise")
+ORDINE = ("original", "animevideov3", "cugan", "cugan-denoise")
 
 # Versione della REGOLA con cui si scelgono gli spezzoni. Si alza quando la
 # scelta cambia, cosi' le casse scritte con la regola vecchia non vengono
@@ -868,10 +869,10 @@ def crop_sheet(
     # Gli indicatori si calcolano QUI: i fotogrammi sono gia' estratti e in
     # memoria, quindi costano una manciata di millisecondi. Rifarli altrove
     # significherebbe una seconda estrazione per gli stessi pixel.
-    reference = grabbed.get("originale") or next(iter(grabbed.values()))
+    reference = grabbed.get("original") or next(iter(grabbed.values()))
     zone = _zone_piatte(reference)
     grezzi = {k: _indicatori(v, zone) for k, v in grabbed.items()}
-    base = grezzi.get("originale")
+    base = grezzi.get("original")
     if base:
         # I due indicatori si normalizzano SEPARATAMENTE: prima bastava che
         # uno dei due fosse zero per far sparire anche l'altro, e siccome il
@@ -922,12 +923,12 @@ def crop_sheet(
     for i, key in enumerate(order):
         cx, cy = (i % cols) * size, (i // cols) * (size + label_h)
         sheet.paste(grabbed[key].crop((bx, by, bx + size, by + size)), (cx, cy + label_h))
-        name = (t("mot.preview.originale_ingrandito") if key == "originale"
+        name = (t("mot.preview.originale_ingrandito") if key == "original"
                 else CATALOG[key].label)
         draw.text((cx + 6, cy + 6), name, fill=(235, 235, 235),
                   font=carattere)
 
-    dest = result.folder / "confronto_1a1.png"
+    dest = result.folder / "comparison_1to1.png"
     sheet.save(dest)
     result.crop_sheet = dest
     return dest

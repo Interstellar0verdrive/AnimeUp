@@ -106,12 +106,12 @@ The Notes column shows **one** status per row, picked in a fixed order of import
 | **in progress** (blue) | This file is being processed right now. | Follow it on the row, see [While a queue is running](#while-a-queue-is-running). |
 | **paused** (yellow) | The job is frozen by **Pause**: no GPU, no CPU. On resume it continues from exactly this point, and the paused time isn't counted in the file's duration. | **Resume** in the bottom bar. |
 | **queued** | The file is waiting for its turn in the current launch. | Nothing. |
-| **interrupted** (yellow) | A job for this file was started and didn't finish: stopped by you, or cut short by a crash, a closed lid or a killed process. Its work so far is kept in `JOBS/`. | **Resume** or **Discard**, see [Interruptions](#interruptions-and-resuming). |
+| **interrupted** (yellow) | A job for this file was started and didn't finish: stopped by you, or cut short by a crash, a closed lid or a killed process. Its work so far is kept in `OUTPUT/JOBS/`. | **Resume** or **Discard**, see [Interruptions](#interruptions-and-resuming). |
 | **own settings** (grey, next to **interrupted**) | The interrupted job was started with settings that differ from the ones now in the sidebar. The tooltip lists them (height, CRF, preset, GB, model). Disk space alone doesn't turn it on: it's recalculated at every launch. **Resume** will use those original settings, not the current ones. | To redo it with the new settings, **Discard** it first, then start it again. |
 | **done** (blue) | The output for this file, with exactly the current settings, exists in `OUTPUT/`. Ticking it does nothing: it's skipped. | To redo it, change a setting or the model, or move the output away. |
 | **done** with a tooltip | The file was produced with exactly these settings, but the output is no longer in `OUTPUT/` (you probably moved it to your library). | Nothing, unless you want it again: tick it and confirm in the bottom bar (see [Already processed](#already-processed-files-redo-or-dont-redo)). |
 | **1 warning** / **n warnings** (yellow, next to **done**) | The job finished, but left notes. Hover for the text. | Read them. Usually informational. |
-| **needs redoing** (red) | The last job produced a damaged file. The output was set aside as `….PARZIALE.mkv` instead of keeping its proper name in `OUTPUT/`. | Run it again (see [Damaged output](#damaged-output-parzialemkv)). |
+| **needs redoing** (red) | The last job produced a damaged file. The output was set aside as `….DEFECTIVE.mkv` instead of keeping its proper name in `OUTPUT/`. | Run it again (see [Damaged output](#damaged-output-parzialemkv)). |
 | **awaiting analysis** (grey) | The background analysis hasn't reached this file yet. The tick box is disabled. | Wait. The row fills in by itself. |
 | **can't be processed** (red), or a more specific red chip | No plan can be built for this file with the current settings. Hover for the full reason. | See the next table. |
 
@@ -225,7 +225,7 @@ A file whose output **is** still in `OUTPUT/` is simply counted under **Already 
 Press **Start processing**. What happens:
 
 1. For a large batch, the bar first says **Starting: analysing the selected files, which can take up to a minute with a large batch. Please be patient...**
-2. A green message confirms the launch, for example **Started: 3 with animevideov3. You can close this page.** followed by the log path (`registri/lavorazione.log`). If you picked different models on different rows, the files are grouped by model and run **one group after another**, never together: **Started: 2 with animevideov3 + 1 with CUGAN no-denoise (one after another).**
+2. A green message confirms the launch, for example **Started: 3 with animevideov3. You can close this page.** followed by the log path (`records/queue.log`). If you picked different models on different rows, the files are grouped by model and run **one group after another**, never together: **Started: 2 with animevideov3 + 1 with CUGAN no-denoise (one after another).**
 3. The title changes to **Job in progress**, the sidebar settings lock (see [03. The interface](03-interface.md)), and the page scrolls to the running row.
 
 If something prevents the launch, you get an error instead: **Launcher not found at …: the job didn't start.**, or **The job didn't start (exit code n). More details in the log: …**. Check the log, and see [Troubleshooting](reference/troubleshooting.md).
@@ -344,12 +344,12 @@ No need to panic in any of these cases. The row shows **interrupted**, a grey ba
 
 ### What survives an interruption
 
-Everything that was finished is kept in the file's folder in `JOBS/`:
+Everything that was finished is kept in the file's folder in `OUTPUT/JOBS/`:
 
 - the **extracted frames** (phase 1 isn't repeated if it had completed);
 - the **chunks already encoded** (their segments);
 - the deduplication map and the job's state;
-- the **settings the job started with** (`parametri.json`).
+- the **settings the job started with** (`parameters.json`).
 
 What's lost is only the **chunk that was in progress**: on resume it restarts from its first frame.
 
@@ -367,14 +367,14 @@ If the sidebar differs from the original settings, the row shows the **own setti
 
 ### Discard
 
-**Discard** deletes the partial work of **this file only**: extracted frames, encoded chunks and state, that is, its folder in `JOBS/`. The row goes back to new and the disk space is freed. It **never** touches the source file in `INPUT/` or anything in `OUTPUT/`.
+**Discard** deletes the partial work of **this file only**: extracted frames, encoded chunks and state, that is, its folder in `OUTPUT/JOBS/`. The row goes back to new and the disk space is freed. It **never** touches the source file in `INPUT/` or anything in `OUTPUT/`.
 
 It's a two-step action: the first click turns the button into a red **Confirm? Discard**, and a second click within 10 seconds does it ("Job discarded: the row is back to new."). Like Resume, it's disabled while the machine is busy. Unlike Resume, it doesn't need the analysis: you can always free the space.
 
 Use Discard when you want to redo a file with a different model or settings, or when you've decided not to finish it and want the gigabytes back.
 
 !!! warning "Interrupted jobs take disk space"
-    A half-finished job can hold tens of gigabytes of PNG frames. Resume it or discard it, don't leave it lying around. See [07. Output files and folders](07-output-and-folders.md) for what's inside `JOBS/`.
+    A half-finished job can hold tens of gigabytes of PNG frames. Resume it or discard it, don't leave it lying around. See [07. Output files and folders](07-output-and-folders.md) for what's inside `OUTPUT/JOBS/`.
 
 ### Resuming after a crash, a closed lid or a kill
 
@@ -384,21 +384,21 @@ If the queue had more files after the one that was cut, they don't restart by th
 
 ### Jobs outside INPUT
 
-If a job exists in `JOBS/` for a file that's no longer in `INPUT/` (you moved the source, or it was a test started from the command line), it can't have a row. It appears in a separate section at the top, **In progress (outside INPUT)**, as a card with its name, **running** or **interrupted**, its model and a progress bar. Running cards also show the latest log line. An interrupted card says **resume it by starting the same file again**: put the source back in `INPUT/` and it gets its row, with Resume and Discard, back.
+If a job exists in `OUTPUT/JOBS/` for a file that's no longer in `INPUT/` (you moved the source, or it was a test started from the command line), it can't have a row. It appears in a separate section at the top, **In progress (outside INPUT)**, as a card with its name, **running** or **interrupted**, its model and a progress bar. Running cards also show the latest log line. An interrupted card says **resume it by starting the same file again**: put the source back in `INPUT/` and it gets its row, with Resume and Discard, back.
 
 ### Finished files with a leftover work folder
 
 A job can finish, with its output in `OUTPUT/`, but leave its work folder behind. AnimeUp itself only keeps that folder when the output is **damaged** (see below), and then the output isn't left under its proper name. So a leftover next to a good output comes from somewhere else: an older version of AnimeUp, which kept the folder for warnings too, a cleanup that was cut short, or `--tieni-temp` on the command line. The row then says **finished · output in OUTPUT; its work folder was left behind in JOBS, Discard frees the space**.
 
-The output is usable. **Discard** sits under the processing time, with the same two-step confirmation as on interrupted rows: it deletes only that folder in `JOBS/` ("Work folder deleted: the output in OUTPUT is untouched."). The output and the source file are never touched. Like every Discard, it's disabled while the machine is busy.
+The output is usable. **Discard** sits under the processing time, with the same two-step confirmation as on interrupted rows: it deletes only that folder in `OUTPUT/JOBS/` ("Work folder deleted: the output in OUTPUT is untouched."). The output and the source file are never touched. Like every Discard, it's disabled while the machine is busy.
 
-### Damaged output (`.PARZIALE.mkv`)
+### Damaged output (`.DEFECTIVE.mkv`)
 
-After assembly, AnimeUp checks the finished file. If it's **damaged** (for example frames are missing), it doesn't leave it in `OUTPUT/` under its proper name, where a later run would see it, think "already there" and skip it forever. Instead it renames it with **`.PARZIALE`** ("partial") before the extension, for example `Episode [upscale 1080p cugan x2 crf18 dd].PARZIALE.mkv`, and:
+After assembly, AnimeUp checks the finished file. If it's **damaged** (for example frames are missing), it doesn't leave it in `OUTPUT/` under its proper name, where a later run would see it, think "already there" and skip it forever. Instead it renames it with **`.DEFECTIVE`** ("partial") before the extension, for example `Episode [upscale 1080p cugan x2 crf18 dd].DEFECTIVE.mkv`, and:
 
 - counts the file as **not completed** in the summary;
 - marks the row **needs redoing**;
-- keeps the work folder in `JOBS/` for inspection.
+- keeps the work folder in `OUTPUT/JOBS/` for inspection.
 
 To fix it, run the file again: tick it (or use **Resume** if the row offers it) and start. If it keeps happening, look at the log and [Troubleshooting](reference/troubleshooting.md). A common cause is the disk filling up mid-job.
 
@@ -454,7 +454,7 @@ For the command-line way of running and stopping jobs, see the [Command-line ref
     - [ ] Every file you want is ticked, analysed, and has a green **recommended** chip (or a model you chose on purpose in Compare).
     - [ ] The bottom bar shows the number of files you expect, and the estimate says "calibrated on this Mac".
     - [ ] You know the difference between **Pause**, **Stop** and **Stop all**, and that the chunk in progress is redone after a Stop.
-    - [ ] You know that **Resume** keeps the original settings and **Discard** deletes only the work in `JOBS/`.
+    - [ ] You know that **Resume** keeps the original settings and **Discard** deletes only the work in `OUTPUT/JOBS/`.
     - [ ] You've seen the **Processing finished** window and know where your files are.
 
 [Next: 07. Output files and folders →](07-output-and-folders.md)

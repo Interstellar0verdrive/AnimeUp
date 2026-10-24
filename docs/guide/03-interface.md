@@ -141,7 +141,7 @@ While a file is processed, AnimeUp needs room for the extracted source frames, t
 
 **The default is a rule, not a number.** The default, and the slider's maximum, is the more cautious of two values:
 
-- 85% of the free space on the disk where the AnimeUp folder lives;
+- 85% of the free space on the disk of the finished videos folder, where the jobs' work files live;
 - all the free space minus 40 GB.
 
 On a nearly full disk the second wins, so macOS always keeps some room. On an empty disk the first wins. The help bubble's **Default:** line shows the result for your disk, for example `193 GB · 233 GB free`.
@@ -164,9 +164,14 @@ Minutes of rest between one file and the next, to give the CPU and GPU a break d
 
 On by default. Once a day AnimeUp asks GitHub for the latest release; if there's a newer one, a note appears at the top of the sidebar, *AnimeUp x.y.z is available*, with a link to what's new. In the app it also shows an **Install update** button: AnimeUp asks you to confirm, then downloads the new version, verifies it and restarts (see [Using and updating the app](01-install.md#using-and-updating-the-app)). In the portable folder the note links to the release to download by hand. Nothing is installed without your click, and the daily check is the only connection AnimeUp makes by itself after the first launch. Turn it off here if you prefer.
 
-### Data folder (app only)
+### Video folders (app only)
 
-In the app, the **System** section also shows where your files live (by default `~/Movies/AnimeUp`) with a **Change…** link that opens the macOS folder picker. AnimeUp switches to the new folder within a few seconds (the window reloads) and remembers it for the next launches; files already in the old one aren't moved. If at launch the chosen folder isn't available (an external drive that isn't connected), AnimeUp uses `~/Movies/AnimeUp` and shows a note here and in the Sources tab. The same choice is offered in the Sources tab when INPUT is empty. In the portable folder this row doesn't exist: the data stays next to the program (see [`ANIMEUP_ROOT`](07-output-and-folders.md#keeping-data-somewhere-else-animeup_root) for the Terminal way).
+In the app, the sidebar also shows the two folders AnimeUp works with, each with its path and a **Change…** link that opens the macOS folder picker:
+
+- **Videos to process folder**: where you copy the episodes to upscale (by default `~/Movies/AnimeUp/INPUT`). AnimeUp watches it and analyses new files by itself.
+- **Finished videos folder**: where the upscaled videos are saved (by default `~/Movies/AnimeUp/OUTPUT`). Each file's log goes in its `logs/` folder, and the work files of running and interrupted jobs in its `JOBS/` folder. These can take tens of GB, so choose a disk with room.
+
+AnimeUp switches to a new folder within a few seconds (the window reloads) and remembers it until you change it; files already in the old one aren't moved. Either folder can be on an external drive. If at launch a chosen folder isn't available (a drive that isn't connected), AnimeUp uses the default one and says so in the sidebar and in the Sources tab. The videos to process folder can also be chosen from the Sources tab when it's empty. In the portable folder these rows don't exist: the folders stay next to the program (see [Choosing the folders from the Terminal](07-output-and-folders.md#choosing-the-folders-from-the-terminal) for the Terminal way).
 
 ### Calibration
 
@@ -195,11 +200,11 @@ What stays usable while locked:
 
 ## The paused-file note
 
-When an interrupted job is waiting in `JOBS/` and it was started with different settings from the ones in the sidebar now, a yellow note appears at the top of the sidebar:
+When an interrupted job is waiting in `OUTPUT/JOBS/` and it was started with different settings from the ones in the sidebar now, a yellow note appears at the top of the sidebar:
 
 > There's a paused file that was started with different parameters (CRF, Output height). Resume will still use its own parameters: changes here only apply to new jobs.
 
-The names in brackets are the settings that differ. It's information, not a warning of danger. **Resume** in Processing always uses the parameters saved with that job (in its `parametri.json`), whatever the sidebar says, so resuming can never throw away work already done.
+The names in brackets are the settings that differ. It's information, not a warning of danger. **Resume** in Processing always uses the parameters saved with that job (in its `parameters.json`), whatever the sidebar says, so resuming can never throw away work already done.
 
 Under the note is a button, **Reset the sidebar to the paused file's parameters**. It copies that job's values back into the sidebar, for when you want new jobs to match the interrupted one. If several jobs are interrupted, the note refers to the most recent one. The note is hidden while the sidebar is locked.
 
@@ -219,7 +224,7 @@ Then check with `./animeup doctor`. When everything is in place the chip disappe
 ## Close AnimeUp
 
 !!! note "In the app"
-    The app has no **Close AnimeUp** button: quit it like any Mac app, with **⌘Q** or **AnimeUp → Quit AnimeUp**. Jobs keep running in the background, exactly as described below.
+    The app has no **Close AnimeUp** button. Closing the window doesn't quit AnimeUp: it keeps running in the background, jobs included, and the Dock icon brings the window back. To quit, use **⌘Q** or **AnimeUp → Quit AnimeUp**. If a job is running, AnimeUp asks first, because quitting the app stops the job and the rest of the queue; the work done so far is kept and can be resumed. The rest of this section is about the portable folder.
 
 
 ![The Close AnimeUp confirmation at the bottom of the sidebar, with "Sure? Close" and "Cancel"](img/sidebar-close.png)
@@ -236,7 +241,7 @@ Closing the browser tab shuts nothing down. Closing the Terminal window shuts do
 
 ## Your settings are remembered
 
-Every sidebar value is saved automatically to `registri/impostazioni.json` whenever it changes. The next time you open AnimeUp you get the values from your last session, not the factory defaults. The one exception is **Max disk space per file (GB)**, which is always recalculated as explained above. A saved value that's out of range (for example, a file edited by hand) is ignored and the default is used.
+Every sidebar value is saved automatically to `records/settings.json` whenever it changes. The next time you open AnimeUp you get the values from your last session, not the factory defaults. The one exception is **Max disk space per file (GB)**, which is always recalculated as explained above. A saved value that's out of range (for example, a file edited by hand) is ignored and the default is used.
 
 ## Before you move on
 

@@ -195,7 +195,7 @@ def in_corso(paths: Paths | None = None) -> bool:
     import os
 
     p = paths or PATHS
-    marcatore = p.cache / "calibration" / "running.lock"
+    marcatore = p.work / ".calibration" / "running.lock"
     try:
         pid = int(marcatore.read_text().strip())
     except (OSError, ValueError):
@@ -323,7 +323,9 @@ def esegui(paths: Paths | None = None, *, clip: Path | None = None,
     if in_corso(p):
         raise RuntimeError(t("mot.taratura.gia_in_corso"))
 
-    lavoro = p.cache / "calibration"
+    # Accanto alle lavorazioni vere, sullo stesso disco: i thread di
+    # salvataggio misurati qui valgono per i fotogrammi scritti in JOBS.
+    lavoro = p.work / ".calibration"
     shutil.rmtree(lavoro, ignore_errors=True)
     (lavoro / "frames").mkdir(parents=True)
     (lavoro / "running.lock").write_text(str(os.getpid()))

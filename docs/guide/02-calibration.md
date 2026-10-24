@@ -25,7 +25,7 @@ How far off can the factory figures be? On an Apple M4, for example, calibration
 
 ## What it measures
 
-Calibration processes a 20-second clip that ships with AnimeUp, `campioni/bbb-480p.mkv`: a scene from **Big Buck Bunny** (© 2008 Blender Foundation, CC BY 3.0), 854×480 at 30 fps, chosen for its continuous motion, because a benchmark on easy frames would lie. It runs the same commands a real job runs, with the same flags, in eleven steps:
+Calibration processes a 20-second clip that ships with AnimeUp, `samples/bbb-480p.mkv`: a scene from **Big Buck Bunny** (© 2008 Blender Foundation, CC BY 3.0), 854×480 at 30 fps, chosen for its continuous motion, because a benchmark on easy frames would lie. It runs the same commands a real job runs, with the same flags, in eleven steps:
 
 | # | Step (as the progress line names it) | What is timed | What it changes |
 |---|---|---|---|
@@ -58,8 +58,8 @@ This test takes about a minute and a half of the ten. Unlike the speeds, its res
 | Time | About 10 minutes on the Mac it was designed on; more or less on yours, depending on CPU and GPU speed. The remaining time shown corrects itself as the steps go by. |
 | GPU | Idle. Calibration is a benchmark: anything else using the GPU or CPU makes every number wrong. |
 | Jobs | None running, queued or pausing between files. Calibration refuses to start otherwise (see [Starting it](#start-it-from-the-sidebar)). |
-| Disk | A little temporary space inside the AnimeUp folder (`.cache/taratura/`), cleaned up when it finishes or fails. |
-| Sample clip | `campioni/bbb-480p.mkv`, which ships with AnimeUp. Don't delete the `campioni/` folder. |
+| Disk | A little temporary space in `OUTPUT/JOBS/.calibration/`, on the same disk real jobs use, cleaned up when it finishes or fails. |
+| Sample clip | `samples/bbb-480p.mkv`, which ships with AnimeUp. Don't delete the `samples/` folder. |
 
 !!! warning "Before you start"
     Close resource-hungry apps (video editors, games, other encoders, a browser full of video tabs) and don't open other programs while it runs. Plug a laptop into power: on battery, macOS may throttle the chip and calibration would record a slower Mac than you have.
@@ -124,7 +124,7 @@ The minutes left start from the factory figures (or your previous calibration) a
 
 ![The Calibrate estimates window after a run, with the results table](img/calibration-results.png)
 
-When the last step ends, the window shows *Calibration completed and saved to `registri/taratura.json`.*, then *From now on, every estimate on this Mac uses the updated values.* and *You can recalibrate at any time with the Redo button next to Calibration in the sidebar.*
+When the last step ends, the window shows *Calibration completed and saved to `records/calibration.json`.*, then *From now on, every estimate on this Mac uses the updated values.* and *You can recalibrate at any time with the Redo button next to Calibration in the sidebar.*
 
 The results table has one row per measurement:
 
@@ -157,10 +157,10 @@ The window shows *Calibration interrupted:* followed by the reason. Nothing is s
 
 | Reason | What to do |
 |---|---|
-| *sample clip missing: … campioni/bbb-480p.mkv is required (see campioni/README.md).* | The sample clip has been deleted or moved. Restore the `campioni/` folder from the release zip or the repository. |
+| *sample clip missing: …* followed by the path of `bbb-480p.mkv` | The sample clip has been deleted or moved. Restore the `samples/` folder from the release zip or the repository. |
 | *a calibration is already running on this machine: wait for it to finish (it carries on even with the window closed).* | You reopened the window and started again while the first run was still going. Wait a few minutes and check the sidebar date. |
 | *extraction failed: no frames produced* | FFmpeg couldn't read the clip. Run `./animeup doctor` to check FFmpeg, then try again. |
-| *Real-ESRGAN animevideov3 x4: produced 170 of 180 frames — measurement unreliable, calibration stopped* (model and numbers vary) | An upscaler didn't finish its batch, so its speed can't be trusted. Check the free space on the AnimeUp disk, close other apps, and try again. |
+| *Real-ESRGAN animevideov3 x4: produced 170 of 180 frames — measurement unreliable, calibration stopped* (model and numbers vary) | An upscaler didn't finish its batch, so its speed can't be trusted. Check the free space on the disk that holds AnimeUp's own data, close other apps, and try again. |
 
 ## Run it from the command line
 
@@ -180,7 +180,7 @@ Press **Ctrl+C** to abandon a run: nothing is saved. The command line is handy o
 
 ## Where the results are stored
 
-Calibration writes to `registri/taratura.json` in the AnimeUp folder. Inside, results are stored **per chip**, under the name macOS reports for it (for example `Apple M4`), with:
+Calibration writes to `records/calibration.json`, in AnimeUp's own data (the AnimeUp folder in the portable version, `~/Library/Application Support/AnimeUp` in the app). Inside, results are stored **per chip**, under the name macOS reports for it (for example `Apple M4`), with:
 
 - when it was run and on which clip;
 - the measured speed of every model at every scale, in Mpx/s;
@@ -189,8 +189,8 @@ Calibration writes to `registri/taratura.json` in the AnimeUp folder. Inside, re
 
 Each Mac reads only its own entry. If you copy the AnimeUp folder to a Mac with a different chip, its calibration doesn't carry over: the sidebar shows **Never** there, and the estimates use the factory figures until you calibrate that Mac too. Your original Mac's entry stays in the file, untouched.
 
-!!! danger "Don't delete `registri/`"
-    The `.log` files in `registri/` are diagnostic and can go, but `taratura.json` is data. Delete it and this Mac goes back to factory estimates and the default save threads until you calibrate again. The same folder holds your job history and settings: see [07. Output files and folders](07-output-and-folders.md).
+!!! danger "Don't delete `records/`"
+    The `.log` files in `records/` are diagnostic and can go, but `calibration.json` is data. Delete it and this Mac goes back to factory estimates and the default save threads until you calibrate again. The same folder holds your job history and settings: see [07. Output files and folders](07-output-and-folders.md).
 
 ## When to redo it
 
@@ -199,12 +199,12 @@ Each Mac reads only its own entry. If you copy the AnimeUp folder to a Mac with 
 | A different Mac with a different chip | Yes. It shows **Never** anyway, because each chip has its own entry. |
 | A different Mac with the **same** chip name (an M4 MacBook Air and an M4 Mac mini, say) | Yes. The entry is matched by chip name only, so the other Mac's figures would be used silently, and the same chip can come with a different number of GPU cores and different cooling. |
 | After a macOS update | Recommended. System updates can change how fast the GPU path and FFmpeg run. |
-| You moved the AnimeUp folder to a different disk | Recommended. The save-thread choice depends on the disk the frames are written to, and an internal SSD and a USB drive don't saturate at the same point. |
+| You moved the AnimeUp folder, or the finished videos folder where jobs write their frames, to a different disk | Recommended. The save-thread choice depends on the disk the frames are written to, and an internal SSD and a USB drive don't saturate at the same point. |
 | The estimates look consistently off | Worth a try, after checking nothing else was running during the last calibration. |
 | Out of curiosity | Any time. It takes ten minutes and only replaces this Mac's entry. |
 
 !!! note "What calibration doesn't cover"
-    Calibration measures the hardware. How many repeated frames your anime has, and how far the estimates have been off on the jobs already done, are learned separately from your job history (`registri/esiti.jsonl`), and that keeps improving the estimates with every finished file, calibrated or not. Likewise, during a job the time left for encoding is measured on that job's own chunks after the first: calibration is the fallback, not the final word. The [tuning notes](../TUNING.md#estimates) explain both.
+    Calibration measures the hardware. How many repeated frames your anime has, and how far the estimates have been off on the jobs already done, are learned separately from your job history (`records/history.jsonl`), and that keeps improving the estimates with every finished file, calibrated or not. Likewise, during a job the time left for encoding is measured on that job's own chunks after the first: calibration is the fallback, not the final word. The [tuning notes](../TUNING.md#estimates) explain both.
 
 ## What happens if you skip it
 
@@ -228,6 +228,6 @@ Nothing breaks. AnimeUp processes your files exactly the same; the output is ide
 !!! success "Check"
     - [ ] The sidebar's **Calibration** row shows a date and **Redo** (or you've decided to skip calibration for now).
     - [ ] Nothing else was using the GPU while it ran.
-    - [ ] You know it's saved in `registri/taratura.json`, per chip, and that you'll redo it on another Mac, after a macOS update, or after moving AnimeUp to another disk.
+    - [ ] You know it's saved in `records/calibration.json`, per chip, and that you'll redo it on another Mac, after a macOS update, or after moving AnimeUp to another disk.
 
 [Next: 03. The interface and its settings →](03-interface.md)

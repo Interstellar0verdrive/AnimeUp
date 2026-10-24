@@ -37,7 +37,7 @@ AnimeUp is for people who keep a local anime library at DVD or web-rip resolutio
 
 | Step | What you do | Time |
 |---|---|---|
-| 1. Install | Unzip, double-click **Avvia AnimeUp.command**, allow it in Privacy & Security | A few minutes, once |
+| 1. Install | Unzip, double-click **Start AnimeUp.command**, allow it in Privacy & Security | A few minutes, once |
 | 2. Calibrate | **Run now** next to **Calibration** in the sidebar | About 10 minutes, once per Mac |
 | 3. Sources | Copy episodes into `INPUT/` and read their analysis | Seconds per file |
 | 4. Compare | Test the models on difficult clips and pick one by eye | A few minutes per series |

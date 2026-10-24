@@ -55,7 +55,7 @@ cd /path/to/AnimeUp
 
 ## ui
 
-Opens the interface. This is what **Avvia AnimeUp.command** runs.
+Opens the interface. This is what **Start AnimeUp.command** runs.
 
 ```bash
 ./animeup ui
@@ -132,7 +132,7 @@ It accepts all the [`plan` options](#plan), plus:
 |---|---|---|
 | `--si` | Don't ask for confirmation before starting. | off |
 | `--pausa <int>` | Minutes of rest between one file and the next, to let the CPU and GPU breathe on long runs. 0 means none. Never after the last file. | `0` |
-| `--tieni-temp` | Keep the working folder in `JOBS/` after a successful job, instead of deleting it. | off |
+| `--tieni-temp` | Keep the working folder in `OUTPUT/JOBS/` after a successful job, instead of deleting it. | off |
 
 These options exist for the interface, which splits a queue into one `run` command per model. You don't need them by hand:
 
@@ -150,12 +150,12 @@ Each file shows a progress bar with the phase and the frames done. At the end of
 | What you see | Meaning |
 |---|---|
 | `  ! …` in yellow | A warning from the final checks. The file is done; read the warning. |
-| `Incomplete output, set aside as ….PARZIALE.mkv. Run again to redo it.` | The final checks found a defect. The file was renamed so that it isn't mistaken for a good one; running the command again redoes it. |
-| `Failed: …` and `Partial work kept in …` | The job failed. Its work stays in `JOBS/`; running the same command again resumes from there. |
+| `Incomplete output, set aside as ….DEFECTIVE.mkv. Run again to redo it.` | The final checks found a defect. The file was renamed so that it isn't mistaken for a good one; running the command again redoes it. |
+| `Failed: …` and `Partial work kept in …` | The job failed. Its work stays in `OUTPUT/JOBS/`; running the same command again resumes from there. |
 | `Stopped by the user: it can be resumed from …` | The file was stopped with **Stop** in the interface. The queue moves on. |
 | `Pausing for 5 min to let the machine breathe...` | The `--pausa` between files. |
 
-**To stop** a `run`, press **Ctrl+C** in its Terminal window. A job started from the command line uses the same `JOBS/` folder and lock as the interface, so it also appears in the Processing tab while it runs. The file in progress stays in `JOBS/`, and running the **same command** again resumes it with the work already done. Resuming only reuses work when the parameters match; different parameters never reuse the wrong frames.
+**To stop** a `run`, press **Ctrl+C** in its Terminal window. A job started from the command line uses the same `OUTPUT/JOBS/` folder and lock as the interface, so it also appears in the Processing tab while it runs. The file in progress stays in `OUTPUT/JOBS/`, and running the **same command** again resumes it with the work already done. Resuming only reuses work when the parameters match; different parameters never reuse the wrong frames.
 
 **Exit code**: 0 when every file was completed or already there; 1 when at least one file couldn't be planned, failed, or produced an incomplete output, with a final line `2 of 5 not completed: …`. Scripts can rely on it.
 
@@ -167,7 +167,7 @@ Measures the speed of this Mac on the sample clip and calibrates every time esti
 ./animeup taratura
 ```
 
-It takes about 10 minutes and needs the GPU idle: with a job or queue running it refuses (`A job is running: stop everything from the interface …`, exit code 1). At the end it prints the measured speeds next to the factory ones and saves them to `registri/taratura.json`. The same calibration is available from the sidebar: see [02. Calibrate your Mac](../02-calibration.md) for what it measures and when to redo it.
+It takes about 10 minutes and needs the GPU idle: with a job or queue running it refuses (`A job is running: stop everything from the interface …`, exit code 1). At the end it prints the measured speeds next to the factory ones and saves them to `records/calibration.json`. The same calibration is available from the sidebar: see [02. Calibrate your Mac](../02-calibration.md) for what it measures and when to redo it.
 
 ## doctor
 
@@ -212,8 +212,17 @@ Runs the regression tests in `tests/run.py`. Without the maintainer's sample vid
 
 | Variable | What it does |
 |---|---|
-| `ANIMEUP_ROOT` | Keep the data (`INPUT/`, `OUTPUT/`, `JOBS/`, `anteprime/`, `registri/`) in another folder instead of the AnimeUp folder. |
+| `ANIMEUP_INPUT` | The videos to process folder. Default: `<base>/INPUT`. |
+| `ANIMEUP_OUTPUT` | The finished videos folder, with `logs/` (one log per processed file) and `JOBS/` (jobs in progress or interrupted) inside. Default: `<base>/OUTPUT`. |
+| `ANIMEUP_ROOT` | The base folder for the two defaults above. Default: the AnimeUp folder. It's also where the 1.6 migration looks for an old 1.5 layout to move. It doesn't move AnimeUp's own data. |
+| `ANIMEUP_STATO` | Where AnimeUp keeps its own data: `records/` (history, settings, calibration), `cache/`, `bin/` and the Python environment. Default: the AnimeUp folder. |
 
-The language of the messages is the one chosen in the interface, saved in `registri/impostazioni.json`; English when there's none.
+```bash
+ANIMEUP_INPUT="/Volumes/Sources/Anime" ANIMEUP_OUTPUT="/Volumes/Big Disk/Upscaled" ./animeup run
+```
+
+A job started this way uses the `JOBS/` folder inside `ANIMEUP_OUTPUT`, so start the interface with the same variables if you want to see it there. See [07. Output files and folders](../07-output-and-folders.md#choosing-the-folders-from-the-terminal) for the details.
+
+The language of the messages is the one chosen in the interface, saved in `records/settings.json`; English when there's none.
 
 [Back to the guide home →](../index.md)

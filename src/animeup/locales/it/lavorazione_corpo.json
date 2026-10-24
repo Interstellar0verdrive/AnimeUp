@@ -20,7 +20,7 @@
   "lavb.chip_pausa_aiuto": "I processi sono congelati dove erano: niente GPU, niente processore. Riprendendo ripartono esattamente da qui, e il tempo passato in pausa non viene conteggiato nella durata del file.",
   "lavb.chip_in_corso": "in corso",
   "lavb.chip_da_rifare": "da rifare",
-  "lavb.chip_da_rifare_aiuto": "L'ultima lavorazione ha prodotto un file incompleto: l'uscita è stata messa da parte come .PARZIALE invece di restare in OUTPUT col nome buono. Rilanciando, il file viene rifatto da capo.",
+  "lavb.chip_da_rifare_aiuto": "L'ultima lavorazione ha prodotto un file incompleto: l'uscita è stata messa da parte come .DEFECTIVE invece di restare in OUTPUT col nome buono. Rilanciando, il file viene rifatto da capo.",
   "lavb.chip_fatto": "fatto",
   "lavb.chip_fatto_spostato": "Il file è stato prodotto, ma l'uscita non è più in OUTPUT: probabilmente è stata spostata. Rispuntandolo viene rifatto da capo.",
   "lavb.avvisi.uno": "{n} avviso",

@@ -1958,7 +1958,7 @@ def _stato_riga_coerente():
     assert sorgente.count("if gia_prodotta and chiave not in rifai_comunque") == 1
     assert "archiviata and chiave not in rifai_comunque" not in sorgente
     # Un'uscita difettosa non e' lavoro archiviato (la pagella si scrive lo
-    # stesso, col nome dell'uscita BUONA, mentre il file e' un .PARZIALE).
+    # stesso, col nome dell'uscita BUONA, mentre il file e' un .DEFECTIVE).
     assert 'not esito.get("difettosa")' in sorgente
     assert "elif difettosa:" in sorgente
     # Riprendi senza referto leggeva `piano.model_key` su None.
@@ -2152,7 +2152,7 @@ def _thread_dalla_taratura():
             self.logs = radice
             self.root = radice
             self.taratura = radice / "taratura.json"
-            self.cache = radice / "cache"
+            self.work = radice / "JOBS"
 
     with tempfile.TemporaryDirectory() as tmp:
         finti = _PathsFinti(Path(tmp))
@@ -2195,7 +2195,7 @@ def _prova_thread_intera():
                 self.logs = r
                 self.root = r
                 self.taratura = r / "taratura.json"
-                self.cache = r / "cache"
+                self.work = r / "JOBS"
 
         # Un upscaler finto: veloce quanto piu' thread ha, e a 8 produce
         # un'uscita DIVERSA — cioe' il caso che la guardia deve fermare.
@@ -4448,7 +4448,7 @@ def _confronto_ordine_e_indicatori():
     tabella dei tempi, indicatori) si contraddicono."""
     from animeup import preview
 
-    assert preview.ORDINE[:3] == ("originale", "animevideov3", "cugan"), (
+    assert preview.ORDINE[:3] == ("original", "animevideov3", "cugan"), (
         "l'ordine di lettura del confronto e' cambiato")
     assert preview.ordine_lettura({"cugan": 1, "animevideov3": 1}) == [
         "animevideov3", "cugan"], "animevideov3 non viene piu' per primo"
@@ -4818,9 +4818,10 @@ def _() -> None:
         (radice / "JOBS" / ".analisi").mkdir()
         (radice / "JOBS" / ".analisi" / "ep0-x.json").write_text("{}")
         (radice / "anteprime" / "ep0 fc158b30").mkdir(parents=True)
-        (radice / "anteprime" / "ep0 fc158b30" / "tempi.json").write_text("{}")
+        (radice / "anteprime" / "ep0 fc158b30" / "originale.mkv").write_text("")
         (radice / "OUTPUT").mkdir()
         (radice / "OUTPUT" / "ep1.mkv.inlavorazione").write_text("")
+        (radice / "OUTPUT" / "ep2 [upscale].PARZIALE.mkv").write_text("")
 
         for _ in range(2):
             _fatte.clear()
@@ -4841,8 +4842,8 @@ def _() -> None:
         assert '"seconds_spent"' in stato and '"from"' in stato, stato
         assert su_disco.leggi(nuova / ".suspended")["da"] == 1.0
         assert (p.analisi / "ep0-x.json").is_file()
-        assert (p.previews / "ep0 fc158b30" / "timings.json").is_file()
         assert (radice / "OUTPUT" / "ep1.mkv.incomplete").is_file()
+        assert (radice / "OUTPUT" / "ep2 [upscale].DEFECTIVE.mkv").is_file()
         # Le stime leggono lo storico migrato come prima.
         assert len(storico._pagelle(p)) == 3
 
@@ -5030,9 +5031,9 @@ def _() -> None:
     # 1. Il marcatore: vivo se il PID esiste, morto se no.
     with tempfile.TemporaryDirectory() as tmp:
         radice = Path(tmp)
-        finti = _types.SimpleNamespace(root=radice, cache=radice / ".cache")
+        finti = _types.SimpleNamespace(root=radice, work=radice / "JOBS")
         assert not taratura.in_corso(finti), "nessun marcatore, eppure in corso"
-        marcatore = radice / ".cache" / "calibration" / "running.lock"
+        marcatore = radice / "JOBS" / ".calibration" / "running.lock"
         marcatore.parent.mkdir(parents=True)
         marcatore.write_text(str(os.getpid()))
         assert taratura.in_corso(finti), "il PID e' vivo ma non risulta in corso"
@@ -5090,7 +5091,7 @@ def _() -> None:
 def _() -> None:
     """La riga diceva «concluso con avvisi … la cartella resta per
     controllo», ma gli avvisi non trattengono piu' la cartella (solo i
-    difetti, e allora l'uscita diventa .PARZIALE). E non aveva Scarta: quei
+    difetti, e allora l'uscita diventa .DEFECTIVE). E non aveva Scarta: quei
     GB non si liberavano dall'interfaccia."""
     import ast as _ast
     from animeup.pipeline import JobResult

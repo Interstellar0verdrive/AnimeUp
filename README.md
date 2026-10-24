@@ -106,14 +106,21 @@ the top of the sidebar. More screenshots and every detail are in the
 
 ### Folders
 
-| Folder | What it's for |
+AnimeUp works with two folders you choose, and keeps its own data apart.
+
+| Where | What it's for |
 |---|---|
-| `INPUT/` | Your source episodes. Never modified. |
-| `OUTPUT/` | Finished files. |
-| `JOBS/` | Jobs in progress or interrupted, one subfolder per episode. A subfolder deletes itself when its job finishes cleanly. |
-| `anteprime/` | Cache for the Compare tab ("previews"). Safe to delete at any time. |
-| `registri/` | Logs, plus job history, calibration and settings ("records"). |
-| `bin/` | FFmpeg, the ncnn upscalers, the models and uv. |
+| **Videos to process** (`INPUT/`) | Your source episodes. Never modified. |
+| **Finished videos** (`OUTPUT/`) | Finished files, plus `logs/` (one log per file) and `JOBS/` (jobs in progress or interrupted, one subfolder per episode; it deletes itself when its job finishes cleanly). Jobs can take tens of GB, so this folder should be on a disk with room. |
+| AnimeUp's data | `records/` (job history, launches, settings, calibration), `cache/` (source analysis, Compare clips: safe to delete), `bin/` (FFmpeg, the ncnn upscalers, the models and uv). |
+
+In the app the two folders default to `~/Movies/AnimeUp/INPUT` and
+`~/Movies/AnimeUp/OUTPUT`, and AnimeUp's data lives in
+`~/Library/Application Support/AnimeUp`. In the portable folder everything
+sits inside the AnimeUp folder. File names and their contents are in English
+whatever the interface language. Upgrading from 1.5 moves the old layout
+(`registri/`, `anteprime/`, `JOBS/` at the top) automatically on first
+launch; interrupted jobs stay resumable.
 
 ### Command line
 
@@ -152,13 +159,16 @@ via GitHub Actions.
    download its video tools (FFmpeg 9.0.2 and the upscaling engines, about
    180 MB, from pinned official releases verified by checksum). After that it
    works offline.
-4. Your files live in **`~/Movies/AnimeUp`** (INPUT, OUTPUT, JOBS…); you can
-   choose another folder, an external drive included, in the sidebar under
-   *System → Data folder* (AnimeUp switches to it right away and remembers it). AnimeUp's own tools and environment live in
-   `~/Library/Application Support/AnimeUp` (about 1 GB).
+4. Copy your episodes into **`~/Movies/AnimeUp/INPUT`**; finished videos go
+   to **`~/Movies/AnimeUp/OUTPUT`**. You can choose other folders, external
+   drives included, in the sidebar or from the empty Sources page; each
+   stays chosen until you change it. AnimeUp's own tools and environment
+   live in `~/Library/Application Support/AnimeUp` (about 1 GB).
 
-Quit with **⌘Q**: running jobs keep going in the background and reappear
-when you reopen the app. AnimeUp checks once a day for a new release (you
+Closing the window doesn't quit AnimeUp: running jobs keep going in the
+background, and clicking the Dock icon brings the window back. **⌘Q** quits;
+if a job is running it asks first, then stops it (you can resume it later,
+losing at most the chunk in progress). AnimeUp checks once a day for a new release (you
 can turn this off); when there is one, click **Install update** in the
 sidebar: the app downloads it from GitHub, verifies it against the checksum
 published with the release, replaces itself and restarts, with no need to
@@ -169,8 +179,7 @@ approve it again in Privacy & Security. Your data and settings are untouched.
 `AnimeUp-<version>-macos-arm64.zip` is the same program as a self-contained
 folder, handy to keep on an external drive or to use from the Terminal.
 
-1. Unzip it anywhere and double-click **`Avvia AnimeUp.command`** ("Launch
-   AnimeUp"). If macOS blocks it, use **System Settings → Privacy & Security
+1. Unzip it anywhere and double-click **`Start AnimeUp.command`**. If macOS blocks it, use **System Settings → Privacy & Security
    → Open Anyway** as above, or run once in Terminal:
 
    ```bash
@@ -213,6 +222,36 @@ brew install video-compare
 
 Without it, AnimeUp opens the two files in [IINA](https://iina.io) if
 that is installed. Everything else works the same either way.
+
+## Uninstalling
+
+**The app.** Quit AnimeUp (⌘Q), then delete:
+
+- `AnimeUp.app` from Applications;
+- `~/Library/Application Support/AnimeUp`: its tools, Python environment,
+  history, settings and calibration (about 1 GB);
+- `~/Library/Caches/io.github.interstellar0verdrive.animeup`,
+  `~/Library/WebKit/io.github.interstellar0verdrive.animeup` and
+  `~/Library/HTTPStorages/io.github.interstellar0verdrive.animeup`: what the
+  app's window stores, like any Mac app showing web content.
+
+To reach `~/Library` in Finder, choose **Go → Go to Folder…** (⇧⌘G) and type
+the path. Or, in Terminal:
+
+```bash
+rm -rf /Applications/AnimeUp.app "$HOME/Library/Application Support/AnimeUp" \
+  "$HOME/Library/Caches/io.github.interstellar0verdrive.animeup" \
+  "$HOME/Library/WebKit/io.github.interstellar0verdrive.animeup" \
+  "$HOME/Library/HTTPStorages/io.github.interstellar0verdrive.animeup"
+```
+
+Your videos are left alone: `~/Movies/AnimeUp` (or the folders you chose)
+holds your sources, the finished videos and any interrupted job in
+`OUTPUT/JOBS`, which can be large. Delete what you no longer need.
+
+**The portable folder.** Quit the Terminal window that runs it, take out of
+`INPUT/` and `OUTPUT/` the videos you want to keep, and delete the folder:
+everything AnimeUp installed is inside it.
 
 ## Why FFmpeg isn't bundled
 
@@ -258,7 +297,7 @@ thanks to all of them.
 | [Pillow](https://github.com/python-pillow/Pillow) | Image handling | MIT-CMU |
 | [Inter](https://github.com/rsms/inter) by Rasmus Andersson | UI typeface | SIL OFL 1.1 ([text](LICENSES/Inter-OFL.txt)) |
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | UI monospace typeface | SIL OFL 1.1 ([text](LICENSES/JetBrainsMono-OFL.txt)) |
-| [Big Buck Bunny](https://peach.blender.org) © 2008 Blender Foundation | 20-second sample clip in `campioni/`, used for calibration | CC BY 3.0 |
+| [Big Buck Bunny](https://peach.blender.org) © 2008 Blender Foundation | 20-second sample clip in `samples/`, used for calibration | CC BY 3.0 |
 | [Morevna Episode 3](https://archive.org/details/morevna-ep3) © Morevna Project | Footage in the screenshots and the before/after image in `docs/images/`, which are therefore CC BY-SA 3.0 as well | CC BY-SA 3.0 |
 
 Python dependencies are installed by uv from PyPI on first launch and are
