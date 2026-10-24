@@ -24,7 +24,7 @@ When nothing is running, a caption under the sidebar title reminds you of the sp
 
 ![Header with the AnimeUp logo, the version and the three numbered tabs, one carrying a badge](img/tabs.png)
 
-At the top are three numbered tabs, in the order you normally use them. The version you're running is shown in small grey type at the bottom of the sidebar (*"Local upscaler · Apple Silicon · v1.5.0"*).
+At the top are three numbered tabs, in the order you normally use them. The version you're running is shown in small grey type at the bottom of the sidebar (*"Local upscaler · Apple Silicon · v1.5.1"*).
 
 | Tab | What you do there | Chapter |
 |---|---|---|
