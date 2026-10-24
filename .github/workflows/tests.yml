@@ -1,0 +1,64 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Apple Silicon: i binari fissati (ffmpeg statico, ncnn, uv) sono arm64.
+    runs-on: macos-14
+    timeout-minutes: 30
+    env:
+      # La suite controlla testi a schermo in italiano; tests/run.py la fissa
+      # da solo, qui vale anche per setup e per i sottoprocessi.
+      ANIMEUP_LANG: it
+    steps:
+      - uses: actions/checkout@v4
+
+      # bin/ (ffmpeg, ffprobe, ncnn e modelli, uv), .python/ (l'interprete
+      # gestito da uv) e .cache/ (la cache di uv). La chiave segue le
+      # versioni fissate: setup.py (URL e checksum ncnn), il lanciatore
+      # (versione di uv), uv.lock e .python-version. Niente restore-keys: un
+      # bin/ vecchio verrebbe tenuto cosi' com'e', perche' setup scarica solo
+      # cio' che manca.
+      - name: Ripristina binari e ambiente
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            bin
+            .python
+            .cache
+          key: animeup-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/animeup/setup.py', 'animeup', 'uv.lock', '.python-version') }}
+
+      - name: Setup (binari e modelli in bin/)
+        run: ./animeup setup --si
+
+      # `setup` non fallisce se un download va male: lo dice e prosegue.
+      - name: Verifica i binari
+        run: |
+          for b in ffmpeg ffprobe realesrgan-ncnn-vulkan realcugan-ncnn-vulkan uv; do
+            test -x "bin/$b" || { echo "bin/$b mancante dopo il setup"; exit 1; }
+          done
+          ./animeup doctor
+
+      # Salvata subito, non a fine job: con un test rosso la cache andrebbe
+      # persa e ogni corsa successiva riscaricherebbe tutto.
+      - name: Salva binari e ambiente
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            bin
+            .python
+            .cache
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      # Senza _WIP/_TESTING la suite genera da sola i campioni sintetici in
+      # tests/.fixtures/ (pochi secondi).
+      - name: Test
+        run: ./animeup test
