@@ -35,14 +35,19 @@ export ANIMEUP_ROOT="${ANIMEUP_ROOT:-$ROOT}"
 
 # --- lingua dei messaggi: quella salvata dall'interfaccia, se c'e' ---
 # Niente Python ne' jq: al primo avvio l'ambiente non esiste ancora. Si legge
-# la chiave `lingua` di registri/impostazioni.json con sed; senza file, o con
-# un valore sconosciuto, si parla inglese come l'app di fabbrica.
+# la chiave `language` di records/settings.json con sed (prima della 1.6:
+# `lingua` in registri/impostazioni.json, che la migrazione sposta al primo
+# avvio); senza file, o con un valore sconosciuto, si parla inglese come
+# l'app di fabbrica.
 lingua_salvata() {
-  local file="$1/registri/impostazioni.json"
+  local file="$1/records/settings.json" chiave="language"
+  if [[ ! -r "$file" ]]; then
+    file="$2/registri/impostazioni.json" chiave="lingua"
+  fi
   [[ -r "$file" ]] || return 0
-  sed -n 's/.*"lingua"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p' "$file" | head -n 1
+  sed -n "s/.*\"$chiave\"[[:space:]]*:[[:space:]]*\"\([a-z]*\)\".*/\1/p" "$file" | head -n 1
 }
-LINGUA="$(lingua_salvata "$ANIMEUP_ROOT" || true)"
+LINGUA="$(lingua_salvata "${ANIMEUP_STATO:-$ANIMEUP_ROOT}" "$ANIMEUP_ROOT" || true)"
 [[ "$LINGUA" == "it" ]] || LINGUA="en"
 
 # Un messaggio nelle due lingue, su stderr: `dire "italiano" "english"`.

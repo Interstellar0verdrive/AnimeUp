@@ -11,10 +11,16 @@ cd "$(dirname "$0")"
 
 # La lingua salvata dall'interfaccia, letta senza Python (al primo avvio
 # l'ambiente non c'e' ancora); di fabbrica si parla inglese.
-IMPOSTAZIONI="${ANIMEUP_ROOT:-.}/registri/impostazioni.json"
+IMPOSTAZIONI="${ANIMEUP_STATO:-${ANIMEUP_ROOT:-.}}/records/settings.json"
+CHIAVE="language"
+if [[ ! -r "$IMPOSTAZIONI" ]]; then
+  # Prima della 1.6; la migrazione lo sposta al primo avvio.
+  IMPOSTAZIONI="${ANIMEUP_ROOT:-.}/registri/impostazioni.json"
+  CHIAVE="lingua"
+fi
 LINGUA=""
 if [[ -r "$IMPOSTAZIONI" ]]; then
-  LINGUA="$(sed -n 's/.*"lingua"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p' "$IMPOSTAZIONI" | head -n 1 || true)"
+  LINGUA="$(sed -n "s/.*\"$CHIAVE\"[[:space:]]*:[[:space:]]*\"\([a-z]*\)\".*/\1/p" "$IMPOSTAZIONI" | head -n 1 || true)"
 fi
 
 PORTA=8899

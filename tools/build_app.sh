@@ -55,7 +55,7 @@ swiftc -O -swift-version 5 -target arm64-apple-macos13.0 \
 # --- 2. the program ---
 # Files tracked by git, taken from the working tree (so a build reflects the
 # checkout it's run from). Untracked files never get in: bin/, .venv, _WIP/,
-# registri/... Tracked but not needed at run time: left out.
+# records/... Tracked but not needed at run time: left out.
 echo "  copying the program..."
 if [[ -n "$(git -C "$REPO" status --porcelain --untracked-files=no)" ]]; then
   echo "  note: the working tree has uncommitted changes; they are included." >&2
@@ -63,8 +63,8 @@ fi
 git -C "$REPO" ls-files -z | while IFS= read -r -d '' f; do
   case "$f" in
     tests/*|docs/*|design/*|.github/*|macos/*|tools/*) continue ;;
-    INPUT/*|OUTPUT/*|JOBS/*|registri/*|anteprime/*|bin/*) continue ;;
-    .gitignore|.gitattributes|"Avvia AnimeUp.command") continue ;;
+    INPUT/*|OUTPUT/*|bin/*) continue ;;
+    .gitignore|.gitattributes|"Start AnimeUp.command") continue ;;
   esac
   [[ -e "$REPO/$f" ]] || continue          # deleted in the working tree
   printf '%s\0' "$f"

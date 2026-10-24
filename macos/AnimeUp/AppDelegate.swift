@@ -4,9 +4,11 @@ import AppKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     private var paths: AppPaths?
-    /// What `<state>/cartella_dati` said when the server was started: when
-    /// the interface changes it, the server restarts on the new folder.
-    private var dataChoice: String?
+    /// The folders chosen in the interface when the server was started:
+    /// when one changes, the server restarts on the new folders.
+    private var folderChoices: [String?] = []
+    /// The quit was already confirmed (or doesn't need asking: an update).
+    private var quitConfirmed = false
     private var dataWatch: Timer?
     private var updating = false
     private var server: ServerProcess?
@@ -33,7 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         do {
             let p = try AppPaths.resolve()
             paths = p
-            detectLanguage(data: p.data)
+            detectLanguage(state: p.state, data: p.data)
         } catch {
             buildMenus()
             NSApp.activate(ignoringOtherApps: true)
@@ -157,22 +159,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         watchDataFolder()
     }
 
-    // MARK: Data folder
+    // MARK: Folders and requests from the interface
 
-    /// The interface writes the newly chosen folder to `<state>/cartella_dati`;
-    /// the server reads the data folder only when it starts, so the app
-    /// restarts it on the new one. A look every 2 s is plenty for a choice
-    /// made through a folder picker.
+    /// The interface writes a newly chosen folder to `<state>/input-folder`
+    /// or `<state>/output-folder`; the server reads its folders only when it
+    /// starts, so the app restarts it on the new ones. The interface also
+    /// leaves requests here (install an update, quit). A look every 2 s is
+    /// plenty for things done through a folder picker or a button.
     private func watchDataFolder() {
         guard let paths else { return }
-        dataChoice = AppPaths.chosenDataFolder(state: paths.state)
+        folderChoices = AppPaths.choices(state: paths.state)
         dataWatch?.invalidate()
         dataWatch = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             guard let self, let paths = self.paths, self.ready, !self.quitting else { return }
-            let now = AppPaths.chosenDataFolder(state: paths.state)
-            if now != self.dataChoice { self.switchDataFolder(); return }
+            if AppPaths.choices(state: paths.state) != self.folderChoices {
+                self.switchDataFolder(); return
+            }
             self.checkUpdateRequest()
+            self.checkQuitRequest()
         }
+    }
+
+    /// The sidebar's "Quit AnimeUp" button: the same as ⌘Q, confirmation
+    /// included.
+    private func checkQuitRequest() {
+        guard let paths else { return }
+        let request = paths.state.appendingPathComponent("quit-request")
+        guard FileManager.default.fileExists(atPath: request.path) else { return }
+        try? FileManager.default.removeItem(at: request)
+        NSApp.terminate(nil)
     }
 
     // MARK: Updates
@@ -228,6 +243,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             let old = try Updater.swap(current: current, with: newApp)
             server?.writeLog("[app] updated to \(release.version): restarting\n")
             Updater.relaunch(newApp: current, oldCopy: old)
+            quitConfirmed = true          // jobs keep running across an update
             NSApp.terminate(nil)
         } catch {
             window.orderOut(nil)
@@ -252,7 +268,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         dataWatch?.invalidate()
         let old = server
         server = nil                      // its exit is expected: no alert
-        old?.writeLog("[app] data folder changed: restarting the server\n")
+        old?.writeLog("[app] folders changed: restarting the server\n")
         old?.terminate()
         if let pid = adoptedPID {
             kill(pid, SIGTERM)
@@ -261,7 +277,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         do {
             let p = try AppPaths.resolve()
             paths = p
-            detectLanguage(data: p.data)
+            detectLanguage(state: p.state, data: p.data)
         } catch {
             startupFailed(title: tr("AnimeUp could not start", "AnimeUp non è riuscito ad avviarsi"),
                           lines: [describe(error)])
@@ -346,16 +362,51 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
     // MARK: Quitting
 
+    /// Closing the window doesn't quit: AnimeUp keeps working in the
+    /// background, like HandBrake, and the Dock icon brings the window back.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
+        false
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            if let mainWindow, ready {
+                mainWindow.showWindow(nil)
+                mainWindow.window?.makeKeyAndOrderFront(nil)
+            } else {
+                preparing?.makeKeyAndOrderFront(nil)
+            }
+        }
+        return true
+    }
+
+    /// Quitting stops the jobs too, so with one running it asks first.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard !quitConfirmed, let paths else { return .terminateNow }
+        let running = RunningJobs.pids(output: paths.output)
+        guard !running.isEmpty else { return .terminateNow }
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = tr("Quit AnimeUp and stop the job?", "Uscire da AnimeUp e fermare la lavorazione?")
+        alert.informativeText = tr(
+            "A job is running. Quitting stops it and the rest of the queue. The work done is saved one chunk at a time, so you can resume later and lose at most the chunk in progress.\n\nTo keep it working, close the window instead: AnimeUp carries on in the background and the Dock icon brings it back.",
+            "C'è una lavorazione in corso. Uscendo si fermano lei e il resto della coda. Il lavoro fatto è salvato un blocco alla volta: potrai riprenderla perdendo al massimo il blocco in corso.\n\nPer lasciarla lavorare chiudi invece la finestra: AnimeUp continua in background e l'icona nel Dock la riapre.")
+        alert.addButton(withTitle: tr("Stop Job and Quit", "Ferma e esci"))
+        alert.addButton(withTitle: tr("Cancel", "Annulla"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+        server?.writeLog("[app] quit with a job running: stopping it\n")
+        RunningJobs.stop(running)
+        quitConfirmed = true
+        return .terminateNow
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         quitting = true
         pollTimer?.invalidate()
         dataWatch?.invalidate()
-        // Only the server: upscaling jobs run in their own sessions and are
-        // left alone.
+        // Only the server here: jobs run in their own sessions, and the ones
+        // to stop were stopped when the quit was confirmed.
         server?.terminate()
         if let pid = adoptedPID {
             kill(pid, SIGTERM)
@@ -383,8 +434,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    @objc func openDataFolder(_ sender: Any?) {
-        if let data = paths?.data { NSWorkspace.shared.open(data) }
+    @objc func openInputFolder(_ sender: Any?) {
+        if let folder = paths?.input { NSWorkspace.shared.open(folder) }
+    }
+
+    @objc func openOutputFolder(_ sender: Any?) {
+        if let folder = paths?.output { NSWorkspace.shared.open(folder) }
     }
 
     @objc func openInBrowser(_ sender: Any?) {
@@ -405,7 +460,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         case #selector(reloadPage(_:)), #selector(actualSize(_:)),
              #selector(zoomIn(_:)), #selector(zoomOut(_:)), #selector(openInBrowser(_:)):
             return ready && mainWindow != nil
-        case #selector(openDataFolder(_:)), #selector(openLog(_:)):
+        case #selector(openInputFolder(_:)), #selector(openOutputFolder(_:)), #selector(openLog(_:)):
             return paths != nil
         default:
             return true
@@ -434,8 +489,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
 
         // File
         let file = submenu(in: bar, tr("File", "Archivio"))
-        add(file, tr("Open Data Folder", "Apri cartella dati"), #selector(openDataFolder(_:)), "o",
-            [.command, .shift], target: self)
+        add(file, tr("Open Videos to Process Folder", "Apri la cartella dei video da elaborare"),
+            #selector(openInputFolder(_:)), "o", [.command, .shift], target: self)
+        add(file, tr("Open Finished Videos Folder", "Apri la cartella dei video finiti"),
+            #selector(openOutputFolder(_:)), "f", [.command, .shift], target: self)
         add(file, tr("Open in Browser", "Apri nel browser"), #selector(openInBrowser(_:)), "b",
             [.command, .shift], target: self)
         add(file, tr("Show Log", "Mostra registro"), #selector(openLog(_:)), target: self)

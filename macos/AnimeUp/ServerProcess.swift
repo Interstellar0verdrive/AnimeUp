@@ -149,15 +149,16 @@ final class ServerProcess {
             "LANG": inherited["LANG"].flatMap { $0.contains("UTF-8") ? $0 : nil } ?? "en_US.UTF-8",
             "ANIMEUP_STATO": paths.state.path,
             "ANIMEUP_ROOT": paths.data.path,
+            "ANIMEUP_INPUT": paths.input.path,
+            "ANIMEUP_OUTPUT": paths.output.path,
             "ANIMEUP_APP": "1",
             "PYTHONUNBUFFERED": "1",
         ]
         for key in ["USER", "LOGNAME", "TMPDIR", "SHELL"] {
             if let v = inherited[key] { env[key] = v }
         }
-        if let missing = paths.unavailableData {
-            env["ANIMEUP_CARTELLA_ASSENTE"] = missing
-        }
+        if let missing = paths.unavailableInput { env["ANIMEUP_INPUT_MISSING"] = missing }
+        if let missing = paths.unavailableOutput { env["ANIMEUP_OUTPUT_MISSING"] = missing }
         return env
     }
 
