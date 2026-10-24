@@ -178,5 +178,7 @@
   "cli.rep.passo_tick.uno": "  step {n} tick",
   "cli.rep.passo_tick.altri": "  step {n} ticks",
   "cli.rep.tick.uno": "{n} tick",
-  "cli.rep.tick.altri": "{n} ticks"
+  "cli.rep.tick.altri": "{n} ticks",
+  "cli.ui.rete": "Also accept connections from other devices on your network (by default only this Mac can open the interface).",
+  "cli.ui.senza_browser": "Don't open a browser window (used by the macOS app, which shows the interface in its own window)."
 }
