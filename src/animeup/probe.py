@@ -31,6 +31,7 @@ from fractions import Fraction
 from pathlib import Path
 
 from .ffmpeg import FFprobe, run_stderr
+from .i18n import t
 from .paths import PATHS, Paths
 
 # --- framerate standard, per l'aggancio ------------------------------------
@@ -190,80 +191,48 @@ class SourceReport:
     def warnings(self) -> list[str]:
         """Problemi che meritano l'attenzione dell'utente prima di partire."""
         out: list[str] = []
-        t = self.timing
+        # `tempi` e non `t`: `t` e' la funzione dei testi tradotti.
+        tempi = self.timing
         # File troncato: il contenitore dichiara una durata ma i pacchetti
         # video finiscono molto prima. Capita coi download interrotti, e senza
         # questo avviso si scopriva DOPO ore di GPU che l'episodio si ferma a
         # metà. Soglia al 2% (e mai sotto i 2 secondi): i contenitori
         # arrotondano la durata e un piccolo scarto è fisiologico.
-        if t.fps and self.duration > 0 and t.packets:
-            attesi = self.duration * float(t.fps)
-            if t.packets < attesi - max(2 * float(t.fps), attesi * 0.02):
-                mancano = self.duration - t.packets / float(t.fps)
-                out.append(
-                    f"File probabilmente troncato: il contenitore dichiara "
-                    f"{self.duration:.0f}s ma il video si ferma "
-                    f"{mancano:.0f}s prima. L'uscita finirebbe lì."
-                )
-        if t.mode is Timebase.VFR:
-            out.append(
-                "Sorgente VFR: il ritmo dei frame cambia. Verrà normalizzato "
-                "in fase di estrazione, senza ricomprimere il sorgente."
-            )
-        if t.mode is Timebase.CFR_WITH_GAPS:
-            out.append(
-                f"Mancano {t.missing_frames} frame ({t.gaps} buchi nella "
-                "sequenza): il rip è incompleto. I buchi verranno riempiti "
-                "ripetendo il frame precedente per non alterare la durata."
-            )
-        if t.container_disagrees:
-            out.append(
-                f"Il container dichiara {_fps_str(t.container_r_fps)} fps ma i "
-                f"timestamp dicono {_fps_str(t.fps)} fps. Uso il valore misurato."
-            )
-        if not t.fps_is_standard and t.fps is not None:
-            out.append(
-                f"Framerate non standard ({_fps_str(t.fps)}): probabile rip "
-                "impreciso. Controlla il risultato dell'anteprima."
-            )
+        if tempi.fps and self.duration > 0 and tempi.packets:
+            attesi = self.duration * float(tempi.fps)
+            if tempi.packets < attesi - max(2 * float(tempi.fps), attesi * 0.02):
+                mancano = self.duration - tempi.packets / float(tempi.fps)
+                out.append(t("probe.troncato", dichiarata=f"{self.duration:.0f}",
+                             mancano=f"{mancano:.0f}"))
+        if tempi.mode is Timebase.VFR:
+            out.append(t("probe.vfr"))
+        if tempi.mode is Timebase.CFR_WITH_GAPS:
+            out.append(t("probe.buchi", mancanti=tempi.missing_frames,
+                         buchi=tempi.gaps))
+        if tempi.container_disagrees:
+            out.append(t("probe.container_discorde",
+                         dichiarato=_fps_str(tempi.container_r_fps),
+                         misurato=_fps_str(tempi.fps)))
+        if not tempi.fps_is_standard and tempi.fps is not None:
+            out.append(t("probe.fps_non_standard", fps=_fps_str(tempi.fps)))
         if self.fields and self.fields.mode is FieldMode.INTERLACED:
-            out.append(
-                "Contenuto interlacciato: senza deinterlacciamento il modello "
-                "upscalerebbe le righe di pettine trasformandole in artefatti "
-                "permanenti."
-            )
+            out.append(t("probe.interlacciato"))
         if self.fields and self.fields.mode is FieldMode.TELECINE:
-            out.append(
-                "Telecine 3:2 rilevato: il contenuto è a 23.976 dentro un "
-                "contenitore a 29.97. Va applicato l'inverse telecine per "
-                "tornare ai frame originali."
-            )
+            out.append(t("probe.telecine"))
         if self.geometry.anamorphic:
-            out.append(
-                f"Pixel non quadri (SAR {self.geometry.sar}): l'uscita verrà "
-                f"normalizzata a {self.geometry.display_width}x"
-                f"{self.geometry.display_height} per non deformare l'immagine."
-            )
+            out.append(t("probe.anamorfico", sar=self.geometry.sar,
+                         larghezza=self.geometry.display_width,
+                         altezza=self.geometry.display_height))
         if self.subtitle_codecs and any(c == "mov_text" for c in self.subtitle_codecs):
-            out.append(
-                "Sottotitoli in formato mov_text: non copiabili in MKV, "
-                "verranno convertiti in SRT."
-            )
+            out.append(t("probe.mov_text"))
         if not self.geometry.width or not self.geometry.height:
-            out.append(
-                "Nessuna traccia video utilizzabile: il file non è elaborabile."
-            )
+            out.append(t("probe.no_video"))
         if self.color_space in (None, "unknown"):
             # L'avviso valeva solo sopra i 720, cioe' proprio dove
             # l'assunzione e' certa; taceva sugli SD, dove invece era
             # sbagliata. Ora dice sempre cosa si e' assunto e perche'.
             hd = self.geometry.height >= 720
-            out.append(
-                "Metadati colore assenti: verrà assunto "
-                + ("BT.709 (sorgente HD)" if hd else "BT.601 (sorgente SD)")
-                + ", secondo la convenzione, e i tag verranno scritti "
-                "espliciti nell'uscita."
-            )
+            out.append(t("probe.colore_hd" if hd else "probe.colore_sd"))
         return out
 
 

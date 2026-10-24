@@ -30,6 +30,11 @@ from animeup.paths import PATHS  # noqa: E402
 from animeup.pipeline import safe_name  # noqa: E402
 from animeup.plan import build_plan, output_name  # noqa: E402
 from animeup.probe import Timebase, probe_source  # noqa: E402
+from animeup import i18n  # noqa: E402
+
+# I casi controllano anche testi a schermo, scritti in italiano: la lingua si
+# fissa qui, invece di dipendere da cosa ha scelto l'utente nella sidebar.
+i18n.imposta("it")
 
 CAMPIONI = ROOT / "_WIP" / "_TESTING"
 FFMPEG = str(PATHS.ffmpeg.path)
@@ -3795,6 +3800,7 @@ def _interruttori_ricordati():
         "_IMPOSTAZIONI_DEFAULT": fabbrica,
         "MINIMO_SPAZIO_GB": 50,
         "_tetto_spazio": lambda: (500, 600),
+        "i18n": i18n,
     }
     exec(compile(_ast.Module(body=[fn], type_ignores=[]), "app", "exec"),
          ambiente)
@@ -4554,6 +4560,94 @@ def _spazio_predefinito_e_una_regola():
     assert "if not valido" not in carica, (
         "e' tornato il ramo che rispetta il valore salvato: un minimo finito "
         "su disco tornerebbe a sopravvivere ai ricaricamenti")
+
+
+# ===========================================================================
+#  Lingue
+# ===========================================================================
+
+def _chiavi_usate() -> set[str]:
+    """Le chiavi passate a `t`/`tn` come letterali, in tutto il codice."""
+    import ast
+    usate: set[str] = set()
+    for f in [ROOT / "ui" / "app.py", *(ROOT / "src" / "animeup").glob("*.py")]:
+        for nodo in ast.walk(ast.parse(f.read_text())):
+            if not (isinstance(nodo, ast.Call) and isinstance(nodo.func, ast.Name)
+                    and nodo.func.id in ("t", "tn") and nodo.args
+                    and isinstance(nodo.args[0], ast.Constant)
+                    and isinstance(nodo.args[0].value, str)):
+                continue
+            chiave = nodo.args[0].value
+            if nodo.func.id == "tn":
+                usate |= {f"{chiave}.uno", f"{chiave}.altri"}
+            else:
+                usate.add(chiave)
+    return usate
+
+
+@caso("le lingue hanno le stesse voci, con gli stessi segnaposto")
+def _() -> None:
+    """Una voce che manca in una lingua ripiega sull'inglese in silenzio: a
+    schermo si vedrebbe una frase sola nell'altra lingua, in mezzo al resto."""
+    import string
+    cataloghi = {lingua: i18n.catalogo(lingua) for lingua in i18n.LINGUE}
+    riferimento = cataloghi[i18n.PREDEFINITA]
+    for lingua, cat in cataloghi.items():
+        assert cat.keys() == riferimento.keys(), (
+            lingua, sorted(cat.keys() ^ riferimento.keys()))
+
+    def segnaposto(testo: str) -> set[str]:
+        return {campo for _, campo, _, _ in string.Formatter().parse(testo) if campo}
+
+    for chiave, testo in riferimento.items():
+        for lingua, cat in cataloghi.items():
+            assert segnaposto(cat[chiave]) == segnaposto(testo), (lingua, chiave)
+
+
+@caso("ogni testo chiesto dal codice esiste nei cataloghi")
+def _() -> None:
+    """Una chiave assente non rompe la pagina: mostra la chiave stessa. Che
+    e' peggio, perche' nessuno se ne accorge prima di averla vista."""
+    from animeup.probe import FieldMode
+    import ast
+    sezioni = ast.literal_eval(next(
+        r.split("=", 1)[1] for r in (ROOT / "ui" / "app.py").read_text().splitlines()
+        if r.startswith("SEZIONI = ")))
+    # Le chiavi composte a runtime: le schede e i valori degli enum.
+    attese = (_chiavi_usate()
+              | {f"tab.{s}" for s in sezioni}
+              | {f"enum.ritmo.{v.value}" for v in Timebase}
+              | {f"enum.campi.{v.value}" for v in FieldMode})
+    mancanti = sorted(attese - i18n.catalogo(i18n.PREDEFINITA).keys())
+    assert not mancanti, mancanti
+
+
+@caso("la lingua salvata torna al riavvio, e una sconosciuta non rompe niente")
+def _() -> None:
+    import json as _json
+    from animeup.paths import Paths
+    with tempfile.TemporaryDirectory() as tmp:
+        radice = Paths(Path(tmp))
+        radice.logs.mkdir(parents=True)
+        import animeup.paths as _paths
+        salvato = _paths.PATHS
+        _paths.PATHS = radice
+        try:
+            assert i18n.preferita() == i18n.PREDEFINITA
+            (radice.logs / "impostazioni.json").write_text(_json.dumps({"lingua": "it"}))
+            assert i18n.preferita() == "it"
+            (radice.logs / "impostazioni.json").write_text(_json.dumps({"lingua": "xx"}))
+            assert i18n.preferita() == i18n.PREDEFINITA
+        finally:
+            _paths.PATHS = salvato
+    i18n.imposta("en")
+    assert i18n.t("tab.Sorgenti") == "Sources"
+    assert i18n.tn("src.avvisi", 1) == "1 warning"
+    assert i18n.tn("src.avvisi", 3) == "3 warnings"
+    i18n.imposta("xx")
+    assert i18n.attiva() == i18n.PREDEFINITA
+    i18n.imposta("it")
+    assert i18n.t("tab.Sorgenti") == "Sorgenti"
 
 
 def main() -> int:
