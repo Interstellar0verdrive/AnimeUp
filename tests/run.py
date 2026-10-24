@@ -4622,6 +4622,45 @@ def _() -> None:
     assert not mancanti, mancanti
 
 
+@caso("ogni chiamata ai testi passa i segnaposto che il testo si aspetta")
+def _() -> None:
+    """Un segnaposto in piu' o in meno fa sollevare `format` solo quando
+    quel testo viene disegnato: magari in una schermata che si vede una
+    volta al mese. Qui si confrontano chiamata e testo per tutto il codice."""
+    import ast
+    import string
+    voci = i18n.catalogo(i18n.PREDEFINITA)
+    errori = []
+    for f in [ROOT / "ui" / "app.py", *(ROOT / "src" / "animeup").glob("*.py")]:
+        for nodo in ast.walk(ast.parse(f.read_text())):
+            if not (isinstance(nodo, ast.Call) and isinstance(nodo.func, ast.Name)
+                    and nodo.func.id in ("t", "tn") and nodo.args
+                    and isinstance(nodo.args[0], ast.Constant)
+                    and isinstance(nodo.args[0].value, str)):
+                continue
+            if any(k.arg is None for k in nodo.keywords):
+                continue                      # **diz: non verificabile qui
+            passati = {k.arg for k in nodo.keywords}
+            chiave = nodo.args[0].value
+            if nodo.func.id == "tn":
+                passati.add("n")
+                chiavi = [f"{chiave}.uno", f"{chiave}.altri"]
+            else:
+                chiavi = [chiave]
+            for c in chiavi:
+                if c not in voci:
+                    continue                  # lo dice gia' un altro caso
+                attesi = {campo for _, campo, _, _ in
+                          string.Formatter().parse(voci[c]) if campo}
+                # `tn` passa sempre `n`: il testo puo' anche non usarlo.
+                if nodo.func.id == "tn":
+                    attesi.add("n")
+                if attesi != passati:
+                    errori.append(f"{f.name}:{nodo.lineno} {c}: attesi "
+                                  f"{sorted(attesi)}, passati {sorted(passati)}")
+    assert not errori, "\n".join(errori)
+
+
 @caso("la lingua salvata torna al riavvio, e una sconosciuta non rompe niente")
 def _() -> None:
     import json as _json
