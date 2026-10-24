@@ -697,6 +697,9 @@ def ui(
         # wifi pubblico) poteva avviare e fermare lavorazioni.
         "--server.address", "0.0.0.0" if rete else "127.0.0.1",
         "--browser.gatherUsageStats", "false",
+        # Niente barra da sviluppatore di Streamlit («Deploy», menu): per chi
+        # usa AnimeUp sono pulsanti che non portano da nessuna parte.
+        "--client.toolbarMode", "minimal",
     ])
 
 
