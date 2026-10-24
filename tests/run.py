@@ -12,21 +12,25 @@ Niente dipendenze esterne: asserzioni e un riepilogo.
 
 from __future__ import annotations
 
+import functools
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
 from fractions import Fraction
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT / "tests"))
 
+import fixtures  # noqa: E402
 from animeup import dedup, library  # noqa: E402
 from animeup.models import CATALOG, recommend  # noqa: E402
-from animeup.paths import PATHS  # noqa: E402
+from animeup.paths import PATHS, MissingToolError  # noqa: E402
 from animeup.pipeline import safe_name  # noqa: E402
 from animeup.plan import build_plan, output_name  # noqa: E402
 from animeup.probe import Timebase, probe_source  # noqa: E402
@@ -39,7 +43,15 @@ i18n.imposta("it")
 # senza questo parlerebbero quella salvata nelle impostazioni dell'utente.
 os.environ["ANIMEUP_LANG"] = "it"
 
-CAMPIONI = ROOT / "_WIP" / "_TESTING"
+# I campioni veri sono rip di anime con tracce fansub: restano sul disco di
+# chi sviluppa e non si pubblicano. Dove mancano (un clone pulito, la CI) si
+# usano gli equivalenti sintetici di `tests/fixtures.py`, con gli stessi nomi.
+# ANIMEUP_TEST_FIXTURES=1 li forza anche dove i veri ci sono, per provare
+# quel ramo senza spostare niente.
+CAMPIONI_VERI = ROOT / "_WIP" / "_TESTING"
+SINTETICI = (os.environ.get("ANIMEUP_TEST_FIXTURES") == "1"
+             or not CAMPIONI_VERI.is_dir())
+CAMPIONI = fixtures.CARTELLA if SINTETICI else CAMPIONI_VERI
 FFMPEG = str(PATHS.ffmpeg.path)
 
 _casi: list = []
@@ -55,6 +67,48 @@ def caso(nome: str):
 def ffmpeg(*args: str) -> None:
     subprocess.run([FFMPEG, "-hide_banner", "-v", "error", "-y", *args],
                    check=True, capture_output=True)
+
+
+class Saltato(Exception):
+    """Il caso non puo' girare qui. Si conta a parte: non e' un passato."""
+
+
+@functools.cache
+def _gpu_assente() -> str | None:
+    """Perche' l'upscaler non puo' girare su questa macchina, o None.
+
+    Sui runner macOS di GitHub (macchine virtuali) Vulkan->Metal spesso non
+    trova un dispositivo usabile. Non si indovina dal modello di macchina: si
+    prova davvero, su un'immagine 16x16, una volta per corsa. Il binario puo'
+    anche uscire con 0 senza scrivere niente, quindi conta il file prodotto.
+    ANIMEUP_TEST_NO_GPU=1 simula il guasto.
+    """
+    if os.environ.get("ANIMEUP_TEST_NO_GPU") == "1":
+        return "GPU assente (simulata con ANIMEUP_TEST_NO_GPU=1)"
+    with tempfile.TemporaryDirectory() as t:
+        src, dst = Path(t) / "p.png", Path(t) / "q.png"
+        ffmpeg("-f", "lavfi", "-i", "color=gray:s=16x16", "-frames:v", "1", str(src))
+        try:
+            esito = subprocess.run(
+                [str(PATHS.realesrgan.path), "-i", str(src), "-o", str(dst),
+                 "-n", "realesr-animevideov3", "-s", "2", "-m", str(PATHS.models)],
+                capture_output=True, text=True, timeout=60)
+        except (OSError, subprocess.TimeoutExpired, MissingToolError) as exc:
+            return f"upscaler non eseguibile: {exc}"
+        if esito.returncode or not dst.is_file() or not dst.stat().st_size:
+            righe = esito.stderr.strip().splitlines()
+            return "nessuna GPU usabile dall'upscaler" + (f": {righe[-1]}" if righe else "")
+    return None
+
+
+def serve_gpu() -> None:
+    """In testa a ogni caso che esegue DAVVERO realesrgan o realcugan.
+
+    Oggi nessun caso lo fa (quelli sull'upscaler usano un binario finto o si
+    fermano prima): la sonda parte solo alla prima chiamata, quindi finche'
+    resta cosi' non costa niente."""
+    if (motivo := _gpu_assente()) is not None:
+        raise Saltato(motivo)
 
 
 # ===========================================================================
@@ -4739,9 +4793,14 @@ def _() -> None:
 
 
 def main() -> int:
-    if not CAMPIONI.is_dir():
-        print(f"campioni non trovati in {CAMPIONI}")
-        return 2
+    if SINTETICI:
+        # Detto a schermo: un verde sui sintetici non e' un verde sui veri.
+        inizio = time.monotonic()
+        fixtures.prepara(FFMPEG)
+        perche = ("forzati da ANIMEUP_TEST_FIXTURES" if CAMPIONI_VERI.is_dir()
+                  else f"{CAMPIONI_VERI} non c'e'")
+        print(f"campioni SINTETICI in {CAMPIONI} ({perche}; pronti in "
+              f"{time.monotonic() - inizio:.1f}s)")
 
     # Un filtro sul nome: le prove di mutazione rilanciano lo stesso caso
     # decine di volte, e far girare ogni volta l'intera suite su un disco
@@ -4760,10 +4819,13 @@ def main() -> int:
         print(f"** CORSA PARZIALE: solo {len(casi)} casi, quelli che contengono "
               f"«{filtro}», su {len(_casi)} totali **")
 
-    passati, falliti = 0, []
+    passati, saltati, falliti = 0, [], []
     for nome, fn in casi:
         try:
             fn()
+        except Saltato as exc:
+            saltati.append((nome, str(exc)))
+            print(f"  SALTATO  {nome}  ({exc})")
         except Exception as exc:  # noqa: BLE001 - si riporta tutto
             falliti.append((nome, exc, traceback.format_exc()))
             print(f"  FALLITO  {nome}")
@@ -4771,8 +4833,13 @@ def main() -> int:
             passati += 1
             print(f"  ok       {nome}")
 
+    # I saltati si contano a parte: «140/144 passati, 4 saltati» non deve
+    # avere l'aspetto di una suite verde al completo.
     print(f"\n{passati}/{len(casi)} passati"
+          + (f", {len(saltati)} saltati" if saltati else "")
           + (f"  (parziale: filtro «{filtro}»)" if filtro else ""))
+    for nome, motivo in saltati:
+        print(f"  saltato: {nome} — {motivo}")
     for nome, exc, tb in falliti:
         print(f"\n--- {nome} ---\n{exc}")
         print("\n".join(tb.strip().splitlines()[-6:]))
