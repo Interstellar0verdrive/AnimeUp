@@ -5674,8 +5674,8 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
         return (nome in in_coda_ora or fatta or con_lavoro
                 or nome == str((catena_ora or {}).get("file") or ""))
     if orfani:
-        st.markdown("<div class='au-eyebrow au-sez-int'>In lavorazione "
-                    "(fuori da INPUT)</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='au-eyebrow au-sez-int'>{t('lavb.fuori_input')}"
+                    "</div>", unsafe_allow_html=True)
         st.markdown("".join(_scheda_monitor(l, campioni, stati) for l in orfani),
                     unsafe_allow_html=True)
 
@@ -5684,22 +5684,15 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
     # dall'utente durante la prima maratona).
     if gpu_occupata:
         st.markdown(
-            "<div class='au-sezione'>Lavorazione in corso</div>"
-            "<div class='au-hint' style='margin-bottom:20px'>La selezione è "
-            "congelata finché la coda non finisce (o non la fermi): le "
-            "righe mostrano lo stato di ogni file, la barra in basso il "
-            "quadro d'insieme. Ferma interrompe il singolo file, Ferma tutto "
-            "l'intera coda — tutto resta riprendibile.</div>",
+            f"<div class='au-sezione'>{t('lavb.titolo_in_corso')}</div>"
+            "<div class='au-hint' style='margin-bottom:20px'>"
+            f"{t('lavb.hint_in_corso')}</div>",
             unsafe_allow_html=True)
     else:
         st.markdown(
-            "<div class='au-sezione'>File da elaborare</div>"
-            "<div class='au-hint' style='margin-bottom:20px'>Selezionare "
-            "i file da elaborare e verificare il modello associato a "
-            "ciascuno. Il modello è preselezionato in base alla "
-            "risoluzione.<br>I file interrotti, se selezionati, riprendono "
-            "da dove erano rimasti (con gli stessi parametri; cambiandoli "
-            "si ricomincia).</div>",
+            f"<div class='au-sezione'>{t('lavb.titolo')}</div>"
+            "<div class='au-hint' style='margin-bottom:20px'>"
+            f"{t('lavb.hint')}</div>",
             unsafe_allow_html=True)
 
     coda = state("coda", set())
@@ -5810,12 +5803,12 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
     with st.container(key="sceltaTutti"):
         m, _ = st.columns([1.8, 6.6])
         m.selectbox(
-            "Stesso modello per tutti", ["auto", *CATALOG],
+            t("lavb.stesso_modello"), ["auto", *CATALOG],
             index=None, key="modello_tutti",
             on_change=_applica_modello_tutti,
-            placeholder="Stesso modello per tutti…",
+            placeholder=t("lavb.stesso_modello_segnaposto"),
             label_visibility="collapsed", disabled=gpu_occupata,
-            format_func=lambda k: ("Consigliato per ciascuno" if k == "auto"
+            format_func=lambda k: (t("lavb.consigliato_ciascuno") if k == "auto"
                                    else CATALOG[k].short))
 
     pesi = [0.45, 4.4, 1.1, 0.85, 2.5, 1.25, 1.5, 0.5]
@@ -5832,12 +5825,13 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                                     for f in files)
         st.session_state["spunta_madre"] = tutte
         colonne[0].checkbox(
-            "tutti i file", key="spunta_madre", on_change=_spunta_madre,
+            t("lavb.tutti_i_file"), key="spunta_madre", on_change=_spunta_madre,
             label_visibility="collapsed", disabled=gpu_occupata,
-            help="Seleziona o deseleziona tutti i file")
+            help=t("lavb.tutti_i_file_aiuto"))
         for col, label in zip(colonne[1:],
-                              ["File", "Risoluzione", "Durata", "Modello",
-                               "Note", "Stima", ""]):
+                              [t("lavb.col_file"), t("lavb.col_risoluzione"),
+                               t("lavb.col_durata"), t("lavb.col_modello"),
+                               t("lavb.col_note"), t("lavb.col_stima"), ""]):
             col.markdown(f"<span class='au-eyebrow'>{label}</span>",
                          unsafe_allow_html=True)
 
@@ -5985,7 +5979,8 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
             spuntato = membro
         else:
             spuntato = c[0].checkbox(
-                f"Elabora {f['name']}", value=chiave in coda, key=f"q_{chiave}",
+                t("lavb.elabora", nome=f["name"]), value=chiave in coda,
+                key=f"q_{chiave}",
                 label_visibility="collapsed",
                 # Senza analisi non c'e' piano, quindi non c'e' niente da
                 # avviare: spuntarlo avrebbe promesso una lavorazione che
@@ -6066,52 +6061,45 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
             if lav is not None and monitor.sospeso(lav) is not None:
                 c[5].markdown(
                     "<span class='au-tag au-warn au-perche' tabindex='0'>"
-                    "in pausa"
-                    + _bolla("I processi sono congelati dove erano: niente "
-                             "GPU, niente processore. Riprendendo ripartono "
-                             "esattamente da qui, e il tempo passato in pausa "
-                             "non viene conteggiato nella durata del file.")
+                    + t("lavb.chip_pausa")
+                    + _bolla(t("lavb.chip_pausa_aiuto"))
                     + "</span>", unsafe_allow_html=True)
             else:
-                c[5].markdown("<span class='au-tag au-busy'>in corso</span>",
+                c[5].markdown("<span class='au-tag au-busy'>"
+                              f"{t('lavb.chip_in_corso')}</span>",
                               unsafe_allow_html=True)
         elif difettosa:
             # PRIMA di ogni altro giudizio: che l'ultima lavorazione abbia
             # prodotto un file rotto conta più del modello consigliato. La
             # riga resta in coda (è giusto rifarla) e lo dice.
             c[5].markdown(
-                "<span class='au-tag au-err au-perche' tabindex='0'>da rifare"
-                + _bolla("L'ultima lavorazione ha prodotto un file "
-                         "incompleto: l'uscita è stata messa da parte come "
-                         ".PARZIALE invece di restare in OUTPUT col nome "
-                         "buono. Rilanciando, il file viene rifatto da capo.")
+                "<span class='au-tag au-err au-perche' tabindex='0'>"
+                + t("lavb.chip_da_rifare")
+                + _bolla(t("lavb.chip_da_rifare_aiuto"))
                 + "</span>",
                 unsafe_allow_html=True)
         elif risulta_fatta:
             if fatta:
-                chip = "<span class='au-tag au-fatta'>fatto</span>"
+                chip = f"<span class='au-tag au-fatta'>{t('lavb.chip_fatto')}</span>"
             else:
                 # Prodotto, ma l'uscita non è più in OUTPUT. Dirlo e basta
                 # sarebbe una mezza verità: chi legge deve sapere che
                 # rispuntarlo lo rifà — è l'unica cosa che cambia davvero
                 # rispetto a un file ancora in cartella.
                 chip = ("<span class='au-tag au-fatta au-perche' tabindex='0'>"
-                        "fatto"
-                        + _bolla("Il file è stato prodotto, ma l'uscita non è "
-                                 "più in OUTPUT: probabilmente è stata "
-                                 "spostata. Rispuntandolo viene rifatto da "
-                                 "capo.")
+                        + t("lavb.chip_fatto")
+                        + _bolla(t("lavb.chip_fatto_spostato"))
                         + "</span>")
             avvisi = (esito or {}).get("avvisi") or []
             if avvisi:
                 # Come il "1 avviso" dei Sorgenti: giallo, col dettaglio nel
                 # fumetto — un esito con avvisi non deve passare per liscio.
                 chip += (f" <span class='au-tag au-warn au-perche' tabindex='0'>"
-                         f"{len(avvisi)} avvis{'o' if len(avvisi) == 1 else 'i'}"
+                         f"{tn('lavb.avvisi', len(avvisi))}"
                          f"{_bolla(' · '.join(avvisi))}</span>")
             c[5].markdown(chip, unsafe_allow_html=True)
         elif interrotto:
-            chip = "<span class='au-tag au-warn'>interrotto</span>"
+            chip = f"<span class='au-tag au-warn'>{t('lavb.chip_interrotto')}</span>"
             # Se la ricetta salvata differisce dalla sidebar, la chip lo
             # dice: Riprendi userà la ricetta (blindato), non la sidebar.
             ricetta = _leggi_parametri(lav.cartella if lav else None)
@@ -6128,24 +6116,23 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     if ricetta.get("modello") in CATALOG else "",
                 ]))
                 chip += (" <span class='au-tag au-dim au-perche' tabindex='0'>"
-                         "parametri suoi"
-                         + _bolla(f"Riprende coi parametri con cui era "
-                                  f"partito ({descr}), non con quelli attuali "
-                                  f"della sidebar. Per rifarlo con parametri "
-                                  f"nuovi serve scartare la lavorazione.")
+                         + t("lavb.chip_parametri_suoi")
+                         + _bolla(t("lavb.chip_parametri_suoi_aiuto", descr=descr))
                          + "</span>")
             c[5].markdown(chip, unsafe_allow_html=True)
         elif not analizzato:
-            c[5].markdown("<span class='au-tag au-dim'>in attesa di "
-                          "analisi</span>", unsafe_allow_html=True)
+            c[5].markdown("<span class='au-tag au-dim'>"
+                          f"{t('lavb.chip_attesa_analisi')}</span>",
+                          unsafe_allow_html=True)
         elif f["name"] in in_coda_ora:
-            c[5].markdown("<span class='au-tag au-coda'>in coda</span>",
+            c[5].markdown("<span class='au-tag au-coda'>"
+                          f"{t('lavb.chip_in_coda')}</span>",
                           unsafe_allow_html=True)
         elif errore is not None:
             # La chip dice QUALE ostacolo, il perché per esteso sta nel
             # suggerimento: "non elaborabile" non diceva niente, e il motivo
             # compariva solo sotto l'elenco e solo per le righe spuntate.
-            breve = getattr(errore, "sintesi", "non elaborabile")
+            breve = getattr(errore, "sintesi", t("lavb.non_elaborabile"))
             c[5].markdown(
                 f"<span class='au-tag au-err au-perche' tabindex='0'>"
                 f"{esc(breve)}{_bolla(str(errore))}</span>",
@@ -6163,9 +6150,10 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
             # qualcosa da dire.
             giudizio = (suggerimento.giudizi or {}).get(modelli.get(chiave))
             chip_riga = {
-                "ok": "<span class='au-tag au-ok'>consigliato</span>",
-                "verifica": "<span class='au-tag au-warn'>da verificare</span>",
-                "no": "<span class='au-tag au-err'>sconsigliato</span>",
+                "ok": f"<span class='au-tag au-ok'>{t('lavb.giudizio_ok')}</span>",
+                "verifica": ("<span class='au-tag au-warn'>"
+                             f"{t('lavb.giudizio_verifica')}</span>"),
+                "no": f"<span class='au-tag au-err'>{t('lavb.giudizio_no')}</span>",
             }.get(giudizio)
             if chip_riga:
                 c[5].markdown(chip_riga, unsafe_allow_html=True)
@@ -6201,7 +6189,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
             if scarta_in_conferma:
                 # Stesso schema del Ferma: conferma nel pulsante stesso,
                 # rosso pieno, scadenza da sola in 10 secondi.
-                if c[6].button("Confermi? Scarta", key=f"scartasi{i}",
+                if c[6].button(t("lavb.conferma_scarta"), key=f"scartasi{i}",
                                use_container_width=True):
                     st.session_state.pop("conferma_scarta", None)
                     # Guardia: si butta SOLO una cartella dentro
@@ -6209,14 +6197,13 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     if (lav is not None
                             and PATHS.work in lav.cartella.parents):
                         shutil.rmtree(lav.cartella, ignore_errors=True)
-                        st.toast("Lavorazione scartata: la riga è "
-                                 "tornata come nuova.")
+                        st.toast(t("lavb.scartata"))
                     st.rerun()
             else:
                 # Riprendere = rilanciare lo stesso file: la pipeline
                 # ritrova il suo stato su disco e riparte da dove si era
                 # fermata, coi parametri della ricetta (blindato).
-                if c[6].button("Riprendi", key=f"rip{i}",
+                if c[6].button(t("lavb.riprendi"), key=f"rip{i}",
                                use_container_width=True,
                                # Senza referto non c'e' piano, e `_riprendi`
                                # arrivava a leggere `piano.model_key` su
@@ -6230,22 +6217,15 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                                # i gigabyte.
                                disabled=gpu_occupata or piano is None,
                                help=(None if piano is not None else
-                                     "L'analisi di questo file non è ancora "
-                                     "pronta: il Riprendi si accende appena "
-                                     "arriva il referto.")):
+                                     t("lavb.riprendi_attesa"))):
                     _riprendi(piano, lav.cartella if lav else None, cfg)
                     st.session_state["appena_avviata"] = True
                     st.session_state["attesa_avvio"] = time.time()
                 if lav is not None and c[6].button(
-                        "Scarta", key=f"scarta{i}",
+                        t("lavb.scarta"), key=f"scarta{i}",
                         use_container_width=True,
                         disabled=gpu_occupata,
-                        help="Elimina l'elaborazione parziale di QUESTO "
-                             "file (fotogrammi estratti, blocchi "
-                             "codificati, stato): la riga torna come "
-                             "nuova e i GB si "
-                             "liberano. Non tocca né il file sorgente né "
-                             "l'eventuale uscita in OUTPUT."):
+                        help=t("lavb.scarta_aiuto")):
                     st.session_state["conferma_scarta"] = (chiave,
                                                           time.time())
                     st.rerun()
@@ -6272,14 +6252,12 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                         "<path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'>"
                         "</path><line x1='12' y1='17' x2='12.01' y2='17'>"
                         "</line></svg>"
-                        + _bolla(f"Elaborazione completata in {riprese} "
-                                 f"riprese; il tempo totale include i blocchi "
-                                 f"in corso rifatti dall'inizio dopo ogni "
-                                 f"interruzione (fino a ~{round(blocco)} "
-                                 f"minuti ogni volta).")
+                        + _bolla(t("lavb.riprese_aiuto", riprese=riprese,
+                                   minuti=round(blocco)))
                         + "</span>")
-                c[6].markdown(f"<div class='au-stima-riga'>Finito in "
-                              f"{stima_hm(secondi)}{perche_riprese}</div>",
+                c[6].markdown("<div class='au-stima-riga'>"
+                              f"{t('lavb.finito_in', durata=stima_hm(secondi))}"
+                              f"{perche_riprese}</div>",
                               unsafe_allow_html=True)
         elif not elaborando and piano is not None:
             # Il valore PIÙ PROBABILE, come nella fascia: la forchetta
@@ -6287,25 +6265,24 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
             # fossero i due numeri, e chi legge una cella di elenco non ha
             # nessuna legenda a cui appoggiarsi. L'intervallo resta, nel
             # fumetto, per chi vuole sapere quanto può ballare.
-            b, t = piano.est_best_seconds, piano.est_total_seconds
+            b, alto = piano.est_best_seconds, piano.est_total_seconds
             stima = f"≈ {stima_hm(piano.est_attesa_seconds)}"
-            if b < t * 0.95:
+            if b < alto * 0.95:
                 # Con la deduplica MISURATA su questo file l'incertezza non
                 # è più «quanti fotogrammi ripetuti ci saranno»: quella
                 # domanda ha già risposta. Resta solo quanto sbaglia il
                 # modello, e dirlo con la nota vecchia sarebbe mentire su
                 # cosa sappiamo.
                 stima += _icona_info(
-                    "Durata stimata",
-                    [f"Più probabile: {stima_hm(piano.est_attesa_seconds)}",
-                     f"Durata possibile: da {stima_hm(b)} a {stima_hm(t)}"],
-                    nota=(f"Deduplica misurata su questo file: "
-                          f"{piano.dedup.expected_ratio:.0%} di fotogrammi "
-                          f"ripetuti. Quello che resta è lo scarto abituale "
-                          f"fra il previsto e l'impiegato."
+                    t("lavb.durata_stimata"),
+                    [t("lavb.piu_probabile",
+                       durata=stima_hm(piano.est_attesa_seconds)),
+                     t("lavb.durata_possibile", da=stima_hm(b),
+                       a=stima_hm(alto))],
+                    nota=(t("lavb.nota_dedup_misurata",
+                            quota=f"{piano.dedup.expected_ratio:.0%}")
                           if piano.dedup.misurata else
-                          "La durata effettiva dipende dalla quantità di "
-                          "fotogrammi ripetuti rilevati."))
+                          t("lavb.nota_dedup")))
             c[6].markdown(f"<div class='au-stima-riga'>{stima}</div>",
                           unsafe_allow_html=True)
 
@@ -6324,23 +6301,17 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                            and armato_stop[0] == chiave
                            and time.time() - armato_stop[1] < 10)
             if not in_conferma:
-                if c[6].button("Ferma", key=f"ferma{i}",
+                if c[6].button(t("lavb.ferma"), key=f"ferma{i}",
                                use_container_width=True,
-                               help="Ferma SOLO questo file: "
-                                    "l'elaborazione potrà essere ripresa in "
-                                    "qualsiasi momento. Gli altri file del "
-                                    "lancio proseguono. Per fermare tutto "
-                                    "c'è il pulsante nella barra in "
-                                    "basso."):
+                               help=t("lavb.ferma_aiuto")):
                     st.session_state["conferma_ferma"] = (chiave, time.time())
                     st.rerun()
             else:
-                if c[6].button("Confermi lo stop?", key=f"fermasi{i}",
+                if c[6].button(t("lavb.conferma_stop"), key=f"fermasi{i}",
                                use_container_width=True):
                     st.session_state.pop("conferma_ferma", None)
                     _ferma(lav, tutto=False)
-                    st.toast("Interruzione richiesta: la riga passerà a "
-                             "\"interrotto\" tra qualche secondo.")
+                    st.toast(t("lavb.interruzione_richiesta"))
                     time.sleep(1.5)
                     st.rerun()
 
@@ -6358,11 +6329,10 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                         lav.cartella.name, _turno_previsto(piano, lav))
                     dett = None
                 elif concluso:
-                    dett = ("concluso con avvisi · uscita in OUTPUT, la "
-                            "cartella di lavoro resta per controllo")
+                    dett = t("lavb.concluso_avvisi")
                 else:
-                    dett = (f"fermo al {lav.frazione:.0%} · "
-                            f"{lav.fatti}/{lav.totale} fotogrammi")
+                    dett = t("lavb.fermo_al", quota=f"{lav.frazione:.0%}",
+                             fatti=lav.fatti, totale=lav.totale)
                 # Solo per le righe FERME: quella viva l'ha gia' disegnata il
                 # suo riquadro qui sopra, e ridisegnarla qui la
                 # raddoppierebbe.
@@ -6429,8 +6399,9 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
         st.write("")
         for nome, motivo in rifiutati:
             st.markdown(
-                f"<div class='au-hint'><span class='au-tag au-warn'>non "
-                f"elaborabile</span>&nbsp; <b>{esc(nome)}</b> — {esc(motivo)}</div>",
+                f"<div class='au-hint'><span class='au-tag au-warn'>"
+                f"{t('lavb.non_elaborabile')}</span>&nbsp; <b>{esc(nome)}</b> — "
+                f"{esc(motivo)}</div>",
                 unsafe_allow_html=True)
 
     st.session_state["coda"] = coda
@@ -6498,31 +6469,30 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                 # Il tempo, che e' l'informazione che si cerca davvero, sta
                 # staccato sotto (vedi `au-catena`).
                 if completo:
-                    titolo = f"**Elaborazione {n} di {tot}**"
+                    titolo = f"**{t('lavb.elaborazione_di', numero=n, totale=tot)}**"
                     if attesa:
-                        titolo += (" · 1 file in attesa" if attesa == 1
-                                   else f" · {attesa} file in attesa")
+                        titolo += f" · {tn('lavb.file_in_attesa', attesa)}"
                     a.markdown(titolo, unsafe_allow_html=True)
                     voci = []
                     if fatti_coda:
-                        voci.append(f"{fatti_coda} "
-                                    + ("completato" if fatti_coda == 1
-                                       else "completati"))
-                    voci.append("1 in elaborazione")
+                        voci.append(tn("lavb.completati", fatti_coda))
+                    voci.append(t("lavb.uno_in_elaborazione"))
                     if attesa:
-                        voci.append(f"{attesa} in attesa")
-                    a.markdown(f"<div class='au-coda-dettaglio'>Coda: "
-                               f"{' · '.join(voci)}</div>",
+                        voci.append(t("lavb.n_in_attesa", n=attesa))
+                    a.markdown("<div class='au-coda-dettaglio'>"
+                               f"{t('lavb.coda_voci', voci=' · '.join(voci))}</div>",
                                unsafe_allow_html=True)
                 else:
-                    a.markdown("**Lavorazione in corso**", unsafe_allow_html=True)
+                    a.markdown(f"**{t('lavb.titolo_in_corso')}**",
+                               unsafe_allow_html=True)
 
                 if pausa_ora is not None and not vivo_qualcosa:
                     riparte = time.strftime("%H:%M", time.localtime(pausa_ora[0]))
-                    posiz = (f" (file {n} di {tot})" if tot and tot > 1 else "")
-                    a.markdown(f"<div class='au-riga-pausa'>Coda in pausa fra "
-                               f"due lavorazioni: la prossima{posiz} parte alle "
-                               f"{riparte}</div>", unsafe_allow_html=True)
+                    posiz = (t("lavb.pausa_posiz", numero=n, totale=tot)
+                             if tot and tot > 1 else "")
+                    a.markdown("<div class='au-riga-pausa'>"
+                               f"{t('lavb.coda_in_pausa', posiz=posiz, ora=riparte)}"
+                               "</div>", unsafe_allow_html=True)
                 elif catena_ora is not None:
                     # L'ora di fine e' CALCOLATA dalla stima, non un numero
                     # letto altrove: i due valori del marcatore sono durate
@@ -6585,9 +6555,11 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                             # La stima è esaurita ma il lavoro no: continuare a
                             # spostare l'orologio in avanti sarebbe una bugia, e
                             # un orario nel passato pure. Si dice quel che si sa.
-                            quanto, quando = "meno di un minuto", "a minuti"
+                            quanto, quando = (t("lavb.meno_di_un_minuto"),
+                                              t("lavb.a_minuti"))
                         elif mn < mx * 0.95 and mn > 60:
-                            quanto = f"da {stima_hm(mn)} a {stima_hm(mx)}"
+                            quanto = t("lavb.da_a", da=stima_hm(mn),
+                                       a=stima_hm(mx))
                             quando = quando_finisce(_adesso + mn, _adesso + mx)
                         else:
                             quanto = stima_hm(mx)
@@ -6596,22 +6568,20 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                         # di TUTTI i file rimasti, pause fra l'uno e l'altro
                         # comprese, e si leggeva come se riguardasse solo il file
                         # in corso — che è quello nominato due righe sopra.
-                        testo = (f"<span class='au-eti'>Tempo rimanente stimato "
-                                 f"per l'intera coda: {quanto}</span> · "
-                                 f"<span class='au-val'>Fine prevista: "
-                                 f"{quando}</span>")
+                        testo = (f"<span class='au-eti'>"
+                                 f"{t('lavb.rimanente_coda', quanto=quanto)}</span> · "
+                                 f"<span class='au-val'>"
+                                 f"{t('lavb.fine_prevista', quando=quando)}</span>")
                     else:
-                        testo = (f"In lavorazione: "
-                                 f"{esc(str(catena_ora.get('file', '')))}")
+                        testo = t("lavb.in_lavorazione_file",
+                                  nome=esc(str(catena_ora.get('file', ''))))
                     a.markdown(f"<div class='au-catena'>{testo}</div>",
                                unsafe_allow_html=True)
             elif in_avvio:
-                a.markdown("<div class='au-catena'>Avvio in corso: sto "
-                           "analizzando i file scelti, con un lotto grosso può "
-                           "volerci fino a un minuto. Abbi pazienza...</div>",
+                a.markdown(f"<div class='au-catena'>{t('lavb.avvio_in_corso')}</div>",
                            unsafe_allow_html=True)
             elif not coda:
-                a.markdown("<span class='au-hint'>Nessun file selezionato.</span>",
+                a.markdown(f"<span class='au-hint'>{t('lavb.nessun_file')}</span>",
                            unsafe_allow_html=True)
             else:
                 # Le pause fra un file e l'altro entrano nel totale della CODA
@@ -6649,20 +6619,20 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                 n_in_corso = len(in_corso_coda)
                 n_attesa = max(0, n_sel - n_fare - n_completati - n_rifiutati
                                - n_in_corso)
-                righe_sel = [f"Da elaborare: {n_fare}"]
+                righe_sel = [t("lavb.sel_da_elaborare", n=n_fare)]
                 if n_in_corso:
-                    righe_sel.append(f"In lavorazione: {n_in_corso}")
+                    righe_sel.append(t("lavb.sel_in_lavorazione", n=n_in_corso))
                 if n_attesa:
-                    righe_sel.append(f"In attesa del proprio turno: {n_attesa}")
-                righe_sel += [f"Già completati: {n_completati}",
-                              f"Non elaborabili: {n_rifiutati}"]
-                info_sel = _icona_info("File selezionati", righe_sel)
+                    righe_sel.append(t("lavb.sel_in_attesa", n=n_attesa))
+                righe_sel += [t("lavb.sel_completati", n=n_completati),
+                              t("lavb.sel_rifiutati", n=n_rifiutati)]
+                info_sel = _icona_info(t("lavb.file_selezionati"), righe_sel)
                 info_stima = _icona_info(
-                    "Durata stimata",
-                    [f"Più probabile: {stima_hm(atteso)}",
-                     f"Durata possibile: da {stima_hm(minimo)} a {stima_hm(totale)}"],
-                    nota="La durata effettiva dipende dalla quantità di "
-                         "fotogrammi ripetuti rilevati.")
+                    t("lavb.durata_stimata"),
+                    [t("lavb.piu_probabile", durata=stima_hm(atteso)),
+                     t("lavb.durata_possibile", da=stima_hm(minimo),
+                       a=stima_hm(totale))],
+                    nota=t("lavb.nota_dedup"))
                 # Il picco di disco non sta più qui: si legge già nella sidebar,
                 # ed è un dato tecnico che rubava spazio alle due cose su cui si
                 # decide davvero (quanti file partono, e quanto ci vuole).
@@ -6672,10 +6642,11 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                 # differenza. Il fumetto della durata invece c'è sempre: la
                 # forchetta è un'informazione utile a prescindere.
                 a.markdown(
-                    f"**{n_sel} file selezionat{'o' if n_sel == 1 else 'i'}**"
-                    + (f" · {n_fare} da elaborare{info_sel}"
+                    f"**{tn('lavb.n_selezionati', n_sel)}**"
+                    + (f" · {t('lavb.n_da_elaborare', n=n_fare)}{info_sel}"
                        if n_fare != n_sel else "")
-                    + (f" · Stima ≈ **{stima_hm(atteso)}**{info_stima}"
+                    + (f" · {t('lavb.stima_barra', durata=stima_hm(atteso))}"
+                       f"{info_stima}"
                        if piani else ""), unsafe_allow_html=True)
                 # I già lavorati la cui uscita è sparita: annunciati sempre, e
                 # con l'azione opposta a portata di clic. Il valore predefinito
@@ -6690,37 +6661,28 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     brevi = [esc(n) for _, n in elenco[:2]]
                     resto = len(elenco) - 2
                     if resto > 0:
-                        brevi.append("e un altro" if resto == 1
-                                     else f"e altri {resto}")
+                        brevi.append(tn("lavb.e_altri", resto))
                     return "<br>".join(brevi)
 
                 if in_forse:
-                    uno = len(in_forse) == 1
-                    saltati = "viene saltato" if uno else "vengono saltati"
                     a.markdown(
                         f"<div class='au-riga-forse'>"
-                        f"{len(in_forse)} file selezionat{'o' if uno else 'i'} "
-                        f"risult{'a' if uno else 'ano'} già lavorat"
-                        f"{'o' if uno else 'i'}, ma l'uscita non è più in "
-                        f"OUTPUT: per ora {saltati}:<br>{_nomi(in_forse)}</div>",
+                        f"{tn('lavb.in_forse', len(in_forse), nomi=_nomi(in_forse))}"
+                        "</div>",
                         unsafe_allow_html=True)
                 # `if`, non `elif`: le due liste convivono benissimo (basta aver
                 # armato un file e spuntarne poi un altro archiviato), e con
                 # l'elif i file che stavano per essere RIFATTI DA CAPO
                 # sparivano dall'avviso pur essendo dentro la coda.
                 if rifatti:
-                    uno = len(rifatti) == 1
                     a.markdown(
                         f"<div class='au-riga-forse'>"
-                        f"{len(rifatti)} file già lavorat{'o' if uno else 'i'} "
-                        f"verr{'à' if uno else 'anno'} rifatt{'o' if uno else 'i'} "
-                        f"da capo:<br>{_nomi(rifatti)}</div>",
+                        f"{tn('lavb.rifatti', len(rifatti), nomi=_nomi(rifatti))}"
+                        "</div>",
                         unsafe_allow_html=True)
                 # La didascalia diceva a parole proprio quello che ora l'estremo
                 # basso calcola: descriveva un valore che non veniva mostrato.
-                a.markdown("<span class='au-meta'>Il tempo minimo si applica "
-                           "quando la deduplica rileva fotogrammi ripetuti, "
-                           "spesso presenti nei contenuti animati. "
+                a.markdown(f"<span class='au-meta'>{t('lavb.tempo_minimo')} "
                            f"{_nota_taratura()}</span>",
                            unsafe_allow_html=True)
                 # Un pulsante solo: i dettagli ora vivono dentro le righe, come
@@ -6729,7 +6691,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     # Le tre azioni della fascia hanno la stessa larghezza: la
                     # colonna intera. Sono alternative fra loro, e larghezze
                     # diverse le facevano leggere come importanze diverse.
-                    if st.button("Avvia la lavorazione", type="primary",
+                    if st.button(t("lavb.avvia"), type="primary",
                                  use_container_width=True,
                                  disabled=not piani or gpu_occupata):
                         # Il consenso a rifare si CONSUMA col lancio — ma solo
@@ -6782,15 +6744,13 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     # piene, o per disarmare un file bisognerebbe prima armarne
                     # un altro.
                     if in_forse and not gpu_occupata:
-                        uno = len(in_forse) == 1
-                        if st.button(f"Rifai quest{'o' if uno else 'i'} "
-                                     f"da capo", key="rifai_si",
+                        if st.button(tn("lavb.rifai_si", len(in_forse)),
+                                     key="rifai_si",
                                      use_container_width=True):
                             rifai_comunque.update(k for k, _ in in_forse)
                             st.rerun()
                     if rifatti and not gpu_occupata:
-                        uno = len(rifatti) == 1
-                        if st.button(f"Non rifar{'lo' if uno else 'li'}",
+                        if st.button(tn("lavb.rifai_no", len(rifatti)),
                                      key="rifai_no",
                                      use_container_width=True):
                             rifai_comunque.difference_update(k for k, _ in rifatti)
@@ -6828,42 +6788,33 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                         # (Decisione presa con l'utente l'11/08.)
                         if vivo_ora is not None:
                             if monitor.sospeso(vivo_ora) is not None:
-                                if st.button("Riprendi", key="riprendi_tutto",
+                                if st.button(t("lavb.riprendi"), key="riprendi_tutto",
                                              type="primary",
                                              use_container_width=True,
-                                             help="Risveglia la lavorazione "
-                                                  "esattamente da dove era: "
-                                                  "non si perde un fotogramma."):
+                                             help=t("lavb.riprendi_tutto_aiuto")):
                                     if (err := _pausa(vivo_ora, riprendi=True)):
-                                        st.toast(f"Non riprende: {err}")
+                                        st.toast(t("lavb.non_riprende", errore=err))
                                     else:
-                                        st.toast("Ripreso da dove era.")
+                                        st.toast(t("lavb.ripreso"))
                                     time.sleep(1.0)
                                     st.rerun()
-                            elif st.button("Pausa", key="pausa_tutto",
+                            elif st.button(t("lavb.pausa"), key="pausa_tutto",
                                            use_container_width=True,
-                                           help="Congela la lavorazione dov'è "
-                                                "e libera processore e scheda "
-                                                "grafica. Riprende esattamente "
-                                                "da qui: nessun lavoro perso, e "
-                                                "il tempo in pausa non viene "
-                                                "conteggiato."):
+                                           help=t("lavb.pausa_aiuto")):
                                 if (err := _pausa(vivo_ora, riprendi=False)):
-                                    st.toast(f"Non posso mettere in pausa: {err}")
+                                    st.toast(t("lavb.pausa_errore", errore=err))
                                 else:
-                                    st.toast("In pausa. Riprende da qui quando vuoi.")
+                                    st.toast(t("lavb.in_pausa"))
                                 time.sleep(1.0)
                                 st.rerun()
                         if not in_conferma_tutto:
-                            if st.button("Ferma tutto", key="ferma_tutto",
+                            if st.button(t("lavb.ferma_tutto"), key="ferma_tutto",
                                          use_container_width=True,
-                                         help="Interrompe il file in corso "
-                                              "(riprendibile) e annulla i "
-                                              "successivi di questo lancio."):
+                                         help=t("lavb.ferma_tutto_aiuto")):
                                 st.session_state["conferma_ferma_tutto"] = time.time()
                                 st.rerun()
                         else:
-                            if st.button("Confermi? Ferma tutto",
+                            if st.button(t("lavb.conferma_ferma_tutto"),
                                          key="fermasi_tutto",
                                          use_container_width=True):
                                 st.session_state.pop("conferma_ferma_tutto", None)
@@ -6876,8 +6827,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                                 else:
                                     # Limbo dell'estrazione: c'e' solo .catena.
                                     _termina_gruppo(int(catena_ora.get("pid", 0)))
-                                st.toast("Lancio interrotto: il file in corso "
-                                         "resterà riprendibile.")
+                                st.toast(t("lavb.lancio_interrotto"))
                                 time.sleep(1.5)
                                 st.rerun()
 
