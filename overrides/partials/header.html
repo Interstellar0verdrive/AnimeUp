@@ -39,16 +39,6 @@
     {% if not config.theme.palette is mapping %}
       {% include "partials/javascripts/palette.html" %}
     {% endif %}
-    <div class="animeup-theme-control">
-      <label for="animeup-theme-select">Theme</label>
-      <select id="animeup-theme-select" aria-label="Theme: follow system, light, or dark"
-              data-favicon-dark="{{ 'assets/animeup-favicon.png' | url }}"
-              data-favicon-light="{{ 'assets/animeup-favicon-light.png' | url }}">
-        <option value="animeup-auto">◐ System</option>
-        <option value="default">☀ Light</option>
-        <option value="slate" selected>☾ Dark</option>
-      </select>
-    </div>
     {% if config.extra.alternate %}
       {% include "partials/alternate.html" %}
     {% endif %}
@@ -62,6 +52,16 @@
         {% include "partials/search.html" %}
       {% endif %}
     {% endif %}
+    <div class="animeup-theme-control">
+      <label for="animeup-theme-select">Theme</label>
+      <select id="animeup-theme-select" aria-label="Theme: follow system, light, or dark"
+              data-favicon-dark="{{ 'assets/animeup-favicon.png' | url }}"
+              data-favicon-light="{{ 'assets/animeup-favicon-light.png' | url }}">
+        <option value="animeup-auto">◐ System</option>
+        <option value="default">☀ Light</option>
+        <option value="slate" selected>☾ Dark</option>
+      </select>
+    </div>
     {% if config.repo_url %}
       <div class="md-header__source">
         {% include "partials/source.html" %}
