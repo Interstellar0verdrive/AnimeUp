@@ -57,7 +57,12 @@ The app runs its interface on port 8898, reachable only from this Mac, so it can
 
 - **Quit** with **⌘Q** (or **AnimeUp → Quit AnimeUp**). Jobs in progress keep running in the background and reappear when you reopen the app. Closing the window quits the app too.
 - **File → Open Data Folder** shows your files in Finder; **File → Open in Browser** opens the same interface in your browser; **File → Show Log** opens the app's log.
-- **Updating**: once a day AnimeUp asks GitHub for the latest release and, if there's a newer one, shows a note at the top of the sidebar with a link (you can turn it off with **Check for updates** in the sidebar). To update, quit AnimeUp and replace `AnimeUp.app` in Applications with the new one: your files, settings and calibration are untouched. You may have to approve the new version once in Privacy & Security.
+- **Updating**: once a day AnimeUp asks GitHub for the latest release and, if there's a newer one, shows a note at the top of the sidebar with an **Install update** button (you can turn the check off with **Check for updates**). Click it and confirm: AnimeUp downloads the new app from the GitHub release, checks it against the SHA256 checksum GitHub publishes for that file, checks the app inside (identifier, version, signature), replaces itself and restarts. Jobs in progress keep running; your files, settings and calibration are untouched.
+
+    !!! tip "No new approval needed"
+        macOS asks for **Open Anyway** again for every version downloaded with a browser, because the browser marks the file as downloaded from the internet. An update installed by AnimeUp itself carries no such mark, so it opens straight away. This needs the app to be in a folder you can write to (Applications is fine) and not running from Downloads.
+
+    You can still update by hand: quit AnimeUp and replace `AnimeUp.app` in Applications with the one from the new release zip (then you'll have to approve it once in Privacy & Security).
 - **Removing** AnimeUp: delete the app, then `~/Library/Application Support/AnimeUp` (tools and Python) and, if you no longer want them, your files in `~/Movies/AnimeUp`.
 
 ## The portable folder

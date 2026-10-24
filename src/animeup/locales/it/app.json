@@ -21,5 +21,8 @@
   "src.vuoto_cartella_app": "I tuoi file possono stare dove vuoi, anche su un disco esterno: scegli un'altra cartella da qui o nella barra laterale, in Sistema → Cartella dei dati. AnimeUp se la ricorda.",
   "src.vuoto_cartella_cartella": "È la cartella INPUT dentro la cartella di AnimeUp.",
   "src.apri_input": "Apri nel Finder",
-  "src.scegli_cartella": "Scegli un'altra cartella…"
+  "src.scegli_cartella": "Scegli un'altra cartella…",
+  "sb.aggiornamento_installa": "Installa l'aggiornamento",
+  "sb.aggiornamento_note": "Novità",
+  "sb.aggiornamento_chiesto": "AnimeUp ti chiederà conferma, scaricherà l'aggiornamento, lo verificherà e si riavvierà."
 }

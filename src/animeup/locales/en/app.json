@@ -21,5 +21,8 @@
   "src.vuoto_cartella_app": "Your files can live anywhere, an external drive included: choose another folder here or in the sidebar under System → Data folder. AnimeUp remembers it.",
   "src.vuoto_cartella_cartella": "This is the INPUT folder inside the AnimeUp folder.",
   "src.apri_input": "Open in Finder",
-  "src.scegli_cartella": "Choose another folder…"
+  "src.scegli_cartella": "Choose another folder…",
+  "sb.aggiornamento_installa": "Install update",
+  "sb.aggiornamento_note": "What's new",
+  "sb.aggiornamento_chiesto": "AnimeUp will ask you to confirm, download the update, check it and restart."
 }

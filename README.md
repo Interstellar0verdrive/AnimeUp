@@ -158,9 +158,11 @@ via GitHub Actions.
    `~/Library/Application Support/AnimeUp` (about 1 GB).
 
 Quit with **⌘Q**: running jobs keep going in the background and reappear
-when you reopen the app. To update, replace `AnimeUp.app` with the new one:
-your data and settings are untouched. AnimeUp checks once a day for a new
-release and shows a note in the sidebar (you can turn this off).
+when you reopen the app. AnimeUp checks once a day for a new release (you
+can turn this off); when there is one, click **Install update** in the
+sidebar: the app downloads it from GitHub, verifies it against the checksum
+published with the release, replaces itself and restarts, with no need to
+approve it again in Privacy & Security. Your data and settings are untouched.
 
 ### Option B: the portable folder
 
