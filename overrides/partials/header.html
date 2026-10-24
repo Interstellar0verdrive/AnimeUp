@@ -57,9 +57,9 @@
       <select id="animeup-theme-select" aria-label="Theme: follow system, light, or dark"
               data-favicon-dark="{{ 'assets/animeup-favicon.png' | url }}"
               data-favicon-light="{{ 'assets/animeup-favicon-light.png' | url }}">
-        <option value="animeup-auto">◐ System</option>
+        <option value="animeup-auto" selected>◐ System</option>
         <option value="default">☀ Light</option>
-        <option value="slate" selected>☾ Dark</option>
+        <option value="slate">☾ Dark</option>
       </select>
     </div>
     {% if config.repo_url %}

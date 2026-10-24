@@ -37,12 +37,6 @@ theme:
     text: Inter
     code: JetBrains Mono
   palette:
-    - scheme: slate
-      primary: custom
-      accent: custom
-      toggle:
-        icon: material/brightness-auto
-        name: Use system appearance
     - scheme: animeup-auto
       primary: custom
       accent: custom
@@ -55,6 +49,12 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Use dark appearance
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-auto
+        name: Use system appearance
   features:
     - navigation.sections
     - navigation.path
