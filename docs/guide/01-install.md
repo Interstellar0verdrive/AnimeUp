@@ -47,7 +47,7 @@ If something goes wrong in step 1, a window shows the last lines of the log with
 
 | What | Where |
 |---|---|
-| Your files: `INPUT/`, `OUTPUT/`, `JOBS/`, `anteprime/`, `registri/` | `~/Movies/AnimeUp`, or the folder you choose in the sidebar under **System → Data folder** (it can be on an external drive; the change applies at the next launch) |
+| Your files: `INPUT/`, `OUTPUT/`, `JOBS/`, `anteprime/`, `registri/` | `~/Movies/AnimeUp`, or the folder you choose in the sidebar under **System → Data folder** (it can be on an external drive; AnimeUp switches to it right away and remembers it; if it isn't available at launch, for example a disconnected drive, AnimeUp uses `~/Movies/AnimeUp` and says so) |
 | Python, its environment, caches, FFmpeg, the upscalers and their models | `~/Library/Application Support/AnimeUp` (about 1 GB) |
 | The program | `AnimeUp.app`, which is never modified |
 

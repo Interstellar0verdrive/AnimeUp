@@ -34,6 +34,10 @@ struct AppPaths {
     let data: URL
     /// `<state>/logs/app.log`: launcher and server output, appended.
     let logFile: URL
+    /// The folder the user chose, when it isn't reachable now (an external
+    /// drive that isn't connected): `data` is then the default folder, and
+    /// the interface says so.
+    let unavailableData: String?
 
     enum Failure: Error {
         case missingProgram(String)
@@ -56,7 +60,7 @@ struct AppPaths {
             ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
         let state = support.appendingPathComponent("AnimeUp", isDirectory: true)
         let logs = state.appendingPathComponent("logs", isDirectory: true)
-        let data = dataFolder(state: state)
+        let (data, unavailable) = dataFolder(state: state)
 
         for dir in [state, logs, data] {
             do {
@@ -66,24 +70,45 @@ struct AppPaths {
             }
         }
         return AppPaths(program: program, launcher: launcher, state: state, data: data,
-                        logFile: logs.appendingPathComponent("app.log"))
+                        logFile: logs.appendingPathComponent("app.log"),
+                        unavailableData: unavailable)
     }
 
-    /// `<state>/cartella_dati` holds one absolute path (written by the UI when
-    /// the user moves the data elsewhere); without it, ~/Movies/AnimeUp.
-    private static func dataFolder(state: URL) -> URL {
-        let fm = FileManager.default
+    /// The text of `<state>/cartella_dati`, the folder the user chose in the
+    /// interface; nil when they never chose one.
+    static func chosenDataFolder(state: URL) -> String? {
         let pointer = state.appendingPathComponent("cartella_dati")
-        if let text = try? String(contentsOf: pointer, encoding: .utf8) {
-            let line = text.split(whereSeparator: \.isNewline).first.map(String.init) ?? ""
-            let path = (line.trimmingCharacters(in: .whitespaces) as NSString).expandingTildeInPath
-            if path.hasPrefix("/") {
-                return URL(fileURLWithPath: path, isDirectory: true)
-            }
-        }
+        guard let text = try? String(contentsOf: pointer, encoding: .utf8) else { return nil }
+        let line = text.split(whereSeparator: \.isNewline).first.map(String.init) ?? ""
+        let path = (line.trimmingCharacters(in: .whitespaces) as NSString).expandingTildeInPath
+        return path.hasPrefix("/") ? path : nil
+    }
+
+    /// The data folder: the one chosen in the interface if it's reachable,
+    /// otherwise ~/Movies/AnimeUp. The second value is the chosen folder when
+    /// it had to be skipped.
+    private static func dataFolder(state: URL) -> (URL, String?) {
+        let fm = FileManager.default
         let movies = fm.urls(for: .moviesDirectory, in: .userDomainMask).first
             ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Movies")
-        return movies.appendingPathComponent("AnimeUp", isDirectory: true)
+        let fallback = movies.appendingPathComponent("AnimeUp", isDirectory: true)
+        guard let chosen = chosenDataFolder(state: state) else { return (fallback, nil) }
+        let url = URL(fileURLWithPath: chosen, isDirectory: true)
+        return isReachable(url) ? (url, nil) : (fallback, chosen)
+    }
+
+    /// A folder is usable if it exists, or if it can be created because its
+    /// disk is there. Under /Volumes a missing disk would otherwise turn into
+    /// a plain folder inside /Volumes, or an error that stops the app.
+    private static func isReachable(_ url: URL) -> Bool {
+        let fm = FileManager.default
+        var isDir: ObjCBool = false
+        if fm.fileExists(atPath: url.path, isDirectory: &isDir) { return isDir.boolValue }
+        let parts = url.standardizedFileURL.pathComponents      // ["/", "Volumes", "Disk", ...]
+        if parts.count >= 3 && parts[1] == "Volumes" {
+            return fm.fileExists(atPath: "/Volumes/" + parts[2])
+        }
+        return fm.fileExists(atPath: url.deletingLastPathComponent().path)
     }
 }
 

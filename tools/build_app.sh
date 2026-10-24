@@ -9,8 +9,7 @@
 #    Contents/Resources/AnimeUp/     the program: the files tracked by git,
 #                                    minus tests, docs, design, CI and the
 #                                    data folders (no bin/, no .venv)
-#    Contents/Resources/AnimeUp.icns (light) and AnimeUp-Dark.icns, built
-#    from the masters in macos/icon/
+#    Contents/Resources/Assets.car + AnimeUp.icns, from the icon in macos/icon/
 #    Contents/Info.plist             version from pyproject.toml
 #
 #  Unsigned for distribution (no Apple Developer account): only an ad-hoc
@@ -73,23 +72,42 @@ done | (cd "$REPO" && tar --null -T - -cf -) | tar -xf - -C "$APP/Contents/Resou
 [[ -x "$APP/Contents/Resources/AnimeUp/animeup" ]] || { echo "ERROR: launcher missing from the bundle" >&2; exit 1; }
 
 # --- 3. the icon ---
-# Two masters (1024 px, transparent corners): Light is the bundle icon that
-# Finder and Launchpad show; Dark is swapped in on the Dock by the app itself
-# when macOS is in dark mode (see macos/AnimeUp/DockIcon.swift).
-echo "  building the icons..."
-for variant in Light Dark; do
-  master="$REPO/macos/icon/AnimeUp-$variant-1024.png"
-  [[ -f "$master" ]] || { echo "ERROR: missing $master" >&2; exit 1; }
-  ICONSET="$WORK/AnimeUp-$variant.iconset"
+# The two masters (1024 px, transparent corners) become an Icon Composer icon
+# (macos/icon/icon.json: the light layer by default, the dark one for the dark
+# appearance). Compiled by Xcode's actool into Assets.car, macOS itself picks
+# the variant from the user's icon style (System Settings → Appearance), in
+# Finder, Launchpad and the Dock alike, and draws it on the system icon grid.
+# actool needs Xcode 26 or later; without it (e.g. on CI) the build falls
+# back to a classic .icns made from the light master.
+echo "  building the icon..."
+ICON_SRC="$WORK/AnimeUp.icon"
+mkdir -p "$ICON_SRC/Assets"
+cp "$REPO/macos/icon/icon.json" "$ICON_SRC/icon.json"
+cp "$REPO/macos/icon/AnimeUp-Light-1024.png" "$REPO/macos/icon/AnimeUp-Dark-1024.png" "$ICON_SRC/Assets/"
+ACTOOL=""
+for dev in "$(xcode-select -p 2>/dev/null)" /Applications/Xcode.app/Contents/Developer; do
+  [[ -x "$dev/usr/bin/actool" ]] && { ACTOOL="$dev/usr/bin/actool"; break; }
+done
+ICON_NAME=""
+mkdir -p "$WORK/icon-out"
+if [[ -n "$ACTOOL" ]] && "$ACTOOL" "$ICON_SRC" --compile "$WORK/icon-out" --platform macosx \
+     --minimum-deployment-target 13.0 --app-icon AnimeUp \
+     --output-partial-info-plist "$WORK/icon-out/partial.plist" >/dev/null 2>&1 \
+   && [[ -f "$WORK/icon-out/Assets.car" ]]; then
+  cp "$WORK/icon-out/Assets.car" "$WORK/icon-out/AnimeUp.icns" "$APP/Contents/Resources/"
+  ICON_NAME="AnimeUp"
+  echo "    Icon Composer icon (light/dark) via $ACTOOL"
+else
+  ICONSET="$WORK/AnimeUp.iconset"
   mkdir -p "$ICONSET"
   for size in 16 32 128 256 512; do
-    sips -z "$size" "$size" "$master" --out "$ICONSET/icon_${size}x${size}.png" >/dev/null
+    sips -z "$size" "$size" "$REPO/macos/icon/AnimeUp-Light-1024.png" --out "$ICONSET/icon_${size}x${size}.png" >/dev/null
     double=$((size * 2))
-    sips -z "$double" "$double" "$master" --out "$ICONSET/icon_${size}x${size}@2x.png" >/dev/null
+    sips -z "$double" "$double" "$REPO/macos/icon/AnimeUp-Light-1024.png" --out "$ICONSET/icon_${size}x${size}@2x.png" >/dev/null
   done
-  name="AnimeUp"; [[ "$variant" == "Dark" ]] && name="AnimeUp-Dark"
-  iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/$name.icns"
-done
+  iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AnimeUp.icns"
+  echo "    no actool from Xcode 26+: classic .icns (light only)"
+fi
 
 # --- 4. Info.plist ---
 cat > "$APP/Contents/Info.plist" <<EOF
@@ -101,6 +119,7 @@ cat > "$APP/Contents/Info.plist" <<EOF
   <key>CFBundleLocalizations</key>         <array><string>en</string><string>it</string></array>
   <key>CFBundleExecutable</key>            <string>AnimeUp</string>
   <key>CFBundleIconFile</key>              <string>AnimeUp</string>
+$( [[ -n "$ICON_NAME" ]] && echo "  <key>CFBundleIconName</key>              <string>$ICON_NAME</string>" )
   <key>CFBundleIdentifier</key>            <string>$BUNDLE_ID</string>
   <key>CFBundleInfoDictionaryVersion</key> <string>6.0</string>
   <key>CFBundleName</key>                  <string>AnimeUp</string>

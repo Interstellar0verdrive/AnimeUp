@@ -24,7 +24,7 @@ When nothing is running, a caption under the sidebar title reminds you of the sp
 
 ![Header with the AnimeUp logo, the version and the three numbered tabs, one carrying a badge](img/tabs.png)
 
-The header shows the logo and the line *"Local upscaler · Apple Silicon · v1.4.0"* (the version is whatever you're running). Below it are three numbered tabs, in the order you normally use them:
+At the top are three numbered tabs, in the order you normally use them. The version you're running is shown in small grey type at the bottom of the sidebar (*"Local upscaler · Apple Silicon · v1.5.0"*).
 
 | Tab | What you do there | Chapter |
 |---|---|---|
@@ -166,7 +166,7 @@ On by default. Once a day AnimeUp asks GitHub for the latest release; if there's
 
 ### Data folder (app only)
 
-In the app, the **System** section also shows where your files live (by default `~/Movies/AnimeUp`) with a **Change…** button that opens the macOS folder picker. The new folder is used from the next launch; files already in the old one aren't moved. In the portable folder this row doesn't exist: the data stays next to the program (see [`ANIMEUP_ROOT`](07-output-and-folders.md#keeping-data-somewhere-else-animeup_root) for the Terminal way).
+In the app, the **System** section also shows where your files live (by default `~/Movies/AnimeUp`) with a **Change…** link that opens the macOS folder picker. AnimeUp switches to the new folder within a few seconds (the window reloads) and remembers it for the next launches; files already in the old one aren't moved. If at launch the chosen folder isn't available (an external drive that isn't connected), AnimeUp uses `~/Movies/AnimeUp` and shows a note here and in the Sources tab. The same choice is offered in the Sources tab when INPUT is empty. In the portable folder this row doesn't exist: the data stays next to the program (see [`ANIMEUP_ROOT`](07-output-and-folders.md#keeping-data-somewhere-else-animeup_root) for the Terminal way).
 
 ### Calibration
 

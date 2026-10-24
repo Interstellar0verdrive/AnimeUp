@@ -4304,10 +4304,11 @@ def _testata_sticky_e_linea_intera():
     `sticky` e' gia' una posizione e fa da contenitore a un figlio assoluto:
     quel `relative` non serviva proprio."""
     app = (ROOT / "ui" / "app.py").read_text()
-    # Si parte dal `top: 112px`, non dal selettore: quel selettore compare
-    # DUE volte (una in una lista con la fascia del marchio) e partendo da
-    # li' si finisce nella regola sbagliata — che infatti non ha lo sticky.
-    blocco = app[app.index("position: sticky; top: 112px"):]
+    # Si parte dal `top:` delle schede, non dal selettore: quel selettore
+    # compare DUE volte (una in una lista con la fascia del marchio) e
+    # partendo da li' si finisce nella regola sbagliata, senza lo sticky.
+    # (45px da quando il marchio sopra le schede non c'e' piu'.)
+    blocco = app[app.index("position: sticky; top: 45px; z-index: 25"):]
     blocco = blocco[:blocco.index("}}") + 2]
     # Via i commenti PRIMA di cercare: dentro c'e' scritto perche' certe
     # dichiarazioni non vanno messe, e cercandole nel testo grezzo si

@@ -155,6 +155,9 @@ final class ServerProcess {
         for key in ["USER", "LOGNAME", "TMPDIR", "SHELL"] {
             if let v = inherited[key] { env[key] = v }
         }
+        if let missing = paths.unavailableData {
+            env["ANIMEUP_CARTELLA_ASSENTE"] = missing
+        }
         return env
     }
 

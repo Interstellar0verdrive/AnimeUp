@@ -533,25 +533,31 @@ STYLE = f"""
   .au-tar-riga .au-perche:hover .au-bolla,
   .au-tar-riga .au-perche:focus-visible .au-bolla {{
       transform: translateX(-50%) translateY(0); }}
-[data-testid="stSidebar"] [class*="st-key-cTarRiga"] {{
+[data-testid="stSidebar"] :is([class*="st-key-cTarRiga"], [class*="st-key-cCartellaRiga"]) {{
       margin: 6px 0 2px; }}
-  [class*="st-key-cTarRiga"] [data-testid="stMarkdownContainer"] {{
+  :is([class*="st-key-cTarRiga"], [class*="st-key-cCartellaRiga"]) [data-testid="stMarkdownContainer"] {{
       margin-bottom: 0 !important; }}
   /* La DATA detta la baseline (allineata a "Taratura" dal flex sopra);
      il calendario, che una baseline non ce l'ha, viene riappeso a mano
      sull'inchiostro delle cifre. */
   .au-tar-data {{ display: inline-flex; align-items: baseline; gap: 5px; }}
+  /* Il percorso della cartella dei dati: sotto la sua riga, a capo dove
+     serve invece di sbordare (un percorso non ha spazi dove andare a capo). */
+  .au-cartella {{ overflow-wrap: anywhere; margin: -2px 0 10px;
+      font-size: 11.5px; }}
+  .au-sb-versione {{ font-size: 11px; color: {TESTO_3};
+      margin: 18px 0 4px; }}
   .au-tar-data svg {{ position: relative; top: 1.5px; }}
   /* Tutto su una riga: la scritta+data nel markdown, e il bottone di
      Streamlit TRAVESTITO da link, ancorato in assoluto a destra della
      stessa riga (Streamlit impila, non affianca). Il padding-right della
      riga riserva lo spazio del link, calcolato da chi la scrive. */
-  [data-testid="stSidebar"] [class*="st-key-cTarRiga"] {{
+  [data-testid="stSidebar"] :is([class*="st-key-cTarRiga"], [class*="st-key-cCartellaRiga"]) {{
       position: relative; }}
-  [data-testid="stSidebar"] [class*="st-key-apriTaratura"] {{
+  [data-testid="stSidebar"] :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) {{
       position: absolute; right: 0; top: 50%;
       transform: translateY(calc(-50% - 2px)); width: auto; }}
-  [class*="st-key-apriTaratura"] button {{
+  :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button {{
       background: none !important; border: none !important;
       padding: 0 !important; min-height: 0 !important; height: auto;
       color: {TESTO} !important;
@@ -560,8 +566,8 @@ STYLE = f"""
   /* Il corpo va sul p interno (il button non lo tramanda), e il ritocco
      verticale riporta la sua baseline su quella di "Taratura" e della
      data: misurato, il centraggio geometrico lo lasciava 3px sotto. */
-  [class*="st-key-apriTaratura"] button p {{ font-size: 11.5px; }}
-  [class*="st-key-apriTaratura"] button:hover {{
+  :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button p {{ font-size: 11.5px; }}
+  :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button:hover {{
       background: none !important; border: none !important;
       color: {TESTO} !important; opacity: .8; }}
   [data-testid="stElementContainer"]:has(.au-sb-sezione)
@@ -1979,7 +1985,7 @@ STYLE = f"""
       margin-top: -17px; margin-bottom: -14px;
       padding-top: 17px; padding-bottom: 14px; }}
   [data-testid="stLayoutWrapper"]:has(> .st-key-fasi) {{
-      position: sticky; top: 112px; z-index: 25;
+      position: sticky; top: 45px; z-index: 25;
       background: #101113; padding-top: 16px; padding-bottom: 0;
       /* La linea sotto le schede: qui e non su `.st-key-fasi`, perche' qui
          la larghezza e' quella dell'area intera. Vedi il commento accanto
@@ -2812,19 +2818,9 @@ def _pallini_schede() -> None:
 
 
 def header() -> str:
-    # Il contenitore serve al CSS: il logo resta sempre in vista (sticky),
-    # vedi la regola .st-key-marchio.
-    with st.container(key="marchio"):
-        st.markdown(
-            "<div class='au-marchio'>"
-            "<svg width='22' height='22' viewBox='0 0 22 22' aria-hidden='true'>"
-            "<rect x='1' y='13' width='8' height='8' rx='1.5' fill='#2AC9DE' opacity='.3'/>"
-            "<rect x='7' y='7' width='9' height='9' rx='1.5' fill='#2AC9DE' opacity='.55'/>"
-            "<rect x='13' y='1' width='8' height='8' rx='1.5' fill='#2AC9DE'/></svg>"
-            "<span class='au-title'>Anime<b>Up</b></span>"
-            f"<span class='au-sub'>{t('header.sottotitolo', versione=__version__)}"
-            "</span></div>",
-            unsafe_allow_html=True)
+    # Niente nome ne' logo sopra le schede (deciso con l'utente): il nome e'
+    # gia' nel titolo della finestra o della scheda del browser, e il logo
+    # era quello vecchio. Versione e sottotitolo stanno in fondo alla sidebar.
     with st.container(key="fasi"):
         # La scheda attiva vive anche nell'URL (?scheda=lavorazione): al
         # refresh la sessione muore ma l'indirizzo resta, e la pagina si
@@ -3580,22 +3576,52 @@ def _scegli_cartella_dati() -> None:
         st.session_state["cartella_cambiata"] = str(Path(scelta).resolve())
 
 
+def _icona_perche(testo: str) -> str:
+    """Il (?) col fumetto, nella forma usata dalle righe con un link a destra."""
+    return ("<span class='au-perche' tabindex='0'>"
+            "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' "
+            "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
+            "stroke-linejoin='round' aria-hidden='true'>"
+            "<circle cx='12' cy='12' r='10'></circle>"
+            "<path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path>"
+            "<line x1='12' y1='17' x2='12.01' y2='17'></line></svg>"
+            f"{_bolla(testo)}</span>")
+
+
+def _breve(percorso: str | Path) -> str:
+    return str(percorso).replace(str(Path.home()), "~", 1)
+
+
+def _nota_cartella_assente() -> str | None:
+    """La cartella scelta che l'app ha dovuto saltare (disco non collegato)."""
+    assente = os.environ.get("ANIMEUP_CARTELLA_ASSENTE")
+    if not assente:
+        return None
+    return t("sb.cartella_assente", scelta=_breve(assente), attuale=_breve(PATHS.root))
+
+
 def _riga_cartella_dati(congelata: bool) -> None:
     """La cartella dei dati dell'app: dove sta, e come cambiarla.
 
-    Vale dal prossimo avvio: cambiarla a caldo vorrebbe dire spostare sotto
-    i piedi le lavorazioni e le analisi gia' caricate in memoria.
+    Stesso disegno della riga Taratura: etichetta e link sulla stessa riga,
+    il percorso sotto. Scelta una cartella, l'app riavvia il server su
+    quella (lo nota da `cartella_dati`) e la pagina si ricarica da sola.
     """
-    attuale = str(PATHS.root).replace(str(Path.home()), "~", 1)
-    _etichetta_sb(t("sb.cartella"), t("sb.cartella_aiuto"))
-    st.sidebar.markdown(f"<div class='au-meta'>{esc(attuale)}</div>",
+    with st.sidebar.container(key="cCartellaRiga"):
+        st.markdown(
+            "<div class='au-tar-riga' style='padding-right: 58px'>"
+            f"<span>{t('sb.cartella')}{_icona_perche(t('sb.cartella_aiuto'))}</span>"
+            "</div>", unsafe_allow_html=True)
+        st.button(t("sb.cartella_cambia"), key="apriCartella",
+                  disabled=congelata, on_click=_scegli_cartella_dati)
+    st.sidebar.markdown(f"<div class='au-meta au-cartella'>{esc(_breve(PATHS.root))}</div>",
                         unsafe_allow_html=True)
+    if (nota := _nota_cartella_assente()):
+        st.sidebar.markdown(f"<div class='au-nota-viva au-nota-avviso'>{esc(nota)}</div>",
+                            unsafe_allow_html=True)
     nuova = st.session_state.get("cartella_cambiata")
     if nuova:
-        st.sidebar.caption(t("sb.cartella_riavvia",
-                             cartella=nuova.replace(str(Path.home()), "~", 1)))
-    st.sidebar.button(t("sb.cartella_cambia"), key="cambiaCartella",
-                      disabled=congelata, on_click=_scegli_cartella_dati)
+        st.sidebar.caption(t("sb.cartella_riavvia", cartella=_breve(nuova)))
 
 
 def _nomi_impostazioni(chiavi: list[str]) -> list[str]:
@@ -3879,15 +3905,7 @@ def sidebar() -> dict:
             "<line x1='8' y1='2' x2='8' y2='6'/>"
             "<line x1='3' y1='10' x2='21' y2='10'/></svg>")
     _aiuto_tar = t("sb.taratura_aiuto")
-    _perche = (
-        "<span class='au-perche' tabindex='0'>"
-        "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' "
-        "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
-        "stroke-linejoin='round' aria-hidden='true'>"
-        "<circle cx='12' cy='12' r='10'></circle>"
-        "<path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path>"
-        "<line x1='12' y1='17' x2='12.01' y2='17'></line></svg>"
-        f"{_bolla(_aiuto_tar)}</span>")
+    _perche = _icona_perche(_aiuto_tar)
     with st.sidebar.container(key="cTarRiga"):
         st.markdown(
             f"<div class='au-tar-riga' style='padding-right: "
@@ -3965,6 +3983,10 @@ def sidebar() -> dict:
     # La fascia è ANCORATA in fondo alla sidebar (sticky): prima il
     # pulsante finiva fuori dall'area di scroll e per trovarlo bisognava
     # sapere che c'era — il contenuto ora le scorre sotto.
+    st.sidebar.markdown(f"<div class='au-sb-versione'>"
+                        f"{t('header.sottotitolo', versione=__version__)}</div>",
+                        unsafe_allow_html=True)
+
     # Nell'app per macOS si esce dal menu (⌘Q), che ferma il server e chiude
     # la finestra insieme: il pulsante spegnerebbe solo il server, lasciando
     # la finestra vuota davanti all'utente.
@@ -4009,6 +4031,22 @@ def page_sorgenti(cfg: dict) -> None:
     if not files:
         st.markdown(f"#### {t('src.vuoto_titolo')}")
         st.info(t("src.vuoto_testo", cartella=PATHS.input))
+        if (nota := _nota_cartella_assente()):
+            st.warning(nota)
+        app = os.environ.get("ANIMEUP_APP") == "1"
+        st.caption(t("src.vuoto_cartella_app" if app else "src.vuoto_cartella_cartella"))
+        c1, c2, _ = st.columns([1, 1.4, 3], gap="small")
+        if c1.button(t("src.apri_input"), key="apriInput",
+                     icon=":material/folder_open:"):
+            PATHS.input.mkdir(parents=True, exist_ok=True)
+            subprocess.run(["open", str(PATHS.input)], check=False)
+        if app:
+            c2.button(t("src.scegli_cartella"), key="sceltaCartellaVuoto",
+                      icon=":material/drive_folder_upload:",
+                      on_click=_scegli_cartella_dati)
+            if st.session_state.get("cartella_cambiata"):
+                st.caption(t("sb.cartella_riavvia",
+                             cartella=_breve(st.session_state["cartella_cambiata"])))
         return
 
     alta = sum(1 for f in files if f["height"] >= CLEAN_SOURCE_MIN_HEIGHT)
@@ -7462,16 +7500,7 @@ def _pagina_primo_avvio() -> bool:
     if not lavoro.in_corso and not lavoro.errore and not primo_avvio.serve():
         st.session_state["preparato"] = True
         return False
-    st.markdown(
-        "<div class='au-marchio'>"
-        "<svg width='22' height='22' viewBox='0 0 22 22' aria-hidden='true'>"
-        "<rect x='1' y='13' width='8' height='8' rx='1.5' fill='#2AC9DE' opacity='.3'/>"
-        "<rect x='7' y='7' width='9' height='9' rx='1.5' fill='#2AC9DE' opacity='.55'/>"
-        "<rect x='13' y='1' width='8' height='8' rx='1.5' fill='#2AC9DE'/></svg>"
-        "<span class='au-title'>Anime<b>Up</b></span>"
-        f"<span class='au-sub'>v{__version__}</span></div>",
-        unsafe_allow_html=True)
-    st.markdown(f"<div class='au-sezione'>{t('pa.titolo')}</div>"
+    st.markdown(f"<div class='au-sezione' style='margin-top:24px'>{t('pa.titolo')}</div>"
                 f"<div class='au-hint' style='margin-bottom:16px'>{t('pa.intro')}</div>",
                 unsafe_allow_html=True)
     mancano = primo_avvio.da_scaricare()
