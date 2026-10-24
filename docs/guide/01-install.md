@@ -41,7 +41,7 @@ cd AnimeUp
 
 You can also skip the two commands and double-click **`Avvia AnimeUp.command`**: it runs `setup` by itself when something is missing from `bin/`. If you have no `uv` on your system, the launcher downloads it too.
 
-Every third-party download comes from a pinned official release and is verified with SHA256. The one exception is FFmpeg, which comes from a rolling snapshot and is checked instead for the encoders and filters AnimeUp needs.
+Every third-party download comes from a pinned official release and is verified with SHA256, FFmpeg included (release 9.0.2, which is also checked for the encoders and filters AnimeUp needs).
 
 ## Get past Gatekeeper
 

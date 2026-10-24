@@ -185,11 +185,14 @@ Nothing breaks if you delete them. You lose history, calibration and preferences
 
 The programs AnimeUp runs, kept inside the folder so it doesn't depend on anything installed on your Mac:
 
-- `ffmpeg`, `ffprobe`: decoding, encoding, analysis;
+- `ffmpeg`, `ffprobe`: decoding, encoding, analysis (FFmpeg 9.0.2, the version AnimeUp is tested with);
 - `realesrgan-ncnn-vulkan` with `models/`, and `realcugan-ncnn-vulkan` with `models-se/`, `models-pro/`, `models-nose/`: the upscalers and their model files (AnimeUp's catalogue uses only some of them; see [The models](deep-dives/models.md));
 - `uv`: the manager for the self-contained Python environment.
 
 If something here is missing or damaged, the sidebar shows **N system dependencies**. `./animeup setup` restores it, and `./animeup doctor` checks the result.
+
+!!! note "An FFmpeg installed with Homebrew doesn't interfere"
+    AnimeUp always uses the copy in its own `bin/` first. Installing or updating FFmpeg on your Mac (for example with `brew upgrade`) changes nothing for AnimeUp. A system copy is used only as a fallback when the one in `bin/` is missing, and the sidebar then shows it as a system dependency.
 
 ### campioni/ (samples)
 

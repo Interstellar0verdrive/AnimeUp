@@ -74,7 +74,7 @@
   "cli.setup.architettura": "Architettura {arch} non gestita automaticamente: copia a mano binari e modelli in bin/.",
   "cli.setup.gia_tutti": "Binari e modelli sono già tutti in bin/.",
   "cli.setup.verranno": "Per rendere la cartella autonoma verranno scaricati:",
-  "cli.setup.voce_ffmpeg": "  · {nome}  (build statica)  da  {url}",
+  "cli.setup.voce_ffmpeg": "  · {nome}  (build statica {versione})  da  {url}",
   "cli.setup.voce_ncnn": "  · {nome}  + modelli  da  {url}",
   "cli.setup.peso": "Circa {mb} MB in totale. Finiranno in bin/ e non usciranno dalla cartella.",
   "cli.setup.procedo": "Procedo con il download? [s/N]",

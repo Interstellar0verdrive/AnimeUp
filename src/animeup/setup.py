@@ -27,9 +27,21 @@ from .paths import PATHS
 # Build statiche per macOS arm64, verificate: Mach-O arm64 con zero dipendenze
 # fuori da /usr/lib e /System, quindi funzionanti su un Mac senza Homebrew.
 # (evermeet.cx, il canale più noto, è esplicitamente solo Intel.)
+#
+# Una RELEASE fissata, con il suo checksum, e non piu' «l'ultima snapshot»:
+# la snapshot cambiava da un giorno all'altro, quindi due installazioni fatte
+# a una settimana di distanza codificavano con due ffmpeg diversi e un
+# difetto non si poteva riprodurre. Cambiare versione e' una scelta da fare
+# qui, provandola, insieme a una release di AnimeUp.
+FFMPEG_VERSIONE = "9.0.2"
+_FFMPEG_BASE = "https://ffmpeg.martin-riedl.de/download/macos/arm64/1789931890_9.0.2"
 FFMPEG_SOURCES: dict[str, str] = {
-    "ffmpeg": "https://ffmpeg.martin-riedl.de/redirect/latest/macos/arm64/snapshot/ffmpeg.zip",
-    "ffprobe": "https://ffmpeg.martin-riedl.de/redirect/latest/macos/arm64/snapshot/ffprobe.zip",
+    "ffmpeg": f"{_FFMPEG_BASE}/ffmpeg.zip",
+    "ffprobe": f"{_FFMPEG_BASE}/ffprobe.zip",
+}
+FFMPEG_SHA256: dict[str, str] = {
+    "ffmpeg": "c8ed4c4e6978a03c485edbfe4e0a5dc2380f8a30bba5150531b31b094492d924",
+    "ffprobe": "fcbe839537485eaee7a7a8bc5cbc0f90d53617e80943e8a5b2e31cb851197ea6",
 }
 
 @dataclass(frozen=True)
@@ -155,11 +167,32 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def versione_ffmpeg(binario: Path) -> str | None:
+    """La versione dichiarata da `ffmpeg -version` / `ffprobe -version`."""
+    try:
+        riga = subprocess.run([str(binario), "-hide_banner", "-version"],
+                              capture_output=True, text=True, timeout=30,
+                              check=False).stdout.split("\n", 1)[0]
+    except (OSError, subprocess.SubprocessError):
+        return None
+    # «ffmpeg version 9.0.2-https://www.martin-riedl.de Copyright ...»
+    parti = riga.split()
+    if len(parti) < 3 or parti[1] != "version":
+        return None
+    return parti[2].split("-", 1)[0]
+
+
 def _ffmpeg_mancanti() -> list[str]:
-    return [
-        name for name, _tool, status in PATHS.portability_report()
-        if name in FFMPEG_SOURCES and status != "ok"
-    ]
+    """ffmpeg/ffprobe da scaricare: assenti, presi dal sistema, o di un'altra
+    versione. Una build vendorizzata ma diversa da quella fissata si
+    sostituisce: e' proprio la differenza che fissare la versione elimina."""
+    mancanti = []
+    for name, tool, status in PATHS.portability_report():
+        if name not in FFMPEG_SOURCES:
+            continue
+        if status != "ok" or versione_ffmpeg(tool.path) != FFMPEG_VERSIONE:
+            mancanti.append(name)
+    return mancanti
 
 
 def _ncnn_mancanti() -> list[str]:
@@ -188,6 +221,12 @@ def _vendor_ffmpeg(console: Console, missing: list[str]) -> None:
             with tempfile.NamedTemporaryFile(suffix=".archive", delete=False) as tmp:
                 archive = Path(tmp.name)
             _download(url, archive)
+            # Stessa regola dei motori: un archivio diverso da quello
+            # verificato non si installa, corrotto o sostituito che sia.
+            if (trovato := _sha256(archive)) != FFMPEG_SHA256[name]:
+                archive.unlink(missing_ok=True)
+                console.print(f"[red]{t('cli.setup.checksum', nome=name, trovato=trovato)}[/red]")
+                continue
             ok = _extract(archive, name, dest)
             archive.unlink(missing_ok=True)
         except Exception as exc:  # noqa: BLE001 - qualunque errore di rete o formato
@@ -277,7 +316,8 @@ def vendor_all(console: Console, *, conferma: bool = True) -> None:
 
     console.print(t("cli.setup.verranno") + "\n")
     for name in ffmpeg:
-        console.print(t("cli.setup.voce_ffmpeg", nome=name, url=FFMPEG_SOURCES[name]))
+        console.print(t("cli.setup.voce_ffmpeg", nome=name, versione=FFMPEG_VERSIONE,
+                        url=FFMPEG_SOURCES[name]))
     for name in ncnn:
         console.print(t("cli.setup.voce_ncnn", nome=name, url=NCNN_SOURCES[name].url))
     console.print(

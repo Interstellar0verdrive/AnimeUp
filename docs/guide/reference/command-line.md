@@ -192,7 +192,7 @@ Downloads the binaries and models missing from `bin/`, so the folder works on an
 |---|---|---|
 | `--si` | Don't ask for confirmation. | off |
 
-It lists what it will download and from where, with the approximate total size, and asks `Go ahead with the download? [y/N]`. FFmpeg and ffprobe come from Martin Riedl's static macOS builds and are checked for the encoders and filters AnimeUp needs; Real-ESRGAN and Real-CUGAN come from pinned official releases and are verified by SHA256. If everything is already there: `All binaries and models are already in bin/.` It only works on Apple Silicon; on another architecture it tells you to copy the binaries by hand.
+It lists what it will download and from where, with the approximate total size, and asks `Go ahead with the download? [y/N]`. FFmpeg and ffprobe are the pinned 9.0.2 release of Martin Riedl's static macOS builds, verified by SHA256 and checked for the encoders and filters AnimeUp needs; Real-ESRGAN and Real-CUGAN come from pinned official releases, verified the same way. An FFmpeg already in `bin/` but of a different version is replaced with the pinned one, so every installation encodes with the same build. If everything is already there: `All binaries and models are already in bin/.` It only works on Apple Silicon; on another architecture it tells you to copy the binaries by hand.
 
 ## test
 

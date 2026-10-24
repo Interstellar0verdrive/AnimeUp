@@ -24,7 +24,7 @@ Find the symptom, read what it means, apply the fix. Nothing on this page can da
 | The sidebar shows **N system dependencies** or **The folder isn't self-contained** | Some tools come from the system (Homebrew, for example) instead of `bin/`. Works here, not on another Mac. | `./animeup setup`, then `./animeup doctor`. |
 | `doctor` shows **can't run**, **not responding** or **no response** | The binary is there but broken: truncated, wrong architecture, or the execute permission was lost while copying. | `chmod +x bin/*`, then `./animeup setup`. |
 | `setup` says `unexpected checksum` | The downloaded archive isn't the one AnimeUp was verified with; it was discarded. | Try again later. If it persists, follow the manual fallback the message prints. |
-| `setup` says the ffmpeg build is `NOT static` or `incomplete` | The rolling FFmpeg snapshot changed in a way AnimeUp can't use; an incomplete build is removed. | Try again later, or download the file by hand as the message explains. |
+| `setup` says the ffmpeg build is `NOT static` or `incomplete`, or reports an unexpected checksum | The downloaded file isn't the pinned FFmpeg 9.0.2 build (a damaged download, or the file changed on the server); it is discarded. | Try again; if it persists, download the file by hand as the message explains and check its SHA256. |
 | `Architecture … isn't handled automatically` | You're not on Apple Silicon. | AnimeUp supports Apple Silicon Macs only. |
 
 ## The interface

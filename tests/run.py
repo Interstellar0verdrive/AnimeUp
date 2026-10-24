@@ -4803,6 +4803,28 @@ def _() -> None:
         assert Paths(Path(tmp)).bin == Path(tmp).resolve() / "bin"
 
 
+@caso("ffmpeg e' fissato a una release, con checksum, e la versione si legge")
+def _() -> None:
+    """Con «l'ultima snapshot» due installazioni a una settimana di distanza
+    codificavano con due ffmpeg diversi: un difetto non si riproduceva."""
+    from animeup import setup as st_
+    assert set(st_.FFMPEG_SOURCES) == set(st_.FFMPEG_SHA256) == {"ffmpeg", "ffprobe"}
+    for nome, url in st_.FFMPEG_SOURCES.items():
+        assert "latest" not in url and "snapshot" not in url, url
+        assert st_.FFMPEG_VERSIONE in url, url
+        assert len(st_.FFMPEG_SHA256[nome]) == 64, nome
+    with tempfile.TemporaryDirectory() as tmp:
+        finto = Path(tmp) / "ffmpeg"
+        finto.write_text("#!/bin/sh\necho 'ffmpeg version 9.0.2-https://www.martin-riedl.de Copyright'\n")
+        finto.chmod(0o755)
+        assert st_.versione_ffmpeg(finto) == "9.0.2"
+        finto.write_text("#!/bin/sh\necho 'ffmpeg version N-125892-g406c5a37aa-https://x Copyright'\n")
+        assert st_.versione_ffmpeg(finto) == "N"
+        finto.write_text("#!/bin/sh\necho 'qualcos altro'\n")
+        assert st_.versione_ffmpeg(finto) is None
+        assert st_.versione_ffmpeg(Path(tmp) / "non-esiste") is None
+
+
 @caso("la lingua salvata torna al riavvio, e una sconosciuta non rompe niente")
 def _() -> None:
     import json as _json
