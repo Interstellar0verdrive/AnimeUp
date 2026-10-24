@@ -488,6 +488,115 @@
   line-height: 1.6;
 }
 
+.md-footer-meta .md-copyright {
+  color: var(--animeup-muted);
+}
+
+.md-footer-meta .md-copyright a {
+  color: var(--animeup-link);
+}
+
+/* Keep chapter navigation inside the reading column, like the guide content. */
+.md-footer {
+  background: var(--animeup-bg);
+}
+
+.md-footer__inner.md-grid {
+  box-sizing: border-box;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0 auto;
+  max-width: 54rem;
+  padding: 1.5rem 1.2rem;
+  width: 100%;
+}
+
+.md-footer__link {
+  align-items: center;
+  background: var(--animeup-surface);
+  border: 1px solid var(--animeup-border);
+  border-radius: 0.6rem;
+  box-sizing: border-box;
+  color: var(--animeup-text);
+  gap: 0.55rem;
+  min-height: 4.5rem;
+  padding: 0.8rem 1rem;
+  transition: background-color 0.2s, border-color 0.2s;
+  width: 100%;
+}
+
+.md-footer__link--prev {
+  grid-column: 1;
+}
+
+.md-footer__link--next {
+  grid-column: 2;
+}
+
+.md-footer__link:only-child {
+  grid-column: 1 / -1;
+}
+
+.md-footer__link:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--animeup-accent) 9%, var(--animeup-surface));
+  border-color: var(--animeup-accent);
+  color: var(--animeup-text);
+}
+
+.md-footer__title {
+  flex: 1;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.md-footer__link--prev .md-footer__title,
+.md-footer__link--next:only-child .md-footer__title {
+  text-align: left;
+}
+
+.md-footer__direction {
+  color: var(--animeup-accent);
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.md-footer__title .md-ellipsis {
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.md-footer__button {
+  color: var(--animeup-accent);
+  flex: 0 0 auto;
+  height: 1.2rem;
+  margin: 0;
+  padding: 0;
+  width: 1.2rem;
+}
+
+@media screen and (max-width: 44em) {
+  .md-footer__inner.md-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .md-footer__link--prev,
+  .md-footer__link--next {
+    grid-column: 1;
+  }
+
+  .md-footer__link--prev .md-footer__title {
+    display: block;
+  }
+}
+
 @media screen and (max-width: 44rem) {
   .animeup-hero {
     gap: 0.8rem;
@@ -630,5 +739,9 @@
     margin: 0 auto;
     max-width: 54rem;
     padding: 1.5rem 1.2rem 2rem;
+  }
+
+  .md-footer__inner.md-grid {
+    width: calc(100% - 2 * clamp(11rem, 17vw, 13rem));
   }
 }
