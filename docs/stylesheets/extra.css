@@ -534,10 +534,6 @@
   grid-column: 2;
 }
 
-.md-footer__link:only-child {
-  grid-column: 1 / -1;
-}
-
 .md-footer__link:is(:hover, :focus-visible) {
   background: color-mix(in srgb, var(--animeup-accent) 9%, var(--animeup-surface));
   border-color: var(--animeup-accent);
@@ -551,8 +547,7 @@
   padding: 0;
 }
 
-.md-footer__link--prev .md-footer__title,
-.md-footer__link--next:only-child .md-footer__title {
+.md-footer__link--prev .md-footer__title {
   text-align: left;
 }
 
@@ -583,13 +578,9 @@
 }
 
 @media screen and (max-width: 44em) {
-  .md-footer__inner.md-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .md-footer__link--prev,
-  .md-footer__link--next {
-    grid-column: 1;
+  .md-footer__link {
+    gap: 0.3rem;
+    padding: 0.6rem;
   }
 
   .md-footer__link--prev .md-footer__title {
