@@ -710,6 +710,17 @@
     width: 100%;
   }
 
+  .md-sidebar--primary .md-nav--primary > .md-nav__title,
+  .md-sidebar--primary .md-nav__item--section > .md-nav__link {
+    color: var(--animeup-text);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .md-sidebar--primary .md-nav__item--section > .md-nav__link {
+    padding-left: 0;
+  }
+
   .md-content {
     grid-column: 2;
     grid-row: 1;
