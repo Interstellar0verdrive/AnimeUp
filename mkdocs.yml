@@ -10,14 +10,13 @@ exclude_docs: |
 
 nav:
   - Home: guide/index.md
-  - Guide:
-      - 01. Install and first launch: guide/01-install.md
-      - 02. Calibrate your Mac: guide/02-calibration.md
-      - 03. The interface and its settings: guide/03-interface.md
-      - '04. Sources: check your files': guide/04-sources.md
-      - '05. Compare: choose the model by eye': guide/05-compare.md
-      - '06. Processing: run, monitor, stop and resume': guide/06-processing.md
-      - 07. Output files and folders: guide/07-output-and-folders.md
+  - 01. Install and first launch: guide/01-install.md
+  - 02. Calibrate your Mac: guide/02-calibration.md
+  - 03. The interface and its settings: guide/03-interface.md
+  - '04. Sources: check your files': guide/04-sources.md
+  - '05. Compare: choose the model by eye': guide/05-compare.md
+  - '06. Processing: run, monitor, stop and resume': guide/06-processing.md
+  - 07. Output files and folders: guide/07-output-and-folders.md
   - Reference:
       - Command-line reference: guide/reference/command-line.md
       - Troubleshooting: guide/reference/troubleshooting.md
@@ -83,6 +82,7 @@ extra_css:
 
 extra_javascript:
   - javascripts/theme-select.js
+  - javascripts/search-expand.js
 
 extra:
   generator: false

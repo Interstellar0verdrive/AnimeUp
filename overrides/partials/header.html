@@ -31,11 +31,16 @@
       {% if "material/search" in config.plugins %}
         {% set search = config.plugins["material/search"] | attr("config") %}
         {% if search.enabled %}
-          <label class="md-header__button md-icon" for="__search">
+          <div class="animeup-search-panel" id="animeup-search-panel">
+            <form class="animeup-search-form" role="search" autocomplete="off">
+              <input class="animeup-search-input" type="search" name="query" aria-label="Search guide" placeholder="Search guide" data-index-url="{{ 'search/search_index.json' | url }}">
+            </form>
+            <div class="animeup-search-results" role="status" aria-live="polite"></div>
+          </div>
+          <button class="animeup-search-toggle md-icon" type="button" aria-label="Open search" aria-controls="animeup-search-panel" aria-expanded="false">
             {% set icon = config.theme.icon.search or "material/magnify" %}
             {% include ".icons/" ~ icon ~ ".svg" %}
-          </label>
-          {% include "partials/search.html" %}
+          </button>
         {% endif %}
       {% endif %}
     </div>
