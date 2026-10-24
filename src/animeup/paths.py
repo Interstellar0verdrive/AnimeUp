@@ -19,6 +19,17 @@ def code_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def stato_root() -> Path:
+    """Dove vive cio' che AnimeUp scarica: per i binari, la cartella bin/.
+
+    Di fabbrica coincide col programma. L'app per macOS la sposta in
+    ~/Library/Application Support/AnimeUp (variabile ANIMEUP_STATO, impostata
+    dal lanciatore), perche' il pacchetto .app non si modifica.
+    """
+    env = os.environ.get("ANIMEUP_STATO")
+    return Path(env).resolve() if env else code_root()
+
+
 def project_root() -> Path:
     """Radice dei DATI: INPUT/, OUTPUT/, JOBS/, registri/...
 
@@ -51,12 +62,13 @@ class Paths:
 
     def __init__(self, root: Path | None = None) -> None:
         self.root = (root or project_root()).resolve()
+        self._radice_esplicita = root is not None
         # I binari stanno col PROGRAMMA, non coi dati. Con ANIMEUP_ROOT su una
         # cartella di soli dati si cercavano dentro di lei, dove non ci sono:
         # si ripiegava su quelli di sistema (o su niente), mentre lanciatore e
         # setup li mettono accanto al codice. Una radice passata a mano (test,
         # strumenti) resta invece autosufficiente, bin/ compreso.
-        self._bin = (self.root if root is not None else code_root()) / "bin"
+        self._bin = (self.root if root is not None else stato_root()) / "bin"
 
     # --- cartelle ---------------------------------------------------------
     @property
@@ -65,8 +77,8 @@ class Paths:
 
     @property
     def campioni(self) -> Path:
-        """I clip liberi della taratura: viaggiano col programma, come bin/."""
-        return self._bin.parent / "campioni"
+        """I clip liberi della taratura: viaggiano col programma."""
+        return (self.root if self._radice_esplicita else code_root()) / "campioni"
 
     @property
     def models(self) -> Path:

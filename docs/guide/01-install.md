@@ -7,30 +7,67 @@ description: Download AnimeUp, get past Gatekeeper, and understand what the firs
 
 # 01. Install and first launch
 
-Put the AnimeUp folder wherever you like, double-click one file, and let the first launch set up everything inside that folder.
+Install the app (or the portable folder), approve it once in macOS, and let the first launch download AnimeUp's tools.
 
 ## Choose how to get it
 
-There are two ways to install AnimeUp. Both end with the same self-contained folder.
+| | **The app** (recommended) | The portable folder | From source (`git clone`) |
+|---|---|---|---|
+| For | Most people | Running from an external drive, or from the Terminal | Following development |
+| You get | `AnimeUp.app`, a normal Mac app with its own window | A folder you open with `Avvia AnimeUp.command`; the interface opens in your browser | The repository |
+| Your files | `~/Movies/AnimeUp` (changeable in the sidebar) | Inside the folder | Inside the folder |
+| AnimeUp's tools and Python | `~/Library/Application Support/AnimeUp` | Inside the folder | Inside the folder |
+| Gatekeeper prompt | Yes, once | Yes, once | No |
+| Updating | Replace the app | Download the new zip | `git pull` |
 
-| | Release zip (recommended) | `git clone` (from source) |
-|---|---|---|
-| For | Most people | People who want to follow development or read the code |
-| Includes | The program, the Real-ESRGAN and Real-CUGAN binaries with their models, and uv | The program only |
-| Downloaded on first launch | Python runtime, dependencies, FFmpeg | Python runtime, dependencies, FFmpeg, the upscalers and their models, uv |
-| Gatekeeper prompt | Yes, once | No (git doesn't mark files as downloaded) |
-| Updating | Download the new zip (see [Updating](#updating-from-an-older-version)) | `git pull` |
+Every third-party download comes from a pinned official release and is verified with SHA256, FFmpeg included (release 9.0.2, which is also checked for the encoders and filters AnimeUp needs).
 
-!!! tip "Where to put the folder"
-    Anywhere you can write to, external drives included. Choose a disk with room to spare: frames are extracted next to the program, in `JOBS/`, and a single episode can temporarily take tens of GB.
+## Install the app
 
-### Option A: the release zip
+1. Download `AnimeUp-<version>-macos-app.zip` from the [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest) and unzip it.
+2. **Drag `AnimeUp.app` into Applications.** Don't run it from Downloads: until it's approved, macOS starts an app from a temporary read-only copy (a security feature called App Translocation).
+3. Open it. macOS refuses, because AnimeUp isn't signed by an identified developer: the project has no paid Apple Developer account. Close the warning.
+4. Open **System Settings → Privacy & Security**, scroll down to the message about AnimeUp and click **Open Anyway**. Confirm with your password or Touch ID if asked.
+5. AnimeUp opens. From now on it opens normally.
 
-1. Download `AnimeUp-<version>-macos-arm64.zip` from the [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest).
-2. Unzip it where you want AnimeUp to live.
-3. Double-click **`Avvia AnimeUp.command`** (Italian for "Launch AnimeUp") and follow [The first launch](#the-first-launch).
+<!-- IMG: macOS System Settings → Privacy & Security with the "Open Anyway" button for AnimeUp -->
 
-### Option B: from source
+!!! note "Right-click → Open no longer works"
+    On older macOS versions you could bypass the warning with right-click → Open. Recent versions (macOS 15 Sequoia and later) only allow **Open Anyway** in Privacy & Security.
+
+### The app's first launch
+
+1. A small window says **Preparing AnimeUp…**, with the step it's on underneath: it downloads uv and a private Python runtime and installs AnimeUp's dependencies. It needs an internet connection and takes about a minute.
+2. The main window opens on **Welcome to AnimeUp**. It lists what's still missing (FFmpeg 9.0.2 and the Real-ESRGAN/Real-CUGAN engines with their models, about 180 MB) and offers **Download and continue**. The download runs from the official releases and is verified by checksum.
+3. When it's done, the normal interface appears. From now on AnimeUp works offline.
+
+If something goes wrong in step 1, a window shows the last lines of the log with **Try Again**, **Open Log** and **Quit**. The log is `~/Library/Application Support/AnimeUp/logs/app.log`.
+
+### Where the app keeps things
+
+| What | Where |
+|---|---|
+| Your files: `INPUT/`, `OUTPUT/`, `JOBS/`, `anteprime/`, `registri/` | `~/Movies/AnimeUp`, or the folder you choose in the sidebar under **System → Data folder** (it can be on an external drive; the change applies at the next launch) |
+| Python, its environment, caches, FFmpeg, the upscalers and their models | `~/Library/Application Support/AnimeUp` (about 1 GB) |
+| The program | `AnimeUp.app`, which is never modified |
+
+The app runs its interface on port 8898, reachable only from this Mac, so it can run alongside the portable folder (port 8899).
+
+### Using and updating the app
+
+- **Quit** with **⌘Q** (or **AnimeUp → Quit AnimeUp**). Jobs in progress keep running in the background and reappear when you reopen the app. Closing the window quits the app too.
+- **File → Open Data Folder** shows your files in Finder; **File → Open in Browser** opens the same interface in your browser; **File → Show Log** opens the app's log.
+- **Updating**: once a day AnimeUp asks GitHub for the latest release and, if there's a newer one, shows a note at the top of the sidebar with a link (you can turn it off with **Check for updates** in the sidebar). To update, quit AnimeUp and replace `AnimeUp.app` in Applications with the new one: your files, settings and calibration are untouched. You may have to approve the new version once in Privacy & Security.
+- **Removing** AnimeUp: delete the app, then `~/Library/Application Support/AnimeUp` (tools and Python) and, if you no longer want them, your files in `~/Movies/AnimeUp`.
+
+## The portable folder
+
+The rest of this page is about the portable folder and the source checkout: the same program, run from a folder you choose.
+
+1. Download `AnimeUp-<version>-macos-arm64.zip` from the [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest) and unzip it where you want AnimeUp to live: anywhere you can write to, external drives included. Choose a disk with room to spare: a single episode can temporarily take tens of GB in `JOBS/`.
+2. Double-click **`Avvia AnimeUp.command`** (Italian for "Launch AnimeUp") and follow [The first launch](#the-first-launch).
+
+From source:
 
 ```bash
 git clone https://github.com/Interstellar0verdrive/AnimeUp.git
@@ -41,8 +78,6 @@ cd AnimeUp
 
 You can also skip the two commands and double-click **`Avvia AnimeUp.command`**: it runs `setup` by itself when something is missing from `bin/`. If you have no `uv` on your system, the launcher downloads it too.
 
-Every third-party download comes from a pinned official release and is verified with SHA256, FFmpeg included (release 9.0.2, which is also checked for the encoders and filters AnimeUp needs).
-
 ## Get past Gatekeeper
 
 The first time you double-click **`Avvia AnimeUp.command`** from the zip, macOS refuses to open it, because the script isn't signed by an identified developer. This is expected.
@@ -52,7 +87,6 @@ The first time you double-click **`Avvia AnimeUp.command`** from the zip, macOS 
 3. Scroll down to the message about `Avvia AnimeUp.command` and click **Open Anyway**.
 4. Confirm. From now on the file opens with a normal double-click.
 
-<!-- IMG: macOS System Settings → Privacy & Security with the "Open Anyway" button for Avvia AnimeUp.command -->
 
 !!! tip "The Terminal alternative"
     Instead of the steps above, you can run this once on the unzipped folder (adjust the path to where you put it):
