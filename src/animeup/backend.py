@@ -11,6 +11,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from .i18n import t
 from .models import CATALOG, Family, Model
 from .paths import PATHS, Paths
 
@@ -231,10 +232,9 @@ def upscale_dir(
             if fatti != ultimo:
                 ultimo, da_quando = fatti, time.monotonic()
             elif time.monotonic() - da_quando > STALLO_SECONDI:
-                stallo.append(
-                    f"nessun fotogramma nuovo per {STALLO_SECONDI // 60} minuti "
-                    f"(fermo a {fatti} su {expected})"
-                )
+                stallo.append(t("mot.backend.stallo",
+                                minuti=STALLO_SECONDI // 60, fatti=fatti,
+                                attesi=expected))
                 _abbatti()
                 return
 
@@ -265,10 +265,7 @@ def upscale_dir(
             pass
 
     if stallo:
-        raise UpscaleError(
-            f"il modello si è piantato: {stallo[0]}. È stato interrotto. "
-            "Rilancia: la lavorazione riprende da dove era arrivata."
-        )
+        raise UpscaleError(t("mot.backend.piantato", motivo=stallo[0]))
 
     # Si confrontano i NOMI, non i conteggi: contando i file, un residuo in
     # `dst` mascherava una produzione incompleta, e un fotogramma scritto con
@@ -292,16 +289,14 @@ def upscale_dir(
     # di dimensione normale ma contenuto parziale, ed è esattamente il guasto
     # silenzioso da cui la verifica dovrebbe difendere.
     if proc.returncode != 0:
-        raise UpscaleError(
-            f"il modello è uscito con codice {proc.returncode} "
-            f"({produced}/{expected} fotogrammi).\n{stderr[-600:]}"
-        )
+        raise UpscaleError(t("mot.backend.codice_uscita", codice=proc.returncode,
+                               prodotti=produced, attesi=expected)
+                           + f"\n{stderr[-600:]}")
     if mancanti:
         # Silenzioso ma letale: la numerazione dei PNG avrebbe un buco e il
         # demuxer immagini troncherebbe il video senza dire nulla.
         elenco = ", ".join(sorted(mancanti)[:5])
-        raise UpscaleError(
-            f"mancano {len(mancanti)} fotogrammi su {expected} attesi "
-            f"({elenco}{'...' if len(mancanti) > 5 else ''})."
-        )
+        raise UpscaleError(t("mot.backend.mancanti", mancanti=len(mancanti),
+                               attesi=expected,
+                               elenco=elenco + ("..." if len(mancanti) > 5 else "")))
     return UpscaleResult(produced, expected, seconds)

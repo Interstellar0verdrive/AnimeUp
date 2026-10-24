@@ -20,6 +20,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
+from .i18n import t
+
 
 class Family(str, Enum):
     ESRGAN = "realesrgan"
@@ -30,15 +32,26 @@ class Family(str, Enum):
 class Model:
     key: str
     family: Family
-    label: str
+    # Chiavi dei testi, non i testi: il catalogo nasce all'import e la lingua
+    # può cambiare ad app aperta. `label` e `description` li traducono alla
+    # lettura.
+    chiave_label: str
     scales: tuple[int, ...]
     throughput: dict[int, float]   # megapixel di ingresso al secondo, per scala
     denoises: bool
-    description: str
+    chiave_description: str
 
     # --- parametri specifici di realcugan ---
     cugan_noise: int | None = None      # valore da passare a -n
     cugan_models: str | None = None     # cartella modelli, relativa al binario
+
+    @property
+    def label(self) -> str:
+        return t(self.chiave_label)
+
+    @property
+    def description(self) -> str:
+        return t(self.chiave_description)
 
     @property
     def short(self) -> str:
@@ -68,7 +81,7 @@ CATALOG: dict[str, Model] = {
     "animevideov3": Model(
         key="realesr-animevideov3",
         family=Family.ESRGAN,
-        label="Real-ESRGAN animevideov3",
+        chiave_label="mot.modello.animevideov3.label",
         scales=(2, 3, 4),
         # x4 era 1.08: misurato quando il salvataggio dei PNG girava su due
         # soli thread ed era LUI il collo di bottiglia, non la GPU. Con
@@ -77,25 +90,23 @@ CATALOG: dict[str, Model] = {
         # devono sbagliare per eccesso di prudenza, non per ottimismo.
         throughput={2: 1.95, 3: 1.79, 4: 1.80},
         denoises=True,
-        description="il più veloce. Linee nettissime, ma spiana la texture di "
-                    "fondo: meno dettaglio e molti meno artefatti",
+        chiave_description="mot.modello.animevideov3.descrizione",
     ),
     "cugan-denoise": Model(
         key="up{scale}x-denoise1x",
         family=Family.CUGAN,
-        label="Real-CUGAN denoise leggero",
+        chiave_label="mot.modello.cugan-denoise.label",
         scales=(2,),            # denoise1x esiste solo per la scala 2
         throughput={2: 1.02},
         denoises=True,
-        description="via di mezzo. Conserva texture e sfumature ripulendo il "
-                    "rumore più evidente: per sorgenti non puliti",
+        chiave_description="mot.modello.cugan-denoise.descrizione",
         cugan_noise=1,
         cugan_models="models-se",
     ),
     "cugan": Model(
         key="up{scale}x-no-denoise",
         family=Family.CUGAN,
-        label="Real-CUGAN no-denoise",
+        chiave_label="mot.modello.cugan.label",
         scales=(2, 3, 4),
         # x4 era 0.57, misurato su un campione breve dove il caricamento del
         # modello pesava più del lavoro. Ricavato dai log di due lavorazioni
@@ -103,8 +114,7 @@ CATALOG: dict[str, Model] = {
         # più basso. Sbagliare per difetto qui gonfiava la stima del 50%.
         throughput={2: 1.02, 3: 0.66, 4: 0.85},
         denoises=False,
-        description="conserva tutto: texture, sfumature e purtroppo anche il "
-                    "rumore. Per sorgenti già puliti",
+        chiave_description="mot.modello.cugan.descrizione",
         cugan_noise=0,          # ATTENZIONE: 0 = no-denoise. L'aiuto del binario
                                 # dice -1, ed è sbagliato: -1 seleziona conservative.
         cugan_models="models-se",
@@ -194,8 +204,7 @@ def recommend(height: int) -> Recommendation:
     if height >= CLEAN_SOURCE_MIN_HEIGHT:
         return Recommendation(
             model="cugan",
-            reason=f"sorgente {height}p: ingrandimento contenuto, conviene "
-                   "conservare texture e sfumature",
+            reason=t("mot.modello.consiglio_alta", altezza=height),
             giudizi={"cugan": "ok"},
         )
     if height >= ALTEZZA_INCERTA:
@@ -204,10 +213,7 @@ def recommend(height: int) -> Recommendation:
         # dettaglio; il no-denoise qui amplifica il rumore di compressione.
         return Recommendation(
             model="animevideov3",
-            reason=f"sorgente {height}p: fascia intermedia. animevideov3 è "
-                   "la base consigliata (meno artefatti). Se il file merita "
-                   "più dettaglio, verifica CUGAN denoise leggero nel "
-                   "Confronto; il no-denoise amplificherebbe il rumore",
+            reason=t("mot.modello.consiglio_media", altezza=height),
             alternative="cugan-denoise",
             sicuro=False,
             giudizi={"animevideov3": "ok", "cugan-denoise": "verifica",
@@ -215,8 +221,6 @@ def recommend(height: int) -> Recommendation:
         )
     return Recommendation(
         model="animevideov3",
-        reason=f"sorgente {height}p: a questa risoluzione non c'e' dettaglio "
-               "autentico da conservare, e CUGAN ingrandirebbe gli artefatti "
-               "di compressione. Meno dettagliato, molti meno artefatti",
+        reason=t("mot.modello.consiglio_bassa", altezza=height),
         giudizi={"animevideov3": "ok", "cugan-denoise": "no", "cugan": "no"},
     )

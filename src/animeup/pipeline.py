@@ -24,6 +24,7 @@ from pathlib import Path
 from . import dedup as dd
 from . import encode as enc
 from .backend import upscale_dir
+from .i18n import t
 from .paths import PATHS, Paths
 from .plan import Plan
 
@@ -657,22 +658,20 @@ class Job:
             sonda.write_bytes(b"")
             sonda.unlink()
         except OSError as exc:
-            raise JobError(
-                f"non posso scrivere in {plan.output.parent}: {exc.strerror or exc}. "
-                "Controlla i permessi della cartella di uscita."
-            ) from exc
+            raise JobError(t("mot.pipe.non_scrivibile",
+                               cartella=plan.output.parent,
+                               errore=exc.strerror or exc)) from exc
 
         self.paths.work.mkdir(parents=True, exist_ok=True)
         registro = self.paths.work / ".prenotazioni"
         altrui = sum(_prenotazioni(registro).values())
         if serve > libero_gb - altrui:
             raise JobError(
-                f"spazio insufficiente: servono circa {serve:.0f} GB, "
-                f"liberi {libero_gb:.0f} GB"
-                + (f" di cui {altrui:.0f} già impegnati da un'altra "
-                   "lavorazione in corso" if altrui else "")
-                + ". Libera spazio, abbassa l'altezza finale, o riduci lo "
-                "spazio per blocco."
+                (t("mot.pipe.spazio_altrui", servono=f"{serve:.0f}",
+                   liberi=f"{libero_gb:.0f}", altrui=f"{altrui:.0f}")
+                 if altrui else
+                 t("mot.pipe.spazio", servono=f"{serve:.0f}",
+                   liberi=f"{libero_gb:.0f}"))
             )
         # Si prenota PRIMA di cominciare, così una lavorazione avviata subito
         # dopo trova lo spazio già impegnato invece di contarlo due volte.
@@ -709,11 +708,9 @@ class Job:
             except FileExistsError:
                 if _processo_vivo(lock):
                     provvisorio.unlink(missing_ok=True)
-                    raise JobError(
-                        f"un'altra lavorazione su questo file è già in corso "
-                        f"(cartella {self.work.name}). Aspetta che finisca, "
-                        f"oppure cancella {lock} se sei sicuro che sia morta."
-                    ) from None
+                    raise JobError(t("mot.pipe.gia_in_corso",
+                                     cartella=self.work.name,
+                                     lucchetto=lock)) from None
                 # Sembra di un processo morto. Toglierlo di mezzo è però
                 # pericoloso: fra il giudizio "è morto" e la rimozione, un
                 # ALTRO processo può averlo già rubato e messo il proprio,
@@ -743,7 +740,7 @@ class Job:
             self._lucchetto_mio = True
             break
         else:
-            raise JobError(f"non riesco a prendere il lucchetto {lock}")
+            raise JobError(t("mot.pipe.lucchetto", lucchetto=lock))
 
         # UNA PAUSA APERTA QUI NON PUO' ESISTERE, e va chiusa.
         #
@@ -780,9 +777,8 @@ class Job:
             # quando l'esito è ok. Un avviso che si ripresenta a ogni lancio
             # avrebbe reso `--tieni-temp` permanentemente attivo senza dirlo,
             # lasciando su disco due cartelle da sedici gigabyte l'una.
-            p.say("Cartelle", f"ne esiste un'altra per questo file "
-                              f"({vecchia.name}): ignorata, si riprende dalla "
-                              "più recente. Se non serve, cancellala a mano.")
+            p.say(t("mot.pipe.fase_cartelle"),
+                  t("mot.pipe.cartella_abbandonata", cartella=vecchia.name))
         # Il lucchetto è nostro, ma se il proprietario precedente è morto di
         # SIGKILL il suo upscaler può essere ancora vivo dentro la cartella.
         _abbatti_orfano(self.work)
@@ -797,7 +793,7 @@ class Job:
         # sorgente (misurato su 5 file di prova su 6). Confrontando con la
         # stima, ogni rilancio rifaceva l'estrazione all'infinito senza mai
         # avanzare.
-        p.say("Estrazione", "decodifica sequenziale del sorgente")
+        p.say(t("mot.pipe.fase_estrazione"), t("mot.pipe.estrazione"))
         registrati = self.state.get("extracted", 0)
         sul_disco = sum(1 for _ in self.frames_dir.glob("*.png")) if self.frames_dir.is_dir() else 0
         if registrati and registrati == sul_disco:
@@ -809,15 +805,10 @@ class Job:
             self._save_state()
 
         if not extracted:
-            raise JobError(
-                "l'estrazione non ha prodotto alcun fotogramma: il sorgente è "
-                "illeggibile o la catena di restauro scarta tutto."
-            )
+            raise JobError(t("mot.pipe.estrazione_vuota"))
         if abs(extracted - plan.frames) > max(2, plan.frames * 0.01):
-            warnings.append(
-                f"estratti {extracted} fotogrammi contro i {plan.frames} stimati "
-                "dal sorgente: possibile disallineamento con l'audio"
-            )
+            warnings.append(t("mot.pipe.estratti_diversi", estratti=extracted,
+                              stimati=plan.frames))
         total_frames = extracted
 
         # --- 2. mappa di deduplica, sui fotogrammi appena estratti ---------
@@ -885,9 +876,7 @@ class Job:
         # su quarantuno del file finale venivano dall'estrazione precedente,
         # senza un avviso.
         if fatti and self.state.get("segments_extracted") != self.state.get("extracted", 0):
-            p.say("Segmenti", "il numero di fotogrammi estratti non risulta, o "
-                              "è cambiato: i segmenti precedenti non sono più "
-                              "validi e vengono rifatti")
+            p.say(t("mot.pipe.fase_segmenti"), t("mot.pipe.segmenti_non_validi"))
             fatti.clear()
 
         # Le cartelle di blocco sono intitolate per INDICE e si ripuliscono
@@ -915,7 +904,8 @@ class Job:
                 p.step(index + 1, len(chunks), stop, total_frames)
                 continue
             if gia is not None:
-                p.say("Segmenti", f"{gia.name} incompleto o illeggibile: si rifà")
+                p.say(t("mot.pipe.fase_segmenti"),
+                      t("mot.pipe.segmento_rifatto", segmento=gia.name))
             segment = self._process_chunk(index, start, stop, dmap, p, len(chunks), total_frames)
             # Si espelle ogni voce che si sovrappone all'intervallo appena
             # prodotto: restavano registrate voci di giri precedenti con
@@ -933,7 +923,7 @@ class Job:
         # --- 4. assemblaggio ----------------------------------------------
         _registra()
 
-        p.say("Assemblaggio", "unione dei segmenti e rimontaggio delle tracce")
+        p.say(t("mot.pipe.fase_assemblaggio"), t("mot.pipe.assemblaggio"))
         enc.concat_and_mux(plan, prodotti, self.work, paths=self.paths)
 
         written, geometry = enc.verify_output(plan, total_frames, paths=self.paths)
@@ -943,21 +933,15 @@ class Job:
         # riserva, è un risultato da buttare.
         difetti: list[str] = []
         if not written:
-            warnings.append(
-                "non è stato possibile verificare il file finale: controllalo a mano"
-            )
+            warnings.append(t("mot.pipe.non_verificabile"))
         elif written != total_frames:
-            difetti.append(
-                f"il file finale contiene {written} fotogrammi invece di {total_frames}"
-            )
+            difetti.append(t("mot.pipe.fotogrammi_diversi", scritti=written,
+                             attesi=total_frames))
         if geometry != atteso:
-            difetti.append(f"il file finale è {geometry} invece di {atteso}")
+            difetti.append(t("mot.pipe.geometria_diversa", geometria=geometry,
+                             attesa=atteso))
         if not enc.audio_risponde_al_seek(plan, paths=self.paths):
-            difetti.append(
-                "l'audio non risponde al salto a metà file: tracce scritte "
-                "male nel contenitore (il video c'è, ma il file va rifatto "
-                "col solo rimontaggio)"
-            )
+            difetti.append(t("mot.pipe.audio_seek"))
 
         return JobResult(
             output=plan.output,
@@ -1023,16 +1007,14 @@ class Job:
                     AttributeError, OSError, UnicodeDecodeError):
                 cache.unlink(missing_ok=True)
 
-        p.say("Deduplica", "misura delle differenze fra fotogrammi")
+        p.say(t("mot.pipe.fase_deduplica"), t("mot.pipe.misura_differenze"))
         diffs = dd.measure_frame_differences(self.frames_dir, paths=self.paths)
         if not diffs:
-            warnings.append("misura delle differenze non riuscita: deduplica saltata")
+            warnings.append(t("mot.pipe.misura_fallita"))
             return None
         if len(diffs) + 1 != total_frames:
-            warnings.append(
-                f"misura su {len(diffs) + 1} fotogrammi invece di {total_frames}: "
-                "deduplica saltata per sicurezza"
-            )
+            warnings.append(t("mot.pipe.misura_sfasata", misurati=len(diffs) + 1,
+                              attesi=total_frames))
             return None
 
         # I fotogrammi estratti sono a 8 bit per scelta (vedi extract_frames):
@@ -1052,19 +1034,12 @@ class Job:
             # 00000000.png, incomprensibile a chiunque. Si rinuncia alla
             # deduplica e si elaborano tutti i fotogrammi: si perde tempo, non
             # correttezza.
-            warnings.append(
-                "La deduplica è stata disattivata per questo file: la mappa "
-                "dei fotogrammi ripetuti non era coerente. Verranno "
-                "elaborati tutti i fotogrammi (più lento, stesso risultato)"
-            )
+            warnings.append(t("mot.pipe.dedup_disattivata"))
             return None
 
         if result.violations:
-            warnings.append(
-                f"{len(result.violations)} fotogrammi erano stati "
-                "considerati ripetuti per errore: vengono elaborati "
-                "comunque, uno per uno"
-            )
+            warnings.append(t("mot.pipe.falsi_duplicati",
+                              n=len(result.violations)))
             # Riparazione chirurgica: si promuovono a "da elaborare" solo i
             # fotogrammi incriminati, senza rifare l'intero episodio.
             # `keep` va tenuto senza ripetizioni, altrimenti `unique` e
@@ -1079,7 +1054,7 @@ class Job:
             "source_of": dmap.source_of, "runs": dmap.runs,
             "threshold": dmap.threshold, "max_run": dmap.max_run, "capped": dmap.capped,
         }))
-        p.say("Deduplica", dd.describe(dmap))
+        p.say(t("mot.pipe.fase_deduplica"), dd.describe(dmap))
         return dmap
 
     def _chunk_ranges(self, total: int) -> list[tuple[int, int]]:
@@ -1139,8 +1114,9 @@ class Job:
         self._save_state()
 
         p.say(
-            "Upscale",
-            f"blocco {index + 1}/{chunks}: {len(needed)} fotogrammi da elaborare",
+            t("mot.pipe.fase_upscale"),
+            t("mot.pipe.blocco_upscale", blocco=index + 1, blocchi=chunks,
+              fotogrammi=len(needed)),
         )
         upscale_dir(
             chunk_in, chunk_up,
@@ -1153,7 +1129,8 @@ class Job:
         enc.materialise_duplicates(chunk_up, mapping, indices, chunk_full)
 
         segment = self.segments_dir / f"seg{start:08d}-{stop:08d}.mkv"
-        p.say("Codifica", f"blocco {index + 1}/{chunks}")
+        p.say(t("mot.pipe.fase_codifica"),
+              t("mot.pipe.blocco_codifica", blocco=index + 1, blocchi=chunks))
         enc.encode_segment(plan, chunk_full, segment, start_number=1, paths=self.paths)
 
         for d in (chunk_in, chunk_up, chunk_full):
@@ -1174,8 +1151,7 @@ class Job:
         except OSError:
             return ""
         if libero < 2.0:
-            return (f" — ma il disco ha solo {libero:.1f} GB liberi: è quasi "
-                    "certamente questa la causa, non i fotogrammi.")
+            return t("mot.pipe.disco_pieno", liberi=f"{libero:.1f}")
         return ""
 
     def cleanup(self) -> None:
