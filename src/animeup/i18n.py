@@ -21,6 +21,7 @@ comando parla la stessa lingua dell'interfaccia senza un'altra impostazione.
 from __future__ import annotations
 
 import json
+import os
 from functools import cache
 from pathlib import Path
 
@@ -44,7 +45,15 @@ def catalogo(lingua: str) -> dict[str, str]:
 
 
 def preferita() -> str:
-    """La lingua salvata nelle impostazioni, o quella di fabbrica."""
+    """La lingua salvata nelle impostazioni, o quella di fabbrica.
+
+    `ANIMEUP_LANG` nell'ambiente vince su tutto: serve ai processi lanciati
+    da fuori (i test chiamano `./animeup` come sottoprocesso) per parlare
+    una lingua decisa, qualunque cosa ci sia scritto nelle impostazioni.
+    """
+    forzata = os.environ.get("ANIMEUP_LANG")
+    if forzata in LINGUE:
+        return forzata
     # Import qui e non in testa: `paths` non deve dipendere dai testi, e
     # chi importa solo i cataloghi (i test) non deve risolvere la radice.
     from .paths import PATHS
