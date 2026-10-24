@@ -103,11 +103,56 @@
 [data-md-color-scheme="default"] .md-header {
   border-bottom: 1px solid var(--animeup-border);
   box-shadow: none;
+  z-index: 6;
+}
+
+.animeup-header__brand,
+.animeup-header__search,
+.animeup-header__actions {
+  align-items: center;
+  display: flex;
+  min-width: 0;
+}
+
+.animeup-header__brand {
+  gap: 0.25rem;
+  padding: 0 0.6rem;
+}
+
+.animeup-header__brand .md-header__button.md-logo {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 2rem;
+  height: 2rem;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  width: 2rem;
 }
 
 .md-header__button.md-logo img {
   height: 2rem;
   width: 2rem;
+}
+
+.animeup-header__title {
+  color: var(--animeup-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.animeup-header__search {
+  justify-content: flex-end;
+}
+
+.animeup-header__actions {
+  gap: 0.2rem;
+  justify-content: flex-end;
+  padding: 0 0.3rem;
 }
 
 /* A named theme menu and a direct GitHub button, as in the Linfa guide. */
@@ -118,15 +163,11 @@
 .animeup-theme-control {
   align-items: center;
   display: flex;
-  gap: 0.4rem;
-  margin-right: 0.55rem;
   white-space: nowrap;
 }
 
 .animeup-theme-control label {
-  color: var(--animeup-muted);
-  font-size: 0.65rem;
-  font-weight: 600;
+  display: none;
 }
 
 .animeup-theme-control select,
@@ -152,7 +193,9 @@
   outline-offset: 2px;
 }
 
-.md-header__source {
+.animeup-header__actions .md-header__source {
+  display: block;
+  margin: 0;
   max-width: none;
   width: auto;
 }
@@ -161,7 +204,7 @@
   align-items: center;
   display: flex;
   gap: 0.35rem;
-  padding: 0.25rem 0.55rem;
+  padding: 0.25rem 0.35rem;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -175,6 +218,29 @@
   fill: currentColor;
   height: 0.8rem;
   width: 0.8rem;
+}
+
+@media screen and (min-width: 60em) {
+  .md-header__inner.md-grid.animeup-header {
+    display: grid;
+    grid-template-columns: clamp(11rem, 17vw, 13rem) minmax(0, 1fr) clamp(11rem, 17vw, 13rem);
+    margin: 0;
+    max-width: none;
+    padding: 0;
+  }
+
+  .animeup-header__brand {
+    grid-column: 1;
+  }
+
+  .animeup-header__search {
+    grid-column: 2;
+    padding-right: 0.5rem;
+  }
+
+  .animeup-header__actions {
+    grid-column: 3;
+  }
 }
 
 .md-header__button.md-logo img.animeup-logo__light,
@@ -209,9 +275,18 @@
   }
 }
 
-@media screen and (max-width: 60rem) {
-  .animeup-theme-control label,
+@media screen and (max-width: 60em) {
   .animeup-github span {
+    display: none;
+  }
+
+  .animeup-header__search {
+    margin-left: auto;
+  }
+}
+
+@media screen and (max-width: 44em) {
+  .animeup-header__title {
     display: none;
   }
 }

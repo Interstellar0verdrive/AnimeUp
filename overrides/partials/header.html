@@ -5,31 +5,16 @@
   {% set class = class ~ " md-header--shadow" %}
 {% endif %}
 <header class="{{ class }}" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="{{ lang.t('header') }}">
-    <a href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}" title="{{ config.site_name | e }}" class="md-header__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
-      {% include "partials/logo.html" %}
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      {% set icon = config.theme.icon.menu or "material/menu" %}
-      {% include ".icons/" ~ icon ~ ".svg" %}
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            {{ config.site_name }}
-          </span>
-        </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            {% if page.meta and page.meta.title %}
-              {{ page.meta.title }}
-            {% else %}
-              {{ page.title }}
-            {% endif %}
-          </span>
-        </div>
-      </div>
+  <nav class="md-header__inner md-grid animeup-header" aria-label="{{ lang.t('header') }}">
+    <div class="animeup-header__brand">
+      <label class="md-header__button md-icon" for="__drawer">
+        {% set icon = config.theme.icon.menu or "material/menu" %}
+        {% include ".icons/" ~ icon ~ ".svg" %}
+      </label>
+      <a href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}" title="{{ config.site_name | e }}" class="md-header__button md-logo" aria-label="{{ config.site_name }}" data-md-component="logo">
+        {% include "partials/logo.html" %}
+      </a>
+      <span class="animeup-header__title">{{ config.site_name }}</span>
     </div>
     {% if config.theme.palette %}
       {% if not config.theme.palette is mapping %}
@@ -42,31 +27,35 @@
     {% if config.extra.alternate %}
       {% include "partials/alternate.html" %}
     {% endif %}
-    {% if "material/search" in config.plugins %}
-      {% set search = config.plugins["material/search"] | attr("config") %}
-      {% if search.enabled %}
-        <label class="md-header__button md-icon" for="__search">
-          {% set icon = config.theme.icon.search or "material/magnify" %}
-          {% include ".icons/" ~ icon ~ ".svg" %}
-        </label>
-        {% include "partials/search.html" %}
+    <div class="animeup-header__search">
+      {% if "material/search" in config.plugins %}
+        {% set search = config.plugins["material/search"] | attr("config") %}
+        {% if search.enabled %}
+          <label class="md-header__button md-icon" for="__search">
+            {% set icon = config.theme.icon.search or "material/magnify" %}
+            {% include ".icons/" ~ icon ~ ".svg" %}
+          </label>
+          {% include "partials/search.html" %}
+        {% endif %}
       {% endif %}
-    {% endif %}
-    <div class="animeup-theme-control">
-      <label for="animeup-theme-select">Theme</label>
-      <select id="animeup-theme-select" aria-label="Theme: follow system, light, or dark"
-              data-favicon-dark="{{ 'assets/animeup-favicon.png' | url }}"
-              data-favicon-light="{{ 'assets/animeup-favicon-light.png' | url }}">
-        <option value="animeup-auto" selected>◐ System</option>
-        <option value="default">☀ Light</option>
-        <option value="slate">☾ Dark</option>
-      </select>
     </div>
-    {% if config.repo_url %}
-      <div class="md-header__source">
-        {% include "partials/source.html" %}
+    <div class="animeup-header__actions">
+      <div class="animeup-theme-control">
+        <label for="animeup-theme-select">Theme</label>
+        <select id="animeup-theme-select" aria-label="Theme: follow system, light, or dark"
+                data-favicon-dark="{{ 'assets/animeup-favicon.png' | url }}"
+                data-favicon-light="{{ 'assets/animeup-favicon-light.png' | url }}">
+          <option value="animeup-auto" selected>◐ System</option>
+          <option value="default">☀ Light</option>
+          <option value="slate">☾ Dark</option>
+        </select>
       </div>
-    {% endif %}
+      {% if config.repo_url %}
+        <div class="md-header__source">
+          {% include "partials/source.html" %}
+        </div>
+      {% endif %}
+    </div>
   </nav>
   {% if "navigation.tabs.sticky" in features %}
     {% if "navigation.tabs" in features %}
