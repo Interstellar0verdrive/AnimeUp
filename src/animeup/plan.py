@@ -14,6 +14,7 @@ from pathlib import Path
 
 from .models import CATALOG, Model, Recommendation, recommend
 from . import storico, taratura
+from .i18n import t
 from .paths import PATHS, Paths
 from .probe import FieldMode, SourceReport, Timebase
 
@@ -114,9 +115,11 @@ class PlanError(RuntimeError):
     "non elaborabile" non dice niente a nessuno.
     """
 
-    def __init__(self, messaggio: str, sintesi: str = "non elaborabile") -> None:
+    def __init__(self, messaggio: str, sintesi: str | None = None) -> None:
         super().__init__(messaggio)
-        self.sintesi = sintesi
+        # Il predefinito si traduce qui e non nella firma: la firma si
+        # valuta una volta sola, all'import, nella lingua di allora.
+        self.sintesi = sintesi if sintesi is not None else t("mot.plan.sintesi_default")
 
 
 def output_name(
@@ -485,16 +488,13 @@ def _target_size(
     src_w, src_h = g.display_width, g.display_height
 
     if not src_h:
-        raise PlanError("Altezza del sorgente sconosciuta.")
+        raise PlanError(t("mot.plan.altezza_sconosciuta"))
     # Controllato QUI, dove il bersaglio entra per la prima volta: più avanti
     # `scale * src_h / target_h` divideva per zero e usciva un traceback grezzo
     # invece di un messaggio, e un bersaglio negativo produceva un piano con
     # uscita "-132x-100" senza obiezioni.
     if target_height < 64:
-        raise PlanError(
-            f"altezza finale {target_height}: chiedine almeno 64. "
-            "Sotto non è un bersaglio, è un refuso."
-        )
+        raise PlanError(t("mot.plan.altezza_minima", altezza=target_height))
 
     height = min(target_height, src_h * 4)   # non oltre il 4x del sorgente
     width = round(src_w * height / src_h)
@@ -560,17 +560,13 @@ def _build_restoration(
     fields = report.fields
 
     if fields and fields.mode in (FieldMode.INTERLACED, FieldMode.TELECINE):
-        r.notes.append(
-            "Sorgente interlacciato o telecinato: NON viene trattato qui. "
-            "L'upscale amplificherebbe le righe di pettine. Preparalo prima "
-            "con uno strumento dedicato, poi rimettilo in INPUT."
-        )
+        r.notes.append(t("mot.plan.interlacciato"))
 
     if denoise:
         # Conservativo: toglie il rumore di compressione senza spianare le
         # texture. Real-ESRGAN amplifica il rumore, quindi va tolto prima.
         r.denoise = "hqdn3d=1.5:1.5:6:6"
-        r.notes.append("Denoise leggero prima dell'upscale.")
+        r.notes.append(t("mot.plan.denoise"))
 
     return r
 
@@ -586,7 +582,7 @@ DEDUP_STANDARD = "hi=768:lo=320:frac=0.33"
 
 def _plan_dedup(report: SourceReport, *, enabled: bool) -> Dedup:
     if not enabled:
-        return Dedup(False, "", 0.0, "disattivata su richiesta")
+        return Dedup(False, "", 0.0, t("mot.plan.dedup_disattivata"))
 
     # PRIMA di tutto la misura su campione, quando c'e': e' l'unico numero
     # che parla di QUESTO file. Gli altri rami indovinano — o dai duplicati
@@ -595,22 +591,18 @@ def _plan_dedup(report: SourceReport, *, enabled: bool) -> Dedup:
     campione = getattr(report, "dedup_campione", None)
     if campione is not None:
         return Dedup(True, DEDUP_CONSERVATIVE, campione,
-                     f"{campione:.0%} misurato su un campione di questo file")
+                     t("mot.plan.dedup_campione", quota=f"{campione:.0%}"))
 
     d = report.duplicates
     if d is None:
-        return Dedup(True, DEDUP_CONSERVATIVE, 0.0, "entità misurata all'avvio")
+        return Dedup(True, DEDUP_CONSERVATIVE, 0.0, t("mot.plan.dedup_all_avvio"))
 
     # I duplicati *esatti* sono un limite inferiore: su encode a 10 bit il
     # dithering rende ogni frame diverso al bit pur essendo identico a vedersi.
     if d.duplicate_ratio > 0.02:
         return Dedup(True, DEDUP_CONSERVATIVE, d.duplicate_ratio,
-                     f"{d.duplicate_ratio:.0%} di fotogrammi identici al bit")
-    return Dedup(
-        True, DEDUP_CONSERVATIVE, 0.0,
-        "nessun duplicato esatto; il confronto percettivo verrà fatto "
-        "all'avvio, dove di norma emerge l'animazione \"in due\"",
-    )
+                     t("mot.plan.dedup_identici", quota=f"{d.duplicate_ratio:.0%}"))
+    return Dedup(True, DEDUP_CONSERVATIVE, 0.0, t("mot.plan.dedup_nessun_esatto"))
 
 
 # ===========================================================================
@@ -626,11 +618,10 @@ PRESET_VALIDI = ("ultrafast", "superfast", "veryfast", "faster", "fast",
 
 def _build_encoding(report: SourceReport, crf: int, preset: str) -> Encoding:
     if preset not in PRESET_VALIDI:
-        raise PlanError(
-            f"preset '{preset}' sconosciuto. Validi: {', '.join(PRESET_VALIDI)}."
-        )
+        raise PlanError(t("mot.plan.preset_sconosciuto", preset=preset,
+                          validi=", ".join(PRESET_VALIDI)))
     if not 0 <= crf <= 51:
-        raise PlanError(f"CRF {crf} fuori scala: x265 accetta da 0 a 51.")
+        raise PlanError(t("mot.plan.crf_fuori_scala", crf=crf))
     # I frame passano per PNG (RGB) e perdono ogni tag: vanno riscritti
     # espliciti, altrimenti il lettore tira a indovinare lo spazio colore.
     # Sorgente che NON dichiara il colore: si applica la convenzione, cioe'
@@ -815,36 +806,36 @@ def build_plan(
     guadagno = target_h / disp_h if disp_h else 0.0
     if guadagno < GUADAGNO_MINIMO and not forza:
         if disp_h >= target_h:
-            motivo = (f"il file è {disp_w}x{disp_h}, già "
-                      + ("esattamente alla dimensione richiesta"
-                         if disp_h == target_h else "più grande del bersaglio")
-                      + f" ({target_w}x{target_h})")
+            bersaglio = f"{target_w}x{target_h}"
+            if disp_h == target_h:
+                motivo = t("mot.plan.gia_uguale", larghezza=disp_w,
+                           altezza=disp_h, bersaglio=bersaglio)
+            else:
+                motivo = t("mot.plan.gia_piu_grande", larghezza=disp_w,
+                           altezza=disp_h, bersaglio=bersaglio)
         else:
-            motivo = (f"da {disp_w}x{disp_h} a {target_w}x{target_h} sono "
-                      f"appena {guadagno:.2f}x, sotto la soglia di "
-                      f"{GUADAGNO_MINIMO}x")
+            motivo = t("mot.plan.guadagno_piccolo",
+                       da=f"{disp_w}x{disp_h}", a=f"{target_w}x{target_h}",
+                       guadagno=f"{guadagno:.2f}", soglia=GUADAGNO_MINIMO)
         raise PlanError(
-            f"{motivo}: non c'è nulla da fare. Questo strumento ingrandisce, "
-            "e solo quando il guadagno vale le ore che costa. Alza l'altezza "
-            "finale per un ingrandimento vero.",
-            "ingrandimento troppo piccolo",
+            t("mot.plan.niente_da_fare", motivo=motivo),
+            t("mot.plan.sintesi_troppo_piccolo"),
         )
 
 
     suggestion = recommend(src_h)
     chosen = model_key or suggestion.model
     if chosen not in CATALOG:
-        raise PlanError(
-            f"Modello '{chosen}' sconosciuto. Disponibili: {', '.join(CATALOG)}."
-        )
+        raise PlanError(t("mot.plan.modello_sconosciuto", modello=chosen,
+                          disponibili=", ".join(CATALOG)))
     model = CATALOG[chosen]
 
     scale = scale_override or _choose_scale(src_h, target_h, model)
     if scale not in model.scales:
         raise PlanError(
-            f"Il modello {model.label} non supporta la scala {scale} "
-            f"(disponibili: {', '.join(str(s) for s in model.scales)}).",
-            "scala non supportata",
+            t("mot.plan.scala_non_supportata", modello=model.label, scala=scale,
+              disponibili=", ".join(str(s) for s in model.scales)),
+            t("mot.plan.sintesi_scala"),
         )
 
     model_w, model_h = src_w * scale, src_h * scale
@@ -935,7 +926,7 @@ def build_plan(
         dedup_plan = Dedup(
             enabled=True, threshold=dedup_plan.threshold,
             expected_ratio=float(dedup_nota),
-            reason=f"{float(dedup_nota):.0%} misurato su questo file",
+            reason=t("mot.plan.dedup_misurata", quota=f"{float(dedup_nota):.0%}"),
             misurata=True,
         )
 
@@ -958,11 +949,8 @@ def build_plan(
         # Il limite del 4x abbassava il bersaglio senza dirlo: chi chiedeva
         # 1080p da un 240p si ritrovava 960p e lo scopriva solo leggendo il
         # nome del file.
-        warnings.append(
-            f"Bersaglio abbassato da {target_height}p a {target_h}p: da "
-            f"{src_w}x{src_h} il quadruplo è il massimo che si può chiedere "
-            "a un modello senza inventare tutto."
-        )
+        warnings.append(t("mot.plan.bersaglio_abbassato", chiesto=target_height,
+                          ottenuto=target_h, sorgente=f"{src_w}x{src_h}"))
     if model_h < target_h:
         # Il divario lo colmerebbe lanczos in fase di codifica: interpolazione
         # pura, cioè esattamente ciò che si stanno pagando ore di GPU per
@@ -974,58 +962,49 @@ def build_plan(
         # modello sarebbe un'istruzione sbagliata, e le istruzioni sbagliate
         # costano più del silenzio.
         if scale_override:
-            rimedio = (f"La scala è forzata a {scale_override}: togli --scala "
-                       f"e lasciala scegliere, oppure abbassa il bersaglio a "
-                       f"{model_h}p")
+            rimedio = t("mot.plan.rimedio_scala_forzata", scala=scale_override,
+                        altezza=model_h)
         else:
             alternative = sorted(
                 k for k, m in CATALOG.items()
                 if k != chosen and src_h * max(m.scales) >= target_h
             )
             rimedio = (
-                "Scegli " + " o ".join(CATALOG[k].short for k in alternative)
+                t("mot.plan.rimedio_scegli", modelli=t("mot.plan.o").join(
+                    CATALOG[k].short for k in alternative))
                 if alternative else
-                f"Nessun modello del catalogo arriva più in alto: da {src_w}x"
-                f"{src_h} il massimo onesto è {model_h}p. Abbassa il bersaglio"
+                t("mot.plan.rimedio_nessuno", sorgente=f"{src_w}x{src_h}",
+                  altezza=model_h)
             )
-        messaggio = (
-            f"{model.label} arriva al massimo a {model_w}x{model_h}, sotto il "
-            f"bersaglio {target_w}x{target_h}: l'ultimo tratto lo farebbe "
-            f"lanczos, cioè ingrandimento senza dettaglio aggiunto. {rimedio}."
-        )
+        messaggio = t("mot.plan.non_arriva", modello=model.label,
+                      massimo=f"{model_w}x{model_h}",
+                      bersaglio=f"{target_w}x{target_h}", rimedio=rimedio)
         if not forza:
-            raise PlanError(messaggio, f"non arriva a {target_h}p")
-        warnings.append("Forzato: " + messaggio)
+            raise PlanError(messaggio, t("mot.plan.sintesi_non_arriva",
+                                         altezza=target_h))
+        warnings.append(t("mot.plan.forzato", messaggio=messaggio))
     if forza and guadagno < GUADAGNO_MINIMO:
-        warnings.append(
-            f"Forzato: l'ingrandimento è di appena {guadagno:.2f}x, sotto la "
-            f"soglia di {GUADAGNO_MINIMO}x. Costa le ore di un ingrandimento "
-            "pieno per pochi pixel in più."
-        )
+        warnings.append(t("mot.plan.forzato_guadagno",
+                          guadagno=f"{guadagno:.2f}", soglia=GUADAGNO_MINIMO))
     if report.timing.mode is Timebase.VFR:
-        warnings.append(
-            "Sorgente VFR: i frame verranno estratti su reticolo costante "
-            f"a {float(fps):.3f} fps. Il sorgente non viene ricompresso."
-        )
+        warnings.append(t("mot.plan.vfr", fps=f"{float(fps):.3f}"))
     if "mov_text" in report.subtitle_codecs:
-        warnings.append("Sottotitoli mov_text convertiti in SRT (MKV non li copia).")
+        warnings.append(t("mot.plan.mov_text"))
     if free_gb < 60:
-        warnings.append(f"Spazio libero ridotto ({free_gb:.0f} GB).")
+        warnings.append(t("mot.plan.spazio_ridotto", liberi=f"{free_gb:.0f}"))
     # Lo spazio dedicato non basta nemmeno per cio' che NON si puo' spezzare.
     # Va detto qui, prima di partire, con il numero che serve: e' l'unico modo
     # per non ritrovarsi a scoprirlo con il disco pieno a meta' coda. Prima
     # l'app ripiegava in silenzio su blocchi minuscoli e andava avanti lo
     # stesso, sforando di quattro o nove volte lo spazio chiesto.
     if incomprimibile > float(peak_disk_gb):
-        warnings.append(
-            f"Servono almeno {incomprimibile:.0f} GB solo per i fotogrammi "
-            f"estratti e il video, piu' dei {float(peak_disk_gb):.0f} GB "
-            f"dedicati: il picco sara' di ~{sorgenti_gb + video_gb + chunk_size * up_mb / 1024:.0f} GB.")
+        warnings.append(t(
+            "mot.plan.spazio_insufficiente", servono=f"{incomprimibile:.0f}",
+            dedicati=f"{float(peak_disk_gb):.0f}",
+            picco=f"{sorgenti_gb + video_gb + chunk_size * up_mb / 1024:.0f}"))
     elif disponibile < TETTO_BLOCCO_GB and chunks > BLOCCHI_MINIMI:
-        warnings.append(
-            f"Spazio stretto: restano {max(disponibile, 0):.0f} GB per i "
-            f"blocchi dopo i fotogrammi, quindi {chunks} blocchi invece di "
-            f"meno. Dedicando piu' spazio si accorcia di qualche minuto.")
+        warnings.append(t("mot.plan.spazio_stretto",
+                          restano=f"{max(disponibile, 0):.0f}", blocchi=chunks))
 
     # «upscale» solo se il bersaglio e' PIU' ALTO del sorgente. A parita' di
     # altezza (o sotto, col forza) il modello ingrandisce e poi si riduce:

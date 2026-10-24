@@ -41,6 +41,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .ffmpeg import run_stderr
+from .i18n import t
 from .paths import PATHS, Paths
 
 _YMAX = re.compile(r"YMAX=([0-9.]+)")
@@ -389,8 +390,8 @@ def audit(diffs: list[float], dmap: DedupMap) -> DedupAudit:
 def describe(dmap: DedupMap) -> str:
     """Riga di riepilogo leggibile."""
     return (
-        f"{dmap.unique}/{dmap.total} fotogrammi da elaborare "
-        f"({dmap.saving:.1%} risparmiato) - sequenze max {dmap.longest_run}, "
-        f"media {sum(dmap.runs)/len(dmap.runs):.1f}" if dmap.runs
-        else f"{dmap.unique}/{dmap.total} fotogrammi da elaborare"
+        t("mot.dedup.riepilogo", unici=dmap.unique, totale=dmap.total,
+          risparmio=f"{dmap.saving:.1%}", massima=dmap.longest_run,
+          media=f"{sum(dmap.runs)/len(dmap.runs):.1f}") if dmap.runs
+        else t("mot.dedup.riepilogo_breve", unici=dmap.unique, totale=dmap.total)
     )

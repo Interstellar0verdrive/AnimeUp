@@ -26,6 +26,7 @@ import subprocess
 import time
 from pathlib import Path
 
+from .i18n import t
 from .models import CATALOG
 from .paths import PATHS, Paths
 
@@ -156,7 +157,7 @@ def preventivo(paths: Paths | None = None, *,
     n_previsto = min(FOTOGRAMMI_MISURA, pacchetti)
     nota = carica(p) or {}
 
-    tappe = [("estrazione dei fotogrammi",
+    tappe = [(t("mot.taratura.tappa_estrazione"),
               pacchetti / float(nota.get("estrazione_fps") or 60.0))]
     # La prova dei thread di salvataggio: quattro giri sullo stesso lotto
     # ridotto. Il costo si stima con lo stesso ritmo del modello che usa.
@@ -165,18 +166,19 @@ def preventivo(paths: Paths | None = None, *,
                     .get(str(_scala_prova))
                     or CATALOG[_chiave_prova].throughput.get(_scala_prova, 1.0))
     _quante_prove = len(candidati_salvataggio()) or 1
-    tappe.append(("thread di salvataggio",
+    tappe.append((t("mot.taratura.tappa_salvataggio"),
                   _quante_prove * FOTOGRAMMI_SALVATAGGIO
                   * src_mpx / float(_ritmo_prova)))
     for chiave, modello, scala in _combinazioni():
         ritmo = (nota.get("mpxs", {}).get(chiave, {}).get(str(scala))
                  or modello.throughput.get(
                      scala, min(modello.throughput.values())))
-        tappe.append((f"upscale {modello.short} x{scala}",
+        tappe.append((t("mot.taratura.tappa_upscale", modello=modello.short,
+                        scala=scala),
                       n_previsto * src_mpx / float(ritmo)))
-    tappe.append(("codifica x265",
+    tappe.append((t("mot.taratura.tappa_codifica"),
                   n_previsto / float(nota.get("codifica_fps") or 8.0)))
-    tappe.append(("scansione per la deduplica",
+    tappe.append((t("mot.taratura.tappa_scansione"),
                   pacchetti / float(nota.get("scansione_fps") or 200.0)))
     return tappe
 
@@ -264,25 +266,23 @@ def frase_salvataggio(voce: dict | None) -> str:
         return ""
 
     elenco = ", ".join(str(k) for k in sorted(ritmi))
-    testa = f"Thread di salvataggio: {scelti}"
+    testa = t("mot.taratura.salvataggio_testa", thread=scelti)
     predefinito = salvataggio_predefinito()
     base = ritmi.get(predefinito)
     if base is None:
         # Il metro di paragone non e' stato misurato: nessun confronto e'
         # avvenuto, e dirlo e' l'unica cosa onesta.
-        return (f"{testa} — la prova del valore predefinito non e' riuscita, "
-                f"quindi non si e' cambiato niente.")
+        return t("mot.taratura.salvataggio_senza_base", testa=testa)
     if int(scelti) == predefinito:
         migliore = max(ritmi, key=lambda k: ritmi[k])
         if migliore != predefinito:
-            return (f"{testa} — provati {elenco}: il migliore guadagnava solo "
-                    f"il {ritmi[migliore] / base - 1:.0%}, sotto la soglia "
-                    f"che vale il cambio.")
-        return f"{testa} — provati {elenco}, nessuno ha fatto meglio."
+            return t("mot.taratura.salvataggio_poco", testa=testa, provati=elenco,
+                     guadagno=f"{ritmi[migliore] / base - 1:.0%}")
+        return t("mot.taratura.salvataggio_nessuno", testa=testa, provati=elenco)
     if int(scelti) in ritmi:
-        return (f"{testa} invece di {predefinito}: "
-                f"{ritmi[int(scelti)] / base - 1:+.0%} sull'upscale alle scale "
-                f"alte, con l'uscita identica.")
+        return t("mot.taratura.salvataggio_cambiato", testa=testa,
+                 predefinito=predefinito,
+                 guadagno=f"{ritmi[int(scelti)] / base - 1:+.0%}")
     return testa
 
 
@@ -317,15 +317,10 @@ def esegui(paths: Paths | None = None, *, clip: Path | None = None,
     p = paths or PATHS
     sorgente = clip or (p.root / "campioni" / CLIP)
     if not sorgente.is_file():
-        raise FileNotFoundError(
-            f"clip campione mancante: {sorgente}. Serve campioni/{CLIP} "
-            "(vedi campioni/LEGGIMI.md)."
-        )
+        raise FileNotFoundError(t("mot.taratura.clip_mancante", percorso=sorgente,
+                                  clip=CLIP))
     if in_corso(p):
-        raise RuntimeError(
-            "una taratura è già in corso su questa macchina: aspetta che "
-            "finisca (prosegue anche a finestra chiusa)."
-        )
+        raise RuntimeError(t("mot.taratura.gia_in_corso"))
 
     lavoro = p.root / ".cache" / "taratura"
     shutil.rmtree(lavoro, ignore_errors=True)
@@ -571,7 +566,7 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
         avanzamento(etichetta, passo, passi, fatto / costo_totale, resta)
 
     # --- 1. estrazione: gli stessi flag della produzione (encode.py) -------
-    _di("estrazione dei fotogrammi")
+    _di(t("mot.taratura.tappa_estrazione"))
     frames = lavoro / "frames"
     inizio = time.monotonic()
     subprocess.run(
@@ -587,7 +582,7 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
     durata_estrazione = time.monotonic() - inizio
     estratti = sum(1 for _ in frames.glob("*.png"))
     if not estratti:
-        raise RuntimeError("estrazione fallita: nessun fotogramma prodotto")
+        raise RuntimeError(t("mot.taratura.estrazione_fallita"))
     fps_estrazione = estratti / durata_estrazione
 
     # Il sottoinsieme cronometrato: hard link, costo zero.
@@ -603,7 +598,7 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
     # --- 2. thread di salvataggio: quanti ne vuole QUESTA macchina ---------
 
     from .backend import upscale_dir
-    _di("thread di salvataggio")
+    _di(t("mot.taratura.tappa_salvataggio"))
     salvataggio, prove_salvataggio = _prova_salvataggio(p, frames, lavoro)
 
     # --- 3. upscale: ogni combinazione modello x scala ----------------------
@@ -611,7 +606,7 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
     mpxs: dict[str, dict[str, float]] = {}
     cartella_per_codifica: Path | None = None
     for chiave, modello, scala in combinazioni:
-        _di(f"upscale {modello.short} x{scala}")
+        _di(t("mot.taratura.tappa_upscale", modello=modello.short, scala=scala))
         dst = lavoro / f"up-{chiave}-x{scala}"
         inizio = time.monotonic()
         upscale_dir(campione, dst, scale=scala, model=modello, paths=p,
@@ -619,10 +614,9 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
         durata = time.monotonic() - inizio
         fatti = sum(1 for _ in dst.glob("*.png"))
         if fatti < n_campione:
-            raise RuntimeError(
-                f"{modello.label} x{scala}: prodotti {fatti} fotogrammi "
-                f"su {n_campione} — misura non attendibile, taratura interrotta"
-            )
+            raise RuntimeError(t("mot.taratura.upscale_incompleto",
+                                 modello=modello.label, scala=scala,
+                                 fatti=fatti, attesi=n_campione))
         ritmo = _ritmo_da_mtime(dst, durata)
         mpxs.setdefault(chiave, {})[str(scala)] = round(ritmo * src_mpx, 3)
         # La scala 3 di ESRGAN produce ~1440p: il campione giusto per la
@@ -635,7 +629,7 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
             shutil.rmtree(dst, ignore_errors=True)
 
     # --- 4. codifica: x265 coi parametri di produzione, uscita 1080p --------
-    _di("codifica x265")
+    _di(t("mot.taratura.tappa_codifica"))
     fps_codifica = 0.0
     if cartella_per_codifica is not None:
         uscita = lavoro / "codifica.mkv"
@@ -658,7 +652,7 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
             fps_codifica = n_campione / durata
 
     # --- 5. la scansione che misura i fotogrammi ripetuti ------------------
-    _di("scansione per la deduplica")
+    _di(t("mot.taratura.tappa_scansione"))
     # Si misura sui fotogrammi GIA' ESTRATTI, esattamente come in
     # produzione: e' la stessa chiamata che fa la pipeline.
     fps_scansione = 0.0

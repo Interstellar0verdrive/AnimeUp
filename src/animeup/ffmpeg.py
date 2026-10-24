@@ -11,6 +11,7 @@ import threading
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
+from .i18n import t
 from .paths import PATHS, Paths
 
 
@@ -22,7 +23,7 @@ class FFmpegError(RuntimeError):
         self.returncode = returncode
         self.stderr = stderr.strip()
         tail = "\n".join(self.stderr.splitlines()[-8:])
-        super().__init__(f"comando fallito (exit {returncode}):\n{tail}")
+        super().__init__(t("mot.ffmpeg.fallito", codice=returncode) + f"\n{tail}")
 
 
 def run(cmd: Sequence[str], *, timeout: float | None = None) -> str:
