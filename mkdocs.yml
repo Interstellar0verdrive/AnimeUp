@@ -1,0 +1,90 @@
+site_name: AnimeUp user guide
+site_description: Step-by-step guide to AnimeUp, the local, offline anime upscaler for Apple Silicon Macs.
+site_url: https://interstellar0verdrive.github.io/AnimeUp/
+repo_url: https://github.com/Interstellar0verdrive/AnimeUp
+repo_name: Interstellar0verdrive/AnimeUp
+edit_uri: edit/main/docs/
+docs_dir: docs
+site_dir: site
+exclude_docs: |
+  USER_GUIDE.md
+
+nav:
+  - Home: guide/index.md
+  - Guide:
+      - 01. Install and first launch: guide/01-install.md
+      - 02. Calibrate your Mac: guide/02-calibration.md
+      - 03. The interface and its settings: guide/03-interface.md
+      - '04. Sources: check your files': guide/04-sources.md
+      - '05. Compare: choose the model by eye': guide/05-compare.md
+      - '06. Processing: run, monitor, stop and resume': guide/06-processing.md
+      - 07. Output files and folders: guide/07-output-and-folders.md
+  - Reference:
+      - Command-line reference: guide/reference/command-line.md
+      - Troubleshooting: guide/reference/troubleshooting.md
+  - Deep dives:
+      - How a job works inside: guide/deep-dives/how-it-works.md
+      - The models and when to use them: guide/deep-dives/models.md
+      - Tuning notes: TUNING.md
+
+theme:
+  name: material
+  language: en
+  logo: assets/animeup-logo.png
+  favicon: assets/animeup-favicon.png
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-7
+        name: Use light appearance
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Use dark appearance
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-auto
+        name: Use system appearance
+  features:
+    - navigation.sections
+    - navigation.path
+    - navigation.footer
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.action.edit
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+extra_css:
+  - stylesheets/extra.css
+
+copyright: >-
+  AnimeUp code: <a href="https://github.com/Interstellar0verdrive/AnimeUp/blob/main/LICENSE">MIT</a>.
+  Guide images featuring <a href="https://archive.org/details/morevna-ep3">Morevna Episode 3</a>:
+  &copy; Morevna Project, <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>.
+  <a href="https://peach.blender.org/">Big Buck Bunny</a>:
+  &copy; 2008 Blender Foundation, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.

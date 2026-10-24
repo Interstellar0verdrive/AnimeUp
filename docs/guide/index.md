@@ -3,11 +3,16 @@ title: AnimeUp user guide
 description: Step-by-step guide to AnimeUp, the local, offline anime upscaler for Apple Silicon Macs.
 ---
 
-<span class="eyebrow">User guide · AnimeUp 1.4</span>
+<header class="animeup-hero">
+  <img class="animeup-hero__icon" src="../assets/animeup-logo.png" alt="AnimeUp app icon">
+  <div class="animeup-hero__copy">
+    <span class="eyebrow">User guide · AnimeUp 1.4</span>
+    <h1>AnimeUp user guide</h1>
+    <p>Upscale anime episodes to 1080p and beyond on your own Mac, offline, with Real-ESRGAN and Real-CUGAN, and choose the model by looking at the result.</p>
+  </div>
+</header>
 
-# AnimeUp user guide
-
-Upscale anime episodes to 1080p and beyond on your own Mac, offline, with Real-ESRGAN and Real-CUGAN, and choose the model by looking at the result.
+![Before and after: a 360p frame enlarged to 1080p with AnimeUp](../images/before-after.png){ .animeup-cover }
 
 ![The AnimeUp window: settings sidebar on the left, the Processing tab with a job running on the right](img/overview.png)
 
