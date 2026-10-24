@@ -1,0 +1,73 @@
+# Tema "Dark Mode Developer" da github.com/jmedia65/awesome-streamlit-themes
+#
+# I font stanno in app/static/, scaricati dallo stesso repo insieme alle loro
+# licenze (OFL-*.txt). Servirli da li' richiede enableStaticServing: senza,
+# Streamlit ricadrebbe in silenzio sul font di sistema.
+#
+# JetBrainsMono-Bold non esiste nel repo (solo Regular e Medium), quindi non
+# viene dichiarato: dichiarare un file assente e' peggio che non averlo.
+
+[server]
+enableStaticServing = true
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter_18pt-Regular.ttf"
+style = "normal"
+weight = 400
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter_18pt-Medium.ttf"
+style = "normal"
+weight = 500
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter_18pt-SemiBold.ttf"
+style = "normal"
+weight = 600
+
+[[theme.fontFaces]]
+family = "Inter"
+url = "app/static/Inter_18pt-Bold.ttf"
+style = "normal"
+weight = 700
+
+[[theme.fontFaces]]
+family = "JetBrainsMono"
+url = "app/static/JetBrainsMono-Regular.ttf"
+style = "normal"
+weight = 400
+
+[[theme.fontFaces]]
+family = "JetBrainsMono"
+url = "app/static/JetBrainsMono-Medium.ttf"
+style = "normal"
+weight = 500
+
+[theme]
+# Accento. Il viola del tema originale non c'entrava niente con questo
+# progetto: qui si guardano fotogrammi, e un accento acido compete con
+# l'immagine invece di stare al suo posto. Corallo acceso, che e' vivo ma
+# caldo e non tira l'occhio via dai contenuti.
+# Alternative gia' provate, basta scambiare la riga:
+#   "#22d3ee"  ciano elettrico, piu' freddo e tecnico
+#   "#f59e0b"  ambra, molto caldo
+primaryColor = "#ff5c47"
+backgroundColor = "#0d1117"          # fondo scuro alla GitHub
+secondaryBackgroundColor = "#161b22" # schede e sezioni
+textColor = "#f0f6fc"
+linkColor = "#58a6ff"
+borderColor = "#30363d"
+showWidgetBorder = true
+baseRadius = "0.375rem"
+codeBackgroundColor = "#21262d"
+font = "Inter"
+headingFont = "Inter"
+codeFont = "JetBrainsMono"
+showSidebarBorder = true
+
+[theme.sidebar]
+backgroundColor = "#161b22"
+secondaryBackgroundColor = "#21262d"
