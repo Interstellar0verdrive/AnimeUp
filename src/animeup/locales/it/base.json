@@ -123,5 +123,6 @@
   "probe.mov_text": "Sottotitoli in formato mov_text: non copiabili in MKV, verranno convertiti in SRT.",
   "probe.no_video": "Nessuna traccia video utilizzabile: il file non è elaborabile.",
   "probe.colore_hd": "Metadati colore assenti: verrà assunto BT.709 (sorgente HD), secondo la convenzione, e i tag verranno scritti espliciti nell'uscita.",
-  "probe.colore_sd": "Metadati colore assenti: verrà assunto BT.601 (sorgente SD), secondo la convenzione, e i tag verranno scritti espliciti nell'uscita."
+  "probe.colore_sd": "Metadati colore assenti: verrà assunto BT.601 (sorgente SD), secondo la convenzione, e i tag verranno scritti espliciti nell'uscita.",
+  "sb.interfaccia": "Interfaccia"
 }
