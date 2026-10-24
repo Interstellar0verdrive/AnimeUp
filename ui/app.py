@@ -185,10 +185,8 @@ def _nota_taratura() -> str:
     if voce:
         import datetime
         quando = datetime.datetime.fromtimestamp(voce["quando"])
-        return (f"Stime tarate su questo Mac il "
-                f"{quando.strftime('%d/%m')}.")
-    return ("Stime di fabbrica: con «./animeup taratura» si adattano "
-            "a questo Mac in ~10 minuti.")
+        return t("lav.nota_tarata", data=quando.strftime(t("lav.fmt_giorno")))
+    return t("lav.nota_fabbrica")
 
 st.set_page_config(page_title="AnimeUp", page_icon="▲", layout="wide")
 
@@ -3173,8 +3171,7 @@ def _segna_lancio_visto(lancio: dict) -> None:
 # "Terminata" e non "completata": il titolo non deve smentire quello che
 # c'e' scritto due righe sotto ("1 file non completato"). Dice che il
 # processo e' finito, non che sia andato tutto bene (scelta dell'utente).
-@st.dialog("Elaborazione terminata")
-def _modale_fine_coda(lancio: dict) -> None:
+def _contenuto_fine_coda(lancio: dict) -> None:
     """Il resoconto di fine coda: cosa e' uscito, in quanto, con che avvisi.
 
     Compare una volta sola, alla prima apertura utile: se AnimeUp era chiuso
@@ -3199,9 +3196,9 @@ def _modale_fine_coda(lancio: dict) -> None:
     # `<b>` e non `**`: qui il markdown non passa, e gli asterischi si
     # vedevano tali e quali.
     st.markdown(
-        f"<div class='au-fine-testa'>{n_ok} file "
-        f"{'completato' if n_ok == 1 else 'completati'} su {n_tot}<br>"
-        f"Tempo di lavorazione: <b>{stima_hm(secondi)}</b></div>",
+        f"<div class='au-fine-testa'>"
+        f"{tn('lav.fine_completati', n_ok, totale=n_tot)}<br>"
+        f"{t('lav.fine_tempo', durata=stima_hm(secondi))}</div>",
         unsafe_allow_html=True)
 
     if lancio.get("inizio") and lancio.get("fine"):
@@ -3215,13 +3212,16 @@ def _modale_fine_coda(lancio: dict) -> None:
         # secondo conteggio invece che come il periodo in cui si e' lavorato
         # (detto dall'utente il 12/08). I due verbi lo dicono e basta.
         if (da.tm_year, da.tm_yday) == (a.tm_year, a.tm_yday):
-            quando = (f"Iniziata alle {time.strftime('%H:%M', da)} e "
-                      f"terminata alle {time.strftime('%H:%M', a)}")
+            quando = t("lav.fine_stesso_giorno",
+                       inizio=time.strftime('%H:%M', da),
+                       fine=time.strftime('%H:%M', a))
         else:
-            quando = (f"Iniziata il {time.strftime('%d/%m', da)} alle "
-                      f"{time.strftime('%H:%M', da)} e terminata il "
-                      f"{time.strftime('%d/%m', a)} alle "
-                      f"{time.strftime('%H:%M', a)}")
+            giorno = t("lav.fmt_giorno")
+            quando = t("lav.fine_giorni_diversi",
+                       giorno_inizio=time.strftime(giorno, da),
+                       inizio=time.strftime('%H:%M', da),
+                       giorno_fine=time.strftime(giorno, a),
+                       fine=time.strftime('%H:%M', a))
         st.markdown(f"<div class='au-fine-quando'>{quando}</div>",
                     unsafe_allow_html=True)
 
@@ -3231,18 +3231,19 @@ def _modale_fine_coda(lancio: dict) -> None:
     n_avvisi = int(lancio.get("avvisi") or 0)
     voci: list[tuple[str, str]] = []
     if n_ok > 1:
-        voci.append(("Tempo medio per file", stima_hm(secondi / n_ok)))
+        voci.append((t("lav.fine_medio"), stima_hm(secondi / n_ok)))
     if respiro > 90:
-        voci.append(("Pause", stima_hm(respiro)))
+        voci.append((t("lav.fine_pause"), stima_hm(respiro)))
     # `is not None` e non la verita' del valore: una deduplica misurata allo
     # ZERO — attiva, ma su questo materiale non ha trovato niente — e' un
     # risultato, e sparendo dal resoconto diventava indistinguibile da
     # «deduplica spenta», che scrive `null`. Sono due cose diverse e chi
     # legge deve poterle distinguere.
     if lancio.get("dedup_medio") is not None:
-        voci.append(("Deduplica media",
-                     f"{float(lancio['dedup_medio']):.1%}".replace(".", ",")))
-    voci.append(("Avvisi", str(n_avvisi)))
+        voci.append((t("lav.fine_dedup"),
+                     f"{float(lancio['dedup_medio']):.1%}".replace(
+                         ".", t("lav.fmt_decimale"))))
+    voci.append((t("lav.fine_avvisi"), str(n_avvisi)))
     st.markdown(
         "<div class='au-fine-stat'>"
         + "".join(f"<div><span>{esc(k)}</span><span>{esc(v)}</span></div>"
@@ -3250,13 +3251,13 @@ def _modale_fine_coda(lancio: dict) -> None:
         + "</div>", unsafe_allow_html=True)
 
     if falliti:
-        uno = len(falliti) == 1
         st.markdown(
-            f"<div class='au-fine-guai'>{len(falliti)} file non "
-            f"{'completato' if uno else 'completati'}</div>"
+            f"<div class='au-fine-guai'>"
+            f"{tn('lav.fine_non_completati', len(falliti))}</div>"
             + "".join(f"<div class='au-fine-nome'>{esc(n)}</div>"
                       for n in falliti[:4])
-            + (f"<div class='au-fine-quando'>e altri {len(falliti) - 4}</div>"
+            + (f"<div class='au-fine-quando'>"
+               f"{t('lav.fine_e_altri', n=len(falliti) - 4)}</div>"
                if len(falliti) > 4 else ""),
             unsafe_allow_html=True)
 
@@ -3270,12 +3271,12 @@ def _modale_fine_coda(lancio: dict) -> None:
 
     with st.container(key="cFineAzioni"):
         a, b = st.columns(2)
-        if a.button("Apri la cartella", type="primary",
+        if a.button(t("lav.fine_apri"), type="primary",
                     use_container_width=True):
             subprocess.run(["open", str(PATHS.output)], check=False)
             _chiudi()
             st.rerun()
-        if b.button("Chiudi", use_container_width=True):
+        if b.button(t("lav.chiudi"), use_container_width=True):
             _chiudi()
             st.rerun()
 
@@ -3288,8 +3289,15 @@ def _modale_fine_coda(lancio: dict) -> None:
         st.balloons()
 
 
-@st.dialog("Taratura delle stime", width="large")
-def _modale_taratura() -> None:
+# Il titolo della modale si traduce a ogni apertura: `@st.dialog("...")` in
+# testa alla funzione lo fisserebbe nella lingua attiva all'avvio. Il
+# frammento della modale resta lo stesso (Streamlit lo riconosce dal nome
+# della funzione del contenuto), quindi i rerun interni non cambiano.
+def _modale_fine_coda(lancio: dict) -> None:
+    st.dialog(t("lav.fine_titolo"))(_contenuto_fine_coda)(lancio)
+
+
+def _contenuto_taratura() -> None:
     """Il processo a passi: presentazione -> cronometro -> confronto.
 
     Una modale e non una tab: si fa una volta per macchina (e la si rifa'
@@ -3308,26 +3316,20 @@ def _modale_taratura() -> None:
         with zona.container():
             st.markdown("<span class='au-tar-passo au-tar-p1'></span>",
                         unsafe_allow_html=True)
-            st.markdown(
-                "Misura le prestazioni effettive di questo Mac e aggiorna "
-                "di conseguenza tutte le future stime dei tempi. La "
-                "procedura richiede circa dieci minuti, in base alla "
-                "velocità di CPU e GPU.")
-            st.markdown(
-                "Per ogni modello e livello di scala viene elaborata una "
-                "clip campione. Vengono misurati anche i tempi di "
-                "estrazione e codifica: i risultati ottenuti sostituiranno "
-                "i valori predefiniti o precedenti tarature.")
+            st.markdown(t("lav.tar_intro"))
+            st.markdown(t("lav.tar_intro_dettagli"))
             if voce:
                 import datetime
                 quando = datetime.datetime.fromtimestamp(voce["quando"])
-                st.markdown(f"<span class='au-meta'>Ultima taratura eseguita "
-                            f"su questo Mac: "
-                            f"{quando.strftime('%d/%m/%Y alle %H:%M')}."
+                _quando = quando.strftime(t("lav.fmt_data_alle"))
+                st.markdown(f"<span class='au-meta'>"
+                            f"{t('lav.tar_ultima', quando=_quando)}"
                             "</span>", unsafe_allow_html=True)
-                with st.expander("Valori attuali"):
+                with st.expander(t("lav.tar_valori")):
                     def _tab(voci):
-                        corpo = ["| misura | valore |", "|---|---:|"]
+                        corpo = [f"| {t('lav.tar_col_misura')} "
+                                 f"| {t('lav.tar_col_valore')} |",
+                                 "|---|---:|"]
                         corpo += [f"| {nome} | {valore} |"
                                   for nome, valore in voci]
                         return "\n".join(corpo)
@@ -3353,9 +3355,9 @@ def _modale_taratura() -> None:
                         c1.markdown(_tab(_modello(["animevideov3"])))
                         c2.markdown(_tab(_modello(["cugan-denoise", "cugan"])))
                         c3.markdown(_tab([
-                            ("estrazione",
+                            (t("lav.tar_estrazione"),
                              f"{voce.get('estrazione_fps', 0):.0f} f/s"),
-                            ("codifica x265",
+                            (t("lav.tar_codifica"),
                              f"{voce.get('codifica_fps', 0):.1f} f/s"),
                         ]))
                     # Anche qui, come nel riepilogo finale: e' parte di cio'
@@ -3368,18 +3370,13 @@ def _modale_taratura() -> None:
                         st.markdown(f"<span class='au-meta'>{esc(_salv)}</span>",
                                     unsafe_allow_html=True)
             else:
-                st.markdown("<span class='au-meta'>Questo Mac non è mai stato "
-                            "tarato: le stime usano i numeri di fabbrica, "
-                            "misurati su un'altra macchina.</span>",
+                st.markdown(f"<span class='au-meta'>{t('lav.tar_mai')}</span>",
                             unsafe_allow_html=True)
             occupata = (any(l.vivo for l in monitor.lavori())
                         or monitor.catena() is not None
                         or monitor.pausa() is not None)
             if occupata:
-                st.error("C'è una lavorazione in corso: il cronometro "
-                         "misurerebbe una GPU occupata e i numeri sarebbero "
-                         "tutti sbagliati. Ferma tutto dalla barra di "
-                         "Lavorazione e riapri questa finestra.")
+                st.error(t("lav.tar_occupata"))
                 return
             st.markdown(
                 "<div class='au-tar-avviso'>"
@@ -3390,26 +3387,19 @@ def _modale_taratura() -> None:
                 "1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>"
                 "<line x1='12' y1='9' x2='12' y2='13'/>"
                 "<line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
-                "<span><b>Prima di iniziare</b>: si consiglia di chiudere "
-                "le applicazioni che richiedono molte risorse e di non "
-                "avviare altri programmi durante la procedura."
+                f"<span>{t('lav.tar_prima')}"
                 "</span></div>", unsafe_allow_html=True)
-            avviato = st.button('Avvia la taratura', type='primary',
+            avviato = st.button(t('lav.tar_avvia'), type='primary',
                                  key='tarAvvia')
         if avviato:
             zona.empty()
             st.markdown("<span class='au-tar-passo au-tar-p2'></span>",
                         unsafe_allow_html=True)
-            st.markdown("**Taratura in corso.**")
+            st.markdown(f"**{t('lav.tar_in_corso')}**")
             # Testo normale e non `au-meta`: quella classe e' monospazio,
             # buona per un'etichetta corta ma non per due frasi di prosa.
-            st.markdown(
-                "È possibile chiudere questa finestra: la taratura "
-                "continuerà in background e i risultati verranno salvati "
-                "automaticamente.  \n"
-                "Nel frattempo, si consiglia di non avviare attività che "
-                "richiedono molte risorse di CPU o GPU, poiché potrebbero "
-                "compromettere l'accuratezza delle misurazioni.")
+            st.markdown(f"{t('lav.tar_chiudibile')}  \n"
+                        f"{t('lav.tar_nel_frattempo')}")
             st.session_state["tar_precedente"] = taratura.carica()
             # I pesi vengono dallo stesso preventivo che muove la barra
             # dentro il motore: una sola verita'. Se il modulo in memoria e'
@@ -3423,9 +3413,7 @@ def _modale_taratura() -> None:
 
             def _quanto(resta: float) -> str:
                 minuti = max(1, round(resta / 60))
-                if minuti == 1:
-                    return "circa un minuto al termine"
-                return f"circa {minuti} minuti al termine"
+                return tn("lav.tar_resta", minuti)
 
             def _segmenti(indice: int, totale: int) -> str:
                 pesi = tappe if len(tappe) == totale else [1.0] * totale
@@ -3439,7 +3427,7 @@ def _modale_taratura() -> None:
 
             barra.markdown(
                 f"{_segmenti(0, len(tappe) or 9)}"
-                "<div class='au-tar-stato'>preparazione…</div>",
+                f"<div class='au-tar-stato'>{t('lav.tar_preparazione')}</div>",
                 unsafe_allow_html=True)
 
             # `frazione` e `resta` con un valore di ripiego: il server
@@ -3462,11 +3450,11 @@ def _modale_taratura() -> None:
                 st.session_state["tar_nuova"] = taratura.esegui(
                     avanzamento=_avanzamento)
             except (OSError, RuntimeError, FileNotFoundError) as errore:
-                st.error(f"Taratura interrotta: {errore}")
+                st.error(t("lav.tar_interrotta", errore=errore))
                 return
             barra.markdown(
                 f"{_segmenti(999, len(tappe) or 9)}"
-                "<div class='au-tar-stato'>finito</div>",
+                f"<div class='au-tar-stato'>{t('lav.tar_finito')}</div>",
                 unsafe_allow_html=True)
             st.session_state["tar_fase"] = "esito"
             st.rerun(scope="fragment")
@@ -3477,21 +3465,17 @@ def _modale_taratura() -> None:
     prima = st.session_state.get("tar_precedente")
     st.markdown("<span class='au-tar-passo au-tar-p3'></span>",
                 unsafe_allow_html=True)
-    st.markdown(
-        "La taratura è stata completata con successo e salvata in "
-        "`registri/taratura.json`.")
-    st.markdown(
-        "Da questo momento, tutte le stime su questo Mac utilizzeranno i "
-        "valori aggiornati.  \n"
-        "È possibile ripetere la taratura in qualsiasi momento tramite "
-        "l'apposito link nella barra laterale.")
+    st.markdown(t("lav.tar_salvata"))
+    st.markdown(f"{t('lav.tar_da_ora')}  \n{t('lav.tar_ripetibile')}")
 
     def _scarto(nuovo, riferimento):
         if not (nuovo and riferimento):
             return "—"
         return f"{(nuovo / riferimento - 1) * 100:+.0f}%"
 
-    righe = ["| misura | di fabbrica | precedente | nuova | scarto |",
+    righe = [f"| {t('lav.tar_col_misura')} | {t('lav.tar_col_fabbrica')} "
+             f"| {t('lav.tar_col_precedente')} | {t('lav.tar_col_nuova')} "
+             f"| {t('lav.tar_col_scarto')} |",
              "|---|---:|---:|---:|---:|"]
     for chiave, modello in CATALOG.items():
         for scala in modello.scales:
@@ -3506,10 +3490,11 @@ def _modale_taratura() -> None:
                 f"| {_scarto(nuo, pre or fab)} |")
     pre_e = (prima or {}).get("estrazione_fps")
     pre_c = (prima or {}).get("codifica_fps")
-    righe.append(f"| estrazione | 60 f/s | {f'{pre_e:.0f} f/s' if pre_e else '—'} "
+    righe.append(f"| {t('lav.tar_estrazione')} | 60 f/s "
+                 f"| {f'{pre_e:.0f} f/s' if pre_e else '—'} "
                  f"| {nuova.get('estrazione_fps', 0):.0f} f/s "
                  f"| {_scarto(nuova.get('estrazione_fps'), pre_e or 60.0)} |")
-    righe.append(f"| codifica x265 (1080p) | 8.0 f/s "
+    righe.append(f"| {t('lav.tar_codifica')} (1080p) | 8.0 f/s "
                  f"| {f'{pre_c:.1f} f/s' if pre_c else '—'} "
                  f"| {nuova.get('codifica_fps', 0):.1f} f/s "
                  f"| {_scarto(nuova.get('codifica_fps'), pre_c or 8.0)} |")
@@ -3523,12 +3508,16 @@ def _modale_taratura() -> None:
     if _frase_salv:
         st.markdown(f"<span class='au-meta'>{esc(_frase_salv)}</span>",
                     unsafe_allow_html=True)
-    st.markdown("<span class='au-meta'>Nota: lo scarto è verso la taratura "
-                "precedente se esiste, altrimenti verso i numeri di "
-                "fabbrica.</span>", unsafe_allow_html=True)
-    if st.button("Chiudi", type="primary", key="tarChiudi"):
+    st.markdown(f"<span class='au-meta'>{t('lav.tar_nota_scarto')}</span>",
+                unsafe_allow_html=True)
+    if st.button(t("lav.chiudi"), type="primary", key="tarChiudi"):
         st.session_state.pop("tar_fase", None)
         st.rerun()
+
+
+# Come per la fine coda: il titolo si traduce all'apertura, non all'avvio.
+def _modale_taratura() -> None:
+    st.dialog(t("lav.tar_titolo"), width="large")(_contenuto_taratura)()
 
 
 def sidebar() -> dict:
@@ -5278,7 +5267,7 @@ def _risultati(path: Path) -> None:
 def page_lavorazione(cfg: dict) -> None:
     files = load_library()
     if not files:
-        st.info("Nessun file in INPUT.")
+        st.info(t("lav.vuoto"))
         return
     # Il corpo è un fragment: con un lavoro vivo si riaggiorna da solo ogni
     # 5 secondi, così le barre DENTRO le righe avanzano; da fermo niente
@@ -5408,14 +5397,13 @@ def _avanzamento_testo(lav, campioni: dict, stati: dict | None = None,
         if lav.sottopasso == "montaggio":
             perc = (f" {lav.codifica_frazione:.0%}"
                     if lav.codifica_frazione > 0 else "")
-            passo = f"scrittura del file finale{perc}"
+            passo = t("lav.av_scrittura", perc=perc)
         else:
             perc = (f" {lav.codifica_frazione:.0%}"
                     if lav.codifica_frazione > 0 else "")
-            passo = f"ultimo blocco in codifica{perc} (CPU)"
-        return (f"fase 3/3 · codifica e montaggio · {passo} · "
-                f"{lav.totale} fotogrammi elaborati · "
-                f"trascorsi {monitor.trascorso(lav)}")
+            passo = t("lav.av_ultimo_blocco", perc=perc)
+        return t("lav.av_fase3", passo=passo, totale=lav.totale,
+                 trascorso=monitor.trascorso(lav))
     if lav.fase == "codifica blocco":
         # Il cambio turno GPU→CPU: dirlo esplicitamente, e NIENTE fps o ETA
         # — in questa finestra sarebbero numeri di un regime che non c'e'.
@@ -5423,7 +5411,7 @@ def _avanzamento_testo(lav, campioni: dict, stati: dict | None = None,
         # scrittura) e compare appena il file inizia a esistere.
         perc = (f" {lav.codifica_frazione:.0%}"
                 if lav.codifica_frazione > 0 else "")
-        quale = (f" (blocco {lav.blocco_n}/{lav.blocchi_totali})"
+        quale = (f" ({t('lav.av_blocco', n=lav.blocco_n, totale=lav.blocchi_totali)})"
                  if lav.blocchi_totali else "")
         # NIENTE tempo che resta qui, ed e' una decisione misurata. La
         # percentuale non cresce liscia: sta ferma 30-35 secondi e poi salta
@@ -5433,39 +5421,44 @@ def _avanzamento_testo(lav, campioni: dict, stati: dict | None = None,
         # guardava e ricascava giu' a ogni scalino. Un conto alla rovescia
         # che sale e scende non e' un'informazione, e' un tic. La
         # percentuale, che e' MISURATA, resta.
-        return (f"fase 2/3 · blocco in codifica{perc}{quale} (CPU) · "
-                f"{lav.fatti}/{lav.totale} fotogrammi · l'upscale riprende "
-                f"a breve · trascorsi {monitor.trascorso(lav)}")
+        return t("lav.av_fase2_codifica", perc=perc, quale=quale,
+                 fatti=lav.fatti, totale=lav.totale,
+                 trascorso=monitor.trascorso(lav))
     numero = "1/3" if lav.fase == "estrazione" else "2/3"
     nome_fase = "estrazione" if lav.fase == "estrazione" else "upscale"
+    # `nome_fase` si confronta qui sotto: a schermo va la sua traduzione.
+    scritta_fase = (t("lav.av_estrazione") if nome_fase == "estrazione"
+                    else t("lav.av_upscale"))
     if not lav.totale:
         # Estrazione appena nata, prima di state.json: il totale non è
         # ancora noto, ma dire QUANTI fotogrammi stanno uscendo è già la
         # differenza fra "sta lavorando" e "sembra tutto fermo".
-        testo = f"fase {numero} · {nome_fase} · {lav.fatti} fotogrammi estratti"
+        testo = t("lav.av_estratti", numero=numero, fase=scritta_fase,
+                  fatti=lav.fatti)
         if monitor.trascorso(lav):
-            testo += f" · trascorsi {monitor.trascorso(lav)}"
+            testo += f" · {t('lav.av_trascorsi', trascorso=monitor.trascorso(lav))}"
         return testo
     # Il punto nel blocco accanto al totale: dice quanto manca al prossimo
     # punto di salvataggio — cioè quando un Ferma non butta via niente
     # (chiesto dall'utente proprio per scegliere il momento).
-    nel_blocco = (f" ({lav.blocco_fatti}/{lav.blocco_totale} del blocco "
-                  f"{lav.blocco_n} di {lav.blocchi_totali})"
+    nel_blocco = (" (" + t("lav.av_nel_blocco", fatti=lav.blocco_fatti,
+                           totale=lav.blocco_totale, n=lav.blocco_n,
+                           blocchi=lav.blocchi_totali) + ")"
                   if lav.blocchi_totali and nome_fase == "upscale" else "")
-    testo = (f"fase {numero} · {nome_fase} · "
-             f"{lav.fatti}/{lav.totale} fotogrammi{nel_blocco}")
+    testo = t("lav.av_fotogrammi", numero=numero, fase=scritta_fase,
+              fatti=lav.fatti, totale=lav.totale, nel_blocco=nel_blocco)
     ritmo = monitor.andatura(campioni.get(lav.cartella.name, []))
     resta = _resto_misurato(lav, campioni, stati, turno_stimato, ritmo=ritmo)
     if ritmo and resta is not None:
-        testo += f" · ~{ritmo:.1f} fps · restano {hms(resta)}"
+        testo += f" · ~{ritmo:.1f} fps · {t('lav.av_restano', resta=hms(resta))}"
     if monitor.trascorso(lav):
-        testo += f" · trascorsi {monitor.trascorso(lav)}"
+        testo += f" · {t('lav.av_trascorsi', trascorso=monitor.trascorso(lav))}"
     return testo
 
 
 def _scheda_monitor(lav, campioni: dict, stati: dict | None = None) -> str:
     if lav.vivo:
-        stato = "<span class='au-tag au-busy'>in corso</span>"
+        stato = f"<span class='au-tag au-busy'>{t('lav.mon_in_corso')}</span>"
         # Anche qui i turni misurati vanno passati: senza, la scheda dei
         # lavori fuori da INPUT mostrava ancora la stima che ignora i turni,
         # cioe' proprio il difetto che questa modifica esiste per chiudere.
@@ -5473,9 +5466,8 @@ def _scheda_monitor(lav, campioni: dict, stati: dict | None = None) -> str:
         # o si e' misurato un turno, o non si somma niente.
         extra = f"<span class='au-meta'>{_avanzamento_testo(lav, campioni, stati)}</span>"
     else:
-        stato = "<span class='au-tag au-warn'>interrotto</span>"
-        extra = ("<span class='au-meta'>riprendibile rilanciando lo stesso "
-                 "file</span>")
+        stato = f"<span class='au-tag au-warn'>{t('lav.mon_interrotto')}</span>"
+        extra = f"<span class='au-meta'>{t('lav.mon_riprendibile')}</span>"
     riga_log = lav.ultima_riga()
     return (
         f"<div class='au-mon{' au-mon-viva' if lav.vivo else ''}'>"
@@ -5558,8 +5550,10 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
             f"<div class='au-riga-avanz'>"
             f"<div class='au-riga-barra au-riga-ferma'>"
             f"<span style='width:{lav.frazione * 100:.1f}%'></span></div>"
-            f"<span class='au-meta'>in pausa al {lav.frazione:.0%} · "
-            f"{lav.fatti}/{lav.totale} fotogrammi · riprende da qui</span>"
+            f"<span class='au-meta'>"
+            + t("lav.av_in_pausa", perc=f"{lav.frazione:.0%}",
+                fatti=lav.fatti, totale=lav.totale)
+            + "</span>"
             f"</div>", unsafe_allow_html=True)
         return
     monitor.aggiorna_campioni(
@@ -6918,9 +6912,8 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
         # quindi un piano non esiste ANCORA — e non e' un errore. Prima
         # questa combinazione non poteva darsi e il codice sotto andava
         # dritto su `plan.model`, facendo esplodere l'intera scheda.
-        st.markdown("<div class='au-hint' style='margin-top:0'>Analisi in "
-                    "corso: i dettagli compaiono appena il referto è "
-                    "pronto.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='au-hint' style='margin-top:0'>"
+                    f"{t('lav.det_analisi')}</div>", unsafe_allow_html=True)
         return
     if errore is not None:
         st.markdown(f"<div class='au-avviso' style='margin-top:0'>"
@@ -6928,17 +6921,21 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
                     "</div>", unsafe_allow_html=True)
         return
     gruppi = [
-        ("Lavorazione", [
-            ("Modello", plan.model.label),
-            ("Catena", f"{plan.model_name} → riduzione {plan.downscale:.2f}:1"),
-            ("Uscita", f"{plan.target_width}×{plan.target_height}"),
-            ("Blocchi", f"{plan.chunks} da {plan.chunk_size} fotogrammi"),
+        (t("lav.det_lavorazione"), [
+            (t("lav.det_modello"), plan.model.label),
+            (t("lav.det_catena"),
+             t("lav.det_catena_valore", modello=plan.model_name,
+               rapporto=f"{plan.downscale:.2f}")),
+            (t("lav.det_uscita"), f"{plan.target_width}×{plan.target_height}"),
+            (t("lav.det_blocchi"),
+             tn("lav.det_blocchi_valore", plan.chunks, dim=plan.chunk_size)),
         ]),
-        ("Codifica", [
+        (t("lav.det_codifica"), [
             ("Codec", f"{plan.encoding.codec} {plan.encoding.pix_fmt}"),
             ("CRF", str(plan.encoding.crf)),
             ("Preset", plan.encoding.preset),
-            ("Restauro", ", ".join(plan.restoration.chain()) or "nessuno"),
+            (t("lav.det_restauro"),
+             ", ".join(plan.restoration.chain()) or t("lav.det_nessuno")),
         ]),
     ]
     pezzi = []
@@ -6949,7 +6946,8 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
         pezzi.append(f"<div class='au-blocco'><div class='au-gtitolo'>{titolo}"
                      f"</div><div class='au-griglia'>{celle}</div></div>")
     pezzi.append(
-        "<div class='au-blocco'><div class='au-gtitolo'>File finale</div>"
+        "<div class='au-blocco'><div class='au-gtitolo'>"
+        f"{t('lav.det_file_finale')}</div>"
         "<div class='au-valore' style='overflow-wrap:anywhere'>"
         f"{esc(plan.output.name)}</div></div>")
 
@@ -6965,7 +6963,7 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
     # dall'utente). Colonne native con le stesse classi = stesso aspetto.
     if esito and esito.get("secondi"):
         pezzi.append("<div class='au-blocco' style='margin-bottom:0'>"
-                     "<div class='au-gtitolo'>Lavorazione conclusa</div></div>")
+                     f"<div class='au-gtitolo'>{t('lav.det_conclusa')}</div></div>")
         st.markdown("".join(pezzi), unsafe_allow_html=True)
 
         secondi = float(esito["secondi"])
@@ -6973,26 +6971,27 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
         inizio = fine - secondi if fine else 0
         avvisi = esito.get("avvisi") or []
         if avvisi:
-            chip_esito = (f"<span class='au-tag au-warn'>{len(avvisi)} "
-                          f"avvis{'o' if len(avvisi) == 1 else 'i'}</span>")
+            chip_esito = (f"<span class='au-tag au-warn'>"
+                          f"{tn('lav.det_avvisi', len(avvisi))}</span>")
         else:
-            chip_esito = "<span class='au-tag au-ok'>tutto ok</span>"
-        voci = [("Esito", chip_esito)]
+            chip_esito = f"<span class='au-tag au-ok'>{t('lav.det_tutto_ok')}</span>"
+        voci = [(t("lav.det_esito"), chip_esito)]
+        giorno_ora = t("lav.fmt_giorno_ora")
         if inizio:
-            voci.append(("Inizio", time.strftime("%d/%m %H:%M",
-                                                 time.localtime(inizio))))
+            voci.append((t("lav.det_inizio"), time.strftime(
+                giorno_ora, time.localtime(inizio))))
         if fine:
-            voci.append(("Fine", time.strftime("%d/%m %H:%M",
-                                               time.localtime(fine))))
-        voci.append(("Durata", stima_hm(secondi)))
+            voci.append((t("lav.det_fine"), time.strftime(
+                giorno_ora, time.localtime(fine))))
+        voci.append((t("lav.det_durata"), stima_hm(secondi)))
         if esito.get("dedup"):
-            voci.append(("Deduplica", f"{float(esito['dedup']):.0%}"))
+            voci.append((t("lav.det_dedup"), f"{float(esito['dedup']):.0%}"))
         if esito.get("fotogrammi"):
-            voci.append(("Velocità media",
+            voci.append((t("lav.det_velocita"),
                          f"{esito['fotogrammi'] / secondi:.1f} fps"))
         try:
             peso = (PATHS.output / esito["output"]).stat().st_size / 1048576
-            voci.append(("Peso", f"{peso:.0f} MB"))
+            voci.append((t("lav.det_peso"), f"{peso:.0f} MB"))
         except (OSError, KeyError, TypeError):
             pass
 
@@ -7019,11 +7018,13 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
                 if indice_r == len(righe_voci) - 1 and esito.get("output"):
                     cella = cols[len(gruppo_voci)]
                     cella.markdown("<div class='au-voce'><span class="
-                                   "'au-etichetta'>Cartella</span></div>",
+                                   f"'au-etichetta'>{t('lav.det_cartella')}"
+                                   "</span></div>",
                                    unsafe_allow_html=True)
                     # `open -R` rivela il FILE nella cartella d'uscita: il
                     # server gira sullo stesso Mac dell'utente, è legittimo.
-                    if cella.button(f"{PATHS.output.name} · apri nel Finder",
+                    if cella.button(t("lav.det_finder",
+                                      cartella=PATHS.output.name),
                                     key=f"finder_{plan.output.name}"):
                         subprocess.run(
                             ["open", "-R",
@@ -7118,8 +7119,7 @@ def _avvia(piani, cfg: dict, modello: str | None = None) -> bool:
 
     lanciatore = CODICE / "animeup"
     if not lanciatore.is_file():
-        st.error(f"Non trovo il lanciatore in {lanciatore}: la lavorazione non "
-                 "è partita.", icon="⚠️")
+        st.error(t("lav.avvia_no_lanciatore", percorso=lanciatore), icon="⚠️")
         return False
     with registro.open("a") as fh:
         proc = subprocess.Popen(["/bin/sh", "-c", "; ".join(comandi)],
@@ -7128,16 +7128,14 @@ def _avvia(piani, cfg: dict, modello: str | None = None) -> bool:
     # mentre la shell risponde 127 è peggio che non annunciare nulla.
     time.sleep(0.6)
     if proc.poll() not in (None, 0):
-        st.error(f"La lavorazione non è partita (codice {proc.poll()}). "
-                 f"Ulteriori dettagli sono disponibili nel registro: "
-                 f"`{registro}`", icon="⚠️")
+        st.error(t("lav.avvia_fallito", codice=proc.poll(), registro=registro),
+                 icon="⚠️")
         return False
 
-    quanti = " + ".join(f"{len(g)} con {CATALOG[m].short}"
+    quanti = " + ".join(t("lav.avvia_gruppo", n=len(g), modello=CATALOG[m].short)
                         for m, g in per_modello.items())
-    coda = " (in sequenza)" if len(per_modello) > 1 else ""
-    st.success(f"Avviata: {quanti}{coda}. È possibile chiudere la "
-               f"pagina. Registro: `{registro}`")
+    coda = f" ({t('lav.avvia_sequenza')})" if len(per_modello) > 1 else ""
+    st.success(t("lav.avviata", quanti=quanti, coda=coda, registro=registro))
     return True
 
 
@@ -7155,12 +7153,10 @@ def _spegni_interfaccia(lavori_in_corso: bool) -> None:
 
     st.markdown(
         "<div style='text-align:center; padding:80px 0'>"
-        "<div style='font-size:22px; font-weight:600'>AnimeUp è spento</div>"
-        "<div class='au-hint' style='margin-top:12px'>È possibile chiudere "
-        "questa finestra e quella del Terminale."
-        + (" L'elaborazione in corso proseguirà in background e resterà "
-           "disponibile alla prossima apertura di AnimeUp."
-           if lavori_in_corso else "")
+        f"<div style='font-size:22px; font-weight:600'>{t('lav.spento')}</div>"
+        "<div class='au-hint' style='margin-top:12px'>"
+        f"{t('lav.spento_chiudi')}"
+        + (f" {t('lav.spento_lavori')}" if lavori_in_corso else "")
         + "</div></div>", unsafe_allow_html=True)
 
     def _poi() -> None:
@@ -7262,9 +7258,9 @@ def _pausa(lav, *, riprendi: bool) -> str:
     try:
         pid = int(lock.read_text().strip())
     except (OSError, ValueError):
-        return "la lavorazione non ha più un processo a cui parlare"
+        return t("lav.pausa_senza_processo")
     if not _e_processo_nostro(pid):
-        return "la lavorazione non risponde più"
+        return t("lav.pausa_non_risponde")
 
     marcatore = lav.cartella / SOSPESO
     if riprendi:
@@ -7300,15 +7296,14 @@ def _pausa(lav, *, riprendi: bool) -> str:
 
     operai = _operai_sotto(pid)
     if not operai:
-        return ("in questo istante non c'è niente da mettere in pausa "
-                "(la lavorazione sta cambiando fase)")
+        return t("lav.pausa_niente")
     # Il marcatore PRIMA del segnale: se l'interfaccia morisse fra le due
     # cose, meglio un marcatore senza pausa (si vede e si toglie) che dei
     # processi congelati senza nessuno che sappia quali sono.
     try:
         marcatore.write_text(json.dumps({"da": time.time(), "pids": operai}))
     except OSError:
-        return "non riesco a scrivere il marcatore di pausa"
+        return t("lav.pausa_marcatore")
     for p in operai:
         try:
             os.kill(p, signal.SIGSTOP)
