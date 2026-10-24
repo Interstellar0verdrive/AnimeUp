@@ -4,7 +4,10 @@ description: Step-by-step guide to AnimeUp, the local, offline anime upscaler fo
 ---
 
 <header class="animeup-hero">
-  <img class="animeup-hero__icon" src="../assets/animeup-logo.png" alt="AnimeUp app icon">
+  <span class="animeup-hero__icons">
+    <img class="animeup-hero__icon animeup-logo__dark" src="../assets/animeup-logo.png" alt="AnimeUp app icon">
+    <img class="animeup-hero__icon animeup-logo__light" src="../assets/animeup-logo-light.png" alt="" aria-hidden="true">
+  </span>
   <div class="animeup-hero__copy">
     <span class="eyebrow">User guide · AnimeUp 1.4</span>
     <h1>AnimeUp user guide</h1>

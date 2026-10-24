@@ -29,6 +29,7 @@ nav:
 
 theme:
   name: material
+  custom_dir: overrides
   language: en
   logo: assets/animeup-logo.png
   favicon: assets/animeup-favicon.png
@@ -81,6 +82,9 @@ markdown_extensions:
 
 extra_css:
   - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/theme-select.js
 
 copyright: >-
   AnimeUp code: <a href="https://github.com/Interstellar0verdrive/AnimeUp/blob/main/LICENSE">MIT</a>.
