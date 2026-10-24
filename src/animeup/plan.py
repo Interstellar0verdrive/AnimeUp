@@ -15,7 +15,7 @@ from pathlib import Path
 from .models import CATALOG, Model, Recommendation, recommend
 from . import storico, taratura
 from .i18n import t
-from .paths import PATHS, Paths
+from .paths import PATHS, Paths, gb_liberi
 from .probe import FieldMode, SourceReport, Timebase
 
 # Peso medio di un PNG, in byte per pixel.
@@ -880,7 +880,7 @@ def build_plan(
     uscita_gb = bitrate_mbps * durata / 8 / 1024 if durata else 0.0
     video_gb = 2 * uscita_gb
 
-    free_gb = shutil.disk_usage(p.root).free / 1_073_741_824
+    free_gb = gb_liberi(p.output)
 
     # --- LO SPAZIO SI SPENDE IN ORDINE, e l'ordine non e' negoziabile ---
     #
@@ -1026,7 +1026,7 @@ def build_plan(
         output=p.output / f"{name}.mkv",
         uscita_storica=(p.output / f"{nome_storico}.mkv"
                         if nome_storico else None),
-        log=p.logs / f"{name}.log",
+        log=p.job_logs / f"{name}.log",
         target_width=target_w,
         target_height=target_h,
         model=model,

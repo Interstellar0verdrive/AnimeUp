@@ -16,7 +16,7 @@ from rich.console import Console
 from rich.text import Text
 from rich.table import Table
 
-from . import __version__
+from . import __version__, su_disco
 from .ffmpeg import FFmpegError
 from .i18n import t, tn
 from .paths import PATHS, MissingToolError
@@ -387,7 +387,7 @@ def run_cmd(
             # A file concluso la cartella sparisce, e la ricetta con lei.
             try:
                 job.work.mkdir(parents=True, exist_ok=True)
-                (job.work / "parametri.json").write_text(json.dumps({
+                (job.work / "parameters.json").write_text(su_disco.dumps({
                     "altezza": altezza, "crf": crf, "preset": preset,
                     "disco": int(disco), "dedup": dedup,
                     "denoise": denoise, "forza": forza,
@@ -495,7 +495,7 @@ def run_cmd(
         # Il marcatore di catena muore col comando, comunque finisca: un
         # "file 5 di 8" rimasto su disco farebbe credere per sempre alla
         # barra che qualcosa stia ancora lavorando.
-        (PATHS.work / ".catena").unlink(missing_ok=True)
+        (PATHS.work / ".queue").unlink(missing_ok=True)
         if in_volo and in_volo not in interrotti:
             interrotti.append(in_volo)
             # E il suo tempo: il file ucciso a meta' dal Ferma tutto non
@@ -715,7 +715,7 @@ def taratura() -> None:
 
     Un giro di ~10 minuti sul clip libero di campioni/: estrazione, ogni
     modello a ogni scala, codifica x265. I risultati finiscono in
-    registri/taratura.json e da lì correggono ogni stima futura. Vuole la
+    records/calibration.json e da lì correggono ogni stima futura. Vuole la
     GPU libera: con una lavorazione in corso si rifiuta di partire.
     """
     from . import monitor, taratura as modulo
@@ -783,7 +783,7 @@ def taratura() -> None:
 
 
 def _scrivi_esito(plan, result) -> None:
-    """La pagella del file, un rigo in registri/esiti.jsonl.
+    """La pagella del file, un rigo in records/history.jsonl.
 
     A lavoro pulito la cartella di lavoro si autocancella e non resta NIENTE
     di leggibile: la riga dell'interfaccia non poteva dire né "fatta", né
@@ -795,8 +795,8 @@ def _scrivi_esito(plan, result) -> None:
 
     try:
         PATHS.logs.mkdir(parents=True, exist_ok=True)
-        with (PATHS.logs / "esiti.jsonl").open("a") as fh:
-            fh.write(json_.dumps({
+        with PATHS.storico.open("a") as fh:
+            fh.write(su_disco.dumps({
                 "file": plan.source.path.name,
                 "output": plan.output.name,
                 "secondi": round(result.seconds, 1),
@@ -884,8 +884,8 @@ def _scrivi_lancio(*, inizio: float, fine: float, previsti: list[str],
 
     try:
         PATHS.logs.mkdir(parents=True, exist_ok=True)
-        with (PATHS.logs / "lanci.jsonl").open("a") as fh:
-            fh.write(json_.dumps({
+        with PATHS.lanci.open("a") as fh:
+            fh.write(su_disco.dumps({
                 "inizio": round(inizio, 1), "fine": round(fine, 1),
                 "previsti": previsti, "riusciti": riusciti,
                 "falliti": falliti, "scartati": scartati,
@@ -950,7 +950,7 @@ def _scrivi_catena(numero: int, totale: int, plan, rimanenti,
                + (1 if pausa_pendente else 0)) * pausa_minuti * 60
 
     try:
-        (PATHS.work / ".catena").write_text(json_.dumps({
+        (PATHS.work / ".queue").write_text(su_disco.dumps({
             "pid": os.getpid(),
             "numero": numero,
             "totale": totale,
@@ -995,9 +995,9 @@ def _pausa_respiro(minuti: int) -> None:
     import json as json_
     import time as time_
 
-    marker = PATHS.work / ".pausa"
+    marker = PATHS.work / ".pause"
     try:
-        marker.write_text(json_.dumps(
+        marker.write_text(su_disco.dumps(
             {"fino": time_.time() + minuti * 60, "pid": os.getpid()}))
     except OSError:
         pass

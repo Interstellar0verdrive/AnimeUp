@@ -21,6 +21,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import su_disco
 from .models import CATALOG
 from .paths import PATHS, Paths
 from .pipeline import _processo_vivo
@@ -112,7 +113,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
         # riempie). Ignorare la cartella qui rendeva la pagina cieca proprio
         # in quella finestra — "sembra tutto fermo e non posso nemmeno
         # fermarlo" (successo). Un lucchetto vivo È una lavorazione.
-        lock = cartella / "in-corso.lock"
+        lock = cartella / "running.lock"
         if not lock.is_file() or not _processo_vivo(lock):
             return None
         frames_dir = cartella / "frames"
@@ -123,8 +124,8 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
         # l'estrazione parta: senza, "5632 fotogrammi estratti" non dice
         # quanto manca. Le lavorazioni di CLI vecchie non ce l'hanno: 0.
         try:
-            totale = int(json.loads(
-                (cartella / "parametri.json").read_text()
+            totale = int(su_disco.loads(
+                (cartella / "parameters.json").read_text()
             ).get("fotogrammi") or 0)
         except (OSError, ValueError):
             totale = 0
@@ -137,7 +138,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
                            totale=totale, modello="?", avviato=avviato,
                            registro=_registro_di(nome, logs))
     try:
-        stato = json.loads(stato_path.read_text())
+        stato = su_disco.loads(stato_path.read_text())
     except (OSError, ValueError):
         return None
 
@@ -220,7 +221,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
                 fase = "codifica blocco"
                 break
 
-    lock = cartella / "in-corso.lock"
+    lock = cartella / "running.lock"
     vivo = lock.is_file() and _processo_vivo(lock)
     avviato = None
     if lock.is_file():
@@ -265,7 +266,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
         if stem:
             try:
                 for cand in PATHS.output.iterdir():
-                    if (cand.name.endswith(".inlavorazione")
+                    if (cand.name.endswith(".incomplete")
                             and cand.name.startswith(stem)):
                         finale = cand
                         break
@@ -335,7 +336,7 @@ def lavori(paths: Paths | None = None) -> list[StatoLavoro]:
     for cartella in p.work.iterdir():
         if not cartella.is_dir():
             continue
-        lavoro = _leggi(cartella, p.logs)
+        lavoro = _leggi(cartella, p.job_logs)
         if lavoro is not None:
             trovati.append(lavoro)
     trovati.sort(key=lambda l: (not l.vivo, -(l.avviato or 0)))
@@ -345,7 +346,7 @@ def lavori(paths: Paths | None = None) -> list[StatoLavoro]:
 def esiti(paths: Paths | None = None) -> dict[str, dict]:
     """Gli esiti delle lavorazioni concluse, per chiave normalizzata.
 
-    Li scrive la CLI a fine file (registri/esiti.jsonl): durata reale,
+    Li scrive la CLI a fine file (records/history.jsonl): durata reale,
     avvisi, esito. Servono alla riga dell'elenco DOPO che la cartella di
     lavoro si è autopulita — senza, un episodio finito non lasciava niente
     di leggibile e la riga tornava muta. L'ultima voce per file vince: un
@@ -354,12 +355,12 @@ def esiti(paths: Paths | None = None) -> dict[str, dict]:
     p = paths or PATHS
     fuori: dict[str, dict] = {}
     try:
-        righe = (p.logs / "esiti.jsonl").read_text().splitlines()
+        righe = p.storico.read_text().splitlines()
     except OSError:
         return fuori
     for riga in righe:
         try:
-            d = json.loads(riga)
+            d = su_disco.loads(riga)
         except ValueError:
             continue
         if isinstance(d, dict) and d.get("file"):
@@ -379,7 +380,7 @@ def pausa(paths: Paths | None = None) -> tuple[float, int] | None:
 
     p = paths or PATHS
     try:
-        dati = json.loads((p.work / ".pausa").read_text())
+        dati = su_disco.loads((p.work / ".pause").read_text())
         fino, pid = float(dati["fino"]), int(dati["pid"])
     except (OSError, ValueError, KeyError, TypeError):
         return None
@@ -407,9 +408,9 @@ def catena(paths: Paths | None = None) -> dict | None:
     import os
 
     p = paths or PATHS
-    marcatore = p.work / ".catena"
+    marcatore = p.work / ".queue"
     try:
-        dati = json.loads(marcatore.read_text())
+        dati = su_disco.loads(marcatore.read_text())
         pid = int(dati["pid"])
     except (OSError, ValueError, KeyError, TypeError):
         return None
@@ -530,7 +531,7 @@ def dedup_misurata(cartella: Path) -> tuple[float, int] | None:
     Per stimare c'e' `dedup_esatta`, che il numero giusto ce l'ha da subito.
     """
     try:
-        dati = json.loads((cartella / "state.json").read_text())
+        dati = su_disco.loads((cartella / "state.json").read_text())
     except (OSError, ValueError, json.JSONDecodeError):
         return None
     # Ogni voce va guardata con sospetto: `state.json` lo scrive un processo
@@ -574,7 +575,7 @@ def sospeso(lavoro: StatoLavoro) -> dict | None:
     """
     from .pipeline import SOSPESO
     try:
-        dati = json.loads((lavoro.cartella / SOSPESO).read_text())
+        dati = su_disco.loads((lavoro.cartella / SOSPESO).read_text())
         return dati if isinstance(dati, dict) else None
     except (OSError, ValueError, json.JSONDecodeError):
         return None
@@ -904,7 +905,7 @@ def ultimo_lancio(paths: Paths | None = None) -> dict | None:
         # accentato — i nomi dei rilasci anime ne sono pieni — sollevava
         # UnicodeDecodeError, che NON e' una OSError, e da li' in poi la
         # pagina si rompeva a ogni giro.
-        testo = (p.logs / "lanci.jsonl").read_text(errors="replace")
+        testo = p.lanci.read_text(errors="replace")
     except OSError:
         return None
 
@@ -912,7 +913,7 @@ def ultimo_lancio(paths: Paths | None = None) -> dict | None:
     etichetta: object = None
     for riga in reversed(testo.splitlines()):
         try:
-            dato = json.loads(riga)
+            dato = su_disco.loads(riga)
         except ValueError:
             continue
         if not isinstance(dato, dict) or _numero(dato.get("fine")) is None:

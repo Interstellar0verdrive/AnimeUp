@@ -762,7 +762,7 @@ def _() -> None:
         # con la sua prenotazione già scritta. Un file per processo, non un
         # JSON condiviso: con quello, venti lavorazioni avviate insieme ne
         # lasciavano registrata una sola.
-        registro = paths.work / ".prenotazioni"
+        registro = paths.work / ".reservations"
         registro.mkdir(parents=True, exist_ok=True)
         (registro / f"{os.getpid()}.gb").write_text(f"{libero_gb * 0.6:.3f}")
 
@@ -782,7 +782,7 @@ def _() -> None:
     from animeup.pipeline import _prenotazioni
 
     with tempfile.TemporaryDirectory() as t:
-        registro = Path(t) / ".prenotazioni"
+        registro = Path(t) / ".reservations"
         registro.mkdir()
         # PID 999999: fuori dal massimo di macOS, quindi certamente morto.
         (registro / "999999.gb").write_text("500.0")
@@ -940,10 +940,10 @@ def _() -> None:
         job = pl.Job(piano, paths=paths)
         job.work.mkdir(parents=True, exist_ok=True)
         # Un lucchetto di un processo VIVO (questo).
-        (job.work / "in-corso.lock").write_text(str(os.getpid() + 0))
+        (job.work / "running.lock").write_text(str(os.getpid() + 0))
         # Il proprio PID non deve bloccare se stessi, quindi se ne finge un
         # altro certamente vivo: il processo padre.
-        (job.work / "in-corso.lock").write_text(str(os.getppid()))
+        (job.work / "running.lock").write_text(str(os.getppid()))
         try:
             job.run()
         except pl.JobError as exc:
@@ -952,7 +952,7 @@ def _() -> None:
             raise AssertionError("il lucchetto non ha fermato la seconda")
 
         # Un lucchetto di un processo morto non deve bloccare la ripresa.
-        (job.work / "in-corso.lock").write_text("999999")
+        (job.work / "running.lock").write_text("999999")
         try:
             job.run()
         except pl.JobError as exc:
@@ -1196,7 +1196,7 @@ def _() -> None:
         piano = build_plan(r, target_height=1080, paths=paths)
         job = pl.Job(piano, paths=paths)
         job.work.mkdir(parents=True, exist_ok=True)
-        lock = job.work / "in-corso.lock"
+        lock = job.work / "running.lock"
         lock.write_text(str(_os.getppid()))       # un processo vivo, non noi
         try:
             job.run()
@@ -1252,7 +1252,7 @@ def _() -> None:
     from animeup.pipeline import _prenotazioni
 
     with tempfile.TemporaryDirectory() as t:
-        registro = Path(t) / ".prenotazioni"
+        registro = Path(t) / ".reservations"
         registro.mkdir()
         for nome, valore in (("0", "5"), ("-1", "5"), ("999999", "500"),
                              ("nonunpid", "5")):
@@ -1310,14 +1310,14 @@ def _() -> None:
         # Un processo VERO: `_processo_vivo` risponde "lo tiene qualcun
         # altro?", quindi al PID di questo stesso processo direbbe no.
         figlio = sp.Popen(["sleep", "30"])
-        (vivo / "in-corso.lock").write_text(str(figlio.pid))
+        (vivo / "running.lock").write_text(str(figlio.pid))
         (vivo / "chunk0000-up" / "00000550.png").write_bytes(b"")
 
         morto = paths.work / "altro 2026-01-01 abcdef02"
         morto.mkdir(parents=True)
         (morto / "state.json").write_text(json.dumps(
             {"signature": firma, "segments": [], "extracted": 300}))
-        (morto / "in-corso.lock").write_text("999999")
+        (morto / "running.lock").write_text("999999")
 
         prima = sorted(str(f) for f in paths.work.rglob("*"))
         letti = monitor.lavori(paths)
@@ -1355,7 +1355,7 @@ def _() -> None:
         for n in range(1, 8):
             (d / "frames" / f"{n:08d}.png").write_bytes(b"")
         figlio = sp.Popen(["sleep", "30"])
-        (d / "in-corso.lock").write_text(str(figlio.pid))
+        (d / "running.lock").write_text(str(figlio.pid))
 
         letti = monitor.lavori(paths)
         assert len(letti) == 1, f"attesa 1 lavorazione, trovate {len(letti)}"
@@ -1367,7 +1367,7 @@ def _() -> None:
         # Con la ricetta (parametri.json, scritta prima dell'estrazione) il
         # monitor sa anche "su quanti": la riga può dire 7/13233.
         import json as json_
-        (d / "parametri.json").write_text(json_.dumps({"fotogrammi": 13233}))
+        (d / "parameters.json").write_text(json_.dumps({"fotogrammi": 13233}))
         lav = monitor.lavori(paths)[0]
         assert lav.totale == 13233, f"totale dalla ricetta: {lav.totale}"
 
@@ -1394,7 +1394,7 @@ def _() -> None:
     with tempfile.TemporaryDirectory() as t:
         paths = Paths(Path(t))
         paths.work.mkdir(parents=True)
-        m = paths.work / ".pausa"
+        m = paths.work / ".pause"
         figlio = sp.Popen(["sleep", "30"])
 
         m.write_text(json.dumps({"fino": t_.time() + 120, "pid": figlio.pid}))
@@ -1439,7 +1439,7 @@ def _() -> None:
         (d / "state.json").write_text(json.dumps(
             {"signature": firma, "segments": [], "extracted": 1000}))
         figlio = sp.Popen(["sleep", "30"])
-        (d / "in-corso.lock").write_text(str(figlio.pid))
+        (d / "running.lock").write_text(str(figlio.pid))
 
         lav = monitor.lavori(paths)[0]
         assert lav.fase == "codifica blocco", lav.fase
@@ -1474,7 +1474,7 @@ def _() -> None:
                 break
         else:
             raise AssertionError("il figlio non è mai diventato zombie")
-        lock = Path(t) / "in-corso.lock"
+        lock = Path(t) / "running.lock"
         lock.write_text(str(figlio.pid))
         assert not _processo_vivo(lock), "uno zombie giudicato vivo"
         figlio.wait()
@@ -1529,7 +1529,7 @@ def _() -> None:
     with tempfile.TemporaryDirectory() as t_:
         paths = Paths(Path(t_))
         paths.logs.mkdir(parents=True)
-        (paths.logs / "taratura.json").write_text(json.dumps({
+        paths.taratura.write_text(json.dumps({
             "versione": 1,
             "macchine": {
                 "Chip Immaginario X9": {
@@ -1544,10 +1544,10 @@ def _() -> None:
 
         # Con la voce del chip GIUSTO invece i numeri arrivano.
         assert taratura.carica(paths, macchina="Chip Immaginario X9") is not None
-        dati = json.loads((paths.logs / "taratura.json").read_text())
+        dati = json.loads(paths.taratura.read_text())
         dati["macchine"][taratura.chip()] = dati["macchine"].pop(
             "Chip Immaginario X9")
-        (paths.logs / "taratura.json").write_text(json.dumps(dati))
+        paths.taratura.write_text(json.dumps(dati))
         assert taratura.throughput("animevideov3", 3, paths) == 3.58
         assert taratura.throughput("animevideov3", 4, paths) is None, \
             "scala mai misurata: deve ricadere sulla fabbrica"
@@ -1597,7 +1597,7 @@ def _() -> None:
         prima = build_plan(sorgente, paths=paths)
         assert not prima.stime_tarate
 
-        (paths.logs / "taratura.json").write_text(json.dumps({
+        paths.taratura.write_text(json.dumps({
             "versione": 1,
             "macchine": {taratura.chip(): {
                 "quando": 0, "estrazione_fps": 120.0, "codifica_fps": 16.0,
@@ -1634,7 +1634,7 @@ def _() -> None:
         larghezza_teorica = (vuoto.est_total_seconds
                              / max(1e-9, vuoto.est_best_seconds))
 
-        with (paths.logs / "esiti.jsonl").open("w") as fh:
+        with paths.storico.open("w") as fh:
             for quota in (0.41, 0.39, 0.36, 0.32):
                 fh.write(json.dumps({"file": "x.mkv", "dedup": quota}) + "\n")
         d = storico.deduplica(paths)
@@ -1651,7 +1651,7 @@ def _() -> None:
                 <= con.est_total_seconds)
         # Un valore anomalo NON trascina la mediana (e' il motivo per cui si
         # usa lei e non la media).
-        with (paths.logs / "esiti.jsonl").open("a") as fh:
+        with paths.storico.open("a") as fh:
             fh.write(json.dumps({"file": "y.mkv", "dedup": 0.95}) + "\n")
         assert abs(storico.deduplica(paths).attesa - 0.39) < 0.001
 
@@ -1689,7 +1689,7 @@ def _() -> None:
         from animeup import storico
         assert storico.correzione(paths) is None
         assert piano.correzione == 1.0
-        with (paths.logs / "esiti.jsonl").open("w") as fh:
+        with paths.storico.open("w") as fh:
             for reali, previsti in ((1060, 1000), (1080, 1000), (1040, 1000)):
                 fh.write(json.dumps({"secondi": reali,
                                      "previsti": previsti}) + "\n")
@@ -1742,8 +1742,10 @@ class _PathsFinti:
 
     def __init__(self, radice: Path) -> None:
         self.work = radice / "JOBS"
-        self.logs = radice / "registri"
+        self.logs = radice / "records"
         self.output = radice / "OUTPUT"
+        self.storico = self.logs / "history.jsonl"
+        self.lanci = self.logs / "launches.jsonl"
         for d in (self.work, self.logs, self.output):
             d.mkdir(parents=True, exist_ok=True)
 
@@ -1786,7 +1788,8 @@ def _pause_marcatore():
             pendente = k > 1          # il primo file di un lancio non riposa
             cli._scrivi_catena(k, N, piano, rimanenti, programma=[piano],
                                pausa_minuti=PAUSA, pausa_pendente=pendente)
-            dati = json_.loads((finti.work / ".catena").read_text())
+            from animeup import su_disco
+            dati = su_disco.loads((finti.work / ".queue").read_text())
             solo_lavoro = sum(x.est_best_seconds for x in rimanenti)
             pause_dichiarate = dati["resta_min"] - solo_lavoro
             # Le pause che verranno eseguite da qui alla fine: una prima di
@@ -1851,8 +1854,9 @@ def _previsti_grezzi():
 
             def prova(finti, piano=piano):
                 cli._scrivi_esito(piano, _EsitoFinto(0.30 if dedup_acceso else 0))
-                riga = (finti.logs / "esiti.jsonl").read_text().strip()
-                return json_.loads(riga)["previsti"]
+                riga = finti.storico.read_text().strip()
+                from animeup import su_disco
+                return su_disco.loads(riga)["previsti"]
 
             letti.append(_con_paths_finti(prova))
         assert max(letti) - min(letti) < 1, (dedup_acceso, letti)
@@ -2147,6 +2151,8 @@ def _thread_dalla_taratura():
         def __init__(self, radice):
             self.logs = radice
             self.root = radice
+            self.taratura = radice / "taratura.json"
+            self.cache = radice / "cache"
 
     with tempfile.TemporaryDirectory() as tmp:
         finti = _PathsFinti(Path(tmp))
@@ -2188,6 +2194,8 @@ def _prova_thread_intera():
             def __init__(self, r):
                 self.logs = r
                 self.root = r
+                self.taratura = r / "taratura.json"
+                self.cache = r / "cache"
 
         # Un upscaler finto: veloce quanto piu' thread ha, e a 8 produce
         # un'uscita DIVERSA — cioe' il caso che la guardia deve fermare.
@@ -2257,6 +2265,7 @@ def _resoconto_coda_fermata():
     class _P:
         def __init__(self, d):
             self.logs = d
+            self.lanci = d / "lanci.jsonl"
 
     def rec(**kw):
         base = dict(inizio=100, fine=200, previsti=[], riusciti=[],
@@ -3375,13 +3384,13 @@ def _storico_guarda_i_simili():
     from animeup.paths import Paths
 
     radice = Path(tempfile.mkdtemp())
-    (radice / "registri").mkdir()
-    (radice / "JOBS").mkdir()
+    (radice / "records").mkdir()
+    (radice / "OUTPUT" / "JOBS").mkdir(parents=True)
     righe = [{"dedup": q, "fotogrammi": f, "secondi": 100.0, "previsti": 100.0}
              for q, f in [(0.322, 18098), (0.257, 15657), (0.365, 17508),
                           (0.352, 17580), (0.276, 18343), (0.325, 19472),
                           (0.065, 34765), (0.070, 33900)]]
-    (radice / "registri" / "esiti.jsonl").write_text(
+    (radice / "records" / "history.jsonl").write_text(
         "\n".join(json.dumps(r) for r in righe))
     p = Paths(radice)
 
@@ -3400,7 +3409,7 @@ def _storico_guarda_i_simili():
     # La lavorazione VIVA entra prima di lasciare una pagella: e' il punto
     # che salva la coda quando il primo file dell'infornata non somiglia a
     # niente di gia' visto.
-    cartella = radice / "JOBS" / "in-corso"
+    cartella = radice / "OUTPUT" / "JOBS" / "in-corso"
     cartella.mkdir()
     (cartella / "dedup.json").write_text(json.dumps(
         {"total": 34000, "keep": list(range(31000))}))
@@ -3419,7 +3428,7 @@ def _storico_guarda_i_simili():
 
     # Una pagella di taglia IGNOTA non e' simile a niente: trattarla come
     # simile a tutto rimetteva dentro proprio i file che il filtro esclude.
-    (radice / "registri" / "esiti.jsonl").write_text("\n".join(
+    (radice / "records" / "history.jsonl").write_text("\n".join(
         [json.dumps(r) for r in righe]
         + [json.dumps({"dedup": 0.99, "secondi": 10.0, "previsti": 10.0})]))
     (cartella / "dedup.json").write_text(json.dumps(
@@ -3434,7 +3443,7 @@ def _storico_guarda_i_simili():
     import shutil
     shutil.rmtree(cartella)
     solo_uno = [r for r in righe if r["fotogrammi"] != 33900]
-    (radice / "registri" / "esiti.jsonl").write_text(
+    (radice / "records" / "history.jsonl").write_text(
         "\n".join(json.dumps(r) for r in solo_uno))
     unico = storico.deduplica(p, simili_a=34765)
     assert unico is not None and abs(unico.attesa - 0.065) < 1e-6, (
@@ -3600,8 +3609,8 @@ def _correzione_per_taglia():
     from animeup.paths import Paths
 
     radice = Path(tempfile.mkdtemp())
-    (radice / "registri").mkdir()
-    (radice / "JOBS").mkdir()
+    (radice / "records").mkdir()
+    (radice / "OUTPUT" / "JOBS").mkdir(parents=True)
     # sei episodi veri e tre clip di prova, con i rapporti misurati
     righe = ([{"secondi": 100.0 * r, "previsti": 100.0, "fotogrammi": f,
                "dedup": 0.3}
@@ -3610,7 +3619,7 @@ def _correzione_per_taglia():
              + [{"secondi": 100.0 * r, "previsti": 100.0, "fotogrammi": f,
                  "dedup": 0.2}
                 for r, f in [(1.21, 5798), (1.39, 4856), (1.32, 1575)]])
-    (radice / "registri" / "esiti.jsonl").write_text(
+    (radice / "records" / "history.jsonl").write_text(
         "\n".join(json.dumps(r) for r in righe))
     p = Paths(radice)
 
@@ -3926,10 +3935,8 @@ def _regola_spazio_si_comporta():
     GB = 1073741824
 
     def tetto(libero_gb):
-        env = {"shutil": _types.SimpleNamespace(
-                   disk_usage=lambda _p: _types.SimpleNamespace(
-                       free=libero_gb * GB)),
-               "PATHS": _types.SimpleNamespace(root=ROOT)}
+        env = {"gb_liberi": lambda _p: libero_gb,
+               "PATHS": _types.SimpleNamespace(output=ROOT)}
         exec(compile(_ast.Module(body=cost + [fn], type_ignores=[]),
                      "app", "exec"), env)
         return env["_tetto_spazio"](), env["MINIMO_SPAZIO_GB"]
@@ -4513,16 +4520,16 @@ def _niente_doppioni_nello_storico():
     from animeup.paths import Paths
 
     radice = Path(tempfile.mkdtemp())
-    (radice / "registri").mkdir()
-    (radice / "JOBS").mkdir()
+    (radice / "records").mkdir()
+    (radice / "OUTPUT" / "JOBS").mkdir(parents=True)
     righe = [{"secondi": 100.0, "previsti": 100.0, "fotogrammi": n, "dedup": q}
              for q, n in [(0.26, 17000), (0.32, 17500),
                           (0.36, 18000), (0.41, 18500)]]
-    (radice / "registri" / "esiti.jsonl").write_text(
+    (radice / "records" / "history.jsonl").write_text(
         "\n".join(json.dumps(r) for r in righe))
     p = Paths(radice)
 
-    c = radice / "JOBS" / "con-avvisi"
+    c = radice / "OUTPUT" / "JOBS" / "con-avvisi"
     c.mkdir()
     (c / "dedup.json").write_text(json.dumps(
         {"total": 17000, "keep": list(range(round(17000 * 0.74)))}))
@@ -4532,7 +4539,7 @@ def _niente_doppioni_nello_storico():
 
     # ...ma una lavorazione NUOVA, che una pagella non ce l'ha ancora, deve
     # entrare eccome: e' tutto il senso di guardare le mappe vive.
-    c2 = radice / "JOBS" / "in-corso"
+    c2 = radice / "OUTPUT" / "JOBS" / "in-corso"
     c2.mkdir()
     (c2 / "dedup.json").write_text(json.dumps(
         {"total": 17600, "keep": list(range(round(17600 * 0.95)))}))
@@ -4543,7 +4550,7 @@ def _niente_doppioni_nello_storico():
     # Il riconoscimento non puo' essere il solo conteggio dei fotogrammi:
     # due puntate della stessa serie possono averlo identico (Koyomi 01 e 02
     # hanno entrambe 19.712 fotogrammi, con deduplica 41,0% e 35,9%).
-    c3 = radice / "JOBS" / "stessa-taglia-altra-dedup"
+    c3 = radice / "OUTPUT" / "JOBS" / "stessa-taglia-altra-dedup"
     c3.mkdir()
     (c3 / "dedup.json").write_text(json.dumps(
         {"total": 17000, "keep": list(range(round(17000 * 0.59)))}))
@@ -4574,8 +4581,8 @@ def _finestra_dopo_il_filtro():
         "non ha piu' nulla da cui pescare")
 
     radice = Path(tempfile.mkdtemp())
-    (radice / "registri").mkdir()
-    (radice / "JOBS").mkdir()
+    (radice / "records").mkdir()
+    (radice / "OUTPUT" / "JOBS").mkdir(parents=True)
     # Le clip devono essere PIU' della finestra, o il taglio non si vede:
     # con esattamente dieci, togliere il `[:FINESTRA]` non cambia niente e
     # la mutazione passa inosservata (provato in audit).
@@ -4584,7 +4591,7 @@ def _finestra_dopo_il_filtro():
                "fotogrammi": 18000, "dedup": 0.35}] * 2
              + [{"secondi": 130.0, "previsti": 100.0,
                  "fotogrammi": 1800, "dedup": 0.05}] * quante_clip)
-    (radice / "registri" / "esiti.jsonl").write_text(
+    (radice / "records" / "history.jsonl").write_text(
         "\n".join(json.dumps(r) for r in righe))
     p = Paths(radice)
 
@@ -4604,8 +4611,9 @@ def _finestra_dopo_il_filtro():
     # per una riga storta in un registro (trovato in audit il 12/08).
     sporco = Path(tempfile.mkdtemp())
     (sporco / "registri").mkdir()
-    (sporco / "JOBS").mkdir()
-    (sporco / "registri" / "esiti.jsonl").write_text("\n".join(
+    (sporco / "OUTPUT" / "JOBS").mkdir(parents=True)
+    (sporco / "records").mkdir()
+    (sporco / "records" / "history.jsonl").write_text("\n".join(
         ["{rotta", "", "null", "12345", "[]", '"testo"']
         + [json.dumps(r) for r in righe[:3]]))
     sp = Paths(sporco)
@@ -4765,19 +4773,78 @@ def _() -> None:
 @caso("la cartella LAVORAZIONI di prima della 1.4 diventa JOBS, col contenuto")
 def _() -> None:
     """Rinominata la cartella, una lavorazione interrotta sotto il nome vecchio
-    sarebbe sparita dall'elenco senza un avviso."""
+    sarebbe sparita dall'elenco senza un avviso. Dalla 1.6 JOBS sta dentro
+    OUTPUT, e la lavorazione deve arrivarci."""
     from animeup.paths import Paths
     with tempfile.TemporaryDirectory() as tmp:
         radice = Path(tmp)
         (radice / "LAVORAZIONI" / "episodio 2026-08-10 abcd1234").mkdir(parents=True)
-        Paths(radice).ensure_dirs()
+        p = Paths(radice)
+        p.ensure_dirs()
         assert not (radice / "LAVORAZIONI").exists()
-        assert (radice / "JOBS" / "episodio 2026-08-10 abcd1234").is_dir()
-        # Con entrambe presenti non si tocca niente: meglio una cartella in
-        # piu' che un'unione fatta a indovinare.
-        (radice / "LAVORAZIONI").mkdir()
-        Paths(radice).ensure_dirs()
-        assert (radice / "LAVORAZIONI").is_dir() and (radice / "JOBS").is_dir()
+        assert (p.work / "episodio 2026-08-10 abcd1234").is_dir()
+        assert p.work == (radice / "OUTPUT" / "JOBS").resolve(), p.work
+
+
+@caso("la disposizione di prima della 1.6 passa a quella nuova senza perdere niente")
+def _() -> None:
+    """Registri e impostazioni vanno nello stato, in inglese; JOBS e i log
+    dei file dentro OUTPUT; una lavorazione sospesa resta riprendibile e
+    lo storico resta leggibile dalle stime. Rilanciare non cambia niente."""
+    import json as _json
+    from animeup import storico, su_disco
+    from animeup.migrazione import _fatte
+    from animeup.paths import Paths
+    with tempfile.TemporaryDirectory() as tmp:
+        radice = Path(tmp)
+        reg = radice / "registri"
+        reg.mkdir()
+        (reg / "esiti.jsonl").write_text("".join(_json.dumps(
+            {"file": f"ep{i}.mkv", "secondi": 100.0 + i, "dedup": 0.3,
+             "fotogrammi": 30000, "quando": i}) + "\n" for i in range(3)))
+        (reg / "impostazioni.json").write_text(_json.dumps(
+            {"altezza": 1080, "lingua": "it", "pausa": 5}))
+        (reg / "taratura.json").write_text(_json.dumps(
+            {"versione": 1, "macchine": {"Chip X": {"codifica_fps": 16}}}))
+        (reg / "ep0 [upscale 1080p cugan x3 crf18 dd].log").write_text("[cmd] x\n")
+        lav = radice / "JOBS" / "ep0 2026-10-23 fc158b30"
+        lav.mkdir(parents=True)
+        (lav / "parametri.json").write_text(_json.dumps(
+            {"altezza": 1080, "modello": "cugan", "fotogrammi": 32374}))
+        (lav / "state.json").write_text(_json.dumps(
+            {"signature": "s", "extracted": 5, "secondi_spesi": 12.5,
+             "blocchi": [{"da": 0, "a": 10, "tenuti": 8}]}))
+        (lav / ".sospeso").write_text(_json.dumps({"da": 1.0, "pids": [1]}))
+        (radice / "JOBS" / ".analisi").mkdir()
+        (radice / "JOBS" / ".analisi" / "ep0-x.json").write_text("{}")
+        (radice / "anteprime" / "ep0 fc158b30").mkdir(parents=True)
+        (radice / "anteprime" / "ep0 fc158b30" / "tempi.json").write_text("{}")
+        (radice / "OUTPUT").mkdir()
+        (radice / "OUTPUT" / "ep1.mkv.inlavorazione").write_text("")
+
+        for _ in range(2):
+            _fatte.clear()
+            p = Paths(radice)
+            p.ensure_dirs()
+
+        assert not reg.exists() and not (radice / "JOBS").exists()
+        assert not (radice / "anteprime").exists()
+        storia = p.storico.read_text()
+        assert '"seconds"' in storia and '"secondi"' not in storia, storia
+        assert len(storia.splitlines()) == 3, "righe perse o doppie"
+        assert '"language": "it"' in p.impostazioni.read_text()
+        assert '"machines"' in p.taratura.read_text()
+        assert (p.job_logs / "ep0 [upscale 1080p cugan x3 crf18 dd].log").is_file()
+        nuova = p.work / "ep0 2026-10-23 fc158b30"
+        assert su_disco.leggi(nuova / "parameters.json")["fotogrammi"] == 32374
+        stato = (nuova / "state.json").read_text()
+        assert '"seconds_spent"' in stato and '"from"' in stato, stato
+        assert su_disco.leggi(nuova / ".suspended")["da"] == 1.0
+        assert (p.analisi / "ep0-x.json").is_file()
+        assert (p.previews / "ep0 fc158b30" / "timings.json").is_file()
+        assert (radice / "OUTPUT" / "ep1.mkv.incomplete").is_file()
+        # Le stime leggono lo storico migrato come prima.
+        assert len(storico._pagelle(p)) == 3
 
 
 @caso("con ANIMEUP_ROOT i dati vanno altrove, ma i binari restano col programma")
@@ -4796,7 +4863,7 @@ def _() -> None:
             assert p.bin == code_root() / "bin", p.bin
             # Anche il clip della taratura viaggia col programma: cercato
             # nella cartella dati, la taratura dall'interfaccia restava appesa.
-            assert p.campioni == code_root() / "campioni", p.campioni
+            assert p.campioni == code_root() / "samples", p.campioni
             assert (p.campioni / "bbb-480p.mkv").is_file()
         finally:
             if vecchio is None:
@@ -4871,7 +4938,7 @@ def _() -> None:
         try:
             p = Paths()
             assert p.bin == Path(tmp).resolve() / "bin", p.bin
-            assert p.campioni == code_root() / "campioni", p.campioni
+            assert p.campioni == code_root() / "samples", p.campioni
         finally:
             if vecchio is None:
                 os.environ.pop("ANIMEUP_STATO", None)
@@ -4907,12 +4974,12 @@ def _() -> None:
         forzata = os.environ.pop("ANIMEUP_LANG", None)
         try:
             assert i18n.preferita() == i18n.PREDEFINITA
-            (radice.logs / "impostazioni.json").write_text(_json.dumps({"lingua": "it"}))
+            radice.impostazioni.write_text(_json.dumps({"lingua": "it"}))
             assert i18n.preferita() == "it"
-            (radice.logs / "impostazioni.json").write_text(_json.dumps({"lingua": "xx"}))
+            radice.impostazioni.write_text(_json.dumps({"lingua": "xx"}))
             assert i18n.preferita() == i18n.PREDEFINITA
             # L'ambiente vince sul salvato.
-            (radice.logs / "impostazioni.json").write_text(_json.dumps({"lingua": "en"}))
+            radice.impostazioni.write_text(_json.dumps({"lingua": "en"}))
             os.environ["ANIMEUP_LANG"] = "it"
             assert i18n.preferita() == "it"
         finally:
@@ -4963,9 +5030,9 @@ def _() -> None:
     # 1. Il marcatore: vivo se il PID esiste, morto se no.
     with tempfile.TemporaryDirectory() as tmp:
         radice = Path(tmp)
-        finti = _types.SimpleNamespace(root=radice)
+        finti = _types.SimpleNamespace(root=radice, cache=radice / ".cache")
         assert not taratura.in_corso(finti), "nessun marcatore, eppure in corso"
-        marcatore = radice / ".cache" / "taratura" / "in-corso.lock"
+        marcatore = radice / ".cache" / "calibration" / "running.lock"
         marcatore.parent.mkdir(parents=True)
         marcatore.write_text(str(os.getpid()))
         assert taratura.in_corso(finti), "il PID e' vivo ma non risulta in corso"
@@ -4985,8 +5052,8 @@ def _() -> None:
         "t": i18n.t,
         # Oltre la guardia la prima cosa che si tocca e' il registro: se ci
         # si arriva, la guardia non ha fermato niente.
-        "PATHS": _types.SimpleNamespace(
-            logs=type("Registri", (), {"__truediv__": _vietato})()),
+        "PATHS": type("Registri", (), {
+            "registro_coda": property(lambda _s: _vietato())})(),
         "_leggi_parametri": lambda _c: {},
         "Path": Path,
     })

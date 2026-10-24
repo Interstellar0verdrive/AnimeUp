@@ -1,7 +1,14 @@
 """Risoluzione dei percorsi del progetto.
 
-Regola d'oro: tutto vive dentro la cartella del progetto. Nessun percorso
-assoluto verso il sistema, così la cartella resta spostabile fra Mac diversi.
+Tre posti, scelti indipendentemente:
+  - INPUT, i video da elaborare (ANIMEUP_INPUT);
+  - OUTPUT, i video finiti, con accanto i log di ogni file (`logs/`) e le
+    lavorazioni in corso o interrotte (`JOBS/`), che stanno sullo stesso
+    disco perche' e' li' che serve lo spazio (ANIMEUP_OUTPUT);
+  - lo STATO, cio' che serve all'app nel tempo: registri, impostazioni,
+    taratura e cache (ANIMEUP_STATO).
+Senza variabili tutto sta dentro la cartella del programma (o in
+ANIMEUP_ROOT), cosi' la cartella portatile resta spostabile fra Mac diversi.
 """
 
 from __future__ import annotations
@@ -31,14 +38,28 @@ def stato_root() -> Path:
 
 
 def project_root() -> Path:
-    """Radice dei DATI: INPUT/, OUTPUT/, JOBS/, registri/...
+    """La radice di partenza: INPUT/ e OUTPUT/ stanno qui se non scelti.
 
-    Coincide con quella del programma, salvo un ANIMEUP_ROOT impostato.
+    Coincide con quella del programma, salvo un ANIMEUP_ROOT impostato. E'
+    anche dove le versioni prima della 1.6 tenevano tutto, ed e' da qui che
+    `migrazione` riprende registri e lavorazioni.
     """
     env = os.environ.get("ANIMEUP_ROOT")
     if env:
         return Path(env).resolve()
     return code_root()
+
+
+def gb_liberi(cartella: Path) -> float:
+    """Lo spazio libero sul disco di `cartella`, in GB.
+
+    La cartella puo' non esistere ancora (OUTPUT appena scelto, JOBS mai
+    usato): si misura sul primo antenato che c'e', che sta sullo stesso disco.
+    """
+    for candidata in (cartella, *cartella.parents):
+        if candidata.exists():
+            return shutil.disk_usage(candidata).free / 1_073_741_824
+    return shutil.disk_usage("/").free / 1_073_741_824
 
 
 class MissingToolError(RuntimeError):
@@ -69,6 +90,18 @@ class Paths:
         # setup li mettono accanto al codice. Una radice passata a mano (test,
         # strumenti) resta invece autosufficiente, bin/ compreso.
         self._bin = (self.root if root is not None else stato_root()) / "bin"
+        # Le cartelle scelte dall'utente valgono solo per la radice di
+        # sistema: una radice passata a mano (test, strumenti) resta tutta
+        # dentro se stessa.
+        def _scelta(nome: str) -> Path | None:
+            valore = None if self._radice_esplicita else os.environ.get(nome)
+            return Path(valore).expanduser().resolve() if valore else None
+
+        self._input = _scelta("ANIMEUP_INPUT") or self.root / "INPUT"
+        self._output = _scelta("ANIMEUP_OUTPUT") or self.root / "OUTPUT"
+        # Lo stato segue ANIMEUP_STATO (l'app: Application Support); senza,
+        # resta con i dati, come prima della 1.6.
+        self._stato = _scelta("ANIMEUP_STATO") or self.root
 
     # --- cartelle ---------------------------------------------------------
     @property
@@ -78,7 +111,7 @@ class Paths:
     @property
     def campioni(self) -> Path:
         """I clip liberi della taratura: viaggiano col programma."""
-        return (self.root if self._radice_esplicita else code_root()) / "campioni"
+        return (self.root if self._radice_esplicita else code_root()) / "samples"
 
     @property
     def models(self) -> Path:
@@ -86,20 +119,35 @@ class Paths:
 
     @property
     def input(self) -> Path:
-        return self.root / "INPUT"
+        return self._input
 
     @property
     def output(self) -> Path:
-        return self.root / "OUTPUT"
+        return self._output
 
     # Convenzione dei nomi su disco (voluta dall'utente): MAIUSCOLO per le
     # cartelle che l'utente tocca (INPUT, OUTPUT, JOBS), minuscolo per
-    # quelle interne (anteprime, registri). I nomi qui sono l'unica verità:
-    # nessun altro punto del codice li conosce per esteso.
+    # quelle interne. Tutto in inglese, qualunque sia la lingua scelta: chi
+    # apre il Finder deve capire senza sapere l'italiano. I nomi qui sono
+    # l'unica verità: nessun altro punto del codice li conosce per esteso.
+
+    @property
+    def stato(self) -> Path:
+        return self._stato
 
     @property
     def logs(self) -> Path:
-        return self.root / "registri"
+        """I registri dell'app: storico, lanci, impostazioni, taratura."""
+        return self._stato / "records"
+
+    @property
+    def job_logs(self) -> Path:
+        """Il log di ogni file lavorato, accanto ai video finiti.
+
+        Nessuna stima li legge: raccontano la singola lavorazione, e chi la
+        cerca la cerca dove ha trovato il video.
+        """
+        return self._output / "logs"
 
     @property
     def work(self) -> Path:
@@ -107,23 +155,54 @@ class Paths:
 
         MAIUSCOLA e col nome della scheda della UI: è qui che vivono le
         lavorazioni interrotte riprendibili, ed è una cartella che l'utente
-        ha il diritto di guardare (e di pesare, quando occupa 19 GB).
+        ha il diritto di guardare (e di pesare, quando occupa 19 GB). Sta
+        dentro OUTPUT perche' lo spazio che chiede e' quello del disco dei
+        video finiti.
         """
-        return self.root / "JOBS"
+        return self._output / "JOBS"
+
+    @property
+    def cache(self) -> Path:
+        return self._stato / "cache"
 
     @property
     def previews(self) -> Path:
-        return self.root / "anteprime"
+        """Le clip del confronto."""
+        return self.cache / "previews"
+
+    @property
+    def analisi(self) -> Path:
+        """Il referto di ogni sorgente analizzato."""
+        return self.cache / "analysis"
+
+    # --- i file dei registri ---------------------------------------------
+    @property
+    def storico(self) -> Path:
+        return self.logs / "history.jsonl"
+
+    @property
+    def lanci(self) -> Path:
+        return self.logs / "launches.jsonl"
+
+    @property
+    def impostazioni(self) -> Path:
+        return self.logs / "settings.json"
+
+    @property
+    def taratura(self) -> Path:
+        return self.logs / "calibration.json"
+
+    @property
+    def registro_coda(self) -> Path:
+        """L'uscita del terminale dell'ultima coda lanciata dall'interfaccia."""
+        return self.logs / "queue.log"
 
     def ensure_dirs(self) -> None:
-        # Fino alla 1.3.2 la cartella delle lavorazioni si chiamava
-        # LAVORAZIONI: con l'interfaccia in inglese e' diventata JOBS. Una
-        # cartella vecchia si rinomina e basta, cosi' le lavorazioni
-        # interrotte restano dove l'app le cerca.
-        vecchia = self.root / "LAVORAZIONI"
-        if vecchia.is_dir() and not self.work.exists():
-            vecchia.rename(self.work)
-        for d in (self.input, self.output, self.logs, self.work, self.previews):
+        from .migrazione import migra
+
+        migra(self)
+        for d in (self.input, self.output, self.logs, self.work,
+                  self.previews, self.analisi):
             d.mkdir(parents=True, exist_ok=True)
 
     # --- binari esterni ---------------------------------------------------

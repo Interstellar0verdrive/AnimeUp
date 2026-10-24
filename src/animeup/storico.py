@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
+from . import su_disco
 from .paths import PATHS, Paths
 
 # Quante pagelle CONTANO, fra quelle che somigliano al file da stimare. Una
@@ -58,7 +59,7 @@ def _pagelle(p: Paths) -> list[dict]:
     applicata ai file SIMILI, non a tutti indistintamente.
     """
     try:
-        righe = (p.logs / "esiti.jsonl").read_text().splitlines()
+        righe = p.storico.read_text().splitlines()
     except OSError:
         return []
     fuori: list[dict] = []
@@ -66,7 +67,7 @@ def _pagelle(p: Paths) -> list[dict]:
         if len(fuori) >= FINESTRA_LETTURA:
             break
         try:
-            dato = json.loads(riga)
+            dato = su_disco.loads(riga)
         except ValueError:
             continue
         # Non basta che la riga sia JSON valido: `12345`, `null` e `[]` lo

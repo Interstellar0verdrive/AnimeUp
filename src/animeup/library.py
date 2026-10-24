@@ -134,7 +134,7 @@ def _cache_path(path: Path, paths: Paths) -> Path:
     E con un nome vicino ai 255 byte la scrittura falliva con "File name too
     long", perché l'estensione .json sforava il limite.
     """
-    folder = paths.work / ".analisi"
+    folder = paths.analisi
     folder.mkdir(parents=True, exist_ok=True)
     # Identità RELATIVA alla radice, come per la cartella di lavoro: usando il
     # percorso assoluto, la copia della cartella sul secondo Mac cambiava tutte
@@ -142,7 +142,7 @@ def _cache_path(path: Path, paths: Paths) -> Path:
     # a file su una serie intera, lasciando per giunta i vecchi JSON orfani.
     from .pipeline import identita_sorgente
     impronta = hashlib.sha1(
-        identita_sorgente(Path(path), paths.root).encode("utf-8")
+        identita_sorgente(Path(path), paths.input.parent).encode("utf-8")
     ).hexdigest()[:12]
     breve = re.sub(r"[^\w.-]+", "_", path.stem)[:80].strip("_")
     return folder / f"{breve or 'file'}-{impronta}.json"

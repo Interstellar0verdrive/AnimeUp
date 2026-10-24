@@ -1,0 +1,70 @@
+{
+  "fingerprint": "569851-cd6b0704c701",
+  "report": {
+    "path": "/Volumes/USB_1TB/AnimeUp-dev/tests/.fixtures/TEST-CFR-23-976fps---2min.mkv",
+    "container": "matroska,webm",
+    "duration": 9.0,
+    "video_codec": "h264",
+    "pix_fmt": "yuv420p",
+    "bit_depth": 8,
+    "color_space": null,
+    "color_transfer": null,
+    "color_primaries": null,
+    "audio_tracks": 1,
+    "subtitle_tracks": 1,
+    "subtitle_codecs": [
+      "ass"
+    ],
+    "chapters": 0,
+    "geometry": {
+      "width": 710,
+      "height": 480,
+      "sar": {
+        "__fraction__": "480/527"
+      },
+      "dar": {
+        "__fraction__": "710/527"
+      },
+      "display_width": 710,
+      "display_height": 528
+    },
+    "timing": {
+      "mode": "cfr",
+      "fps": {
+        "__fraction__": "24000/1001"
+      },
+      "fps_is_standard": true,
+      "packets": 144,
+      "time_base": {
+        "__fraction__": "1/1000"
+      },
+      "dominant_delta": 42,
+      "jitter_ticks": 1,
+      "quantization_only": true,
+      "gaps": 0,
+      "missing_frames": 0,
+      "outliers": [],
+      "container_r_fps": {
+        "__fraction__": "30000/1001"
+      },
+      "container_avg_fps": {
+        "__fraction__": "30000/1001"
+      },
+      "notes": [
+        "Le piccole differenze fra i tempi dei fotogrammi sono l'arrotondamento del contenitore (1000 tick al secondo), non un ritmo davvero variabile."
+      ]
+    },
+    "fields": {
+      "mode": "progressivo",
+      "progressive": 143,
+      "tff": 0,
+      "bff": 0,
+      "undetermined": 1,
+      "repeated_fields": 0,
+      "total": 144,
+      "confidence": 1.0
+    },
+    "duplicates": null,
+    "dedup_campione": null
+  }
+}
