@@ -150,9 +150,9 @@
 }
 
 .animeup-header__actions {
-  gap: 0.2rem;
+  gap: 8px;
   justify-content: flex-end;
-  padding: 0 0.3rem;
+  padding: 0 8px;
 }
 
 /* A named theme menu and a direct GitHub button, as in the Linfa guide. */
@@ -806,6 +806,7 @@
 
   .md-header__inner.md-grid.animeup-header {
     height: 58px;
+    grid-template-columns: clamp(250px, 21vw, 274px) minmax(0, 1fr) max-content;
   }
 
   .animeup-header__brand {
@@ -818,7 +819,7 @@
 
   .animeup-header__search {
     gap: 8px;
-    padding-right: 16px;
+    padding-right: 0;
   }
 
   .animeup-search-toggle {
@@ -829,11 +830,11 @@
     color: var(--animeup-text);
     cursor: pointer;
     display: inline-flex;
-    flex: 0 0 34px;
-    height: 34px;
+    flex: 0 0 2rem;
+    height: 2rem;
     justify-content: center;
     padding: 7px;
-    width: 34px;
+    width: 2rem;
   }
 
   .animeup-search-toggle:hover,
@@ -920,24 +921,9 @@
 }
 
 @media screen and (min-width: 60em) and (max-width: 77.5em) {
-  .md-header__inner.md-grid.animeup-header,
   .md-main__inner.md-grid,
   .md-footer {
     grid-template-columns: clamp(250px, 21vw, 274px) minmax(0, 1fr);
-  }
-
-  .animeup-header__actions {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
-  }
-
-  .animeup-header__search {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
-    margin-right: 210px;
-    padding-left: 0;
   }
 
   .md-sidebar--secondary,
@@ -974,11 +960,11 @@
     color: var(--animeup-text);
     cursor: pointer;
     display: inline-flex;
-    flex: 0 0 34px;
-    height: 34px;
+    flex: 0 0 2rem;
+    height: 2rem;
     justify-content: center;
     padding: 7px;
-    width: 34px;
+    width: 2rem;
   }
 
   .animeup-search-toggle svg {
