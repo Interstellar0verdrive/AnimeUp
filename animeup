@@ -21,6 +21,23 @@ export UV_PYTHON_PREFERENCE=only-managed
 # OUTPUT/ finire qui dentro senza un avviso.
 export ANIMEUP_ROOT="${ANIMEUP_ROOT:-$ROOT}"
 
+# --- lingua dei messaggi: quella salvata dall'interfaccia, se c'e' ---
+# Niente Python ne' jq: al primo avvio l'ambiente non esiste ancora. Si legge
+# la chiave `lingua` di registri/impostazioni.json con sed; senza file, o con
+# un valore sconosciuto, si parla inglese come l'app di fabbrica.
+lingua_salvata() {
+  local file="$1/registri/impostazioni.json"
+  [[ -r "$file" ]] || return 0
+  sed -n 's/.*"lingua"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p' "$file" | head -n 1
+}
+LINGUA="$(lingua_salvata "$ANIMEUP_ROOT" || true)"
+[[ "$LINGUA" == "it" ]] || LINGUA="en"
+
+# Un messaggio nelle due lingue, su stderr: `dire "italiano" "english"`.
+dire() {
+  if [[ "$LINGUA" == "it" ]]; then echo "$1" >&2; else echo "$2" >&2; fi
+}
+
 # --- cartella scaricata da Internet: via la quarantena di macOS ---
 # Estraendo lo zip della release, macOS marca ogni file come "scaricato", e
 # Gatekeeper bloccherebbe al primo avvio i binari non firmati da uno
@@ -28,7 +45,8 @@ export ANIMEUP_ROOT="${ANIMEUP_ROOT:-$ROOT}"
 # come uscirne. Si toglie la marca alla SOLA cartella del progetto: chi ha
 # aperto questo launcher ha già scelto di fidarsene.
 if xattr -p com.apple.quarantine "$ROOT/animeup" >/dev/null 2>&1; then
-  echo "Cartella scaricata da Internet: tolgo la quarantena di macOS ai suoi file." >&2
+  dire "Cartella scaricata da Internet: tolgo la quarantena di macOS ai suoi file." \
+       "Folder downloaded from the Internet: removing the macOS quarantine from its files."
   xattr -dr com.apple.quarantine "$ROOT" 2>/dev/null || true
 fi
 
@@ -42,7 +60,8 @@ UV_URL="https://github.com/astral-sh/uv/releases/download/$UV_VERSION/uv-aarch64
 scarica_uv() {
   local tmp
   tmp="$(mktemp -d)"
-  echo "Scarico uv $UV_VERSION (gestore dell'ambiente Python, ~20 MB)..." >&2
+  dire "Scarico uv $UV_VERSION (gestore dell'ambiente Python, ~20 MB)..." \
+       "Downloading uv $UV_VERSION (the Python environment manager, ~20 MB)..."
   if curl -fsSL "$UV_URL" -o "$tmp/uv.tar.gz" \
      && [[ "$(shasum -a 256 "$tmp/uv.tar.gz" | cut -d' ' -f1)" == "$UV_SHA256" ]] \
      && tar -xzf "$tmp/uv.tar.gz" -C "$tmp"; then
@@ -60,7 +79,8 @@ if [[ ! -x "$UV" ]]; then
     mkdir -p "$ROOT/bin"
     cp "$(command -v uv)" "$UV" && chmod +x "$UV"
   elif [[ "$(uname -m)" != "arm64" ]] || ! scarica_uv; then
-    cat >&2 <<'EOF'
+    if [[ "$LINGUA" == "it" ]]; then
+      cat >&2 <<'EOF'
 ERRORE: bin/uv mancante, nessun uv nel PATH e download non riuscito.
 
 uv e' il gestore che crea l'ambiente Python dentro questa cartella.
@@ -71,13 +91,27 @@ Installalo una volta sola con:
 poi rilancia ./animeup: verra' copiato in bin/ e la cartella tornera'
 completamente autonoma.
 EOF
+    else
+      cat >&2 <<'EOF'
+ERROR: bin/uv is missing, there's no uv in the PATH and the download failed.
+
+uv is the manager that creates the Python environment inside this folder.
+Install it once with:
+
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+then run ./animeup again: it will be copied into bin/ and the folder will be
+fully self-contained again.
+EOF
+    fi
     exit 1
   fi
 fi
 
 # --- primo avvio: messaggio esplicito, altrimenti uv lavora in silenzio ---
 if [[ ! -d "$ROOT/.venv" ]]; then
-  echo "Primo avvio: preparo l'ambiente dentro la cartella (una volta sola)..." >&2
+  dire "Primo avvio: preparo l'ambiente dentro la cartella (una volta sola)..." \
+       "First launch: setting up the environment inside the folder (only once)..."
 fi
 
 # Se l'ambiente e' gia' pronto si esegue direttamente, senza passare da uv:
@@ -110,13 +144,23 @@ fi
 # Ambiente assente o incompleto: lo si prepara. Qui uv puo' aver bisogno della
 # rete, ed e' l'unico punto in cui ha senso segnalarlo.
 if ! "$UV" sync --project "$ROOT" --quiet; then
-  cat >&2 <<EOF
+  if [[ "$LINGUA" == "it" ]]; then
+    cat >&2 <<EOF
 ERRORE: preparazione dell'ambiente fallita.
 
 Al primo avvio su una macchina nuova serve una connessione per scaricare
 Python e le dipendenze dentro questa cartella. Una volta fatto, funziona
 anche offline.
 EOF
+  else
+    cat >&2 <<EOF
+ERROR: setting up the environment failed.
+
+The first launch on a new machine needs an Internet connection to download
+Python and the dependencies into this folder. After that, it works offline
+too.
+EOF
+  fi
   exit 1
 fi
 

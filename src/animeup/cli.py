@@ -18,6 +18,7 @@ from rich.table import Table
 
 from . import __version__
 from .ffmpeg import FFmpegError
+from .i18n import t, tn
 from .paths import PATHS, MissingToolError
 from .probe import probe_source
 from .report import render_source
@@ -25,7 +26,9 @@ from .report import render_source
 app = typer.Typer(
     add_completion=False,
     no_args_is_help=True,
-    help="AnimeUp — upscaler per anime su Apple Silicon.",
+    # Gli aiuti di Typer si leggono all'import: per la CLI va bene, ogni
+    # comando e' un processo nuovo che parte gia' nella lingua salvata.
+    help=t("cli.app.aiuto"),
     rich_markup_mode="rich",
 )
 console = Console()
@@ -59,7 +62,7 @@ def _collect(targets: list[Path] | None) -> list[Path]:
         elif target.is_file():
             files.append(target)
         else:
-            dire(f"Ignorato (non esiste): {target}", "yellow")
+            dire(t("cli.ignorato", percorso=target), "yellow")
 
     # Su APFS il filesystem è case-insensitive: due percorsi diversi possono
     # puntare allo stesso file. Si deduplica sul percorso risolto.
@@ -69,31 +72,31 @@ def _collect(targets: list[Path] | None) -> list[Path]:
     return list(seen.values())
 
 
-@app.command()
+@app.command(help=t("cli.analyze.aiuto"))
 def analyze(
     targets: Annotated[
         list[Path] | None,
-        typer.Argument(help="File o cartelle da analizzare. Vuoto = cartella INPUT."),
+        typer.Argument(help=t("cli.analyze.targets")),
     ] = None,
     duplicates: Annotated[
         bool,
         typer.Option("--duplicati/--no-duplicati",
-                     help="Analizza i frame identici (costa una decodifica completa)."),
+                     help=t("cli.analyze.duplicati")),
     ] = False,
     quick: Annotated[
         bool,
-        typer.Option("--veloce", help="Salta campi e geometria: solo tempi."),
+        typer.Option("--veloce", help=t("cli.analyze.veloce")),
     ] = False,
 ) -> None:
     """Analizza i sorgenti e mostra il referto, senza modificare nulla."""
     files = _collect(targets)
     if not files:
-        console.print("[yellow]Nessun file video trovato.[/yellow]")
+        console.print(f"[yellow]{t('cli.nessun_video')}[/yellow]")
         raise typer.Exit(0)
 
     for path in files:
         try:
-            with console.status("Analisi in corso..."):
+            with console.status(t("cli.analisi_in_corso")):
                 report = probe_source(
                     path,
                     with_fields=not quick,
@@ -101,45 +104,44 @@ def analyze(
                     with_duplicates=duplicates,
                 )
         except (OSError, FFmpegError, ValueError) as exc:
-            dire(f"{path.name}: non analizzabile — {exc}", "red")
+            dire(t("cli.non_analizzabile", nome=path.name, errore=exc), "red")
             continue
         render_source(report, console)
 
 
-@app.command(name="plan")
+@app.command(name="plan", help=t("cli.plan.aiuto"))
 def plan_cmd(
     targets: Annotated[
         list[Path] | None,
-        typer.Argument(help="File o cartelle. Vuoto = cartella INPUT."),
+        typer.Argument(help=t("cli.opz.targets")),
     ] = None,
     altezza: Annotated[
-        int, typer.Option("--altezza", help="Altezza finale in pixel.")
+        int, typer.Option("--altezza", help=t("cli.opz.altezza"))
     ] = 1080,
-    crf: Annotated[int, typer.Option("--crf", help="Qualità x265 (più basso = migliore).")] = 18,
+    crf: Annotated[int, typer.Option("--crf", help=t("cli.opz.crf"))] = 18,
     scala: Annotated[
         int | None,
-        typer.Option("--scala", help="Forza la scala del modello (2/3/4)."),
+        typer.Option("--scala", help=t("cli.opz.scala")),
     ] = None,
     denoise: Annotated[
-        bool, typer.Option("--denoise/--no-denoise", help="Denoise prima dell'upscale.")
+        bool, typer.Option("--denoise/--no-denoise", help=t("cli.opz.denoise"))
     ] = False,
     dedup: Annotated[
-        bool, typer.Option("--dedup/--no-dedup", help="Salta i fotogrammi ripetuti.")
+        bool, typer.Option("--dedup/--no-dedup", help=t("cli.opz.dedup"))
     ] = True,
     forza: Annotated[bool, typer.Option("--forza",
-        help="Procedi anche sotto la soglia minima di ingrandimento.")] = False,
+        help=t("cli.opz.forza"))] = False,
     # `plan` è l'unico comando di sola lettura: senza queste due non poteva
     # riprodurre ciò che `run` avrebbe fatto, e mostrava blocchi, picco su
     # disco e riga di codifica diversi da quelli veri.
     preset: Annotated[str, typer.Option("--preset",
-        help="Preset x265: medium | slow | slower | veryslow.")] = "slower",
+        help=t("cli.opz.preset"))] = "slower",
     disco: Annotated[float, typer.Option("--disco",
-        help="Spazio massimo per FILE, in GB: fotogrammi estratti, blocchi e segmenti insieme.")] = 40.0,
+        help=t("cli.opz.disco"))] = 40.0,
     modello: Annotated[
         str | None,
         typer.Option("--modello", "-m",
-                     help="cugan | cugan-denoise | animevideov3. "
-                          "Vuoto = quello consigliato."),
+                     help=t("cli.opz.modello")),
     ] = None,
 ) -> None:
     """Mostra cosa verrebbe fatto su ogni file, senza eseguire nulla."""
@@ -148,13 +150,13 @@ def plan_cmd(
 
     files = _collect(targets)
     if not files:
-        console.print("[yellow]Nessun file video trovato.[/yellow]")
+        console.print(f"[yellow]{t('cli.nessun_video')}[/yellow]")
         raise typer.Exit(0)
 
     total = minimo = 0.0
     for path in files:
         try:
-            with console.status("Analisi in corso..."):
+            with console.status(t("cli.analisi_in_corso")):
                 report = probe_source(path, with_duplicates=False)
             plan = build_plan(
                 report, target_height=altezza, crf=crf,
@@ -164,7 +166,7 @@ def plan_cmd(
                 dedup_nota=_dedup_gia_misurata(path),
             )
         except (PlanError, OSError, FFmpegError, ValueError) as exc:
-            dire(f"{path.name}: non elaborabile — {exc}", "red")
+            dire(t("cli.non_elaborabile", nome=path.name, errore=exc), "red")
             continue
         render_plan(plan, console)
         total += plan.est_total_seconds
@@ -176,59 +178,53 @@ def plan_cmd(
         # numero due volte e mezzo il minimo, presentato come "il" tempo.
         quanto = (f"{hms(minimo)} - {hms(total)}" if minimo < total * 0.95
                   else hms(total))
-        console.print(f"\n[bold]Totale stimato per {len(files)} file: {quanto}[/bold]")
+        console.print("\n[bold]" + t("cli.plan.totale", n=len(files), quanto=quanto)
+                      + "[/bold]")
 
 
-@app.command(name="run")
+@app.command(name="run", help=t("cli.run.aiuto"))
 def run_cmd(
     targets: Annotated[
         list[Path] | None,
-        typer.Argument(help="File o cartelle. Vuoto = cartella INPUT."),
+        typer.Argument(help=t("cli.opz.targets")),
     ] = None,
     altezza: Annotated[int, typer.Option("--altezza",
-        help="Altezza finale in pixel.")] = 1080,
+        help=t("cli.opz.altezza"))] = 1080,
     crf: Annotated[int, typer.Option("--crf",
-        help="Qualità x265 (più basso = migliore).")] = 18,
+        help=t("cli.opz.crf"))] = 18,
     forza: Annotated[bool, typer.Option("--forza",
-        help="Procedi anche sotto la soglia minima di ingrandimento.")] = False,
+        help=t("cli.opz.forza"))] = False,
     disco: Annotated[float, typer.Option("--disco",
-        help="Spazio massimo per FILE, in GB: fotogrammi estratti, blocchi e segmenti insieme.")] = 40.0,
+        help=t("cli.opz.disco"))] = 40.0,
     preset: Annotated[str, typer.Option("--preset",
-        help="Preset x265: medium | slow | slower | veryslow.")] = "slower",
+        help=t("cli.opz.preset"))] = "slower",
     scala: Annotated[int | None, typer.Option("--scala",
-        help="Forza la scala del modello (2/3/4).")] = None,
+        help=t("cli.opz.scala"))] = None,
     denoise: Annotated[bool, typer.Option("--denoise/--no-denoise",
-        help="Denoise prima dell'upscale.")] = False,
+        help=t("cli.opz.denoise"))] = False,
     dedup: Annotated[bool, typer.Option("--dedup/--no-dedup",
-        help="Salta i fotogrammi ripetuti.")] = True,
+        help=t("cli.opz.dedup"))] = True,
     conferma: Annotated[
-        bool, typer.Option("--si", help="Non chiedere conferma prima di partire.")
+        bool, typer.Option("--si", help=t("cli.run.si"))
     ] = False,
     tieni_temp: Annotated[
-        bool, typer.Option("--tieni-temp", help="Non cancellare la cartella di lavoro.")
+        bool, typer.Option("--tieni-temp", help=t("cli.run.tieni_temp"))
     ] = False,
     modello: Annotated[
         str | None,
         typer.Option("--modello", "-m",
-                     help="cugan | cugan-denoise | animevideov3. "
-                          "Vuoto = quello consigliato."),
+                     help=t("cli.opz.modello")),
     ] = None,
     pausa: Annotated[int, typer.Option("--pausa",
-        help="Minuti di riposo fra un file e l'altro (0 = nessuno): nelle "
-             "maratone lunghe dà respiro a CPU e GPU.")] = 0,
+        help=t("cli.run.pausa"))] = 0,
     pausa_prima: Annotated[bool, typer.Option("--pausa-prima",
-        help="Riposa anche PRIMA del primo file: lo usa l'interfaccia per i "
-             "comandi successivi al primo di una catena.")] = False,
+        help=t("cli.run.pausa_prima"))] = False,
     catena_totale: Annotated[int, typer.Option("--catena-totale",
-        help="Quanti file conta l'intera catena (per il \"file N di M\" "
-             "dell'interfaccia): lo passa la UI quando spezza il lancio in "
-             "più comandi. 0 = solo i file di questo comando.")] = 0,
+        help=t("cli.run.catena_totale"))] = 0,
     catena_inizio: Annotated[int, typer.Option("--catena-inizio",
-        help="Quanti file della catena vengono PRIMA di questo comando.")] = 0,
+        help=t("cli.run.catena_inizio"))] = 0,
     lancio: Annotated[str, typer.Option("--lancio",
-        help="Etichetta comune a tutti i comandi di uno stesso lancio: "
-             "serve a rimettere insieme il resoconto quando l'interfaccia "
-             "spezza una coda in piu' comandi. Vuota = comando a se'.")] = "",
+        help=t("cli.run.lancio"))] = "",
 ) -> None:
     """Esegue la lavorazione completa."""
     from rich.progress import BarColumn, Progress as RichProgress, TextColumn, TimeRemainingColumn
@@ -239,14 +235,14 @@ def run_cmd(
 
     files = _collect(targets)
     if not files:
-        console.print("[yellow]Nessun file video trovato.[/yellow]")
+        console.print(f"[yellow]{t('cli.nessun_video')}[/yellow]")
         raise typer.Exit(0)
 
     plans = []
     scartati: list[str] = []
     for path in files:
         try:
-            with console.status("Analisi in corso..."):
+            with console.status(t("cli.analisi_in_corso")):
                 report = probe_source(path, with_duplicates=False)
             plans.append(build_plan(
                 report, target_height=altezza, crf=crf, preset=preset,
@@ -255,7 +251,7 @@ def run_cmd(
                 dedup_nota=_dedup_gia_misurata(path),
             ))
         except (PlanError, OSError, FFmpegError, ValueError) as exc:
-            dire(f"{path.name}: non elaborabile — {exc}", "red")
+            dire(t("cli.non_elaborabile", nome=path.name, errore=exc), "red")
             scartati.append(path.name)
 
     # L'identita' del lancio, prima di qualunque uscita anticipata: anche i
@@ -307,21 +303,17 @@ def run_cmd(
     total = sum(p.est_total_seconds for p in da_fare) + respiro
     minimo = sum(p.est_best_seconds for p in da_fare) + respiro
     quanto = f"{hms(minimo)} - {hms(total)}" if minimo < total * 0.95 else hms(total)
-    riposo = (f", di cui {hms(respiro)} di pause fra un file e l'altro"
+    riposo = (t("cli.run.di_cui_pause", pause=hms(respiro))
               if respiro else "")
     saltati = len(plans) - len(da_fare)
-    nota_saltati = (f" ({saltati} già present"
-                    f"{'e' if saltati == 1 else 'i'}, non "
-                    f"{'verrà' if saltati == 1 else 'verranno'} rifatt"
-                    f"{'o' if saltati == 1 else 'i'})" if saltati else "")
+    nota_saltati = (f" ({tn('cli.run.saltati', saltati)})" if saltati else "")
     if not da_fare:
         # Chiedere "Procedo?" per un ciclo che non lavorerà nessun file, e
         # annunciare "0 file, tempo stimato 0s", è un giro a vuoto travestito
         # da lavoro.
-        uno = len(plans) == 1
-        console.print(f"\n[bold]Niente da fare: {len(plans)} file "
-                      f"{'ha già la sua' if uno else 'hanno già la loro'} "
-                      f"uscita in {PATHS.output.name}.[/bold]\n")
+        console.print("\n[bold]" + tn("cli.run.niente_da_fare", len(plans),
+                                       cartella=PATHS.output.name)
+                      + "[/bold]\n")
         # Anche questo e' un pezzo del lancio: senza il suo record, in una
         # maratona spezzata per modello il gruppo spariva e il resoconto
         # complessivo restava monco.
@@ -333,12 +325,15 @@ def run_cmd(
                        catena_totale=catena_totale, numero_finale=0,
                        lancio=etichetta)
         raise typer.Exit(0)
-    console.print(f"\n[bold]{len(da_fare)} file, tempo stimato "
-                  f"{quanto}{riposo}{nota_saltati}[/bold]\n")
+    console.print("\n[bold]" + tn("cli.run.annuncio", len(da_fare), quanto=quanto)
+                  + f"{riposo}{nota_saltati}[/bold]\n")
 
     if not conferma:
-        if input("Procedo? [s/N] ").strip().lower() not in ("s", "si", "y"):
-            console.print("Annullato.")
+        # Si accettano le risposte in tutte e due le lingue, qualunque sia
+        # quella della domanda.
+        if input(t("cli.run.procedo") + " ").strip().lower() not in (
+                "s", "si", "sì", "y", "yes"):
+            console.print(t("cli.run.annullato"))
             raise typer.Exit(0)
 
     falliti: list[str] = []
@@ -360,7 +355,7 @@ def run_cmd(
     try:
         for indice, plan in enumerate(plans):
             if plan.uscita_esiste:
-                dire(f"Già presente, saltato: {plan.output.name}", "dim")
+                dire(t("cli.run.gia_presente", nome=plan.output.name), "dim")
                 continue
 
             # Il marcatore di catena si scrive PRIMA della pausa: così
@@ -410,7 +405,7 @@ def run_cmd(
                 BarColumn(), TextColumn("{task.completed}/{task.total}"),
                 TimeRemainingColumn(), console=console,
             ) as bar:
-                task = bar.add_task("preparazione", total=plan.frames)
+                task = bar.add_task(t("cli.preparazione"), total=plan.frames)
                 _partito = _t.monotonic()
                 # Se il comando muore qui — SIGTERM del "Ferma tutto" — non
                 # si passa da nessun `append`, e quel file spariva da ogni
@@ -428,17 +423,15 @@ def run_cmd(
                     # file si interrompe (riprendibile: il lucchetto è già
                     # stato rilasciato dal finally di Job.run), i successivi
                     # proseguono.
-                    dire("Interrotto dall'utente: resta riprendibile da "
-                         f"{job.work.name}. Si prosegue col prossimo file.",
+                    dire(t("cli.run.interrotto", cartella=job.work.name),
                          "yellow")
                     interrotti.append(plan.source.path.name)
                     in_volo = None
                     secondi_lavorati += max(0.0, _t.monotonic() - _partito)
                     continue
                 except Exception as exc:  # noqa: BLE001 - si riporta e si prosegue
-                    dire(f"Fallito: {exc}", "red")
-                    dire(f"Lavoro parziale conservato in {job.work} "
-                         f"(rilanciando riprende da li').", "dim")
+                    dire(t("cli.run.fallito", errore=exc), "red")
+                    dire(t("cli.run.parziale", cartella=job.work), "dim")
                     falliti.append(plan.source.path.name)
                     in_volo = None
                     # Anche il lavoro BRUCIATO e' lavoro: senza, tre ore di
@@ -463,8 +456,7 @@ def run_cmd(
                 guasto.unlink(missing_ok=True)
                 try:
                     result.output.rename(guasto)
-                    dire(f"  Uscita incompleta, messa da parte come {guasto.name}. "
-                         "Rilancia per rifarla.", "red")
+                    dire(t("cli.run.incompleta", nome=guasto.name), "red")
                 except OSError as exc:
                     # Ripiegare sul nome BUONO tenendo il messaggio del
                     # successo era il peggiore dei mondi: il rilancio avrebbe
@@ -472,15 +464,16 @@ def run_cmd(
                     # sarebbe uscito 0 — cioè esattamente il danno permanente
                     # che questa parte esiste per impedire, con in più un
                     # messaggio che diceva il contrario.
-                    dire(f"  Uscita incompleta E non spostabile ({exc.strerror or exc}): "
-                         f"cancella a mano {result.output} prima di rilanciare, "
-                         "altrimenti verrà saltata.", "red")
+                    dire(t("cli.run.incompleta_ferma", motivo=exc.strerror or exc,
+                           percorso=result.output), "red")
                 falliti.append(plan.source.path.name)
             else:
                 console.print(
-                    f"[green]  Fatto:[/green] {result.geometry}, "
-                    f"{result.frames_written} fotogrammi, {hms(result.seconds)}"
-                    + (f", deduplica {result.dedup_saving:.0%}" if result.dedup_saving else "")
+                    f"[green]  {t('cli.run.fatto')}[/green] "
+                    + t("cli.run.fatto_valore", geometria=result.geometry,
+                        fotogrammi=result.frames_written, durata=hms(result.seconds))
+                    + (t("cli.run.fatto_dedup", quota=f"{result.dedup_saving:.0%}")
+                       if result.dedup_saving else "")
                 )
                 console.print(Text(f"  {result.output}", style="dim"))
             in_volo = None
@@ -541,7 +534,7 @@ def run_cmd(
     # in modo opposto.
     non_fatti = scartati + falliti
     if non_fatti:
-        dire(f"\n{len(non_fatti)} su {len(files)} non completati: "
+        dire("\n" + t("cli.run.non_completati", n=len(non_fatti), totale=len(files))
              + ", ".join(non_fatti[:5]) + (" ..." if len(non_fatti) > 5 else ""), "red")
         raise typer.Exit(1)
 
@@ -556,36 +549,36 @@ def _prova_binario(percorso: Path) -> str | None:
                 timeout=20, check=False,
             )
         except OSError as exc:
-            return f"non eseguibile ({exc.strerror or exc})"
+            return t("cli.doctor.non_eseguibile", motivo=exc.strerror or exc)
         except subprocess.TimeoutExpired:
-            return "non risponde"
+            return t("cli.doctor.non_risponde")
         if esito.stdout or esito.stderr:
             return None
-    return "nessuna risposta"
+    return t("cli.doctor.nessuna_risposta")
 
 
-@app.command()
+@app.command(help=t("cli.doctor.aiuto"))
 def doctor() -> None:
     """Verifica che la cartella sia autonoma e pronta all'uso."""
     console.print(f"[bold]AnimeUp {__version__}[/bold]")
-    console.print(f"Cartella progetto: {PATHS.root}\n")
+    console.print(t("cli.doctor.cartella", percorso=PATHS.root) + "\n")
 
     table = Table(show_header=True, header_style="bold")
-    table.add_column("Dipendenza")
-    table.add_column("Stato")
-    table.add_column("Prova")
-    table.add_column("Percorso", overflow="fold")
+    table.add_column(t("cli.doctor.dipendenza"))
+    table.add_column(t("cli.doctor.stato"))
+    table.add_column(t("cli.doctor.prova"))
+    table.add_column(t("cli.doctor.percorso"), overflow="fold")
 
     portable = True
     rotti = False
     for name, tool, status in PATHS.portability_report():
         if status == "ok":
-            badge = "[green]vendorizzato[/green]"
+            badge = f"[green]{t('cli.doctor.vendorizzato')}[/green]"
         elif status == "sistema":
-            badge = "[yellow]dal sistema[/yellow]"
+            badge = f"[yellow]{t('cli.doctor.dal_sistema')}[/yellow]"
             portable = False
         else:
-            badge = "[red]MANCANTE[/red]"
+            badge = f"[red]{t('cli.doctor.mancante')}[/red]"
             portable = False
         # Il binario si ESEGUE, non si guarda soltanto. Controllando solo che
         # il file esistesse e avesse il bit di esecuzione, quattro file da zero
@@ -596,7 +589,7 @@ def doctor() -> None:
         if tool is not None:
             esito = _prova_binario(tool.path)
             if esito is None:
-                prova = "[green]esegue[/green]"
+                prova = f"[green]{t('cli.doctor.esegue')}[/green]"
             else:
                 prova = f"[red]{esito}[/red]"
                 portable = False
@@ -607,28 +600,25 @@ def doctor() -> None:
     console.print()
 
     if rotti:
-        dire("Uno o più binari sono presenti ma non eseguibili: file "
-             "troncato, architettura sbagliata, o permesso di esecuzione perso "
-             "nella copia. Prova prima 'chmod +x bin/*', poi './animeup setup'.",
-             "red")
+        dire(t("cli.doctor.rotti"), "red")
         console.print()
 
     if portable:
         console.print(
-            "[green]La cartella è autonoma: puoi spostarla su un altro Mac "
-            "e funzionera' identica.[/green]"
+            f"[green]{t('cli.doctor.autonoma')}[/green]"
         )
     else:
         console.print(
-            "[yellow]La cartella dipende ancora da binari di sistema.[/yellow]\n"
-            "Le dipendenze marcate [yellow]dal sistema[/yellow] verrebbero a mancare\n"
-            "su un Mac senza Homebrew. Per risolvere:  [bold]./animeup setup[/bold]"
+            f"[yellow]{t('cli.doctor.dipende')}[/yellow]\n"
+            + t("cli.doctor.dipende_dettaglio",
+                marcate=f"[yellow]{t('cli.doctor.dal_sistema')}[/yellow]",
+                comando="[bold]./animeup setup[/bold]")
         )
 
 
-@app.command()
+@app.command(help=t("cli.setup.aiuto"))
 def setup(
-    si: Annotated[bool, typer.Option("--si", help="Non chiedere conferma.")] = False,
+    si: Annotated[bool, typer.Option("--si", help=t("cli.setup.si"))] = False,
 ) -> None:
     """Scarica binari e modelli mancanti dentro bin/, per rendere la cartella portabile."""
     from .setup import vendor_all
@@ -636,7 +626,7 @@ def setup(
     vendor_all(console, conferma=not si)
 
 
-@app.command()
+@app.command(help=t("cli.test.aiuto"))
 def test() -> None:
     """Esegue i test di regressione (tests/run.py)."""
     # Il docstring dei test promette `./animeup test` da sempre: ora è vero.
@@ -647,9 +637,9 @@ def test() -> None:
     raise typer.Exit(esito.returncode)
 
 
-@app.command()
+@app.command(help=t("cli.ui.aiuto"))
 def ui(
-    porta: Annotated[int, typer.Option("--porta", help="Porta locale.")] = 8899,
+    porta: Annotated[int, typer.Option("--porta", help=t("cli.ui.porta"))] = 8899,
 ) -> None:
     """Apre l'interfaccia nel browser.
 
@@ -664,7 +654,7 @@ def ui(
     codice = Path(__file__).resolve().parents[2]
     app_py = codice / "ui" / "app.py"
     if not app_py.is_file():
-        dire(f"interfaccia non trovata in {app_py}", "red")
+        dire(t("cli.ui.non_trovata", percorso=app_py), "red")
         raise typer.Exit(1)
 
     # Una porta già occupata quasi sempre significa una sessione VECCHIA
@@ -678,18 +668,15 @@ def ui(
         s.settimeout(0.4)
         occupata = s.connect_ex(("127.0.0.1", porta)) == 0
     if occupata:
-        dire(f"La porta {porta} è già occupata: c'e' un'altra interfaccia "
-             "aperta.", "yellow")
-        dire("Quella sessione tiene in memoria il codice di quando è stata "
-             "avviata, quindi non vedrebbe le modifiche fatte da allora. "
-             "Chiudila prima:", "yellow")
+        dire(t("cli.ui.occupata", porta=porta), "yellow")
+        dire(t("cli.ui.vecchia"), "yellow")
         console.print(f"\n  [bold]lsof -ti :{porta} | xargs kill[/bold]\n")
-        dire(f"oppure usa un'altra porta:  ./animeup ui --porta {porta + 1}",
+        dire(t("cli.ui.altra_porta", comando=f"./animeup ui --porta {porta + 1}"),
              "dim")
         raise typer.Exit(1)
 
-    console.print(f"Interfaccia su [bold]http://localhost:{porta}[/bold] "
-                  "— Ctrl+C per fermarla.")
+    console.print(t("cli.ui.indirizzo",
+                    url=f"[bold]http://localhost:{porta}[/bold]"))
     # Si SOSTITUISCE il processo invece di generarne uno figlio: con un figlio,
     # un SIGTERM al padre lo lasciava vivo e in ascolto sulla porta, e il
     # riavvio successivo falliva. Senza padre non ci sono orfani.
@@ -701,13 +688,13 @@ def ui(
     ])
 
 
-@app.command()
+@app.command(help=t("cli.version.aiuto"))
 def version() -> None:
     """Mostra la versione."""
     console.print(f"AnimeUp {__version__}")
 
 
-@app.command()
+@app.command(help=t("cli.tar.aiuto"))
 def taratura() -> None:
     """Misura la velocità di QUESTA macchina e tara le stime.
 
@@ -722,11 +709,10 @@ def taratura() -> None:
     # fastidio alla lavorazione vera): meglio un no chiaro subito.
     occupata = any(l.vivo for l in monitor.lavori()) or monitor.catena()
     if occupata:
-        dire("C'è una lavorazione in corso: ferma tutto dall'interfaccia "
-             "(o aspetta la fine) e rilancia la taratura.", "yellow")
+        dire(t("cli.tar.occupata"), "yellow")
         raise typer.Exit(1)
 
-    dire(f"Taratura su {modulo.chip()} — ci vorranno ~10 minuti.", "cyan")
+    dire(t("cli.tar.inizio", chip=modulo.chip()), "cyan")
     from rich.progress import (BarColumn, Progress as RichProgress,
                                TextColumn)
     with RichProgress(
@@ -734,13 +720,12 @@ def taratura() -> None:
         BarColumn(), TextColumn("{task.completed}/{task.total}"),
         console=console,
     ) as barra:
-        compito = barra.add_task("preparazione", total=100)
+        compito = barra.add_task(t("cli.preparazione"), total=100)
 
         def avanzamento(etichetta: str, indice: int, totale: int,
                         frazione: float, resta: float) -> None:
             minuti = max(1, round(resta / 60))
-            manca = ("circa un minuto al termine" if minuti == 1
-                     else f"circa {minuti} minuti al termine")
+            manca = tn("cli.tar.manca", minuti)
             barra.update(compito,
                          description=f"{etichetta} ({indice}/{totale}) "
                                      f"- {manca}",
@@ -751,14 +736,14 @@ def taratura() -> None:
         except FileNotFoundError as errore:
             dire(str(errore), "red")
             raise typer.Exit(1)
-        barra.update(compito, completed=100, description="fatto")
+        barra.update(compito, completed=100, description=t("cli.tar.fatto_barra"))
 
     from .models import CATALOG
-    tabella = Table(title=f"Taratura di {modulo.chip()}")
-    tabella.add_column("modello")
-    tabella.add_column("scala", justify="right")
-    tabella.add_column("di fabbrica", justify="right")
-    tabella.add_column("misurato", justify="right")
+    tabella = Table(title=t("cli.tar.titolo", chip=modulo.chip()))
+    tabella.add_column(t("cli.tar.modello"))
+    tabella.add_column(t("cli.tar.scala"), justify="right")
+    tabella.add_column(t("cli.tar.fabbrica"), justify="right")
+    tabella.add_column(t("cli.tar.misurato"), justify="right")
     for chiave, modello in CATALOG.items():
         for scala in modello.scales:
             fabbrica = modello.throughput.get(scala)
@@ -768,16 +753,15 @@ def taratura() -> None:
                 f"{fabbrica:.2f} Mpx/s" if fabbrica else "—",
                 f"{misurato:.2f} Mpx/s" if misurato else "—",
             )
-    tabella.add_row("estrazione", "", "60 f/s",
+    tabella.add_row(t("cli.tar.estrazione"), "", "60 f/s",
                     f"{voce['estrazione_fps']:.0f} f/s")
-    tabella.add_row("codifica x265 (1080p)", "", "8.0 f/s",
+    tabella.add_row(t("cli.tar.codifica"), "", "8.0 f/s",
                     f"{voce['codifica_fps']:.1f} f/s")
     console.print(tabella)
     frase = modulo.frase_salvataggio(voce)
     if frase:
         dire(frase, "dim")
-    dire("Fatto: da adesso le stime su questo Mac usano questi numeri.",
-         "green")
+    dire(t("cli.tar.fatto"), "green")
 
 
 def _scrivi_esito(plan, result) -> None:
@@ -999,7 +983,7 @@ def _pausa_respiro(minuti: int) -> None:
             {"fino": time_.time() + minuti * 60, "pid": os.getpid()}))
     except OSError:
         pass
-    dire(f"Pausa di {minuti} min per far respirare la macchina...", "dim")
+    dire(t("cli.pausa", minuti=minuti), "dim")
     try:
         time_.sleep(minuti * 60)
     finally:
