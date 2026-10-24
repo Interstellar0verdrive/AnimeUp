@@ -12,9 +12,11 @@ Everything lives in one folder: Python, dependencies, binaries and models.
 No Homebrew and no system Python are needed. Copy the folder to another Mac
 and it works the same way there.
 
-> **Language note:** the user interface and the in-depth docs
-> ([LEGGIMI.md](LEGGIMI.md), [TARATURE.md](TARATURE.md)) are currently in
-> Italian. An English localisation is planned.
+> **Language note:** the user interface is available in English and Italian
+> (selectable in the sidebar; English by default). The in-depth docs are the
+> [user guide](docs/USER_GUIDE.md) and the [tuning notes](docs/TUNING.md);
+> Italian versions are in [docs/it/](docs/it/)
+> ([LEGGIMI.md](docs/it/LEGGIMI.md), [TARATURE.md](docs/it/TARATURE.md)).
 
 ---
 
