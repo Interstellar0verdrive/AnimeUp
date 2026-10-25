@@ -11,7 +11,7 @@ The Sources tab analyses every video in `INPUT/` on its own and tells you, befor
 
 ## What you need first
 
-Copy the episodes you want to process into the videos to process folder, `INPUT/`. In the portable folder it's inside the AnimeUp folder. In the app it's `~/Movies/AnimeUp/INPUT` unless you chose another one (see [Video folders](03-interface.md#video-folders-app-only)). A few rules:
+Copy the episodes you want to process into the `INPUT/` folder inside the AnimeUp folder. A few rules:
 
 - AnimeUp only looks at files directly inside `INPUT/`: it doesn't look inside subfolders.
 - Recognised extensions: `.mkv`, `.mp4`, `.mov`, `.avi`, `.m4v`, `.ts`, `.webm`.

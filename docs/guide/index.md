@@ -3,11 +3,19 @@ title: AnimeUp user guide
 description: Step-by-step guide to AnimeUp, the local, offline anime upscaler for Apple Silicon Macs.
 ---
 
-<span class="eyebrow">User guide · AnimeUp 1.4</span>
+<header class="animeup-hero">
+  <span class="animeup-hero__icons">
+    <img class="animeup-hero__icon animeup-logo__dark" src="../assets/animeup-logo.png" alt="AnimeUp app icon">
+    <img class="animeup-hero__icon animeup-logo__light" src="../assets/animeup-logo-light.png" alt="" aria-hidden="true">
+  </span>
+  <div class="animeup-hero__copy">
+    <span class="eyebrow">Version 1.4 · Apple Silicon</span>
+    <h1>AnimeUp user guide</h1>
+    <p>Upscale anime episodes to 1080p and beyond on your own Mac, offline, with Real-ESRGAN and Real-CUGAN, and choose the model by looking at the result.</p>
+  </div>
+</header>
 
-# AnimeUp user guide
-
-Upscale anime episodes to 1080p and beyond on your own Mac, offline, with Real-ESRGAN and Real-CUGAN, and choose the model by looking at the result.
+![Before and after: a 360p frame enlarged to 1080p with AnimeUp](../images/before-after.png){ .animeup-cover }
 
 ![The AnimeUp window: settings sidebar on the left, the Processing tab with a job running on the right](img/overview.png)
 
@@ -37,7 +45,7 @@ AnimeUp is for people who keep a local anime library at DVD or web-rip resolutio
 
 | Step | What you do | Time |
 |---|---|---|
-| 1. Install | Unzip, double-click **Start AnimeUp.command**, allow it in Privacy & Security | A few minutes, once |
+| 1. Install | Unzip, double-click **Avvia AnimeUp.command**, allow it in Privacy & Security | A few minutes, once |
 | 2. Calibrate | **Run now** next to **Calibration** in the sidebar | About 10 minutes, once per Mac |
 | 3. Sources | Copy episodes into `INPUT/` and read their analysis | Seconds per file |
 | 4. Compare | Test the models on difficult clips and pick one by eye | A few minutes per series |
@@ -93,5 +101,7 @@ Step 2 is optional but recommended: without it AnimeUp still works, but every ti
 
 <small>Screenshots in this guide show footage from
 [Morevna Episode 3](https://archive.org/details/morevna-ep3) (© Morevna
-Project, CC BY-SA 3.0) and [Big Buck Bunny](https://peach.blender.org)
-(© 2008 Blender Foundation, CC BY 3.0); the images are CC BY-SA 3.0.</small>
+Project, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/))
+and [Big Buck Bunny](https://peach.blender.org) (© 2008 Blender Foundation,
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)); the images are
+CC BY-SA 3.0.</small>

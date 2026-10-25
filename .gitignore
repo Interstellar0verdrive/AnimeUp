@@ -34,3 +34,6 @@ RIPRENDI_QUI.md
 # --- app build output (tools/build_app.sh) ---
 dist/
 .migration.lock
+
+# --- generated documentation ---
+site/
