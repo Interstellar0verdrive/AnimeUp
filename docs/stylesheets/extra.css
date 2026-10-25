@@ -1090,12 +1090,38 @@
 
 @media screen and (max-width: 60em) {
   .md-sidebar--primary .md-nav__source,
-  .md-nav--primary > .md-nav__list > .md-nav__item--active > label.md-nav__link,
-  .md-nav--primary > .md-nav__list > .md-nav__item--active > .md-nav--secondary {
-    display: none;
+  .md-nav--primary .md-nav__item--active > label.md-nav__link[for="__toc"],
+  .md-nav--primary .md-nav--secondary,
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > .md-nav > .md-nav__title,
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > label.md-nav__link .md-nav__icon {
+    display: none !important;
   }
 
-  .md-nav--primary > .md-nav__list > .md-nav__item--active > a.md-nav__link {
+  /* Flatten Material's drill-down navigation inside the mobile drawer. */
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > .md-nav {
+    display: block !important;
+    height: auto !important;
+    opacity: 1 !important;
+    position: static !important;
+    transform: none !important;
+    visibility: visible !important;
+    width: 100%;
+  }
+
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > .md-nav > .md-nav__list {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > label.md-nav__link {
+    color: var(--animeup-text);
+    cursor: default;
+    font-size: 15px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  .md-nav--primary .md-nav__item--active > a.md-nav__link {
     display: flex !important;
   }
 
