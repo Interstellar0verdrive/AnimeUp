@@ -968,4 +968,7 @@ def ultimo_lancio(paths: Paths | None = None) -> dict | None:
         "dedup_medio": (round(sum(dedup) / len(dedup), 3) if dedup else None),
         # La pausa piu' lunga fra i pezzi: e' un'impostazione, non una somma.
         "pausa_minuti": max(pause) if pause else None,
+        # La cartella dell'ultimo pezzo: e' li' che la coda ha finito.
+        "output": next((d["output"] for d in pezzi
+                        if isinstance(d.get("output"), str) and d["output"]), None),
     }

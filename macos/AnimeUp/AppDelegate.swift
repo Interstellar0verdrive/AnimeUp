@@ -9,6 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     private var folderChoices: [String?] = []
     /// The quit was already confirmed (or doesn't need asking: an update).
     private var quitConfirmed = false
+    /// The theme last applied to the windows (see `applyTheme`).
+    private var appliedTheme: String?
     private var dataWatch: Timer?
     private var updating = false
     private var server: ServerProcess?
@@ -36,6 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             let p = try AppPaths.resolve()
             paths = p
             detectLanguage(state: p.state, data: p.data)
+            applyTheme()
         } catch {
             buildMenus()
             NSApp.activate(ignoringOtherApps: true)
@@ -177,6 +180,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             }
             self.checkUpdateRequest()
             self.checkQuitRequest()
+            self.applyTheme()
+        }
+    }
+
+    /// Dark, Light or System, as chosen in the interface's Preferences.
+    private func applyTheme() {
+        guard let paths else { return }
+        let theme = savedTheme(state: paths.state)
+        guard theme != appliedTheme else { return }
+        appliedTheme = theme
+        switch theme {
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        default: NSApp.appearance = nil
         }
     }
 

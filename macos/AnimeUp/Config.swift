@@ -179,3 +179,17 @@ func tr(_ en: String, _ it: String) -> String {
 var appVersion: String {
     Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
 }
+
+// MARK: - Theme
+
+/// The window's appearance follows the interface's System / Dark / Light
+/// choice (`"theme"` in `<state>/records/settings.json`), so the title bar
+/// and the page never disagree. System leaves it to macOS.
+func savedTheme(state: URL) -> String {
+    let file = state.appendingPathComponent("records/settings.json")
+    guard let raw = try? Data(contentsOf: file),
+          let json = try? JSONSerialization.jsonObject(with: raw) as? [String: Any],
+          let theme = json["theme"] as? String else { return "system" }
+    return theme
+}
+
