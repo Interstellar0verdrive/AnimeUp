@@ -30,8 +30,8 @@
 
   <g transform="translate(424 16)">
     <rect class="flow-card flow-card--optional" width="376" height="152" rx="12" />
-    <rect class="flow-tag" x="213" y="21" width="146" height="22" rx="11" />
-    <text class="flow-tag-text" x="286" y="36">OPTIONAL · FIRST USE</text>
+    <rect class="flow-tag" x="223" y="21" width="136" height="22" rx="11" />
+    <text class="flow-tag-text" x="291" y="36">OPTIONAL · FIRST USE</text>
     <text class="flow-title" x="20" y="38">Calibrate</text>
     <text class="flow-caption" x="20" y="69">Select Run now beside Calibration</text>
     <text class="flow-caption" x="20" y="91">in the sidebar</text>
