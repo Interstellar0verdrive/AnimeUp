@@ -4,7 +4,7 @@
   "lav.fmt_data_alle": "%d/%m/%Y alle %H:%M",
   "lav.fmt_decimale": ",",
   "lav.nota_tarata": "Stime tarate su questo Mac il {data}.",
-  "lav.nota_fabbrica": "Stime di fabbrica: con «Esegui ora» accanto a Taratura, nella barra laterale, si adattano a questo Mac in ~10 minuti.",
+  "lav.nota_fabbrica": "Stime di fabbrica: con «Calibra ora» accanto a Taratura, nella barra laterale, si adattano a questo Mac in ~10 minuti.",
   "lav.vuoto": "Nessun file in INPUT.",
   "lav.chiudi": "Chiudi",
   "lav.fine_titolo": "Elaborazione terminata",
@@ -125,7 +125,7 @@
   "lav.fine_motivo_fallito": "fallito",
   "lav.fine_motivo_fermato": "fermato",
   "lav.fine_motivo_scartato": "non pianificato",
-  "lav.fine_testo_fallito": "L'uscita non ha passato i controlli ed è stata messa da parte come .DEFECTIVE. Rilancialo.",
+  "lav.fine_testo_fallito": "Si è fermato per un errore; il lavoro fatto resta e Riprendi continua da lì. Il log del file dice perché.",
   "lav.fine_testo_fermato": "Fermato prima della fine. Riprendilo dalla sua riga.",
   "lav.fine_testo_scartato": "Non si poteva pianificare con queste impostazioni ed è rimasto fuori dalla coda.",
   "lav.fine_salvati": "Salvati in",
@@ -148,5 +148,7 @@
   "sb.taratura_mostra": "Mostra",
   "lav.avvia_gia": "C'è già una coda in corso: aspetta che finisca, o fermala prima.",
   "lav.fine_motivo_non_avviato": "non avviato",
-  "lav.fine_testo_non_avviato": "La coda si è fermata prima di arrivare a questo file."
+  "lav.fine_testo_non_avviato": "La coda si è fermata prima di arrivare a questo file.",
+  "lav.fine_motivo_difettoso": "difettoso",
+  "lav.fine_testo_difettoso": "L'uscita non ha passato i controlli ed è stata messa da parte come .DEFECTIVE. Rilancialo."
 }
