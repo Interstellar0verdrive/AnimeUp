@@ -13,38 +13,9 @@ You don't need this page to use AnimeUp. It's for when you want to understand a 
 
 ## The whole path at a glance
 
-```text
- INPUT/episode.mkv
-      │
-      ▼
- 1. Analysis ─────── what the file really is (once, saved)
-      │
-      ▼
- 2. Plan ─────────── size, model, scale, chunks, estimate (nothing runs yet)
-      │
-      ▼
- 3. Checks ───────── free space, output folder writable, lock
-      │
-      ▼
- 4. Extraction ───── every frame → PNG, one sequential pass      ┐ phase 1/3
-      │                                                          ┘
- 5. Deduplication ── which frames are repeats
-      │
-      ▼
- 6. Chunks, one after another:                                   ┐
-      upscale (GPU) → restore repeats → encode segment (CPU)     │ phase 2/3
-      │                                                          ┘
-      ▼
- 7. Assembly ─────── join segments + copy audio, subs, fonts,    ┐ phase 3/3
-      │              chapters from the source                    ┘
-      ▼
- 8. Verification ─── frame count, size, audio
-      │
-      ▼
- OUTPUT/episode [upscale 1080p … ].mkv   + job report, JOBS/ folder deleted
-```
+![Flow from the source file through analysis, planning, checks, extraction, deduplication, chunk processing, assembly and verification to the finished MKV](../img/job-flow.svg)
 
-The "phase 1/3, 2/3, 3/3" on a Processing row map onto this: extraction, the chunk loop (upscale with encoding in between), and the encoding of the last chunk plus assembly.
+The phase labels match the Processing row: **1/3** extracts the frames, **2/3** upscales and encodes chunks, and **3/3** encodes the last chunk and assembles the file. Deduplication happens between extraction and the chunk loop; verification follows assembly.
 
 ## 1. Analysis
 
