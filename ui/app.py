@@ -3804,7 +3804,14 @@ STYLE = f"""
   .au-tar-corso i {{ width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }}
 
   /* Il primo avvio: un riquadro al centro, senza sidebar. */
-  .st-key-benvenuto {{ max-width: 640px; margin: 14vh auto 0; padding: 32px !important;
+  /* Al centro della finestra, nei due sensi: niente margine a sinistra per
+     il pulsante del cassetto, che qui non c'e'. */
+  body:has(.st-key-benvenuto) #au-cassetto {{ display: none !important; }}
+  .block-container:has(.st-key-benvenuto) {{ padding: 24px 40px !important; min-height: 100vh; display: flex;
+      flex-direction: column; justify-content: center; }}
+  .block-container:has(.st-key-benvenuto) > * {{ flex: 1 1 auto; display: flex;
+      flex-direction: column; justify-content: center; }}
+  .st-key-benvenuto {{ max-width: 640px; margin: 0 auto !important; padding: 32px !important;
       border-radius: 14px; background: var(--surface); border: 1px solid var(--borderColor);
       gap: 16px !important; }}
   .au-pa-occhio {{ font: 400 12px var(--mono); color: var(--primaryText); }}
@@ -9680,9 +9687,11 @@ def main() -> None:
                  or _impostazioni_carica()["lingua"])
     _applica_tema(st.session_state.get("w_tema")
                   or _impostazioni_carica()["tema"])
-    _cassetto_sidebar()
+    # Il primo avvio non ha sidebar: niente cassetto (il suo pulsante restava
+    # li' senza fare niente, visto dall'utente).
     if _pagina_primo_avvio():
         return
+    _cassetto_sidebar()
     sezione = header()
     # L'analisi si accoda QUI e non dentro Sorgenti: la scheda aperta
     # sopravvive nell'URL, quindi aprendo l'app direttamente su Lavorazione
