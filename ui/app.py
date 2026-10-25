@@ -3024,6 +3024,203 @@ STYLE = f"""
       min-width: 0; max-width: 520px; }}
   .au-cartella-riga .au-osserva {{ flex: none; }}
 
+  /* ===================================================================
+     Redesign 1.6 — Confronto.
+     =================================================================== */
+  .st-key-fileCard {{ background: var(--surface); border: 1px solid var(--borderColor);
+      border-radius: 12px; padding: 18px 20px !important; flex-wrap: nowrap;
+      gap: 0 !important; align-items: stretch; margin-top: 12px; }}
+  .st-key-campoFile {{ flex: 0 0 auto; width: 420px !important;
+      padding-right: 16px; gap: 8px !important; }}
+  .st-key-fileCard > div:last-child {{ flex: 1 1 auto; min-width: 0; }}
+  .au-stat-file {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      height: 100%; }}
+  .au-stat-file > div {{ padding: 0 16px; border-left: 1px solid var(--borderColor);
+      display: flex; flex-direction: column; gap: 10px; }}
+  .au-stat-file dt {{ display: flex; align-items: center; gap: 6px;
+      font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--textTertiary); }}
+  .au-stat-file dd {{ margin: 0; font: 400 18px var(--mono); color: var(--textPrimary); }}
+  .au-stat-file dd small {{ font-size: 12px; color: var(--textSecondary); }}
+  .au-sez-riga {{ display: flex; align-items: baseline; gap: 12px; margin-top: 20px; }}
+  .au-sez-titolo {{ font-size: 18px; font-weight: 600; letter-spacing: -.01em;
+      color: var(--textPrimary); }}
+  .au-sez-nota {{ font-size: 13px; color: var(--textSecondary); }}
+  [class*="st-key-verdetto"] {{ background: var(--surface); border: 1px solid var(--borderColor);
+      border-radius: 12px; padding: 14px 16px 6px !important; gap: 8px !important; }}
+  .st-key-verdettoDubbio {{ background: var(--yellowBg);
+      border-color: rgb(var(--yellowRgb) / .35); }}
+  .au-verdetto {{ display: flex; gap: 14px; align-items: flex-start; }}
+  .au-verdetto-icona {{ width: 32px; height: 32px; flex: none; box-sizing: border-box;
+      border-radius: 50%; border: 1.5px solid var(--green); color: var(--greenText);
+      display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }}
+  .au-verdetto-icona.au-giallo {{ border-color: var(--yellow); color: var(--yellowText); }}
+  .au-verdetto-file {{ font: 400 11px var(--mono); color: var(--textSecondary); }}
+  .st-key-verdettoDubbio .au-verdetto-file {{ color: var(--yellowText); }}
+  .au-verdetto-scelta {{ font-size: 15px; font-weight: 600; margin-top: 2px; }}
+  .au-verdetto-motivo {{ font-size: 13px; line-height: 1.45; color: var(--textCode);
+      margin-top: 2px; }}
+  /* «Come si sceglie»: un cassetto che si apre su una linea sottile, con
+     l'etichetta al centro e la freccia che si gira. */
+  .st-key-comeScelti [data-testid="stExpander"] details {{ border: 0 !important;
+      background: transparent !important; }}
+  .st-key-comeScelti summary {{ display: flex; align-items: center; gap: 12px;
+      padding: 6px 0 !important; justify-content: center; }}
+  .st-key-comeScelti summary::before, .st-key-comeScelti summary::after {{
+      content: ""; flex: 1; height: 1px; background: var(--borderColor); }}
+  .st-key-comeScelti summary > span {{ flex: none; display: inline-flex;
+      flex-direction: row-reverse; align-items: center; gap: 6px; }}
+  .st-key-comeScelti summary p {{ font-size: 12.5px !important; font-weight: 500;
+      color: var(--textCode); }}
+  .st-key-comeScelti summary [data-testid="stIconMaterial"] {{
+      transform: rotate(90deg); transition: transform .15s; font-size: 16px; }}
+  .st-key-comeScelti details[open] summary [data-testid="stIconMaterial"] {{
+      transform: rotate(-90deg); }}
+  .au-regole {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px; margin-top: 6px; }}
+  .au-regola {{ display: flex; flex-direction: column; gap: 6px; padding: 12px;
+      border-radius: 8px; background: var(--insetBackground);
+      border: 1px solid var(--borderColor); }}
+  .au-regola .au-p-fascia {{ font: 400 11px var(--mono); color: var(--textSecondary); }}
+  .au-regola .au-p-mod {{ font-size: 13.5px; font-weight: 600; }}
+  .au-regola .au-p-testo {{ font-size: 12.5px; line-height: 1.45; color: var(--textSecondary); }}
+  .au-regole-nota {{ font-size: 12px; color: var(--textSecondary); margin: 10px 0 6px; }}
+  .st-key-modelli {{ gap: 12px !important; flex-wrap: nowrap; align-items: stretch; }}
+  [data-testid="stLayoutWrapper"]:has(> [class*="st-key-mod_"]) {{ flex: 1 1 0 !important;
+      min-width: 0; }}
+  [class*="st-key-mod_"] {{ height: 100%; box-sizing: border-box; padding: 14px !important;
+      gap: 10px !important; border-radius: 10px; background: var(--surface);
+      border: 1px solid var(--borderColor); }}
+  [class*="st-key-mod_"]:has(input:checked) {{ background: rgb(var(--primaryRgb) / .08);
+      border-color: rgb(var(--primaryRgb) / .55); }}
+  [class*="st-key-mod_"]:has(input:disabled) {{ opacity: .6; }}
+  [class*="st-key-mod_"] [data-testid="stCheckbox"] label p {{ font-size: 14.5px;
+      font-weight: 600; color: var(--textPrimary); }}
+  [class*="st-key-mod_"] .au-tag {{ align-self: flex-start; }}
+  [class*="st-key-mod_"] .au-m-desc {{ font-size: 13px; line-height: 1.5;
+      color: var(--textCode); margin: 8px 0 10px; }}
+  [class*="st-key-mod_"]:has(input:disabled) .au-m-desc {{ color: var(--textSecondary); }}
+  [class*="st-key-mod_"] .au-m-vel {{ font: 400 11.5px var(--mono); color: var(--textCode); }}
+  .st-key-testaClip {{ flex-wrap: nowrap; }}
+  .st-key-testaClip > div:first-child {{ flex: 1 1 auto; }}
+  .st-key-testaClip [class*="st-key-trova"] {{ flex: none; width: auto !important; }}
+  .st-key-testaClip .au-sez-riga {{ align-items: center; margin-top: 0; }}
+  .st-key-trovaCard {{ padding: 20px !important; border-radius: 12px; flex-wrap: nowrap;
+      gap: 20px !important; background: var(--surface);
+      border: 1px dashed var(--borderStrong); }}
+  .st-key-trovaCard > div:first-child {{ flex: 1 1 auto; }}
+  .st-key-trovaCard [class*="st-key-trova"] {{ flex: none; width: auto !important; }}
+  .au-trova b {{ font-size: 15px; font-weight: 600; }}
+  .au-trova p {{ margin: 6px 0 0; font-size: 13px !important; line-height: 1.5;
+      color: var(--textSecondary); }}
+  .au-c-motivo {{ font: 400 11px var(--mono); color: var(--textSecondary); }}
+  .au-c-prove {{ font-size: 13px; line-height: 1.45; color: var(--textCode); margin-top: 6px; }}
+  .st-key-barraConfronto {{ position: fixed; bottom: 0; left: 360px; right: 0;
+      width: auto !important; z-index: 100; flex-wrap: nowrap;
+      gap: 16px !important; padding: 14px 40px;
+      background: rgb(var(--bgRgb) / .96); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--borderColor); }}
+  .st-key-barraConfronto > div:first-child {{ flex: 1 1 auto; min-width: 0; }}
+  .st-key-barraConfronto [class*="st-key-tog_"], .st-key-barraConfronto .st-key-elaboraClip {{
+      flex: none; width: auto !important; }}
+  .st-key-elaboraClip button {{ height: 40px; padding: 0 20px; white-space: nowrap; }}
+  .st-key-elaboraClip button p {{ font-size: 14px; font-weight: 600; }}
+  .st-key-barraConfronto .au-barra-testo b {{ display: block; font-size: 14px;
+      font-weight: 600; color: var(--textPrimary); }}
+  .st-key-barraConfronto .au-barra-testo code {{ font: 400 12px var(--mono) !important;
+      color: var(--textSecondary) !important; background: none !important; padding: 0 !important; }}
+  .block-container:has(.st-key-barraConfronto) {{ padding-bottom: 8rem !important; }}
+  .st-key-barraConfronto [data-testid="stFragment"], .st-key-barraConfronto > div:has([data-testid="stFragment"]) {{
+      flex: 1 1 auto; }}
+  .st-key-provaTesta {{ flex-wrap: nowrap; gap: 14px !important; }}
+  .st-key-provaTesta > div:first-child {{ flex: 1 1 auto; }}
+  .st-key-provaTesta [class*="st-key-ferma"] {{ flex: none; width: auto !important; }}
+  .st-key-ferma_confronto button {{ height: 32px; min-height: 32px;
+      border-color: rgb(var(--redRgb) / .55) !important; color: var(--redText) !important;
+      background: transparent !important; }}
+  .st-key-ferma_confronto_ok button {{ height: 32px; min-height: 32px;
+      background: var(--redFill) !important; border: 0 !important; color: var(--onRed) !important; }}
+  .au-prova-testa {{ display: flex; align-items: center; gap: 14px; }}
+  .au-prova-testa > span {{ width: 7px; height: 7px; border-radius: 50%;
+      background: var(--primary); box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .2); }}
+  .au-prova-testa b {{ font-size: 14px; font-weight: 600; }}
+  .au-prova-testa code {{ font: 400 12px var(--mono) !important; color: var(--primaryText) !important;
+      background: none !important; padding: 0 !important; }}
+  .au-prova-testa small {{ margin-left: auto; font: 400 12px var(--mono);
+      color: var(--textSecondary); }}
+  .au-prova-barra {{ height: 6px; border-radius: 3px; overflow: hidden;
+      background: rgb(var(--primaryRgb) / .15); margin-top: 10px; }}
+  .au-prova-barra span {{ display: block; height: 100%; background: var(--primary); }}
+  .au-prova-nota {{ font-size: 12.5px; line-height: 1.45; color: var(--textSecondary);
+      margin-top: 8px; }}
+  .au-errore {{ padding: 12px 16px; border-radius: 10px; background: var(--redBg);
+      border: 1px solid rgb(var(--redRgb) / .35); color: var(--redText);
+      font-size: 13px; line-height: 1.5; margin-top: 12px; }}
+
+  .st-key-comeScelti summary > span {{ flex: 0 0 auto !important; width: auto !important;
+      display: inline-flex !important; flex-direction: row-reverse !important;
+      align-items: center; gap: 6px; }}
+  .st-key-campoFile [data-testid="stSelectbox"] [role="group"] {{
+      background: var(--insetBackground); border: 1px solid var(--borderStrong);
+      border-radius: 8px; min-height: 38px; }}
+  .st-key-campoFile [data-testid="stSelectbox"] input {{ font-size: 14px;
+      font-weight: 500; }}
+
+  /* Risultati del confronto. */
+  .st-key-testaRisultati {{ flex-wrap: nowrap; margin-top: 24px; }}
+  .st-key-testaRisultati > div:first-child {{ flex: 1 1 auto; }}
+  .st-key-finderRisultati {{ flex: none; width: auto !important; }}
+  .au-sez-titolo.au-grande {{ font-size: 22px; }}
+  .st-key-risultati [data-testid="stExpander"] details {{ background: var(--surface);
+      border: 1px solid var(--borderColor); border-radius: 12px; }}
+  .st-key-risultati [data-testid="stExpander"] summary p {{ font-size: 13px;
+      color: var(--textSecondary); }}
+  .st-key-risultati [data-testid="stExpander"] summary p strong {{ font-size: 15px;
+      color: var(--textPrimary); margin-right: 8px; }}
+  .st-key-risultati [data-testid="stExpander"] summary p code {{ font: 400 12px var(--mono);
+      color: var(--textCode); background: none; padding: 0; margin-right: 6px; }}
+  .au-res-due {{ display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 28px; }}
+  .au-res-due .au-occhio {{ margin-bottom: 10px; }}
+  .au-cnf th {{ font-size: 10.5px; color: var(--textTertiary); }}
+  .au-cnf td:not(:first-child), .au-cnf th:not(:first-child) {{ text-align: right; }}
+  .au-cnf td {{ font: 400 12px var(--mono); }}
+  .au-cnf td.au-cnf-nome {{ font: 600 13.5px var(--font); }}
+  .au-cnf-nota {{ font-size: 12.5px; line-height: 1.5; color: var(--textSecondary);
+      margin-top: 10px; }}
+  .au-ind-modello {{ font-size: 13.5px; font-weight: 600; margin: 8px 0 6px; }}
+  .au-ind {{ display: grid; grid-template-columns: 130px minmax(0, 1fr) 48px;
+      align-items: center; gap: 10px; margin: 4px 0; font-size: 12.5px;
+      color: var(--textSecondary); }}
+  .au-ind i {{ position: relative; height: 6px; border-radius: 3px;
+      background: var(--borderStrong); }}
+  .au-ind i::after {{ content: ""; position: absolute; left: 25%; top: -3px;
+      width: 1px; height: 12px; background: var(--textSecondary); }}
+  .au-ind em {{ position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px;
+      background: var(--primary); }}
+  .au-ind b {{ font: 400 12px var(--mono); color: var(--textCode); text-align: right; }}
+  .au-res-sez {{ margin: 18px 0 2px; gap: 12px; }}
+  .au-res-sez .au-sez-nota {{ font-size: 12.5px; letter-spacing: 0;
+      text-transform: none; font-weight: 400; }}
+  [class*="st-key-coppie_"] {{ gap: 8px !important; }}
+  [class*="st-key-coppie_"] [class*="st-key-cmp_"] {{ width: auto !important; flex: none; }}
+  .au-foglio {{ overflow-x: auto; border-radius: 8px; }}
+  .au-foglio img {{ display: block; max-width: none; }}
+  [class*="st-key-piedeClip_"] {{ flex-wrap: nowrap; border-top: 1px solid var(--borderColor);
+      padding-top: 12px; margin-top: 8px; }}
+  [class*="st-key-piedeClip_"] > div:first-child {{ flex: 1 1 auto; }}
+  [class*="st-key-piedeClip_"] [class*="st-key-finder_conf"] {{ flex: none; width: auto !important; }}
+  [class*="st-key-piedeClip_"] [data-testid="stExpander"] details {{ border: 0 !important;
+      background: transparent !important; }}
+  [class*="st-key-piedeClip_"] summary {{ padding: 4px 0 !important; }}
+  .au-barra-pronto {{ display: flex; align-items: center; gap: 14px; }}
+  .au-barra-pronto b {{ display: block; font-size: 14px; font-weight: 600; }}
+  .au-barra-pronto span:not(.au-spunta) {{ font-size: 12.5px; color: var(--textSecondary); }}
+  .st-key-barraConfronto .st-key-tornaClip, .st-key-barraConfronto .st-key-avantiLavorazione {{
+      flex: none; width: auto !important; }}
+  .st-key-tornaClip button, .st-key-avantiLavorazione button {{ height: 40px; padding: 0 18px;
+      white-space: nowrap; }}
+
 </style>
 """
 st.markdown(STYLE, unsafe_allow_html=True)
@@ -4304,6 +4501,19 @@ def sidebar() -> dict:
     # non esiste (segnalato dall'utente il 12/08).
     posto_sospeso = st.sidebar.empty()
     if congelata:
+        # Bloccata DAVVERO anche all'occhio: `disabled=` spegne i widget ma
+        # lascia i colori e i suggerimenti vivi. Resta piena solo la nota che
+        # spiega perche', e il piede con Esci.
+        st.sidebar.markdown(
+            "<style>[data-testid='stSidebar'] :is([data-testid='stSlider'],"
+            "[data-testid='stCheckbox'],[data-testid='stSelectbox'],"
+            "[data-testid='stButtonGroup'],.au-sb-eti,.au-sgruppo,.au-pref-eti,"
+            ".au-percorso,.au-tar-mai,.au-tar-ok,.au-agg-nota,.st-key-adv summary)"
+            "{ opacity: .45; }"
+            "[data-testid='stSidebar'] :is([data-testid='stSlider'],"
+            "[data-testid='stCheckbox']) { filter: saturate(0); pointer-events: none; }"
+            "[data-testid='stSidebar'] :is(.au-info, .au-perche) .au-bolla"
+            "{ display: none !important; }</style>", unsafe_allow_html=True)
         nota = {"lavoro": "sb.congelata", "confronto": "sb.congelata_confronto",
                 "taratura": "sb.congelata_taratura"}[motivo]
         st.sidebar.markdown(f"<div class='au-lock-nota'>{t(nota)}</div>",
@@ -5136,9 +5346,8 @@ def _dettagli(rep) -> None:
 
 def page_confronto(cfg: dict) -> None:
     st.markdown(
-        f"<div class='au-sezione'>{t('conf.titolo')}</div>"
-        "<div class='au-hint' style='margin-bottom:20px'>"
-        f"{t('conf.intro')}</div>",
+        f"<div class='au-titolo-pagina'>{t('conf.titolo')}</div>"
+        f"<div class='au-sotto-pagina'>{t('conf.intro')}</div>",
         unsafe_allow_html=True)
 
     files = load_library()
@@ -5147,86 +5356,54 @@ def page_confronto(cfg: dict) -> None:
         return
 
     # La selezione vive nella CHIAVE del widget, non in un doppione che poi
-    # rientra da `index=`. Il giro precedente — leggere lo stato, calcolare
-    # `index`, riscrivere lo stato — cambiava l'identita' del widget a ogni
-    # cambio di default: se fra il clic e la sua elaborazione arrivava un
-    # rerun (l'estrazione degli spezzoni ne fa), il clic veniva applicato al
-    # widget vecchio e scartato, e la tendina tornava sul file di prima.
+    # rientra da `index=`: un clic arrivato durante un rerun veniva applicato
+    # al widget vecchio e scartato, e la tendina tornava sul file di prima.
     percorsi = [f["path"] for f in files]
     nomi = {f["path"]: f["name"] for f in files}
     if st.session_state.get("file_confronto") not in percorsi:
         st.session_state.pop("file_confronto", None)
-    # `ch` e non pixel: è la larghezza del carattere corrente, quindi la
-    # stima regge anche se un giorno cambia il corpo del testo. Il minimo
-    # evita una tendina ridicola quando i nomi sono corti, il massimo la tiene
-    # dentro la colonna quando sono assurdi.
-    piu_lungo = max((len(f["name"]) for f in files), default=40)
-    st.markdown(
-        "<style>.st-key-campoFile [data-testid=\"stSelectbox\"] "
-        f"{{ width: clamp(360px, calc({piu_lungo}ch + 72px), 100%); }}</style>",
-        unsafe_allow_html=True)
-    with st.container(key="campoFile"):
-        st.markdown(f"<div class='au-eyebrow au-sez'>{t('conf.file_da_provare')}</div>",
-                    unsafe_allow_html=True)
-        prescelto = st.selectbox(t("conf.file_da_provare"), percorsi,
-                                 key="file_confronto",
-                                 format_func=lambda pth: nomi[pth],
-                                 label_visibility="collapsed")
-    entry = next(f for f in files if f["path"] == prescelto)
-    path = Path(entry["path"])
+    # Il file e i suoi tre numeri in un riquadro solo: cosa si prova, da che
+    # risoluzione, a quale, e quanto costerebbe l'episodio intero.
+    with st.container(key="fileCard", horizontal=True):
+        with st.container(key="campoFile"):
+            st.markdown(f"<div class='au-occhio'>{t('conf.file_da_provare')}</div>",
+                        unsafe_allow_html=True)
+            prescelto = st.selectbox(t("conf.file_da_provare"), percorsi,
+                                     key="file_confronto",
+                                     format_func=lambda pth: nomi[pth],
+                                     label_visibility="collapsed")
+        entry = next(f for f in files if f["path"] == prescelto)
+        path = Path(entry["path"])
+        posto_stat = st.empty()
 
-    # Misurati il 12/08: 8,9s su un 360p, 37s su un 720p, 49s su un 1080p,
-    # tutti episodi da circa 25 minuti. Il "~15 secondi" di prima era una
-    # sottostima di tre volte sul caso peggiore.
+    # Misurati il 12/08: 8,9s su un 360p, 37s su un 720p, 49s su un 1080p.
     with st.spinner(t("conf.analisi")):
         try:
             plan = plan_for(path, cfg, entry["height"])
         except (PlanError, OSError, FFmpegError, ValueError) as exc:
-            st.error(str(exc))
+            posto_stat.empty()
+            st.markdown(
+                f"<div class='au-errore'><b>{esc(str(exc))}</b></div>",
+                unsafe_allow_html=True)
             return
 
-    # Tre valori affiancati in un riquadro solo, largo quanto il contenuto.
-    # `st.metric` li scriveva alla sua misura — enorme — e con tre righe di
-    # etichetta sopra: pesavano più dell'elenco dei modelli, che è la cosa da
-    # cui si decide.
-    # Stesso formato delle stime in Lavorazione: ore e minuti, niente
-    # secondi — coerenza fra le schede, stessa ragione.
-    intero = (f"{stima_hm(plan.est_best_seconds)} / "
-              f"{stima_hm(plan.est_total_seconds)}"
-              if plan.est_best_seconds < plan.est_total_seconds * 0.95
-              else stima_hm(plan.est_total_seconds))
-    st.markdown(
-        "<div class='au-stat'>"
+    # Stesso formato delle stime in Lavorazione: ore e minuti.
+    if plan.est_best_seconds < plan.est_total_seconds * 0.95:
+        intero = (f"≈ {stima_hm(plan.est_best_seconds)} "
+                  f"<small>{t('conf.stat_da_a', max=stima_hm(plan.est_total_seconds))}</small>")
+    else:
+        intero = f"≈ {stima_hm(plan.est_total_seconds)}"
+    posto_stat.markdown(
+        "<div class='au-stat-file'>"
         f"<div><dt>{t('conf.stat_sorgente')}</dt><dd>{esc(entry['resolution'])}</dd></div>"
         f"<div><dt>{t('conf.stat_uscita')}</dt>"
         f"<dd>{plan.target_width}×{plan.target_height}</dd></div>"
-        # Due durate e non una: senza spiegazione sembrano un errore. Il
-        # suggerimento è nativo del browser (`title`) perché qui il markup è
-        # nostro e quello di Streamlit vive solo dentro i suoi controlli.
         f"<div><dt>{t('conf.stat_episodio')}"
-        f"<span class='au-perche' tabindex='0'>"
-        # Lo stesso disegno del suggerimento nativo della sidebar, copiato dal
-        # DOM: cerchio, gancio e punto, tratto da 2. Un "?" scritto come testo
-        # non gli somigliava, ed era grande la metà.
-        "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' "
-        "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
-        "stroke-linejoin='round' aria-hidden='true'>"
-        "<circle cx='12' cy='12' r='10'></circle>"
-        "<path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path>"
-        "<line x1='12' y1='17' x2='12.01' y2='17'></line></svg>"
-        + _bolla(t("conf.stat_episodio_aiuto")) +
-        "</span></dt>"
-        # Niente suffisso "h": il nuovo formato porta già le unità dentro
-        # ("02h 30m"), e un "h" in coda le raddoppierebbe.
-        f"<dd>{intero}</dd></div>"
-        "</div>", unsafe_allow_html=True)
-
+        f"{_icona_perche(t('conf.stat_episodio_aiuto'))}</dt>"
+        f"<dd>{intero}</dd></div></div>", unsafe_allow_html=True)
 
     # La praticabilita' REALE di ogni modello con le impostazioni correnti,
-    # calcolata UNA volta e rispettata da tutta la pagina (schede, consiglio
-    # nell'espansore, caselle): prima le caselle si spegnevano ma il resto
-    # continuava a pubblicizzare modelli che non arrivano al bersaglio
-    # (visto dall'utente sul 400p in fascia intermedia).
+    # calcolata UNA volta e rispettata da tutta la pagina.
     praticabili: dict[str, str] = {}
     for k in CATALOG:
         try:
@@ -5239,140 +5416,122 @@ def page_confronto(cfg: dict) -> None:
         except (PlanError, ValueError) as exc:
             praticabili[k] = str(exc)
 
-    # Ogni scheda porta il giudizio della SUA fascia: consigliato (verde),
-    # da verificare (giallo), sconsigliato (rosso), o niente. Prima la chip
-    # stava solo sul vincitore, e nella fascia intermedia "da verificare"
-    # finiva sul consigliato stesso — il contrario di quello che significa.
-    giudizi = (plan.recommendation.giudizi or {}) if plan.recommendation else {}
-    CHIP = {"ok": f"<span class='au-tag au-ok'>{t('conf.chip_ok')}</span>",
-            "verifica": f"<span class='au-tag au-warn'>{t('conf.chip_verifica')}</span>",
-            "no": f"<span class='au-tag au-err'>{t('conf.chip_no')}</span>"}
-    BORDO_SCHEDA = {"ok": " au-consigliato", "verifica": " au-verifica",
-                    "no": " au-sconsigliato"}
-    schede = []
-    for chiave, modello in CATALOG.items():
-        giudizio = giudizi.get(chiave)
-        chip = CHIP.get(giudizio, "")
-        morta = bool(praticabili.get(chiave))
-        if morta:
-            # L'impossibilita' vince sul giudizio: e' aritmetica, non
-            # opinione. E niente velocita': la stima di un'opzione
-            # impossibile e' solo pubblicita' ingannevole.
-            chip = ("<span class='au-tag au-dim'>"
-                    f"{t('conf.chip_non_arriva', altezza=plan.target_height)}"
-                    "</span>")
-        # Alla scala che QUESTO modello userebbe davvero, non a quella del
-        # piano: CUGAN denoise leggero esiste solo a scala 2, quindi chiedendo
-        # la scala del piano non trovava niente e restava senza velocità.
-        scala = preview.scale_for(chiave, plan)
-        mpx_s = modello.throughput.get(scala, min(modello.throughput.values()))
-        # In fotogrammi al secondo su questo file, non in megapixel al secondo:
-        # i Mpx/s sono l'unita' con cui il motore fa i conti, ma per decidere
-        # servono i fotogrammi. `throughput` è riferito ai pixel in INGRESSO.
-        src_mpx = plan.source.geometry.width * plan.source.geometry.height / 1e6
-        velocita = mpx_s / src_mpx if src_mpx else None
-        schede.append(
-            f"<div class='au-modello"
-            f"{' au-spenta' if morta else BORDO_SCHEDA.get(giudizio, '')}'>"
-            f"<div class='au-m-testa'><span class='au-m-nome'>{esc(modello.label)}</span>"
-            f"{chip}</div>"
-            f"<div class='au-m-desc'>{esc(modello.description)}</div>"
-            # «(solo fasi di upscale)» e non «per l'intero file»: il numero e'
-            # `fotogrammi / velocita`, cioe' il tempo del solo ingrandimento —
-            # niente deduplica, niente codifica, niente turni fra i blocchi.
-            # Il riquadro qui sopra dice EPISODIO INTERO e quello e' il totale
-            # vero. Due quantita' diverse con parole quasi uguali: a 1080p la
-            # differenza e' piccola (11m contro 13m) e non si nota, a 1440p
-            # diventa 11m contro 20m e chi legge pensa a un errore.
-            # La scheda serve a CONFRONTARE i modelli fra loro, e per quello
-            # il solo upscale e' il numero giusto: deduplica e codifica sono
-            # identiche qualunque modello si scelga, e sommarle appiattirebbe
-            # proprio la differenza che si sta guardando.
-            + (f"<div class='au-m-vel'>"
-               f"{t('conf.velocita', fps=f'{velocita:.1f}', durata=stima_hm(plan.frames / velocita))}"
-               f"</div>"
-               if velocita and not morta else "")
-            + "</div>")
-    # Etichetta e griglia nello STESSO blocco: separate, la distanza fra le
-    # due la decide la spaziatura fra elementi di Streamlit, che vale 14px
-    # davanti a un controllo (che ha il suo padding) e 0 davanti a del markup
-    # nudo — infatti la card finiva 6px SOPRA l'etichetta. Insieme, la
-    # distanza è quella dichiarata e basta.
     st.markdown(
-        f"<div class='au-eyebrow au-sez-int'>{t('conf.modelli_disponibili')}</div>"
-        f"<div class='au-modelli'>{''.join(schede)}</div>",
+        f"<div class='au-sez-riga'><span class='au-sez-titolo'>{t('conf.modelli_titolo')}</span>"
+        f"<span class='au-sez-nota'>{t('conf.modelli_nota')}</span></div>",
         unsafe_allow_html=True)
-    # Prima QUESTO caso, poi la regola generale. L'accordion diceva solo la
-    # teoria, e chi lo apre l'ha aperto per sapere perché è stato scelto
-    # quel modello per QUESTO file — la teoria è il seguito, non la risposta.
+    _verdetto(plan, cfg, praticabili)
+    chiavi = _schede_modelli(plan, path, praticabili)
+    _spezzoni(plan, path, cfg, praticabili, chiavi)
+
+
+def _verdetto(plan, cfg: dict, praticabili: dict[str, str]) -> None:
+    """Il consiglio per QUESTO file in una riga, e la regola generale sotto.
+
+    Prima questo caso, poi la teoria: chi guarda vuole sapere perche' e'
+    stato scelto quel modello per questo file. La regola sta in un cassetto
+    che si apre su una linea sottile, centrato sotto il consiglio.
+    """
     rec = plan.recommendation
-    # Un'etichetta sola per tutti i casi: è la domanda a cui il pannello
-    # risponde. "Perché va verificato" presupponeva che l'utente sapesse già
-    # cosa andava verificato.
-    # L'accordion prende il colore dello stato: giallo quando la fascia è
-    # incerta, neutro quando il consiglio è sicuro. Su fondo uguale al resto
-    # passava inosservato proprio nel caso in cui va letto.
-    # Il "dipende" della fascia intermedia ha senso solo se l'alternativa
-    # e' davvero praticabile: se non arriva al bersaglio, il dubbio e'
-    # morto e il pannello torna neutro.
-    dubbio = bool(rec and not rec.sicuro
-                  and not praticabili.get("cugan-denoise"))
-    with st.container(key=("perche_att" if dubbio else "perche_ok")):
-        with st.expander(t("conf.quale_modello")):
-            if rec:
-                # Tre frasi, non un muro: in quale fascia sei, cosa usare,
-                # cosa fare se la fascia è incerta.
-                h = plan.source.geometry.height
-                if h >= CLEAN_SOURCE_MIN_HEIGHT:
-                    fascia_t = t("conf.caso.sopra_fascia",
-                                 altezza=CLEAN_SOURCE_MIN_HEIGHT)
-                    scelta = t("conf.caso.sopra_scelta")
-                    spiega = t("conf.caso.sopra_spiega")
-                elif h >= ALTEZZA_INCERTA:
-                    fascia_t = t("conf.caso.mezzo_fascia", da=ALTEZZA_INCERTA,
-                                 a=CLEAN_SOURCE_MIN_HEIGHT)
-                    if praticabili.get("cugan-denoise"):
-                        # L'alternativa della fascia non arriva al bersaglio
-                        # con le impostazioni attuali: niente "dipende", e
-                        # si dice PERCHE' il dubbio non esiste piu'.
-                        scelta = t("conf.caso.usa_esrgan")
-                        spiega = t("conf.caso.mezzo_bloccato", h=h,
-                                   altezza=plan.target_height)
-                    else:
-                        # Il titolo è la domanda vera di questa fascia, non
-                        # un "usa X" che contraddirebbe il "dipende" sotto.
-                        scelta = t("conf.caso.mezzo_scelta")
-                        spiega = t("conf.caso.mezzo_spiega")
-                else:
-                    fascia_t = t("conf.caso.sotto_fascia",
-                                 altezza=ALTEZZA_INCERTA)
-                    scelta = t("conf.caso.usa_esrgan")
-                    spiega = t("conf.caso.sotto_spiega")
-                colore = "verde" if not dubbio else "giallo"
-                st.markdown(
-                    f"<div class='au-p-caso au-p-{colore}'>"
-                    f"<div class='au-eyebrow'>"
-                    f"{esc(t('conf.caso.questo_file', h=h, fascia=fascia_t))}</div>"
-                    f"<div class='au-p-scelta'>{esc(scelta)}</div>"
-                    f"<div class='au-p-motivo'>{esc(spiega)}</div></div>",
-                    unsafe_allow_html=True)
-            # La regola generale STA nell'accordion: fuori era un secondo
-            # blocco che fluttuava da solo sotto un pannello chiuso.
-            st.markdown("<div class='au-eyebrow' style='margin:18px 0 10px'>"
-                        f"{t('conf.regola')}</div>", unsafe_allow_html=True)
+    if not rec:
+        return
+    dubbio = bool(not rec.sicuro and not praticabili.get("cugan-denoise"))
+    h = plan.source.geometry.height
+    if h >= CLEAN_SOURCE_MIN_HEIGHT:
+        fascia_t = t("conf.caso.sopra_fascia", altezza=CLEAN_SOURCE_MIN_HEIGHT)
+        scelta, spiega = t("conf.caso.sopra_scelta"), t("conf.caso.sopra_spiega")
+    elif h >= ALTEZZA_INCERTA:
+        fascia_t = t("conf.caso.mezzo_fascia", da=ALTEZZA_INCERTA,
+                     a=CLEAN_SOURCE_MIN_HEIGHT)
+        if praticabili.get("cugan-denoise"):
+            scelta = t("conf.caso.usa_esrgan")
+            spiega = t("conf.caso.mezzo_bloccato", h=h, altezza=plan.target_height)
+        else:
+            scelta, spiega = t("conf.caso.mezzo_scelta"), t("conf.caso.mezzo_spiega")
+    else:
+        fascia_t = t("conf.caso.sotto_fascia", altezza=ALTEZZA_INCERTA)
+        scelta, spiega = t("conf.caso.usa_esrgan"), t("conf.caso.sotto_spiega")
+    icona = (f"<span class='au-verdetto-icona au-giallo'>?</span>" if dubbio else
+             f"<span class='au-verdetto-icona'>{_svg(_I_SPUNTA, 14, 2.4)}</span>")
+    with st.container(key="verdetto" + ("Dubbio" if dubbio else "")):
+        st.markdown(
+            f"<div class='au-verdetto'>{icona}<div>"
+            f"<div class='au-verdetto-file'>{esc(t('conf.caso.questo_file', h=h, fascia=fascia_t))}</div>"
+            f"<div class='au-verdetto-scelta'>{esc(scelta)}</div>"
+            f"<div class='au-verdetto-motivo'>{esc(spiega)}</div></div></div>",
+            unsafe_allow_html=True)
+        with st.expander(t("conf.come_scelti"), key="comeScelti"):
             st.markdown(
-                "<div class='au-p-regole'>" + "".join(
-                    f"<div class='au-p-riga au-p-{colore}'>"
+                "<div class='au-regole'>" + "".join(
+                    f"<div class='au-regola au-p-{colore}'>"
                     f"<div class='au-p-fascia'>{esc(fascia)}</div>"
-                    f"<div><span class='au-p-mod'>{esc(modello)}</span>"
-                    f"<span class='au-p-testo'> — {esc(testo)}</span></div></div>"
+                    f"<div class='au-p-mod'>{esc(modello)}</div>"
+                    f"<div class='au-p-testo'>{esc(testo)}</div></div>"
                     for fascia, colore, modello, testo in perche_generale(
                         plan.target_height, bool(cfg.get("forza"))))
-                + "</div>", unsafe_allow_html=True)
-            st.markdown("<div class='au-hint' style='margin-top:14px'>"
-                        f"{t('conf.regola_nota')}</div>", unsafe_allow_html=True)
+                + f"</div><div class='au-regole-nota'>{t('conf.regola_nota')}</div>",
+                unsafe_allow_html=True)
 
-    _spezzoni(plan, path, cfg, praticabili)
+
+def _schede_modelli(plan, path: Path, praticabili: dict[str, str]) -> list[str]:
+    """I tre modelli come schede spuntabili: cosa sono e quanto costano.
+
+    La spunta dice quali provare sulle clip (prima era una colonna a parte,
+    lontana dalla scheda che lo descriveva). Un modello che non arriva al
+    bersaglio non si puo' provare: la clip uscirebbe a un'altra scala e si
+    sceglierebbe su un test poi inutilizzabile.
+    """
+    giudizi = (plan.recommendation.giudizi or {}) if plan.recommendation else {}
+    CHIP = {"ok": ("au-ok", t("conf.chip_ok")),
+            "verifica": ("au-warn", t("conf.chip_verifica")),
+            "no": ("au-err", t("conf.chip_no"))}
+    for k in CATALOG:
+        if praticabili.get(k) and st.session_state.get(f"prova_{k}_{path}"):
+            # Una spunta rimasta accesa da prima non sopravvive allo
+            # spegnimento della casella.
+            st.session_state[f"prova_{k}_{path}"] = False
+    # Streamlit butta lo stato dei widget che un giro non disegna: lo
+    # specchio `modelli_` tiene la scelta fra un'uscita e un ritorno. Vale
+    # solo dopo che l'utente ha toccato le caselle; prima segue il modello
+    # del file.
+    toccato = st.session_state.get(f"tocco_modelli_{path}")
+    memoria = st.session_state.get(f"modelli_{path}") if toccato else None
+    voluti = memoria if memoria is not None else {plan.model_key}
+    if voluti and all(praticabili.get(k) for k in voluti):
+        voluti = {plan.model_key}
+    src_mpx = plan.source.geometry.width * plan.source.geometry.height / 1e6
+    chiavi: list[str] = []
+    with st.container(key="modelli", horizontal=True):
+        for k, modello in CATALOG.items():
+            morta = bool(praticabili.get(k))
+            scala = preview.scale_for(k, plan)
+            if morta:
+                classe, testo = "au-dim", t("conf.chip_non_arriva",
+                                             altezza=plan.target_height)
+                meta = t("conf.solo_scala", scala=scala,
+                         altezza=plan.source.geometry.height * scala)
+            else:
+                classe, testo = CHIP.get(giudizi.get(k), ("", ""))
+                mpx_s = modello.throughput.get(scala, min(modello.throughput.values()))
+                velocita = mpx_s / src_mpx if src_mpx else None
+                meta = (t("conf.velocita", fps=f"{velocita:.1f}",
+                          durata=stima_hm(plan.frames / velocita)) if velocita else "")
+            with st.container(key=f"mod_{k}"):
+                acceso = st.checkbox(
+                    modello.label, value=(k in voluti) and not morta,
+                    key=f"prova_{k}_{path}", disabled=morta,
+                    help=praticabili.get(k) or None,
+                    on_change=_tocca_modelli, args=(str(path),))
+                st.markdown(
+                    (f"<span class='au-tag {classe}'>{esc(testo)}</span>" if testo else "")
+                    + f"<div class='au-m-desc'>{esc(modello.description[:1].upper() + modello.description[1:])}</div>"
+                    f"<div class='au-m-vel'>{esc(meta)}</div>",
+                    unsafe_allow_html=True)
+            if acceso and not morta:
+                chiavi.append(k)
+    if toccato:
+        st.session_state[f"modelli_{path}"] = set(chiavi)
+    return chiavi
 
 
 # Oltre questa soglia si rinuncia al video incorporato: un data URI enorme
@@ -5408,8 +5567,10 @@ def _video_ciclico(f: Path) -> bool:
 
 
 def _spezzoni(plan, path: Path, cfg: dict,
-              praticabili: dict[str, str] | None = None) -> None:
+              praticabili: dict[str, str] | None = None,
+              chiavi: list[str] | None = None) -> None:
     praticabili = praticabili or {}
+    chiavi = chiavi or []
     chiave = f"cand_{path}"
     # La scansione ora lascia traccia su disco: se l'interfaccia è stata
     # ricaricata (o riavviata) a metà lavoro, i minuti spesi non sono persi e
@@ -5441,23 +5602,30 @@ def _spezzoni(plan, path: Path, cfg: dict,
         except OSError:
             pass
 
-    # Il contenitore serve al CSS per centrare la chip sul pulsante: le
-    # colonne di Streamlit si allineano in alto, e la chip restava appesa.
-    with st.container(key="avvio"):
-        avvio, esito = st.columns([1, 3])
-        if candidati_gia := st.session_state.get(chiave):
-            esito.markdown(
-                f"<span class='au-tag au-ok'>"
-                f"{tn('conf.individuati', len(candidati_gia))}</span>",
+    # La testata delle clip: titolo, quante, un consiglio, e a destra il
+    # pulsante per cercarne altre. Senza clip, al posto della griglia c'e'
+    # un riquadro che spiega cosa fara' la ricerca.
+    candidati_gia = st.session_state.get(chiave)
+    gia_visti = tuple(st.session_state.get(f"visti_{path}") or ())
+    premuto = False
+    if candidati_gia:
+        with st.container(key="testaClip", horizontal=True,
+                          vertical_alignment="center"):
+            st.markdown(
+                f"<div class='au-sez-riga'><span class='au-sez-titolo'>{t('conf.clip_titolo')}</span>"
+                f"<span class='au-tag au-ok'>{t('conf.trovate', n=len(candidati_gia))}</span>"
+                f"<span class='au-sez-nota'>{t('conf.clip_nota')}</span></div>",
                 unsafe_allow_html=True)
-        # L'etichetta dice cosa fara' ADESSO: la prima volta cerca, dalla
-        # seconda in poi cerca ALTRO. Senza, premerlo di nuovo sembrava
-        # rifare la stessa cosa (e prima la rifaceva davvero).
-        gia_visti = tuple(st.session_state.get(f"visti_{path}") or ())
-        premuto = avvio.button(
-            t("conf.trova_altri") if gia_visti
-            else t("conf.trova"),
-            type="primary", use_container_width=True)
+            premuto = st.button(t("conf.trova_altri"), key="trovaAltri")
+    else:
+        st.markdown(f"<div class='au-sez-riga'><span class='au-sez-titolo'>"
+                    f"{t('conf.clip_titolo')}</span></div>", unsafe_allow_html=True)
+        with st.container(key="trovaCard", horizontal=True,
+                          vertical_alignment="center"):
+            st.markdown(f"<div class='au-trova'><b>{t('conf.trova')}</b>"
+                        f"<p>{t('conf.trova_spiega')}</p></div>",
+                        unsafe_allow_html=True)
+            premuto = st.button(t("conf.trova"), key="trovaClip", type="primary")
     if premuto:
         # La durata annunciata era "circa tre minuti": misurata, sta fra 28s
         # (360p) e 51s (720p) su episodi interi. Sovrastimare per prudenza fa
@@ -5508,9 +5676,8 @@ def _spezzoni(plan, path: Path, cfg: dict,
 
     candidati = st.session_state.get(chiave)
     if candidati is None:
-        st.markdown(
-            f"<span class='au-hint'>{t('conf.spiega_spezzoni')}</span>",
-            unsafe_allow_html=True)
+        _barra_confronto(plan, path, cfg, [], chiavi,
+                         st.session_state.get(f"originale_{path}", True))
         return
     if not candidati:
         st.warning(t("conf.nessuno_spezzone"))
@@ -5585,165 +5752,86 @@ def _spezzoni(plan, path: Path, cfg: dict,
                     else:
                         scelti.discard(cand.slug)
                     st.markdown(
-                        f"<div class='au-c-desc'>"
-                        f"{esc(t('conf.c_desc', motivo=cand.reason, prove=cand.kind.tests))}"
-                        "</div>",
+                        f"<div class='au-c-motivo'>{esc(cand.reason)}</div>"
+                        f"<div class='au-c-prove'>"
+                        f"{esc(t('conf.prova', prove=cand.kind.tests))}</div>",
                         unsafe_allow_html=True)
 
     st.markdown("<style>" + "\n".join(regole_clip) + "</style>",
                 unsafe_allow_html=True)
     st.session_state[f"scelti_{path}"] = scelti
 
-    # Tre colonne, non due: modelli | quanto ci vuole | esito. Prima la
-    # stima stava in una mega-colonna a destra con un buco fra lei e i
-    # modelli, e l'avanzamento nasceva SOTTO la stima allungando la pagina
-    # (ristrutturazione chiesta dall'utente). La terza colonna e' vuota a
-    # riposo e ospita barra e nota durante l'elaborazione.
-    with st.container(key="lancio"):
-        sinistra, centro, destra = st.columns([0.8, 0.9, 1.5], gap="large")
-    with sinistra:
-        with st.container(key="campoModelli"):
-            st.markdown(f"<div class='au-eyebrow au-sez'>{t('conf.modelli_da_provare')}</div>",
-                        unsafe_allow_html=True)
-            # Tre caselle e non un multiselect: le opzioni sono TRE, fisse e
-            # note — la tendina coi tag era cerimonia (detto dall'utente).
-            # La chiave include il file: cambiando episodio si riparte dal
-            # modello consigliato per QUELLA risoluzione.
-            # Le regole della Lavorazione valgono anche qui: un modello che
-            # verrebbe rifiutato (es. "non arriva a 1080p") non si può
-            # nemmeno provare — la clip uscirebbe a una scala diversa e si
-            # sceglierebbe su un test poi inutilizzabile (disallineamento
-            # notato dall'utente). La casella si spegne e il motivo sta
-            # nel suggerimento.
-            # `praticabili` e' gia' calcolata in cima alla pagina (una
-            # verita' sola per schede, consiglio e caselle).
-            for k in CATALOG:
-                if praticabili.get(k) and st.session_state.get(
-                        f"prova_{k}_{path}"):
-                    # Una spunta rimasta accesa da prima non deve
-                    # sopravvivere allo spegnimento della casella.
-                    st.session_state[f"prova_{k}_{path}"] = False
-            # Streamlit butta lo stato dei widget che un giro non disegna:
-            # uscendo dalla pagina e tornando, le caselle rinascevano col
-            # valore di partenza e un modello scelto in più spariva in
-            # silenzio (difetto visto in prova: due modelli all'andata, uno
-            # al ritorno, con la stima che cambiava senza dire perché).
-            # Gli spezzoni si salvavano solo perché la pagina li ricopia in
-            # `scelti_`: qui serve lo stesso specchio. La chiave dello
-            # specchio è diversa da quella del widget, altrimenti scriverla
-            # dopo il disegno solleverebbe.
-            # Lo specchio vale SOLO dopo che l'utente ha davvero messo mano
-            # alle caselle. Scritto anche al primo disegno, congelava il
-            # valore proposto e da quel momento la pagina non seguiva più il
-            # modello del file: sceglendolo dalla tendina della Lavorazione,
-            # il Confronto continuava a provare quello di prima senza dirlo.
-            toccato = st.session_state.get(f"tocco_modelli_{path}")
-            memoria = st.session_state.get(f"modelli_{path}") if toccato else None
-            voluti = memoria if memoria is not None else {plan.model_key}
-            # Se NIENTE di ciò che si voleva è utilizzabile a questa altezza
-            # — capita spegnendo un modello che esiste a una scala sola — la
-            # pagina resterebbe senza una casella accesa, senza pulsante e
-            # senza spiegazione. Si ricade sul consigliato, praticabile per
-            # costruzione. Lo specchio VUOTO invece è una scelta vera ("li ho
-            # tolti tutti") e si rispetta.
-            if voluti and all(praticabili.get(k) for k in voluti):
-                voluti = {plan.model_key}
-            # Il suggerimento di una casella barrata non si limita al "non
-            # si puo'": dice anche cosa aspettarsi dalle alternative — in
-            # particolare se quella rimasta selezionabile e' comunque
-            # sconsigliata per questo file (chiesto dall'utente).
-            giudizi_ = ((plan.recommendation.giudizi or {})
-                        if plan.recommendation else {})
-            sconsigliate_vive = [CATALOG[a].short for a in CATALOG
-                                 if not praticabili.get(a)
-                                 and giudizi_.get(a) == "no"]
-            aiuti: dict[str, str] = {}
-            for k in CATALOG:
-                if not praticabili.get(k):
-                    continue
-                aiuto = praticabili[k]
-                if sconsigliate_vive:
-                    aiuto += " " + t(
-                        "conf.nota_sconsigliate",
-                        modelli=t("conf.e").join(sconsigliate_vive))
-                aiuti[k] = aiuto
-            chiavi = [k for k in CATALOG
-                      if st.checkbox(CATALOG[k].short,
-                                     value=(k in voluti) and not praticabili[k],
-                                     key=f"prova_{k}_{path}",
-                                     disabled=bool(praticabili[k]),
-                                     help=aiuti.get(k) or None,
-                                     on_change=_tocca_modelli, args=(str(path),))
-                      and not praticabili[k]]
-            if toccato:
-                st.session_state[f"modelli_{path}"] = set(chiavi)
-        # Stessa storia per l'originale: spento e poi ritrovato acceso.
-        riferimento = st.checkbox(
-            t("conf.includi_originale"),
-            value=st.session_state.get(f"originale_{path}", True),
-            help=t("conf.includi_aiuto"))
-        st.session_state[f"originale_{path}"] = riferimento
-
+    riferimento = st.session_state.get(f"originale_{path}", True)
     prescelti = [c for c in candidati if c.slug in scelti]
-    varianti = preview.variants_for(*chiavi, reference=riferimento)
+    _barra_confronto(plan, path, cfg, prescelti, chiavi, riferimento)
+    _risultati(path)
 
-    premi = False
-    with centro:
-        st.markdown(f"<div class='au-eyebrow au-sez-int'>{t('conf.quanto')}</div>",
-                    unsafe_allow_html=True)
-        # Niente nota sulla taratura qui: si sa gia' (la dice la sidebar), e
-        # allungava la colonna di centro disallineando le tre del Confronto
-        # (chiesto da Interstellar0verdrive il 2026-08-10).
-        if not prescelti or not varianti:
-            st.markdown(f"<span class='au-hint'>{t('conf.seleziona')}</span>",
+
+def _barra_confronto(plan, path: Path, cfg: dict, prescelti: list,
+                     chiavi: list[str], riferimento: bool) -> None:
+    """La barra in fondo al Confronto: cosa si sta per elaborare e il via.
+
+    Mentre un confronto gira (anche partito da un altro file, anche dopo un
+    ricaricamento) la barra diventa il suo avanzamento, con Ferma.
+    """
+    _carica_esito_confronto(path)
+    if st.session_state.pop("scorri_clip", False):
+        st.iframe("<script>window.parent.document.querySelector('.st-key-testaClip')"
+                  "?.scrollIntoView({behavior:'smooth',block:'start'});</script>", height=1)
+    with st.container(key="barraConfronto", horizontal=True,
+                      vertical_alignment="center"):
+        if confronto.in_corso():
+            _avanzamento_confronto(str(path))
+            return
+        fatto = confronto.stato()
+        if (not prescelti and fatto and fatto.get("state") == confronto.FINITO
+                and fatto.get("file") == str(path) and fatto.get("results")):
+            # Il confronto e' pronto e non si sta preparando altro: la barra
+            # dice com'e' andata e porta al passo successivo.
+            n_file = sum(len(r.get("file") or {}) for r in fatto["results"])
+            durata = max(0.0, float(fatto.get("ended") or 0) - float(fatto.get("started") or 0))
+            st.markdown(
+                f"<div class='au-barra-pronto'><span class='au-spunta'>{_svg(_I_SPUNTA, 12, 2.4)}</span>"
+                f"<div><b>{t('conf.pronto_barra', n=n_file, tempo=hms(durata))}</b>"
+                f"<span>{t('conf.pronto_nota')}</span></div></div>",
+                unsafe_allow_html=True)
+            if st.button(t("conf.torna_clip"), key="tornaClip"):
+                st.session_state["scorri_clip"] = True
+            st.button(t("conf.avanti_lavorazione"), key="avantiLavorazione",
+                      type="primary", icon=":material/arrow_forward:",
+                      icon_position="right", on_click=_vai, args=(SEZIONI[2],))
+            return
+        varianti = preview.variants_for(*chiavi, reference=riferimento)
+        modelli = [v for v in varianti if not v.is_reference]
+        premi = False
+        if not prescelti or not modelli:
+            st.markdown(f"<div class='au-barra-testo'>{t('conf.seleziona')}</div>",
                         unsafe_allow_html=True)
         else:
-            # Scomposta e non un totale solo: il riferimento è l'unica voce
-            # che si può togliere, e senza vederne il costo non si può
-            # decidere se toglierla. "N varianti" contava il riferimento come
-            # un modello scelto, e chi ne aveva spuntati tre ne leggeva
-            # quattro chiedendosi quale fosse il quarto.
-            modelli = [v for v in varianti if not v.is_reference]
             ns, nm = len(prescelti), len(modelli)
             solo_modelli = preview.estimate_seconds(plan, prescelti, modelli)
             totale = preview.estimate_seconds(plan, prescelti, varianti)
-            righe = [f"<div class='au-stima'><span>{tn('conf.n_spezzoni', ns)}"
-                     f" × {tn('conf.n_modelli', nm)}</span>"
-                     f"<b>{hms(solo_modelli)}</b></div>"]
+            riga = f"{tn('conf.n_spezzoni', ns)} × {tn('conf.n_modelli', nm)}"
             if riferimento:
-                righe.append(f"<div class='au-stima'><span>{t('conf.stima_originale')}"
-                             f"</span><b>{hms(totale - solo_modelli)}"
-                             "</b></div>")
-            righe.append("<div class='au-stima au-stima-tot'><span>"
-                         f"{tn('conf.stima_totale', ns * len(varianti))}</span>"
-                         f"<b>{hms(totale)}</b></div>")
-            st.markdown("".join(righe), unsafe_allow_html=True)
-            premi = st.button(t("conf.elabora"), type="primary",
-                              use_container_width=True,
-                              disabled=confronto.in_corso())
-    with destra:
-        st.markdown(f"<div class='au-eyebrow au-sez-int'>{t('conf.avanzamento')}</div>",
-                    unsafe_allow_html=True)
-        # La zona esiste GIA' PRIMA del click (segnaposto + altezza dal
-        # CSS): al click barra e nota compaiono qui, nella terza colonna,
-        # senza spostare la pagina.
-        zona = st.container(key="zonaEsito")
-        with zona:
-            st.markdown("<span class='au-zona-segnaposto'></span>",
-                        unsafe_allow_html=True)
-            # Il "pronto" resta finche' i risultati esistono: prima viveva
-            # solo nel giro della generazione e il primo rerun lo mangiava
-            # (sparizione vista dall'utente).
-            # ...ma NON mentre una generazione nuova sta girando: «pronto»
-            # sopra la barra di un lavoro in corso, con la freccia che punta
-            # a quella barra invece che alle clip, e' fuorviante (segnalato
-            # dall'utente il 12/08, al secondo giro di confronto).
-            if premi:
-                _avvia_confronto(cfg, plan.source.geometry.height, path, prescelti, varianti)
-            _carica_esito_confronto(path)
-            _avanzamento_confronto(str(path))
-
-    _risultati(path)
+                riga += f" + {t('conf.piu_originale')}"
+            riga += f" · {tn('conf.n_file', ns * len(varianti))}"
+            tempi = (t("conf.tempi_riga", clip=hms(solo_modelli),
+                       orig=hms(totale - solo_modelli), tot=hms(totale))
+                     if riferimento else
+                     t("conf.tempi_riga_senza", clip=hms(solo_modelli), tot=hms(totale)))
+            st.markdown(f"<div class='au-barra-testo'><b>{riga}</b>"
+                        f"<code>{tempi}</code></div>", unsafe_allow_html=True)
+        nuovo = st.toggle(t("conf.includi_originale"), value=riferimento,
+                          key=f"tog_originale_{path}", help=t("conf.includi_aiuto"))
+        if nuovo != riferimento:
+            st.session_state[f"originale_{path}"] = nuovo
+            st.rerun()
+        premi = st.button(t("conf.elabora"), type="primary", key="elaboraClip",
+                          disabled=not prescelti or not modelli)
+    if premi:
+        _avvia_confronto(cfg, plan.source.geometry.height, path, prescelti,
+                         preview.variants_for(*chiavi, reference=riferimento))
+        st.rerun()
 
 
 def _avvia_confronto(cfg: dict, altezza: int, path: Path, candidati,
@@ -5801,11 +5889,9 @@ def _carica_esito_confronto(path: Path) -> None:
 
 @st.fragment(run_every=2)
 def _avanzamento_confronto(path: str) -> None:
-    """La barra del confronto in corso, riletta ogni due secondi.
-
-    Quando il processo finisce si ridisegna la pagina intera, che porta in
-    pagina i risultati.
-    """
+    """Il confronto in corso, riletto ogni due secondi: dove e', quanto
+    manca, e Ferma. Quando il processo finisce si ridisegna la pagina
+    intera, che porta in pagina i risultati."""
     s = confronto.stato()
     if not s or s.get("state") != confronto.IN_CORSO:
         if st.session_state.pop("conf_seguito", None):
@@ -5813,21 +5899,35 @@ def _avanzamento_confronto(path: str) -> None:
         return
     st.session_state["conf_seguito"] = True
     totale = max(int(s.get("total") or 0), 1)
-    quota = min((int(s.get("done") or 0) + float(s.get("fraction") or 0)) / totale, 1.0)
+    fatte = int(s.get("done") or 0)
+    quota = min((fatte + float(s.get("fraction") or 0)) / totale, 1.0)
     testo = s.get("text") or t("conf.avvio")
-    st.progress(quota, f"{testo} · {quota:.0%}")
-    if s.get("file") != path:
-        st.caption(t("conf.altro_file", nome=Path(s["file"]).name))
-    # Due clic, come gli altri Ferma: il primo chiede conferma per dieci
-    # secondi, il secondo ferma davvero.
-    if time.time() - st.session_state.get("conf_ferma_conferma", 0) > 10:
-        if st.button(t("conf.ferma"), key="ferma_confronto"):
-            st.session_state["conf_ferma_conferma"] = time.time()
+    altro = ("<div class='au-prova-nota'>"
+             f"{t('conf.altro_file', nome=esc(Path(s['file']).name))}</div>"
+             if s.get("file") != path else "")
+    with st.container(key="provaTesta", horizontal=True,
+                      vertical_alignment="center"):
+        st.markdown(
+            "<div class='au-prova-testa'><span></span>"
+            f"<b>{t('conf.prova_titolo')}</b>"
+            f"<code>{esc(testo)} · {quota:.0%}</code>"
+            f"<small>{t('conf.versione_di', n=min(fatte + 1, totale), tot=totale)}</small>"
+            "</div>", unsafe_allow_html=True)
+        # Due clic, come gli altri Ferma: il primo chiede conferma per dieci
+        # secondi, il secondo ferma davvero.
+        if time.time() - st.session_state.get("conf_ferma_conferma", 0) > 10:
+            if st.button(t("conf.ferma"), key="ferma_confronto"):
+                st.session_state["conf_ferma_conferma"] = time.time()
+                st.rerun(scope="fragment")
+        elif st.button(t("conf.ferma_conferma"), key="ferma_confronto_ok",
+                       type="primary"):
+            st.session_state.pop("conf_ferma_conferma", None)
+            confronto.ferma()
             st.rerun(scope="fragment")
-    elif st.button(t("conf.ferma_conferma"), key="ferma_confronto_ok", type="primary"):
-        st.session_state.pop("conf_ferma_conferma", None)
-        confronto.ferma()
-        st.rerun(scope="fragment")
+    st.markdown(
+        f"<div class='au-prova-barra'><span style='width:{quota * 100:.1f}%'></span></div>"
+        f"<div class='au-prova-nota'>{t('conf.prova_nota')}</div>{altro}",
+        unsafe_allow_html=True)
 
 
 # Una funzione e non un dizionario fisso: i testi seguono la lingua attiva.
@@ -5837,25 +5937,15 @@ def _spiega_indicatori() -> dict[int, str]:
 
 def _tabella_confronto(modelli: list[dict], dedup,
                        riferimento: bool = True) -> None:
-    """I numeri del confronto, in rilievo e in cima.
+    """Tempi e indicatori di una clip, affiancati: a sinistra quanto costa
+    ogni modello, a destra cosa fa all'immagine.
 
-    Prima stavano in coda, in grigetto, formato nota a margine: «non e'
-    affatto in rilievo» (utente, 12/08). Sono la prima domanda a cui un
-    confronto risponde — quale modello, e a che prezzo — quindi aprono.
-
-    La colonna del CONFRONTO FRA MODELLI compare solo da due modelli in su:
-    con un modello solo contro l'ingrandito il tempo e' ovvio e la colonna
-    sarebbe rumore (detto dall'utente, e ha ragione).
+    La colonna «rispetto al piu' veloce» compare solo da due modelli in su:
+    con un modello solo contro l'ingrandito sarebbe rumore.
     """
-    # Solo il NOME della deduplica: la quota e' gia' applicata a
-    # `m["intero"]` da chi ha costruito le righe.
     quota, codice = (dedup or (0.0, ""))
-    pct = f"{quota:.0%}"
-    come = {"spenta": t("conf.dedup.spenta"),
-            "misurata": t("conf.dedup.misurata", pct=pct),
-            "storico": t("conf.dedup.storico", pct=pct),
-            "prevista": t("conf.dedup.prevista", pct=pct),
-            "ignota": t("conf.dedup.ignota")}.get(codice, "")
+    come = t(f"conf.dedup_come.{codice}") if codice in ("misurata", "storico",
+                                                         "prevista") else ""
     piu_veloce = min(m["secondi"] for m in modelli)
     righe = []
     for m in modelli:
@@ -5868,19 +5958,18 @@ def _tabella_confronto(modelli: list[dict], dedup,
             f"<tr><td class='au-cnf-nome'>{esc(m['nome'])}</td>"
             f"<td>{stima_hm(m['secondi'])}</td>"
             f"<td>≈ {stima_hm(m['intero'])}</td>"
-            f"<td class='au-cnf-scarto'>{esc(scarto)}</td></tr>")
-    st.markdown(
-        "<table class='au-cnf'>"
-        f"<thead><tr><th>{t('conf.th_modello')}</th><th>{t('conf.th_spezzone')}</th>"
-        f"<th>{t('conf.th_episodio')}</th><th></th></tr></thead>"
-        f"<tbody>{''.join(righe)}</tbody></table>"
-        f"<div class='au-hint' style='margin:6px 0 2px'>"
-        f"{esc(t('conf.proiezione', come=come))}</div>",
-        unsafe_allow_html=True)
+            + (f"<td class='au-cnf-scarto'>{esc(scarto)}</td>" if len(modelli) > 1 else "")
+            + "</tr>")
+    proiezione = (t("conf.proiezione_breve", pct=f"{quota:.0%}", come=come)
+                  if come else t("conf.proiezione", come=t("conf.dedup.spenta")))
+    tempi = (f"<div class='au-occhio'>{t('conf.tempo_modello')}</div>"
+             "<table class='au-cnf'>"
+             f"<thead><tr><th>{t('conf.th_modello')}</th><th>{t('conf.th_spezzone')}</th>"
+             f"<th>{t('conf.th_episodio')}</th>"
+             + (f"<th>{t('conf.th_vs')}</th>" if len(modelli) > 1 else "")
+             + f"</tr></thead><tbody>{''.join(righe)}</tbody></table>"
+             f"<div class='au-cnf-nota'>{esc(proiezione)}</div>")
 
-    # Una colonna si disegna solo se qualcuno ha un numero da metterci: una
-    # fila di trattini non e' informazione, e' rumore. Il rumore nelle aree
-    # piatte non e' misurabile su ogni fotogramma (vedi RESIDUO_MINIMO).
     def _c(m, i):
         q = m.get("metriche")
         return q[i] if q and len(q) > i else None
@@ -5889,141 +5978,112 @@ def _tabella_confronto(modelli: list[dict], dedup,
                ((0, t("conf.col_dettaglio")), (1, t("conf.col_rumore")))
                if any(_c(m, i) is not None for m in modelli)]
     if not colonne:
-        # Niente indicatori: si dice PERCHE'. Sparire in silenzio manda a
-        # cercare un difetto dove non c'e' — ed e' esattamente il modo in cui
-        # il difetto vero era rimasto invisibile fino all'audit del 12/08.
-        st.markdown(
-            "<div class='au-hint' style='margin:10px 0 2px'>" +
-            (t("conf.ind_no_rif") if not riferimento
-             else t("conf.ind_no_aree")) +
-            "</div>", unsafe_allow_html=True)
-        return
-    voci = []
-    for m in modelli:
-        # OGNI modello ha la sua riga, anche chi non e' stato misurato: chi
-        # sparisce lascia una tabella piu' corta dell'altra senza una parola,
-        # e chi guarda si chiede quale delle due sbagli (visto in audit).
-        celle = "".join(
-            f"<td>{v * 100:.0f}%</td>" if (v := _c(m, i)) is not None
-            else "<td>—</td>" for i, _t in colonne)
-        voci.append(
-            f"<tr><td class='au-cnf-nome'>{esc(m['nome'])}</td>{celle}</tr>")
-    # `testo` e non `t`: `t` e' la funzione dei testi.
-    intestazioni = "".join(f"<th>{testo}</th>" for _i, testo in colonne)
-    spiega = _spiega_indicatori()
-    st.markdown(
-        "<div class='au-eyebrow' style='margin:14px 0 6px'>"
-        f"{t('conf.indicatori')}</div>"
-        "<table class='au-cnf'>"
-        f"<thead><tr><th>{t('conf.th_modello')}</th>{intestazioni}</tr></thead>"
-        f"<tbody>{''.join(voci)}</tbody></table>"
-        # Le righe che spiegano come si leggono: senza, due percentuali non
-        # dicono niente a nessuno (chiesto dall'utente il 12/08). Si spiega
-        # solo cio' che si sta mostrando.
-        "<div class='au-hint' style='margin:8px 0 2px'>"
-        + "<br>".join(spiega[i] for i, _t in colonne) +
-        "</div>"
-        "<div class='au-hint' style='margin:6px 0 2px;opacity:.85'>"
-        f"{t('conf.avvertenza')}"
-        "</div>",
-        unsafe_allow_html=True)
+        # Niente indicatori: si dice PERCHE', invece di sparire in silenzio.
+        indicatori = (f"<div class='au-occhio'>{t('conf.indicatori_titolo')}</div>"
+                      f"<div class='au-cnf-nota'>"
+                      f"{t('conf.ind_no_rif') if not riferimento else t('conf.ind_no_aree')}</div>")
+    else:
+        # Barre e non numeri soli: la tacca e' il 100% dell'ingrandimento
+        # semplice, e la barra arriva fino a 4 volte tanto.
+        blocchi = []
+        for m in modelli:
+            barre = []
+            for i, testo in colonne:
+                v = _c(m, i)
+                if v is None:
+                    barre.append(f"<div class='au-ind'><span>{esc(testo)}</span>"
+                                 "<i></i><b>—</b></div>")
+                    continue
+                barre.append(
+                    f"<div class='au-ind'><span>{esc(testo)}</span>"
+                    f"<i><em style='width:{min(v / 4, 1) * 100:.1f}%'></em></i>"
+                    f"<b>{v * 100:.0f}%</b></div>")
+            blocchi.append(f"<div class='au-ind-modello'>{esc(m['nome'])}</div>"
+                           + "".join(barre))
+        spiega = _spiega_indicatori()
+        indicatori = (f"<div class='au-occhio'>{t('conf.indicatori_titolo')}"
+                      f"{_icona_perche(' '.join(spiega[i] for i, _t in colonne))}</div>"
+                      + "".join(blocchi)
+                      + f"<div class='au-cnf-nota'>{t('conf.tacca')}</div>")
+    st.markdown(f"<div class='au-res-due'><div>{tempi}</div><div>{indicatori}</div></div>",
+                unsafe_allow_html=True)
 
 
 def _risultati(path: Path) -> None:
     risultati = st.session_state.get(f"risultati_{path}")
     if not risultati:
         return
-    st.divider()
     # L'ancora dello scroll automatico post-elaborazione.
-    st.markdown("<div class='au-ancora-risultati'></div>",
+    st.markdown("<div class='au-ancora-risultati'></div>", unsafe_allow_html=True)
+    clip = tn("conf.n_spezzoni", len(risultati))
+    nomi_mod = [m["nome"] for m in (risultati[0].get("modelli") or [])]
+    if "original" in (risultati[0].get("file") or {}):
+        nomi_mod.append(t("conf.e_originale"))
+    modelli_testo = (", ".join(nomi_mod[:-1]) + t("conf.e") + nomi_mod[-1]
+                     if len(nomi_mod) > 1 else "".join(nomi_mod))
+    with st.container(key="risultati"):
+        with st.container(key="testaRisultati", horizontal=True,
+                          vertical_alignment="bottom"):
+            st.markdown(
+                f"<div class='au-sez-titolo au-grande'>{t('conf.risultati')}</div>"
+                f"<div class='au-sez-nota'>"
+                f"{esc(t('conf.risultati_testo', clip=clip, modelli=modelli_testo))}</div>",
                 unsafe_allow_html=True)
-    # Il contenitore con chiave serve al CSS (titoli accordion + stile):
-    # tutto il corpo dei risultati vive qui dentro.
-    blocco_risultati = st.container(key="risultati")
-    # Titolo di sezione VERO, come "Confronto dei modelli": "#####"
-    # era il piu' piccolo dei markdown e l'arrivo dei risultati — cioe'
-    # il momento clou della scheda — sembrava una nota a margine
-    # ("sfigatissimo", parola dell'utente).
-    # Coppia __enter__/__exit__ esplicita: il corpo e' lungo e
-    # re-indentarlo tutto sotto un `with` renderebbe illeggibile
-    # ogni diff futuro. L'uscita sta in fondo alla funzione.
-    blocco_risultati.__enter__()
-    st.markdown(
-        f"<div class='au-sezione'>{t('conf.risultati')}</div>"
-        f"<div class='au-hint' style='margin-bottom:14px'>"
-        f"{t('conf.risultati_nota', cartella=PATHS.previews.name)}</div>",
-        unsafe_allow_html=True)
-
-    for res in risultati:
-        # `titolo` e' il formato di prima: risultati rimasti in sessione da
-        # un giro precedente all'aggiornamento.
-        titolo = (t(f"conf.tipo.{res['tipo']}") + f" · {res['intervallo']}"
-                  if "tipo" in res else res.get("titolo", ""))
-        with st.expander(titolo, expanded=True):
-            # GERARCHIA: prima l'AZIONE (aprire il confronto vero), poi la
-            # prova visiva (il foglio 1:1), in coda i numeri e il percorso.
-            # Prima le proiezioni stavano in cima e i pulsanti, appiccicati
-            # al testo, sparivano ("non si nota per niente", utente).
-            # I tempi e la proiezione APRONO il report: sono la prima
-            # domanda a cui il risultato risponde (spostati su richiesta).
-            modelli = res.get("modelli") or []
-            if modelli:
-                _tabella_confronto(
-                    modelli, res.get("dedup"),
-                    riferimento="original" in (res.get("file") or {}))
-            nomi = preview.ordine_lettura(res["file"])
-            coppie = [(a, b) for i, a in enumerate(nomi) for b in nomi[i + 1:]]
-            if coppie:
-                st.markdown("<div class='au-eyebrow' style='margin:16px 0 "
-                            f"8px'>{t('conf.video_compare')}</div>",
-                            unsafe_allow_html=True)
-                for col, (x, y) in zip(st.columns(len(coppie)), coppie):
-                    lx = t("conf.originale") if x == "original" else CATALOG[x].short
-                    ly = t("conf.originale") if y == "original" else CATALOG[y].short
-                    if col.button(t("conf.apri_coppia", a=lx, b=ly),
-                                  key=f"cmp_{res['cartella']}_{x}_{y}",
-                                  type="primary"):
-                        ok, msg = preview.open_comparison(
-                            Path(res["file"][x]), Path(res["file"][y]))
-                        (st.success if ok else st.error)(msg)
-            if res["foglio"]:
-                st.markdown("<div class='au-eyebrow' style='margin:18px 0 "
-                            f"8px'>{t('conf.frame_statico')}</div>",
-                            unsafe_allow_html=True)
-                # Alla larghezza NATURALE del PNG. Con `use_container_width` il
-                # browser lo riscalava da 1.1x a 2.2x con interpolazione
-                # bilineare: il foglio dei ritagli è 1:1 nel file, e mostrarlo
-                # riscalato annulla l'unica ragione per cui esiste — a scala
-                # diversa da 1:1 gli artefatti da giudicare spariscono.
-                try:
-                    from PIL import Image
-                    with Image.open(res["foglio"]) as im:
-                        larghezza = im.width
-                    st.image(res["foglio"], width=larghezza)
-                    st.markdown(f"<span class='au-hint'>{t('conf.ritagli_nota')}"
-                                "</span>", unsafe_allow_html=True)
-                except Exception:                          # noqa: BLE001
-                    st.image(res["foglio"])
-            # L'elenco ESPLICITO dei file prodotti, uno per riga, e la via
-            # breve alla cartella: prima c'era solo il percorso in un
-            # caption muto (chiesto dall'utente).
-            righe_file = ["<div class='au-eyebrow' style='margin:14px 0 "
-                          f"6px'>{t('conf.percorso')}</div>"]
-            for k_f, v_f in res["file"].items():
-                nome_f = (t("conf.originale_ingrandito") if k_f == "original"
-                          else CATALOG[k_f].label)
-                # Un font solo (il mono di au-meta): etichetta piena e in
-                # grassetto, percorso normale e grigio.
-                righe_file.append(
-                    f"<div class='au-meta' style='margin-top:2px'>"
-                    f"<b class='au-file-eti'>{esc(t('conf.file_eti', nome=nome_f))}</b> "
-                    f"{esc(str(v_f))}</div>")
-            st.markdown("".join(righe_file), unsafe_allow_html=True)
-            if st.button(t("conf.apri_finder"),
-                         key=f"finder_conf_{res['cartella']}",
-                         icon=":material/folder_open:"):
-                subprocess.run(["open", str(res["cartella"])], check=False)
-    blocco_risultati.__exit__(None, None, None)
+            if st.button(t("conf.mostra_finder"), key="finderRisultati"):
+                cartelle = {str(Path(r["cartella"]).parent) for r in risultati}
+                subprocess.run(["open", sorted(cartelle)[0]], check=False)
+        for res in risultati:
+            tipo = t(f"conf.tipo.{res['tipo']}").capitalize()
+            prove = preview.Kind(res["tipo"]).tests if res.get("tipo") in (
+                k.value for k in preview.Kind) else ""
+            prova = t("conf.prova", prove=prove) if prove else ""
+            titolo = f"**{tipo}** `{res['intervallo']}` · {prova[:1].lower() + prova[1:]}"
+            with st.expander(titolo, expanded=True):
+                modelli = res.get("modelli") or []
+                if modelli:
+                    _tabella_confronto(
+                        modelli, res.get("dedup"),
+                        riferimento="original" in (res.get("file") or {}))
+                nomi = preview.ordine_lettura(res["file"])
+                coppie = [(a, b) for i, a in enumerate(nomi) for b in nomi[i + 1:]]
+                if coppie:
+                    st.markdown(f"<div class='au-occhio au-res-sez'>{t('conf.guarda')}</div>",
+                                unsafe_allow_html=True)
+                    with st.container(key=f"coppie_{res['cartella']}", horizontal=True):
+                        for x, y in coppie:
+                            lx = t("conf.originale") if x == "original" else CATALOG[x].short
+                            ly = t("conf.originale") if y == "original" else CATALOG[y].short
+                            if st.button(t("conf.apri_coppia", a=lx, b=ly),
+                                         key=f"cmp_{res['cartella']}_{x}_{y}"):
+                                ok, msg = preview.open_comparison(
+                                    Path(res["file"][x]), Path(res["file"][y]))
+                                (st.success if ok else st.error)(msg)
+                if res["foglio"]:
+                    # Alla larghezza NATURALE del PNG, in una striscia che
+                    # scorre di lato: riscalato, gli artefatti da giudicare
+                    # sparirebbero.
+                    lato = 480
+                    st.markdown(
+                        f"<div class='au-occhio au-res-sez'>{t('conf.fermo', lato=lato)}"
+                        f"<span class='au-sez-nota'>{t('conf.fermo_nota')}</span></div>",
+                        unsafe_allow_html=True)
+                    try:
+                        dati = base64.b64encode(Path(res["foglio"]).read_bytes()).decode()
+                        st.markdown(f"<div class='au-foglio'><img src='data:image/png;base64,"
+                                    f"{dati}'></div>", unsafe_allow_html=True)
+                    except OSError:
+                        pass
+                with st.container(key=f"piedeClip_{res['cartella']}", horizontal=True,
+                                  vertical_alignment="center"):
+                    with st.expander(t("conf.n_percorsi", n=len(res["file"]))):
+                        st.markdown("".join(
+                            f"<div class='au-meta'><b class='au-file-eti'>"
+                            f"{esc(t('conf.file_eti', nome=(t('conf.originale_ingrandito') if k_f == 'original' else CATALOG[k_f].label)))}"
+                            f"</b> {esc(str(v_f))}</div>"
+                            for k_f, v_f in res["file"].items()), unsafe_allow_html=True)
+                    if st.button(t("conf.apri_cartella_clip"),
+                                 key=f"finder_conf_{res['cartella']}"):
+                        subprocess.run(["open", str(res["cartella"])], check=False)
 
 
 # ===========================================================================
