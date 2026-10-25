@@ -8638,6 +8638,10 @@ def main() -> None:
     if not (sezione == SEZIONI[0] and not load_library()):
         for nota in _note_cartelle_assenti():
             st.warning(nota)
+    # Cosa la migrazione alla 1.6 non ha potuto fare (una volta per codice).
+    from animeup import migrazione as _migrazione
+    for codice, dati in dict(_migrazione.avvisi).items():
+        st.warning(t(codice, **{k: _breve(v) for k, v in dati.items()}))
     # Il resoconto di fine coda, se ce n'e' uno da mostrare. Qui e non dentro
     # Lavorazione: la coda puo' finire con l'utente su un'altra scheda, o con
     # l'app chiusa, e il resoconto non deve dipendere da dove si trovava.

@@ -141,6 +141,10 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
         stato = su_disco.loads(stato_path.read_text())
     except (OSError, ValueError):
         return None
+    if not isinstance(stato, dict):
+        return None
+    if not isinstance(stato.get("segments", []), list):
+        stato["segments"] = []
 
     parti = str(stato.get("signature", "")).split("|")
     sorgente = parti[0] if parti else ""

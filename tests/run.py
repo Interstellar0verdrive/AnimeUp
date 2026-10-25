@@ -5349,6 +5349,63 @@ def _() -> None:
     assert identita_sorgente(Path("/altrove/ep.mkv"), Path("/v/INPUT")) == "/altrove/ep.mkv"
 
 
+@caso("la migrazione non perde niente nei casi storti")
+def _() -> None:
+    """Dall'audit: la stessa cartella scritta in due modi si cancellava da
+    sola; storici fusi due volte; la taratura vecchia cancellata se c'era gia'
+    quella nuova; una 1.5 ancora al lavoro derubata dei suoi file."""
+    import json as _json
+    import os as _os
+    from animeup import migrazione
+    from animeup.paths import Paths
+    with tempfile.TemporaryDirectory() as tmp:
+        radice = Path(tmp) / "data"
+        lav = radice / "JOBS" / "ep 2026-10-23 abcd1234"
+        lav.mkdir(parents=True)
+        (lav / "frame.png").write_bytes(b"x" * 1000)
+        reg = radice / "registri"
+        reg.mkdir()
+        (reg / "esiti.jsonl").write_text(_json.dumps({"file": "a", "quando": 1}) + "\n")
+        (reg / "taratura.json").write_text(_json.dumps(
+            {"macchine": {"Apple M1": {"quando": 5}}}))
+        stato = Path(tmp) / "stato"
+        (stato / "records").mkdir(parents=True)
+        (stato / "records" / "calibration.json").write_text(_json.dumps(
+            {"machines": {"Apple M4": {"when": 9}}}))
+        # Una 1.5 al lavoro: non si tocca niente.
+        (lav / "in-corso.lock").write_text(str(_os.getpid()))
+        variante = Path(tmp) / "DATA"   # APFS: la radice stessa, in maiuscolo
+
+        def _p():
+            q = Paths(radice)
+            q._output, q._stato = variante, stato
+            return q
+        try:
+            migrazione._fatte.clear()
+            _p().ensure_dirs()
+            assert (reg / "esiti.jsonl").exists(), "spostato sotto una 1.5 al lavoro"
+            assert ("mig.rimandata", {}) in migrazione.avvisi
+            (lav / "in-corso.lock").unlink()
+            for _ in range(2):
+                migrazione._fatte.clear()
+                _p().ensure_dirs()
+            assert (lav / "frame.png").is_file() or any(
+                Path(tmp).rglob("frame.png")), "la lavorazione e' sparita"
+            assert sum(1 for f in Path(tmp).rglob("frame.png")) == 1
+            cal = _json.loads((stato / "records" / "calibration.json").read_text())
+            assert set(cal["machines"]) == {"Apple M1", "Apple M4"}, cal
+            righe = (stato / "records" / "history.jsonl").read_text().splitlines()
+            assert len(righe) == 1, righe
+            # Un vecchio file rimasto (non cancellabile) non raddoppia lo storico.
+            reg.mkdir(exist_ok=True)
+            (reg / "esiti.jsonl").write_text(_json.dumps({"file": "a", "quando": 1}) + "\n")
+            migrazione._fatte.clear()
+            _p().ensure_dirs()
+            assert len((stato / "records" / "history.jsonl").read_text().splitlines()) == 1
+        finally:
+            pass
+
+
 def main() -> int:
     if SINTETICI:
         # Detto a schermo: un verde sui sintetici non e' un verde sui veri.
