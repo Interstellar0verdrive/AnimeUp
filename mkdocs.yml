@@ -78,7 +78,10 @@ markdown_extensions:
       custom_checkbox: true
 
 extra_css:
-  - stylesheets/extra.css?v=20261025-theme-spacing
+  - stylesheets/extra.css?v=20261025-nav-cards
+
+hooks:
+  - hooks/hide_markdown_nav.py
 
 extra_javascript:
   - javascripts/theme-select.js
