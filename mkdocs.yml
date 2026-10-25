@@ -83,6 +83,7 @@ extra_css:
 extra_javascript:
   - javascripts/theme-select.js
   - javascripts/search-expand.js
+  - javascripts/toc-current.js
 
 extra:
   generator: false
