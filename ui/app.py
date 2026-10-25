@@ -848,9 +848,14 @@ STYLE = f"""
   a.au-ripristina {{ color: var(--primaryText) !important; text-decoration: underline;
       text-underline-offset: 2px; align-self: flex-start; }}
   a.au-ripristina:hover {{ color: var(--primaryHover) !important; }}
-  .au-info:is(:hover, :focus-within) .au-bolla:has(.au-ripristina) {{ pointer-events: auto; }}
-  .au-bolla:has(.au-ripristina)::after {{ content: ""; position: absolute; left: 0; right: 0;
+  /* TUTTI i fumetti, non solo quelli col link: ci si puo' andare sopra e
+     restano aperti (l'utente li trovava capricciosi, e lo erano: chi non
+     aveva il link ignorava il puntatore e si chiudeva appena lo si
+     raggiungeva). Il ponte copre gli 8px fra icona e fumetto. */
+  :is(.au-info, .au-perche):is(:hover, :focus-within) .au-bolla {{ pointer-events: auto; }}
+  :is(.au-info, .au-perche) .au-bolla::after {{ content: ""; position: absolute; left: 0; right: 0;
       top: 100%; height: 12px; }}
+  .au-agg-tip .au-bolla {{ pointer-events: none !important; }}
   .st-key-ripristiniNascosti, .st-key-premiNascosti,
   :is([data-testid="stLayoutWrapper"], [data-testid="stElementContainer"]):has(
       > :is(.st-key-ripristiniNascosti, .st-key-premiNascosti)) {{ display: none !important; }}
@@ -2391,6 +2396,8 @@ STYLE = f"""
       .au-info, [data-ripristina], [data-preme], #au-cassetto, #au-velo),
   :is(button:not(:disabled), a[href], summary, [data-baseweb="select"],
       [data-testid="stCheckbox"] label, [data-ripristina], [data-preme]) * {{ cursor: pointer; }}
+  [data-testid="stSlider"]:not(:has(input:disabled)) [role="group"],
+  [data-testid="stSlider"]:not(:has(input:disabled)) [role="group"] * {{ cursor: pointer; }}
   :is(button:disabled, [data-testid="stCheckbox"] label:has(input:disabled),
       [data-baseweb="select"]:has(input:disabled)),
   :is(button:disabled, [data-testid="stCheckbox"] label:has(input:disabled),
@@ -2632,17 +2639,18 @@ STYLE = f"""
       border-top: 1px solid var(--borderStrong); }}
   .au-sb-nota {{ font-size: 12.5px; line-height: 1.45;
       color: var(--textSecondary); margin: 4px 0 0; }}
+  .au-sb-nota-lock {{ color: var(--textCode); }}
+  /* Bloccarsi e sbloccarsi si vede come una dissolvenza, non come uno scatto. */
+  [data-testid="stSidebar"] :is([data-testid="stSlider"], [data-testid="stCheckbox"],
+      [data-testid="stSelectbox"], [data-testid="stButtonGroup"], .au-sb-eti, .au-sgruppo,
+      .au-pref-eti, .au-sb-aiuto, .au-sb-titolo > span, .au-percorso, .au-tar-mai,
+      .au-tar-ok, .au-agg-nota, .st-key-adv summary) {{ transition: opacity .25s ease; }}
   .au-lock-chip {{ margin-left: auto; display: inline-flex;
       align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px;
       background: rgb(var(--primaryRgb) / .10);
       border: 1px solid rgb(var(--primaryRgb) / .30);
       color: var(--textPrimary); font: 400 11px var(--mono);
       white-space: nowrap; }}
-  /* Il margine compensa il -1rem di Streamlit sotto il sottotitolo, che
-     faceva salire la nota sopra l'ultima riga del testo. */
-  .au-lock-nota {{ margin-top: 17px; padding: 10px 12px; border-radius: 8px;
-      background: var(--sidebar2); border: 1px solid var(--borderStrong);
-      font-size: 12.5px; line-height: 1.45; color: var(--textCode); }}
   [data-testid="stSidebar"] .au-eyebrow.au-sgruppo {{ margin: 14px 0 2px;
       font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
       color: var(--textTertiary); }}
@@ -2681,11 +2689,15 @@ STYLE = f"""
       margin: -6px 0 0 40px; }}
   .au-cambiata span {{ width: 5px; height: 5px; border-radius: 50%;
       background: var(--primary); flex: none; }}
-  .st-key-cDisco + div .au-cambiata, .au-sb-eti + .au-cambiata {{
+  .st-key-cDisco + div .au-cambiata, .au-sb-eti + .au-cambiata,
+  [data-testid="stLayoutWrapper"]:has(> :is(.st-key-cDisco, .st-key-cPausa))
+      + [data-testid="stElementContainer"] .au-cambiata {{
       margin-left: 0; }}
   .au-sb-regola {{ font-size: 12px; line-height: 1.45;
       color: var(--textSecondary); margin-top: -4px; }}
-  .au-sb-ridotto {{ padding: 8px 10px; border-radius: 6px;
+  [data-testid="stElementContainer"]:has(.au-sb-ridotto) [data-testid="stMarkdownContainer"] {{
+      margin-bottom: 0 !important; }}
+  .au-sb-ridotto {{ margin: 4px 0 10px; padding: 8px 10px; border-radius: 6px;
       background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .3);
       font-size: 12px; line-height: 1.45; color: var(--yellowText); }}
   .au-sb-sospeso {{ padding: 10px 12px; border-radius: 8px;
@@ -3721,6 +3733,12 @@ STYLE = f"""
       border-color: rgb(var(--redRgb) / .45) !important; color: var(--redText) !important;
       background: transparent !important; }}
   .st-key-tarFerma button p {{ color: var(--redText) !important; }}
+  /* Il suo hover, rosso: quello generale delle secondarie lo faceva grigio.
+     I :not(.a)... vincono sul selettore lungo della regola generale. */
+  [data-testid="stElementContainer"].st-key-tarFerma .stButton button[kind="secondary"]:hover:not(:disabled):not(.a):not(.b):not(.c):not(.d) {{
+      background: var(--redBg) !important; border-color: rgb(var(--redRgb) / .7) !important; }}
+  [data-testid="stElementContainer"].st-key-tarFerma .stButton button[kind="secondary"]:hover:not(:disabled):not(.a):not(.b):not(.c):not(.d) p {{
+      color: var(--redText) !important; }}
   .st-key-tarChiudiContinua {{ align-self: flex-end; width: auto !important; margin-top: 6px; }}
   .st-key-tarChiudiContinua button {{ height: 38px; padding: 0 16px; white-space: nowrap; }}
   .st-key-tarAzioni [data-testid="stElementContainer"] {{ margin: 0 !important; }}
@@ -4776,7 +4794,7 @@ def _contenuto_taratura() -> None:
     if st.session_state.get("tar_vedi") and stato != taratura.IN_CORSO:
         ultimi = _ultimi_risultati()
         if ultimi:
-            _taratura_esito(ultimi)
+            _taratura_esito(ultimi, passo=False)
             return
     st.session_state.pop("tar_vedi", None)
     if stato == taratura.IN_CORSO:
@@ -4784,8 +4802,12 @@ def _contenuto_taratura() -> None:
         _taratura_viva()
         with st.container(key="tarCorsaAzioni", horizontal=True):
             # Fermarla non salva niente: i numeri di prima restano.
+            # Ferma e chiude: non c'e' niente da guardare dopo (detto
+            # dall'utente). Lo stato resta «interrotta, vista»: la prossima
+            # apertura riparte dall'inizio.
             if st.button(t("lav.tar_ferma"), key="tarFerma"):
                 taratura.ferma_fondo()
+                _chiudi_taratura()
                 st.rerun()
             if st.button(t("lav.tar_chiudi_continua"), key="tarChiudiContinua"):
                 _chiudi_taratura()
@@ -4901,8 +4923,9 @@ def _taratura_viva() -> None:
         unsafe_allow_html=True)
 
 
-def _taratura_esito(s: dict) -> None:
-    st.markdown("<span class='au-tar-passo au-tar-p3'></span>", unsafe_allow_html=True)
+def _taratura_esito(s: dict, passo: bool = True) -> None:
+    st.markdown("<span class='au-tar-passo au-tar-p3'></span>" if passo else
+                "<span class='au-tar-passo au-tar-vista'></span>", unsafe_allow_html=True)
     nuova = s.get("new") or {}
     prima = s.get("previous") or {}
     import datetime
@@ -5030,7 +5053,18 @@ def _modale_taratura() -> None:
         f'[role="dialog"]:has(.au-tar-p{n}) h2::after '
         f'{{ content: "{t("lav.tar_passo", n=n, totale=3)}"; }}'
         for n in (1, 2, 3)) + "</style>", unsafe_allow_html=True)
-    st.dialog(t("lav.tar_titolo"), width="medium",
+    # Il titolo dice cosa si guarda: la taratura da fare o in corso, quella
+    # appena finita (anche quando la finestra si riapre da sola), o i
+    # risultati di una vecchia, aperti dalla sua data — li' niente «passo 3
+    # di 3», che e' un passo solo se ci si arriva dal 2.
+    s_tar = taratura.stato_fondo() or {}
+    if st.session_state.get("tar_vedi") and s_tar.get("state") != taratura.IN_CORSO:
+        titolo = t("lav.tar_titolo_risultati")
+    elif s_tar.get("state") == taratura.FINITA and not s_tar.get("seen"):
+        titolo = t("lav.tar_titolo_finita")
+    else:
+        titolo = t("lav.tar_titolo")
+    st.dialog(titolo, width="medium",
               on_dismiss=_chiudi_taratura)(_contenuto_taratura)()
 
 
@@ -5336,6 +5370,43 @@ def _cambiata(dove, chiave: str, fabbrica: dict) -> None:
             "</div>", unsafe_allow_html=True)
 
 
+_SCELTE_ALTEZZA = [720, 1080, 1440, 2160]
+_SCELTE_CRF = list(range(14, 25))
+_SCELTE_PRESET = ["medium", "slow", "slower", "veryslow"]
+# Come si legge ogni cursore della sidebar nella sua etichetta: lo usa anche
+# lo script della pagina, che la aggiorna mentre si trascina.
+_ETICHETTE_SCATTI = {
+    "cAltezza": [f"{v} px" for v in _SCELTE_ALTEZZA],
+    "cCrf": [str(v) for v in _SCELTE_CRF],
+    "cPreset": _SCELTE_PRESET,
+}
+
+
+def _cursore_a_scatti(chiave: str, nome: str, scelte: list, congelata: bool):
+    """Un cursore a valori fissi che segue il mouse e si aggancia al rilascio.
+
+    Quello di Streamlit salta da un valore all'altro: con quattro valori su
+    300px il pomello restava fermo finche' il mouse non arrivava a meta' del
+    salto, e sembrava rotto (detto dall'utente). Qui il widget e' continuo
+    sulla POSIZIONE nell'elenco (0.00 … n-1), e al rilascio si arrotonda al
+    valore piu' vicino: segue la mano, poi scatta come una calamita. Il
+    valore vero resta in `w_<chiave>`, come prima.
+    """
+    vero = st.session_state.get(f"w_{chiave}", _IMPOSTAZIONI_DEFAULT[chiave])
+    indice = scelte.index(vero) if vero in scelte else scelte.index(_IMPOSTAZIONI_DEFAULT[chiave])
+    st.session_state[f"w_{chiave}_pos"] = float(indice)
+    st.slider(nome, 0.0, float(len(scelte) - 1), step=0.01, key=f"w_{chiave}_pos",
+              disabled=congelata, label_visibility="collapsed",
+              on_change=_aggancia, args=(chiave, scelte))
+    return scelte[indice]
+
+
+def _aggancia(chiave: str, scelte: list) -> None:
+    posizione = float(st.session_state.get(f"w_{chiave}_pos") or 0)
+    indice = min(max(int(round(posizione)), 0), len(scelte) - 1)
+    st.session_state[f"w_{chiave}"] = scelte[indice]
+
+
 def _ripristina_una(chiave: str, valore) -> None:
     st.session_state[f"w_{chiave}"] = valore
 
@@ -5421,33 +5492,43 @@ def sidebar() -> dict:
     if congelata:
         blocco = (f"<span class='au-lock-chip'>{_ICONA_LUCCHETTO}"
                   f"{t('sb.lock_' + motivo)}</span>")
+    # Bloccata, il perche' prende il posto del sottotitolo, della stessa
+    # misura: un riquadro in piu' spingeva giu' tutta la colonna di un salto
+    # (segnalato dall'utente).
+    if congelata:
+        nota = {"lavoro": "sb.congelata", "confronto": "sb.congelata_confronto",
+                "taratura": "sb.congelata_taratura"}[motivo]
+        sotto = f"<div class='au-sb-nota au-sb-nota-lock'>{t(nota)}</div>"
+    else:
+        sotto = f"<div class='au-sb-nota'>{t('sb.valgono')}</div>"
     st.sidebar.markdown(
-        f"<div class='au-sb-titolo'><span>{t('sb.titolo')}</span>{blocco}</div>"
-        f"<div class='au-sb-nota'>{t('sb.valgono')}</div>",
+        f"<div class='au-sb-titolo'><span>{t('sb.titolo')}</span>{blocco}</div>{sotto}",
         unsafe_allow_html=True)
     # Il posto dell'avviso «file sospeso» sta QUI, in alto, anche se il suo
     # contenuto si sa solo in fondo (serve il confronto con i widget): un
     # avviso che si vede solo se scorri e' un avviso che meta' delle volte
     # non esiste (segnalato dall'utente il 12/08).
     posto_sospeso = st.sidebar.empty()
-    if congelata:
-        # Bloccata DAVVERO anche all'occhio: `disabled=` spegne i widget ma
-        # lascia i colori e i suggerimenti vivi. Resta piena solo la nota che
-        # spiega perche', e il piede con Esci.
-        st.sidebar.markdown(
-            "<style>[data-testid='stSidebar'] :is([data-testid='stSlider'],"
-            "[data-testid='stCheckbox'],[data-testid='stSelectbox'],"
-            "[data-testid='stButtonGroup'],.au-sb-eti,.au-sgruppo,.au-pref-eti,"
-            ".au-percorso,.au-tar-mai,.au-tar-ok,.au-agg-nota,.st-key-adv summary)"
-            "{ opacity: .45; }"
-            "[data-testid='stSidebar'] :is([data-testid='stSlider'],"
-            "[data-testid='stCheckbox']) { filter: saturate(0); pointer-events: none; }"
-            "[data-testid='stSidebar'] :is(.au-info, .au-perche) .au-bolla"
-            "{ display: none !important; }</style>", unsafe_allow_html=True)
-        nota = {"lavoro": "sb.congelata", "confronto": "sb.congelata_confronto",
-                "taratura": "sb.congelata_taratura"}[motivo]
-        st.sidebar.markdown(f"<div class='au-lock-nota'>{t(nota)}</div>",
-                            unsafe_allow_html=True)
+    # Bloccata DAVVERO anche all'occhio, e TUTTA allo stesso modo: titoli,
+    # etichette, «?» (spenti anche al passaggio), valori. Restano pieni il
+    # perche' sotto il titolo, «Mostra» della taratura e il piede con Esci.
+    # Lo stile c'e' a ogni giro, vuoto da sbloccata: un elemento che compare
+    # e sparisce in cima alla colonna spostava tutti quelli sotto, e per un
+    # attimo Streamlit li rimetteva al posto sbagliato (la sidebar si
+    # «disimpaginava», visto dall'utente).
+    st.sidebar.markdown(
+        "<style>[data-testid='stSidebar'] :is([data-testid='stSlider'],"
+        "[data-testid='stCheckbox'],[data-testid='stSelectbox'],"
+        "[data-testid='stButtonGroup'],.au-sb-eti,.au-sgruppo,.au-pref-eti,"
+        ".au-sb-aiuto,.au-sb-titolo > span:first-child,"
+        ".au-percorso,.au-tar-mai,.au-tar-ok,.au-agg-nota,.st-key-adv summary)"
+        "{ opacity: .45; }"
+        "[data-testid='stSidebar'] :is([data-testid='stSlider'],"
+        "[data-testid='stCheckbox'],.au-info,.au-perche,a.au-tar-vedi)"
+        "{ filter: saturate(0); pointer-events: none; }"
+        "[data-testid='stSidebar'] :is(.au-info, .au-perche) .au-bolla"
+        "{ display: none !important; }</style>" if congelata else "<style></style>",
+        unsafe_allow_html=True)
 
     # Il «Predefinito: …» dei fumetti diventa un link quando il valore e'
     # stato cambiato: lo raccoglie lo script della pagina madre e preme qui
@@ -5457,11 +5538,10 @@ def sidebar() -> dict:
         if congelata or st.session_state.get(f"w_{chiave}") == fabbrica[chiave]:
             return None
         return chiave
-    if not congelata:
-        with st.sidebar.container(key="ripristiniNascosti"):
-            for chiave in ("altezza", "crf", "preset") + _AVANZATE:
-                st.button(chiave, key=f"ripr_{chiave}", on_click=_ripristina_una,
-                          args=(chiave, fabbrica[chiave]))
+    with st.sidebar.container(key="ripristiniNascosti"):
+        for chiave in ("altezza", "crf", "preset") + _AVANZATE:
+            st.button(chiave, key=f"ripr_{chiave}", on_click=_ripristina_una,
+                      args=(chiave, fabbrica[chiave]), disabled=congelata)
 
     st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.uscita')}</div>",
                         unsafe_allow_html=True)
@@ -5470,27 +5550,19 @@ def sidebar() -> dict:
         f"{st.session_state.get('w_altezza', 1080)} px",
         predefinito="1080 px", ripristina=rip("altezza"))
     with st.sidebar.container(key="cAltezza"):
-        altezza = st.select_slider(
-            "Altezza finale", options=[720, 1080, 1440, 2160],
-            key="w_altezza", disabled=congelata,
-            label_visibility="collapsed")
+        altezza = _cursore_a_scatti("altezza", "Altezza finale", _SCELTE_ALTEZZA, congelata)
     _etichetta_sb(
         t("sb.crf"),
         t("sb.crf_aiuto"), str(st.session_state.get("w_crf", 18)), predefinito="18",
         ripristina=rip("crf"))
     with st.sidebar.container(key="cCrf"):
-        crf = st.slider(
-            "CRF (x265)", 14, 24, key="w_crf", disabled=congelata,
-            label_visibility="collapsed")
+        crf = _cursore_a_scatti("crf", "CRF (x265)", _SCELTE_CRF, congelata)
     _etichetta_sb(
         t("sb.preset"), t("sb.preset_aiuto"),
         str(st.session_state.get("w_preset", "slower")),
         predefinito="slower", ripristina=rip("preset"))
     with st.sidebar.container(key="cPreset"):
-        preset = st.select_slider(
-            "Preset x265", options=["medium", "slow", "slower", "veryslow"],
-            key="w_preset", disabled=congelata,
-            label_visibility="collapsed")
+        preset = _cursore_a_scatti("preset", "Preset x265", _SCELTE_PRESET, congelata)
 
     # --- Avanzate: un riquadro che si apre --------------------------------
     # L'intestazione dice se c'e' qualcosa di cambiato: un interruttore
@@ -5538,8 +5610,11 @@ def sidebar() -> dict:
         _disco_ora = st.session_state.get("w_disco", _tetto_max)
         # Il valore ricordato non entra piu' nel disco di oggi: si abbassa e
         # lo si DICE. (Chiesto da Interstellar0verdrive l'11/08.)
+        # Ma solo a sidebar libera: mentre qualcosa gira e' il lavoro stesso a
+        # consumare il disco, il valore e' comunque bloccato, e l'avviso
+        # tornava a ogni giro dicendo il falso (visto durante una taratura).
         ridotto = None
-        if _disco_ora > _tetto_max:
+        if _disco_ora > _tetto_max and not congelata:
             ridotto = t("sb.disco_ridotto", ora=_disco_ora, libero=_libero_gb,
                         tetto=_tetto_max)
             st.session_state["w_disco"] = _tetto_max
@@ -5548,11 +5623,13 @@ def sidebar() -> dict:
                       predefinito=t("sb.disco_predefinito", tetto=_tetto_max,
                                     libero=_libero_gb), dove=adv,
                       ripristina=rip("disco"))
-        _cambiata(adv, "disco", fabbrica)
         with st.container(key="cDisco"):
-            disco = st.slider(t("sb.disco"), MINIMO_SPAZIO_GB, _tetto_max,
+            disco = st.slider(t("sb.disco"), MINIMO_SPAZIO_GB, max(_tetto_max, _disco_ora),
                               key="w_disco", disabled=congelata,
                               label_visibility="collapsed")
+        # Sotto il cursore e non fra etichetta e cursore: li' si sovrapponeva
+        # all'etichetta (segnalato dall'utente).
+        _cambiata(adv, "disco", fabbrica)
         st.markdown(f"<div class='au-sb-regola'>{t('sb.disco_regola', libero=_libero_gb)}</div>",
                     unsafe_allow_html=True)
         if ridotto:
@@ -5564,12 +5641,12 @@ def sidebar() -> dict:
             t("sb.pausa"), t("sb.pausa_aiuto"),
             t("sb.pausa_nessuna") if _pausa_ora == 0 else f"{_pausa_ora} min",
             predefinito="5 min", dove=adv, ripristina=rip("pausa"))
-        _cambiata(adv, "pausa", fabbrica)
         with st.container(key="cPausa"):
             # Default 5 e non 0 (scelta dell'utente): nelle maratone la pausa
             # deve esserci senza doversene ricordare; 0 spegne la funzione.
             pausa = st.slider(t("sb.pausa"), 0, 30, key="w_pausa",
                               disabled=congelata, label_visibility="collapsed")
+        _cambiata(adv, "pausa", fabbrica)
         if cambiate:
             st.button(t("sb.ripristina_avanzate"), key="ripristinaAvanzate",
                       icon=":material/restart_alt:", disabled=congelata,
@@ -9385,6 +9462,8 @@ def _cassetto_sidebar() -> None:
     etichetta = json.dumps(t("sb.cassetto"))
     cartelle = {q: {"prompt": t(_CARTELLE[q][2] + "_prompt"), "start": str(_cartella_attuale(q))}
                 for q in ("input", "output")}
+    formati = {"cDisco": {"testo": "{} GB"},
+               "cPausa": {"testo": "{} min", "zero": t("sb.pausa_nessuna")}}
     st.iframe(
         "<script>try{const D=window.parent.document;"
         "if(!D.getElementById('au-cassetto')){"
@@ -9415,6 +9494,23 @@ def _cassetto_sidebar() -> None:
         "const k=a.dataset.ripristina?'ripr_'+a.dataset.ripristina:a.dataset.preme;"
         "const b=D.querySelector('.st-key-'+k+' button');"
         "if(b)b.click();},true);}"
+        # Mentre si trascina un cursore della sidebar l'etichetta segue il
+        # pomello (Streamlit manda il valore solo al rilascio): si legge il
+        # numero sotto il pomello e lo si scrive nell'etichetta, a ogni frame.
+        f"W.auScatti={json.dumps(_ETICHETTE_SCATTI)};W.auFormati={json.dumps(formati)};"
+        "if(!W.auTrascina){W.auTrascina=1;D.addEventListener('pointerdown',e=>{"
+        "const c=e.target.closest&&e.target.closest('[data-testid=\"stSidebar\"] [class*=\"st-key-c\"]');"
+        "if(!c||!c.querySelector('[data-testid=\"stSlider\"]'))return;"
+        "const k=[...c.classList].find(x=>x.startsWith('st-key-c'));if(!k)return;const n=k.slice(7);"
+        "const w=c.closest('[data-testid=\"stLayoutWrapper\"]')||c;"
+        "let p=w.previousElementSibling;while(p&&!p.querySelector('.au-sb-val'))p=p.previousElementSibling;"
+        "const eti=p&&p.querySelector('.au-sb-val');if(!eti)return;let su=false;"
+        "const fine=()=>{su=true;};W.addEventListener('pointerup',fine,{once:true});"
+        "const giro=()=>{if(su)return;const v=c.querySelector('[data-testid=\"stSliderThumbValue\"]');"
+        "if(v){const x=parseFloat(v.textContent);if(!isNaN(x)){"
+        "if(W.auScatti[n]){const l=W.auScatti[n];eti.textContent=l[Math.min(l.length-1,Math.max(0,Math.round(x)))];}"
+        "else if(W.auFormati[n]){const f=W.auFormati[n];eti.textContent=(x===0&&f.zero)?f.zero:f.testo.replace('{}',Math.round(x));}}}"
+        "requestAnimationFrame(giro);};requestAnimationFrame(giro);},true);}"
         # Nell'app «Cambia…» apre il pannello nativo (vedi `_cartella_dal_mac`):
         # il clic va all'app e non al server. Nel browser non c'e' il ponte, e
         # il pulsante fa quello di sempre.
