@@ -45,10 +45,10 @@ AnimeUp is for people who keep a local anime library at DVD or web-rip resolutio
 
 <picture>
   <source media="(max-width: 44em)" srcset="img/guide-path-mobile.svg">
-  <img src="img/guide-path.svg" width="820" height="420" alt="Six steps to use AnimeUp: install, optionally calibrate your Mac on first use, inspect sources, compare models, process the files, and collect the output.">
+  <img src="img/guide-path.svg" width="820" height="372" alt="Set up AnimeUp with Install and optional first-use Calibrate, then follow four numbered steps: Sources, Compare, Processing, Output.">
 </picture>
 
-Step 2 is optional but recommended: without it AnimeUp still works, but every time estimate comes from a different Mac.
+Calibration is optional but recommended on first use: without it AnimeUp still works, but every time estimate comes from a different Mac.
 
 ## Requirements
 
