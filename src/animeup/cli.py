@@ -721,7 +721,9 @@ def version() -> None:
 
 
 @app.command(help=t("cli.tar.aiuto"))
-def taratura() -> None:
+def taratura(
+    fondo: Annotated[bool, typer.Option("--fondo", hidden=True)] = False,
+) -> None:
     """Misura la velocità di QUESTA macchina e tara le stime.
 
     Un giro di ~10 minuti sul clip libero di campioni/: estrazione, ogni
@@ -734,6 +736,36 @@ def taratura() -> None:
     # Con la GPU occupata i numeri uscirebbero sballati (e si darebbe
     # fastidio alla lavorazione vera): meglio un no chiaro subito.
     occupata = any(l.vivo for l in monitor.lavori()) or monitor.catena()
+    if fondo:
+        # Lanciata dalla pagina: niente barra nel terminale, l'avanzamento
+        # va nel file di stato che la pagina rilegge.
+        import os as os_
+        import time as time_
+
+        stato = modulo.stato_fondo() or {}
+        stato.update({"state": modulo.IN_CORSO, "pid": os_.getpid()})
+        if occupata:
+            stato.update({"state": modulo.FALLITA, "error": t("cli.tar.occupata")})
+            modulo.scrivi_stato(stato)
+            raise typer.Exit(1)
+        modulo.scrivi_stato(stato)
+
+        def avanzamento(etichetta: str, indice: int, totale: int,
+                        frazione: float, resta: float) -> None:
+            stato.update({"label": etichetta, "index": indice, "total": totale,
+                          "fraction": frazione, "left": resta})
+            modulo.scrivi_stato(stato)
+
+        try:
+            stato["new"] = modulo.esegui(avanzamento=avanzamento)
+            stato["state"] = modulo.FINITA
+        except (OSError, RuntimeError, subprocess.CalledProcessError) as errore:
+            stato.update({"state": modulo.FALLITA, "error": str(errore)})
+        except KeyboardInterrupt:
+            stato.update({"state": modulo.INTERROTTA})
+        stato["ended"] = time_.time()
+        modulo.scrivi_stato(stato)
+        raise typer.Exit(0 if stato["state"] == modulo.FINITA else 1)
     if occupata:
         dire(t("cli.tar.occupata"), "yellow")
         raise typer.Exit(1)

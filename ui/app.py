@@ -3337,6 +3337,91 @@ STYLE = f"""
   .st-key-fineChiudi button, .st-key-fineFinder button {{ height: 38px; padding: 0 16px;
       white-space: nowrap; }}
 
+  /* La finestra della taratura. */
+  .au-tar-p {{ font-size: 14px; line-height: 1.55; color: var(--textCode); margin: 0; }}
+  .au-tar-p.au-tar-p2t {{ font-size: 13px; color: var(--textSecondary); }}
+  .au-tar-tessere {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px; margin: 14px 0; }}
+  .au-tar-tessere > div {{ display: flex; flex-direction: column; gap: 4px; padding: 12px;
+      border-radius: 8px; background: var(--insetBackground); border: 1px solid var(--borderColor); }}
+  .au-tar-tessere b {{ font: 400 16px var(--mono); }}
+  .au-tar-tessere span {{ font-size: 12px; color: var(--textSecondary); }}
+  .au-tar-mono {{ font: 400 12px var(--mono); color: var(--textSecondary); }}
+  .au-box-giallo, .au-box-rosso {{ padding: 10px 12px; border-radius: 8px; font-size: 13px;
+      line-height: 1.5; }}
+  .au-box-giallo {{ background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .3);
+      color: var(--yellowText); }}
+  .au-box-rosso {{ background: var(--redBg); border: 1px solid rgb(var(--redRgb) / .35);
+      color: var(--redText); }}
+  .st-key-tarAzioni {{ justify-content: flex-end; gap: 10px !important; }}
+  .st-key-tarAzioni [class*="st-key-tar"] {{ width: auto !important; flex: none; }}
+  .st-key-tarAzioni .st-key-tarLog {{ margin-right: auto; }}
+  .st-key-tarAzioni button {{ height: 38px; padding: 0 16px; white-space: nowrap; }}
+  .au-tar-corsa-testa {{ display: flex; align-items: center; gap: 10px; }}
+  .au-tar-corsa-testa > span {{ width: 8px; height: 8px; border-radius: 50%;
+      background: var(--primary); box-shadow: 0 0 0 4px rgb(var(--primaryRgb) / .2); }}
+  .au-tar-corsa-testa b {{ font-size: 15px; font-weight: 600; }}
+  .au-tar-corsa-testa code {{ margin-left: auto; font: 400 12.5px var(--mono) !important;
+      color: var(--primaryText) !important; background: none !important; padding: 0 !important; }}
+  .au-tar-corsa .au-tar-tappe {{ margin-top: 10px; }}
+  .au-tar-lista {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px 24px; padding: 12px 14px; margin: 12px 0; border-radius: 8px;
+      background: var(--insetBackground); border: 1px solid var(--borderColor); }}
+  .au-tar-voce {{ display: flex; align-items: center; gap: 8px; font-size: 12.5px;
+      color: var(--textTertiary); }}
+  .au-tar-voce i {{ width: 8px; height: 8px; flex: none; border-radius: 50%; box-sizing: border-box;
+      border: 1.5px solid var(--idleEdge); }}
+  .au-tar-voce.fatta {{ color: var(--textCode); }}
+  .au-tar-voce.fatta i {{ background: var(--green); border: 0; }}
+  .au-tar-voce.corso {{ color: var(--textPrimary); font-weight: 600; }}
+  .au-tar-voce.corso i {{ background: var(--primary); border: 0;
+      box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .2); }}
+  .au-tar-ok-testa {{ display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }}
+  .au-tar-ok-testa .au-spunta {{ width: 32px; height: 32px; }}
+  .au-tar-ok-testa b {{ display: block; font-size: 15px; font-weight: 600; }}
+  .au-tar-ok-testa span:not(.au-spunta) {{ font-size: 12.5px; color: var(--textSecondary); }}
+  .au-tar-tab {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
+  .au-tar-tab th {{ font-size: 10.5px; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--textTertiary); text-align: right;
+      padding: 0 0 8px; border-bottom: 1px solid var(--borderColor); }}
+  .au-tar-tab th:first-child, .au-tar-tab td:first-child {{ text-align: left; }}
+  .au-tar-tab td {{ padding: 7px 0; border-bottom: 1px solid var(--rowLine);
+      text-align: right; font: 400 12px var(--mono); color: var(--textCode); }}
+  .au-tar-tab td:first-child {{ font: 400 13px var(--font); color: var(--textPrimary); }}
+  .au-tar-frase {{ font-size: 13px; margin: 12px 0 4px; }}
+
+  .au-tar-corso {{ display: inline-flex; align-items: center; gap: 6px;
+      font: 400 11.5px var(--mono); color: var(--primaryText); margin-top: 2px; }}
+  .au-tar-corso i {{ width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }}
+
+  /* Il primo avvio: un riquadro al centro, senza sidebar. */
+  .st-key-benvenuto {{ max-width: 640px; margin: 14vh auto 0; padding: 32px !important;
+      border-radius: 14px; background: var(--surface); border: 1px solid var(--borderColor);
+      gap: 16px !important; }}
+  .au-pa-occhio {{ font: 400 12px var(--mono); color: var(--primaryText); }}
+  .au-pa-titolo {{ font-size: 26px; font-weight: 600; letter-spacing: -.02em; margin-top: 6px; }}
+  .au-pa-testo {{ font-size: 14px !important; line-height: 1.55; color: var(--textSecondary);
+      margin: 8px 0 18px !important; }}
+  .au-pa-voci {{ border-radius: 10px; background: var(--insetBackground);
+      border: 1px solid var(--borderColor); }}
+  .au-pa-voci > div {{ display: flex; gap: 12px; padding: 14px 16px; }}
+  .au-pa-voci > div + div {{ border-top: 1px solid var(--borderColor); }}
+  .au-pa-voci i {{ width: 8px; height: 8px; margin-top: 6px; flex: none; border-radius: 50%;
+      box-sizing: border-box; border: 1.5px solid var(--idleEdge); }}
+  .au-pa-voci.au-corso i {{ border: 0; background: var(--primary);
+      box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .2); }}
+  .au-pa-voci b {{ display: block; font-size: 14px; font-weight: 600; }}
+  .au-pa-voci span {{ font-size: 12.5px; line-height: 1.45; color: var(--textSecondary); }}
+  .au-pa-nota {{ font-size: 12.5px !important; line-height: 1.5; color: var(--textSecondary);
+      margin: 18px 0 0 !important; }}
+  .au-pa-stato {{ display: flex; align-items: center; gap: 10px; font-size: 13.5px; }}
+  .au-pa-log {{ font: 400 11.5px var(--mono); color: var(--textCode); padding: 10px 12px;
+      border-radius: 8px; background: var(--insetBackground);
+      border: 1px solid var(--borderColor); white-space: pre-wrap; margin: 8px 0 0; }}
+  .st-key-paScarica button, .st-key-paRiprova button {{ height: 40px; padding: 0 20px;
+      white-space: nowrap; }}
+  .st-key-paScarica button p, .st-key-paRiprova button p {{ font-size: 14px; font-weight: 600; }}
+
 </style>
 """
 st.markdown(STYLE, unsafe_allow_html=True)
@@ -4174,223 +4259,179 @@ def _modale_fine_coda(lancio: dict) -> None:
 
 
 def _contenuto_taratura() -> None:
-    """Il processo a passi: presentazione -> cronometro -> confronto.
+    """La taratura in tre passi: cosa fa, il cronometro, i risultati.
 
-    Una modale e non una tab: si fa una volta per macchina (e la si rifa'
-    dopo un cambio di macOS o per curiosita'), non merita peso permanente
-    nella navigazione di tutti i giorni.
+    Gira in un processo suo (`animeup taratura --fondo`): la finestra si puo'
+    chiudere e riaprire, e un ricaricamento non la ferma. Qui si legge solo
+    il suo file di stato.
     """
-    fase = st.session_state.get("tar_fase", "intro")
-
-    if fase == "intro":
-        voce = taratura.carica()
-        # La presentazione vive in una zona cancellabile: quando il
-        # giro parte sparisce tutta (avviso e pulsante compresi) e
-        # resta solo il cronometro. Erano tre schermate, non una con
-        # la coda che cresce.
-        zona = st.empty()
-        with zona.container():
-            st.markdown("<span class='au-tar-passo au-tar-p1'></span>",
-                        unsafe_allow_html=True)
-            st.markdown(t("lav.tar_intro"))
-            st.markdown(t("lav.tar_intro_dettagli"))
-            if voce:
-                import datetime
-                quando = datetime.datetime.fromtimestamp(voce["quando"])
-                _quando = quando.strftime(t("lav.fmt_data_alle"))
-                st.markdown(f"<span class='au-meta'>"
-                            f"{t('lav.tar_ultima', quando=_quando)}"
-                            "</span>", unsafe_allow_html=True)
-                with st.expander(t("lav.tar_valori")):
-                    def _tab(voci):
-                        corpo = [f"| {t('lav.tar_col_misura')} "
-                                 f"| {t('lav.tar_col_valore')} |",
-                                 "|---|---:|"]
-                        corpo += [f"| {nome} | {valore} |"
-                                  for nome, valore in voci]
-                        return "\n".join(corpo)
-
-                    def _modello(chiavi):
-                        voci = []
-                        for chiave in chiavi:
-                            modello = CATALOG[chiave]
-                            for scala in modello.scales:
-                                val = voce.get("mpxs", {}).get(chiave,
-                                                               {}).get(str(scala))
-                                if val:
-                                    voci.append((f"{modello.short} x{scala}",
-                                                 f"{val:.2f} Mpx/s"))
-                        return voci
-
-                    # I pesi seguono la lunghezza dei nomi (CUGAN e' il piu'
-                    # largo), e le tabelle riempiono la loro colonna: cosi' i
-                    # vuoti fra una tabella e l'altra sono il gap di Streamlit,
-                    # uguale per tutti, e la fila occupa tutta la larghezza.
-                    with st.container(key="cTarValori"):
-                        c1, c2, c3 = st.columns([0.9, 1.35, 0.75])
-                        c1.markdown(_tab(_modello(["animevideov3"])))
-                        c2.markdown(_tab(_modello(["cugan-denoise", "cugan"])))
-                        c3.markdown(_tab([
-                            (t("lav.tar_estrazione"),
-                             f"{voce.get('estrazione_fps', 0):.0f} f/s"),
-                            (t("lav.tar_codifica"),
-                             f"{voce.get('codifica_fps', 0):.1f} f/s"),
-                        ]))
-                    # Anche qui, come nel riepilogo finale: e' parte di cio'
-                    # che questa macchina ha gia' misurato. Una taratura
-                    # precedente al passo che li misura non ce l'ha, e allora
-                    # non si dice niente invece di dire "4" spacciando il
-                    # predefinito per una misura.
-                    _salv = taratura.frase_salvataggio(voce)
-                    if _salv:
-                        st.markdown(f"<span class='au-meta'>{esc(_salv)}</span>",
-                                    unsafe_allow_html=True)
-            else:
-                st.markdown(f"<span class='au-meta'>{t('lav.tar_mai')}</span>",
-                            unsafe_allow_html=True)
-            occupata = (any(l.vivo for l in monitor.lavori())
-                        or monitor.catena() is not None
-                        or monitor.pausa() is not None)
-            if occupata:
-                st.error(t("lav.tar_occupata"))
-                return
-            st.markdown(
-                "<div class='au-tar-avviso'>"
-                "<svg width='15' height='15' viewBox='0 0 24 24' fill='none' "
-                "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
-                "stroke-linejoin='round' aria-hidden='true'>"
-                "<path d='M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 "
-                "1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>"
-                "<line x1='12' y1='9' x2='12' y2='13'/>"
-                "<line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
-                f"<span>{t('lav.tar_prima')}"
-                "</span></div>", unsafe_allow_html=True)
-            avviato = st.button(t('lav.tar_avvia'), type='primary',
-                                 key='tarAvvia')
-        if avviato:
-            zona.empty()
-            st.markdown("<span class='au-tar-passo au-tar-p2'></span>",
-                        unsafe_allow_html=True)
-            st.markdown(f"**{t('lav.tar_in_corso')}**")
-            # Testo normale e non `au-meta`: quella classe e' monospazio,
-            # buona per un'etichetta corta ma non per due frasi di prosa.
-            st.markdown(f"{t('lav.tar_chiudibile')}  \n"
-                        f"{t('lav.tar_nel_frattempo')}")
-            st.session_state["tar_precedente"] = taratura.carica()
-            # I pesi vengono dallo stesso preventivo che muove la barra
-            # dentro il motore: una sola verita'. Se il modulo in memoria e'
-            # anteriore alla funzione (server non ancora riavviato) si
-            # ripiega su segmenti uguali, che e' brutto ma non rotto.
-            try:
-                tappe = [costo for _, costo in taratura.preventivo()]
-            except (AttributeError, OSError, ValueError,
-                    subprocess.CalledProcessError):
-                tappe = []
-            barra = st.empty()
-
-            def _quanto(resta: float) -> str:
-                minuti = max(1, round(resta / 60))
-                return tn("lav.tar_resta", minuti)
-
-            def _segmenti(indice: int, totale: int) -> str:
-                pesi = tappe if len(tappe) == totale else [1.0] * totale
-                parti = []
-                for n, peso in enumerate(pesi, start=1):
-                    classe = ("fatta" if n < indice
-                              else "corso" if n == indice else "")
-                    parti.append(f"<span class='{classe}' "
-                                 f"style='flex:{peso:.3f}'></span>")
-                return f"<div class='au-tar-tappe'>{''.join(parti)}</div>"
-
-            barra.markdown(
-                f"{_segmenti(0, len(tappe) or 9)}"
-                f"<div class='au-tar-stato'>{t('lav.tar_preparazione')}</div>",
-                unsafe_allow_html=True)
-
-            # `frazione` e `resta` con un valore di ripiego: il server
-            # tiene in cache i moduli di src/animeup dall'avvio, mentre
-            # app.py si rilegge a ogni rerun. Fra una modifica al modulo e
-            # il riavvio del server convivono un chiamante vecchio e un
-            # callback nuovo, e senza ripiego la taratura muore con un
-            # TypeError (successo davvero, 2026-08-10).
-            def _avanzamento(etichetta, indice, totale,
-                             frazione=None, resta=None):
-                if frazione is None:
-                    frazione = max(0.0, (indice - 1) / totale)
-                coda = f" · {_quanto(resta)}" if resta is not None else ""
-                barra.markdown(
-                    f"{_segmenti(indice, totale)}"
-                    f"<div class='au-tar-stato'>{etichetta} "
-                    f"({indice}/{totale}) · {frazione:.0%}{coda}</div>",
-                    unsafe_allow_html=True)
-            try:
-                st.session_state["tar_nuova"] = taratura.esegui(
-                    avanzamento=_avanzamento)
-            except (OSError, RuntimeError, FileNotFoundError,
-                    subprocess.CalledProcessError) as errore:
-                st.error(t("lav.tar_interrotta", errore=errore))
-                return
-            barra.markdown(
-                f"{_segmenti(999, len(tappe) or 9)}"
-                f"<div class='au-tar-stato'>{t('lav.tar_finito')}</div>",
-                unsafe_allow_html=True)
-            st.session_state["tar_fase"] = "esito"
-            st.rerun(scope="fragment")
+    s = taratura.stato_fondo()
+    stato = (s or {}).get("state")
+    if stato == taratura.IN_CORSO:
+        st.markdown("<span class='au-tar-passo au-tar-p2'></span>", unsafe_allow_html=True)
+        _taratura_viva()
+        if st.button(t("lav.tar_chiudi_continua"), key="tarChiudiContinua"):
+            st.rerun()
         return
+    if stato in (taratura.FINITA, taratura.FALLITA, taratura.INTERROTTA) and not s.get("seen"):
+        if stato == taratura.FINITA:
+            _taratura_esito(s)
+        else:
+            _taratura_fallita(s)
+        return
+    _taratura_intro()
 
-    # --- esito: il confronto a tre colonne e il congedo -------------------
-    nuova = st.session_state.get("tar_nuova") or {}
-    prima = st.session_state.get("tar_precedente")
-    st.markdown("<span class='au-tar-passo au-tar-p3'></span>",
-                unsafe_allow_html=True)
-    st.markdown(t("lav.tar_salvata"))
-    st.markdown(f"{t('lav.tar_da_ora')}  \n{t('lav.tar_ripetibile')}")
+
+def _taratura_vista() -> None:
+    s = taratura.stato_fondo() or {}
+    s["seen"] = True
+    taratura.scrivi_stato(s)
+
+
+def _taratura_intro() -> None:
+    st.markdown("<span class='au-tar-passo au-tar-p1'></span>", unsafe_allow_html=True)
+    try:
+        n_misure = len(taratura.preventivo())
+    except (OSError, ValueError, subprocess.CalledProcessError):
+        n_misure = 11
+    st.markdown(
+        f"<p class='au-tar-p'>{t('lav.tar_intro')}</p>"
+        "<div class='au-tar-tessere'>"
+        f"<div><b>{t('lav.tar_t1')}</b><span>{t('lav.tar_t1b')}</span></div>"
+        f"<div><b>{t('lav.tar_t2')}</b><span>{t('lav.tar_t2b')}</span></div>"
+        f"<div><b>{t('lav.tar_t3', n=n_misure)}</b><span>{t('lav.tar_t3b')}</span></div>"
+        "</div>"
+        f"<p class='au-tar-p au-tar-p2t'>{t('lav.tar_intro_dettagli')}</p>",
+        unsafe_allow_html=True)
+    voce = taratura.carica()
+    if voce:
+        import datetime
+        quando = datetime.datetime.fromtimestamp(voce["quando"]).strftime(t("fmt.data_ora"))
+        st.markdown(f"<div class='au-tar-mono'>{t('sb.taratura_ultima', quando=quando)}</div>",
+                    unsafe_allow_html=True)
+    else:
+        st.markdown(f"<div class='au-tar-mono'>{t('lav.tar_mai')}</div>", unsafe_allow_html=True)
+    occupata = (any(l.vivo for l in monitor.lavori()) or monitor.catena() is not None
+                or monitor.pausa() is not None or confronto.in_corso())
+    if occupata:
+        st.markdown(f"<div class='au-box-rosso'>{t('lav.tar_occupata')}</div>",
+                    unsafe_allow_html=True)
+    else:
+        st.markdown(f"<div class='au-box-giallo'>{t('lav.tar_prima')}</div>",
+                    unsafe_allow_html=True)
+    with st.container(key="tarAzioni", horizontal=True):
+        if st.button(t("lav.chiudi") if occupata else t("lav.tar_non_ora"), key="tarNonOra"):
+            st.rerun()
+        if st.button(t("lav.tar_avvia"), type="primary", key="tarAvvia", disabled=occupata):
+            taratura.avvia_fondo()
+            st.rerun(scope="fragment")
+
+
+@st.fragment(run_every=2)
+def _taratura_viva() -> None:
+    """Il cronometro, riletto ogni due secondi dal file di stato."""
+    s = taratura.stato_fondo() or {}
+    if s.get("state") != taratura.IN_CORSO:
+        # Finita (o fallita) mentre si guardava: si ridisegna la finestra.
+        st.rerun()
+        return
+    tappe = s.get("steps") or []
+    indice = int(s.get("index") or 0)
+    totale = int(s.get("total") or len(tappe) or 1)
+    quota = float(s.get("fraction") or 0)
+    resta = s.get("left")
+    pesi = [float(c) for _n, c in tappe] if tappe else [1.0] * totale
+    segmenti = []
+    for n, peso in enumerate(pesi, start=1):
+        classe = "fatta" if n < indice else "corso" if n == indice else ""
+        segmenti.append(f"<span class='{classe}' style='flex:{peso:.3f}'></span>")
+    voci = []
+    for n, (nome, _c) in enumerate(tappe, start=1):
+        classe = "fatta" if n < indice else "corso" if n == indice else ""
+        voci.append(f"<div class='au-tar-voce {classe}'><i></i>{esc(nome)}</div>")
+    manca = (f" · {tn('lav.tar_resta', max(1, round(float(resta) / 60)))}"
+             if resta is not None else "")
+    st.markdown(
+        "<div class='au-tar-corsa'>"
+        f"<div class='au-tar-corsa-testa'><span></span><b>{t('lav.tar_in_corso')}</b>"
+        f"<code>{quota:.0%}{manca}</code></div>"
+        f"<div class='au-tar-tappe'>{''.join(segmenti)}</div>"
+        f"<div class='au-tar-stato'>{esc(s.get('label') or t('lav.tar_preparazione'))}"
+        f"{f' ({indice}/{totale})' if indice else ''}</div>"
+        f"<div class='au-tar-lista'>{''.join(voci)}</div>"
+        f"<p class='au-tar-p'>{t('lav.tar_chiudibile')}</p></div>",
+        unsafe_allow_html=True)
+
+
+def _taratura_esito(s: dict) -> None:
+    st.markdown("<span class='au-tar-passo au-tar-p3'></span>", unsafe_allow_html=True)
+    nuova = s.get("new") or {}
+    prima = s.get("previous") or {}
+    import datetime
+    quando = datetime.datetime.fromtimestamp(
+        float(nuova.get("quando") or s.get("ended") or time.time())).strftime(t("fmt.data_ora"))
 
     def _scarto(nuovo, riferimento):
         if not (nuovo and riferimento):
             return "—"
         return f"{(nuovo / riferimento - 1) * 100:+.0f}%"
 
-    righe = [f"| {t('lav.tar_col_misura')} | {t('lav.tar_col_fabbrica')} "
-             f"| {t('lav.tar_col_precedente')} | {t('lav.tar_col_nuova')} "
-             f"| {t('lav.tar_col_scarto')} |",
-             "|---|---:|---:|---:|---:|"]
+    righe = []
     for chiave, modello in CATALOG.items():
         for scala in modello.scales:
             fab = modello.throughput.get(scala)
-            pre = (prima or {}).get("mpxs", {}).get(chiave, {}).get(str(scala))
+            pre = prima.get("mpxs", {}).get(chiave, {}).get(str(scala))
             nuo = nuova.get("mpxs", {}).get(chiave, {}).get(str(scala))
-            righe.append(
-                f"| {modello.short} x{scala} "
-                f"| {fab:.2f} Mpx/s "
-                f"| {f'{pre:.2f} Mpx/s' if pre else '—'} "
-                f"| {f'{nuo:.2f} Mpx/s' if nuo else '—'} "
-                f"| {_scarto(nuo, pre or fab)} |")
-    pre_e = (prima or {}).get("estrazione_fps")
-    pre_c = (prima or {}).get("codifica_fps")
-    righe.append(f"| {t('lav.tar_estrazione')} | 60 f/s "
-                 f"| {f'{pre_e:.0f} f/s' if pre_e else '—'} "
-                 f"| {nuova.get('estrazione_fps', 0):.0f} f/s "
-                 f"| {_scarto(nuova.get('estrazione_fps'), pre_e or 60.0)} |")
-    righe.append(f"| {t('lav.tar_codifica')} (1080p) | 8.0 f/s "
-                 f"| {f'{pre_c:.1f} f/s' if pre_c else '—'} "
-                 f"| {nuova.get('codifica_fps', 0):.1f} f/s "
-                 f"| {_scarto(nuova.get('codifica_fps'), pre_c or 8.0)} |")
-    with st.container(key="cTarConfronto"):
-        st.markdown("\n".join(righe))
-    # I thread di salvataggio non stanno nella tabella: non sono un ritmo da
-    # confrontare con la fabbrica, sono una SCELTA che la taratura ha fatto.
-    # Vanno detti dove si riferisce, pero': altrimenti la prova che li misura
-    # (un minuto e mezzo su dieci) sembra non essere mai avvenuta.
-    _frase_salv = taratura.frase_salvataggio(taratura.carica())
-    if _frase_salv:
-        st.markdown(f"<span class='au-meta'>{esc(_frase_salv)}</span>",
-                    unsafe_allow_html=True)
-    st.markdown(f"<span class='au-meta'>{t('lav.tar_nota_scarto')}</span>",
-                unsafe_allow_html=True)
-    if st.button(t("lav.chiudi"), type="primary", key="tarChiudi"):
-        st.session_state.pop("tar_fase", None)
-        st.rerun()
+            righe.append((f"{modello.short} x{scala}", f"{fab:.2f}" if fab else "—",
+                          f"{pre:.2f}" if pre else "—", f"{nuo:.2f}" if nuo else "—",
+                          _scarto(nuo, pre or fab)))
+    pre_e, pre_c = prima.get("estrazione_fps"), prima.get("codifica_fps")
+    righe.append((t("lav.tar_estrazione"), "60 f/s", f"{pre_e:.0f} f/s" if pre_e else "—",
+                  f"{nuova.get('estrazione_fps', 0):.0f} f/s",
+                  _scarto(nuova.get("estrazione_fps"), pre_e or 60.0)))
+    righe.append((f"{t('lav.tar_codifica')} (1080p)", "8.0 f/s",
+                  f"{pre_c:.1f} f/s" if pre_c else "—",
+                  f"{nuova.get('codifica_fps', 0):.1f} f/s",
+                  _scarto(nuova.get("codifica_fps"), pre_c or 8.0)))
+    tabella = (
+        "<table class='au-tar-tab'><thead><tr>"
+        f"<th>{t('lav.tar_col_misura')}</th><th>{t('lav.tar_col_fabbrica')}</th>"
+        f"<th>{t('lav.tar_col_precedente')}</th><th>{t('lav.tar_col_nuova')}</th>"
+        f"<th>{t('lav.tar_col_scarto')}</th></tr></thead><tbody>"
+        + "".join("<tr>" + "".join(f"<td>{esc(c)}</td>" for c in r) + "</tr>" for r in righe)
+        + "</tbody></table>")
+    frase = taratura.frase_salvataggio(nuova) or ""
+    st.markdown(
+        f"<div class='au-tar-ok-testa'><span class='au-spunta'>{_svg(_I_SPUNTA, 16, 2.4)}</span>"
+        f"<div><b>{t('lav.tar_salvata_il', quando=quando)}</b>"
+        f"<span>{t('lav.tar_salvata_nota')}</span></div></div>{tabella}"
+        + (f"<div class='au-tar-frase'>{esc(frase)}</div>" if frase else "")
+        + f"<div class='au-tar-mono'>{t('lav.tar_nota_scarto')}</div>",
+        unsafe_allow_html=True)
+    with st.container(key="tarAzioni", horizontal=True):
+        if st.button(t("lav.chiudi"), type="primary", key="tarChiudi"):
+            _taratura_vista()
+            st.rerun()
+
+
+def _taratura_fallita(s: dict) -> None:
+    st.markdown("<span class='au-tar-passo au-tar-p2'></span>", unsafe_allow_html=True)
+    errore = s.get("error") or t("lav.tar_interrotta_titolo")
+    st.markdown(
+        f"<div class='au-box-rosso'><b>{t('lav.tar_interrotta_titolo')}</b>"
+        f" {esc(str(errore))}</div>"
+        f"<p class='au-tar-p'>{t('lav.tar_niente_salvato')}</p>",
+        unsafe_allow_html=True)
+    with st.container(key="tarAzioni", horizontal=True):
+        if st.button(t("lav.tar_mostra_log"), key="tarLog", type="tertiary"):
+            subprocess.run(["open", "-R", str(PATHS.cache / "calibration.log")], check=False)
+        if st.button(t("lav.chiudi"), key="tarChiudiErr"):
+            _taratura_vista()
+            st.rerun()
+        if st.button(t("lav.tar_riprova"), type="primary", key="tarRiprova"):
+            _taratura_vista()
+            taratura.avvia_fondo()
+            st.rerun(scope="fragment")
 
 
 # Come per la fine coda: il titolo si traduce all'apertura, non all'avvio.
@@ -4847,7 +4888,14 @@ def _riga_taratura(congelata: bool) -> None:
     neutro, perche' non c'e' niente di urgente.
     """
     voce_tar = taratura.carica()
-    if voce_tar:
+    fondo = taratura.stato_fondo() or {}
+    if fondo.get("state") == taratura.IN_CORSO:
+        # In corso: si puo' sempre riaprire la finestra per guardarla, anche
+        # con la sidebar bloccata (e' lei a bloccarla).
+        stato = (f"<span class='au-tar-corso'><i></i>"
+                 f"{t('sb.taratura_corso', pct=round(float(fondo.get('fraction') or 0) * 100))}</span>")
+        azione, tipo, congelata = t("sb.taratura_mostra"), "secondary", False
+    elif voce_tar:
         import datetime as _dt
         quando = _dt.datetime.fromtimestamp(voce_tar["quando"]).strftime(t("fmt.data_ora"))
         stato = f"<span class='au-tar-ok'>{t('sb.taratura_ultima', quando=quando)}</span>"
@@ -6557,7 +6605,7 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
     st.markdown(
         f"<div class='au-riga-avanz'>"
         f"<div class='au-riga-testa'><div class='au-riga-barra'>"
-        f"<span style='width:{quota * 100:.1f}%'></span></div>"
+        f"<span style='width:{_riempimento(lav) * 100:.1f}%'></span></div>"
         f"<b>{quota:.0%}</b></div>"
         f"<div class='au-riga-tappe'>{''.join(tappe)}"
         f"<span class='au-riga-misure'>{esc(' · '.join(misure))}</span></div>"
@@ -8352,38 +8400,45 @@ def _pagina_primo_avvio() -> bool:
     if not lavoro.in_corso and not lavoro.errore and not primo_avvio.serve():
         st.session_state["preparato"] = True
         return False
-    st.markdown(f"<div class='au-sezione' style='margin-top:24px'>{t('pa.titolo')}</div>"
-                f"<div class='au-hint' style='margin-bottom:16px'>{t('pa.intro')}</div>",
-                unsafe_allow_html=True)
     mancano = primo_avvio.da_scaricare()
     voci = []
     if mancano["ffmpeg"]:
-        voci.append(t("pa.voce_ffmpeg"))
+        voci.append((t("pa.ffmpeg_titolo"), t("pa.ffmpeg_testo")))
     if mancano["ncnn"]:
-        voci.append(t("pa.voce_ncnn"))
-    if voci:
-        st.markdown("\n".join(f"- {v}" for v in voci))
-        st.caption(t("pa.nota", mb=primo_avvio.peso_mb()))
-    if lavoro.in_corso:
-        with st.spinner(t("pa.in_corso")):
+        voci.append((t("pa.ncnn_titolo"), t("pa.ncnn_testo")))
+    classe = " au-corso" if lavoro.in_corso else ""
+    with st.container(key="benvenuto"):
+        st.markdown(
+            f"<div class='au-pa-occhio'>{t('pa.occhio')}</div>"
+            f"<div class='au-pa-titolo'>{t('pa.titolo')}</div>"
+            f"<p class='au-pa-testo'>{t('pa.intro')}</p>"
+            + (f"<div class='au-pa-voci{classe}'>" + "".join(
+                f"<div><i></i><span><b>{esc(n)}</b>{esc(d)}</span></div>" for n, d in voci)
+               + "</div>" if voci else "")
+            + f"<p class='au-pa-nota'>{t('pa.nota', mb=primo_avvio.peso_mb())}</p>",
+            unsafe_allow_html=True)
+        if lavoro.in_corso:
             righe = lavoro.righe.righe[-4:]
-            if righe:
-                st.code("\n".join(righe), language=None)
+            st.markdown(
+                f"<div class='au-pa-stato'><span class='au-rotella'></span>{t('pa.in_corso')}</div>"
+                + (f"<pre class='au-pa-log'>{esc(chr(10).join(righe))}</pre>" if righe else ""),
+                unsafe_allow_html=True)
             time.sleep(1.0)
-        st.rerun()
-    if lavoro.errore:
-        st.error(t("pa.errore"))
-        st.code(lavoro.errore, language=None)
-        if st.button(t("pa.riprova"), type="primary", key="paRiprova"):
+            st.rerun()
+        if lavoro.errore:
+            st.markdown(f"<div class='au-box-rosso'>{t('pa.errore')}</div>"
+                        f"<pre class='au-pa-log'>{esc(str(lavoro.errore))}</pre>",
+                        unsafe_allow_html=True)
+            if st.button(t("pa.riprova"), type="primary", key="paRiprova"):
+                lavoro.avvia()
+                st.rerun()
+            return True
+        if lavoro.finita and not primo_avvio.serve():
+            return False
+        if st.button(t("pa.scarica", mb=primo_avvio.peso_mb()), type="primary",
+                     key="paScarica"):
             lavoro.avvia()
             st.rerun()
-        return True
-    if lavoro.finita and not primo_avvio.serve():
-        return False
-    if st.button(t("pa.scarica", mb=primo_avvio.peso_mb()), type="primary",
-                 key="paScarica"):
-        lavoro.avvia()
-        st.rerun()
     return True
 
 

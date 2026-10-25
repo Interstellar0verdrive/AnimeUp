@@ -24,5 +24,10 @@
   "src.apri_input": "Apri nel Finder",
   "sb.aggiornamento_installa": "Installa l'aggiornamento",
   "sb.aggiornamento_note": "Novità",
-  "sb.aggiornamento_chiesto": "AnimeUp ti chiederà conferma, scaricherà l'aggiornamento, lo verificherà e si riavvierà."
+  "sb.aggiornamento_chiesto": "AnimeUp ti chiederà conferma, scaricherà l'aggiornamento, lo verificherà e si riavvierà.",
+  "pa.occhio": "Primo avvio · una volta sola",
+  "pa.ffmpeg_titolo": "FFmpeg 9.0.2",
+  "pa.ffmpeg_testo": "Legge, analizza e codifica il video. Si scarica invece di essere incluso per via della sua licenza (GPLv3).",
+  "pa.ncnn_titolo": "Real-ESRGAN e Real-CUGAN",
+  "pa.ncnn_testo": "I motori di upscale, con i loro modelli."
 }
