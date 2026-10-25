@@ -162,6 +162,7 @@
   "sb.controlla_agg_nota": "Nothing installs without your click",
   "sb.taratura_mai_nota": "first time only, ≈10 min",
   "sb.taratura_ultima": "Last calibrated {quando}",
+  "sb.taratura_vedi": "See the results",
   "sb.preset": "Encoder effort · preset",
   "src.cartelle_titolo": "Source and destination folders",
   "src.cartelle_testo": "Copy episodes into the top folder with Finder; they show up here within seconds. Upscaled videos are saved to the bottom one. Both stay chosen until you change them, external drives included.",
