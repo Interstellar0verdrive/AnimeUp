@@ -1,0 +1,118 @@
+"""I colori dell'interfaccia: due temi, un posto solo.
+
+Ogni colore e' un token con due valori, scuro e chiaro, presi dalla tavola
+dei token del design (artboard "Token sheet"). Il CSS dell'interfaccia usa
+SOLO queste variabili: un colore scritto a mano nel foglio di stile e' un
+difetto, e un test lo cerca.
+
+Le tinte trasparenti si scrivono `rgb(var(--primaryRgb) / .1)`: per questo
+i colori che servono velati hanno anche la terna RGB.
+
+La scelta dell'utente (Sistema / Scuro / Chiaro) decide quali blocchi
+scrivere: Scuro e Chiaro ne scrivono uno, Sistema li scrive tutti e due e
+lascia scegliere a `prefers-color-scheme`, come fa Streamlit col suo tema.
+"""
+
+from __future__ import annotations
+
+SISTEMA, SCURO, CHIARO = "system", "dark", "light"
+SCELTE = (SISTEMA, SCURO, CHIARO)
+
+# nome: (scuro, chiaro)
+TOKEN: dict[str, tuple[str, str]] = {
+    # superfici
+    "bg":              ("#101113", "#F6F7F9"),
+    "surface":         ("#17191C", "#FFFFFF"),
+    "insetBackground": ("#131518", "#F1F3F5"),
+    "surfaceHover":    ("#1C1F23", "#EEF0F2"),
+    "rowBg":           ("#191F22", "#FFFFFF"),
+    "rowBgHover":      ("#1F262A", "#F7F9FA"),
+    "sidebar":         ("#1A1D21", "#ECEEF1"),
+    "sidebar2":        ("#22262B", "#E3E6EA"),
+    "sidebarCard":     ("#1E2125", "#F5F6F8"),
+    "clipBg":          ("#000000", "#000000"),
+    # bordi
+    "borderColor":     ("#26292E", "#E1E4E8"),
+    "borderStrong":    ("#33373D", "#CDD1D6"),
+    "borderFaint":     ("#2B2F34", "#DADDE2"),
+    "borderHover":     ("#40454C", "#B9BEC4"),
+    "borderHover2":    ("#565C66", "#A9AFB6"),
+    "rowLine":         ("#1F2226", "#ECEEF1"),
+    "idleEdge":        ("#3A3F46", "#8A9099"),
+    "locked":          ("#2E3238", "#D5D9DE"),
+    # testi
+    "textPrimary":     ("#E8EAED", "#16181B"),
+    "textCode":        ("#C6CBD2", "#3A3F46"),
+    "textSecondary":   ("#9BA1A9", "#5C626A"),
+    "textTertiary":    ("#80868E", "#656B73"),
+    "grayText":        ("#B7BCC3", "#4A5058"),
+    "dot":             ("#5A6068", "#80868E"),
+    # accento: una tinta per tema, cambia solo l'intensita'.
+    # `primary` per cio' che non si clicca (barre, bordi delle righe,
+    # selezione, cerchio della scheda, badge); `primaryStrong` per i comandi
+    # (pulsanti pieni, interruttori, caselle, cursori); `primaryText` per il
+    # testo e i pulsanti a contorno.
+    "primary":         ("#2AC9DE", "#10AFCB"),
+    "primaryStrong":   ("#2AC9DE", "#0E99B1"),
+    "primaryText":     ("#2AC9DE", "#0B7284"),
+    "primaryHover":    ("#57D4E5", "#0F9FB9"),
+    "onPrimary":       ("#07282C", "#FFFFFF"),
+    "knobOn":          ("#07282C", "#FFFFFF"),
+    # rampe di stato: colore (bordi, pallini), fondo, testo
+    "green":           ("#45D483", "#12A150"),
+    "greenBg":         ("#10251A", "#E6F5EC"),
+    "greenText":       ("#7FE3AC", "#146C3E"),
+    "yellow":          ("#F2B84B", "#C78100"),
+    "yellowBg":        ("#2A2110", "#FFF5DF"),
+    "yellowText":      ("#F5CB78", "#7F5300"),
+    "red":             ("#F26D6D", "#D9402E"),
+    "redBg":           ("#2A1414", "#FDECEC"),
+    "redText":         ("#F59B9B", "#B42323"),
+    "redFill":         ("#F26D6D", "#C62F25"),
+    "redHover":        ("#F58585", "#B02A21"),
+    "onRed":           ("#2A0F0F", "#FFFFFF"),
+    "blue":            ("#4DA3FF", "#1F6FD1"),
+    "blueBg":          ("#101C2B", "#E8F1FC"),
+    "blueText":        ("#8CC2FF", "#1A5BB0"),
+    "gray":            ("#8A9099", "#6B7179"),
+    "grayBg":          ("#1C1F23", "#EEF0F2"),
+}
+
+# Le terne per le velature: `rgb(var(--xRgb) / alfa)`.
+TERNE: dict[str, tuple[str, str]] = {
+    "primaryRgb":  ("42 201 222", "16 175 203"),
+    "greenRgb":    ("69 212 131", "18 161 80"),
+    "yellowRgb":   ("242 184 75", "199 129 0"),
+    "redRgb":      ("242 109 109", "217 64 46"),
+    "blueRgb":     ("77 163 255", "31 111 209"),
+    "grayRgb":     ("138 144 153", "107 113 121"),
+    "textGrayRgb": ("183 188 195", "74 80 88"),
+    "bgRgb":       ("16 17 19", "246 247 249"),
+    # Ombre: nere sul tema scuro, blu notte appena accennato sul chiaro.
+    "shadowRgb":   ("0 0 0", "16 24 40"),
+    # Le velature "piu' chiaro del fondo" del tema scuro, che sul chiaro
+    # devono diventare "piu' scuro del fondo".
+    "overlayRgb":  ("255 255 255", "0 0 0"),
+}
+
+
+def _blocco(indice: int) -> str:
+    righe = [f"--{k}: {v[indice]};" for k, v in TOKEN.items()]
+    righe += [f"--{k}: {v[indice]};" for k, v in TERNE.items()]
+    righe.append(f"color-scheme: {'dark' if indice == 0 else 'light'};")
+    return " ".join(righe)
+
+
+def css(scelta: str) -> str:
+    """Le variabili per la scelta dell'utente, pronte per un `<style>`."""
+    if scelta == CHIARO:
+        return f":root {{ {_blocco(1)} }}"
+    if scelta == SCURO:
+        return f":root {{ {_blocco(0)} }}"
+    return (f":root {{ {_blocco(0)} }}\n"
+            f"@media (prefers-color-scheme: light) {{ :root {{ {_blocco(1)} }} }}")
+
+
+def streamlit(scelta: str) -> str:
+    """Il nome che Streamlit da' allo stesso tema nel browser."""
+    return {SCURO: "Dark", CHIARO: "Light"}.get(scelta, "System")

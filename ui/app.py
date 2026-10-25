@@ -48,7 +48,7 @@ sys.path.insert(0, str(CODICE / "src"))
 
 import streamlit as st  # noqa: E402
 
-from animeup import __version__, su_disco  # noqa: E402
+from animeup import __version__, su_disco, tema  # noqa: E402
 from animeup import (  # noqa: E402
     aggiornamenti, confronto, i18n, library, monitor, preview, primo_avvio,
     taratura)
@@ -114,7 +114,7 @@ def _icona_aiuto(testo: str, predefinito: str = "") -> str:
 
 
 def _etichetta_sb(testo: str, aiuto: str, valore: str = "",
-                  predefinito: str = "") -> None:
+                  predefinito: str = "", dove=None) -> None:
     """L'etichetta di un controllo della sidebar, disegnata da noi.
 
     Con l'etichetta nativa il valore andava messo in un `content` di CSS
@@ -125,7 +125,7 @@ def _etichetta_sb(testo: str, aiuto: str, valore: str = "",
     piedi, e il fumetto e' quello dell'app.
     """
     val = f"<span class='au-sb-val'>{esc(valore)}</span>" if valore else ""
-    st.sidebar.markdown(
+    (dove or st.sidebar).markdown(
         f"<div class='au-sb-eti'>{esc(testo)}"
         f"{_icona_aiuto(aiuto, predefinito)}{val}</div>",
         unsafe_allow_html=True)
@@ -191,7 +191,8 @@ def _nota_taratura() -> str:
         return t("lav.nota_tarata", data=quando.strftime(t("lav.fmt_giorno")))
     return t("lav.nota_fabbrica")
 
-st.set_page_config(page_title="AnimeUp", page_icon="▲", layout="wide")
+st.set_page_config(page_title="AnimeUp", page_icon="▲", layout="wide",
+                   initial_sidebar_state="expanded")
 
 # Senza il numero nell'etichetta: il cerchio numerato lo genera il CSS con un
 # contatore, così il numero è un elemento a se' e non tre caratteri dentro
@@ -287,35 +288,9 @@ STYLE = f"""
     -moz-osx-font-smoothing: grayscale; }}
   body, .stMarkdown, [data-testid="stSidebar"] {{ line-height: 1.5; }}
 
+  /* I COLORI sono variabili scritte da `tema.css()` (vedi
+     `_variabili_tema`): qui sotto non ne compare nessuno. */
   :root {{
-    --primary:        #2AC9DE;
-    --primaryHover:   #55D8EA;
-    --primaryBg:      rgba(42,201,222,.10);
-    --primaryEdge:    rgba(42,201,222,.45);
-    --onPrimary:      #08262B;
-    --surface:        #17191C;
-    --surfaceHover:   #1C1F23;
-    --insetBackground:#131518;
-    --borderColor:    #26292E;
-    --borderStrong:   #33373D;
-    --idleEdge:       #3A3F46;
-    --textPrimary:    #E8EAED;
-    --textSecondary:  #9BA1A9;
-    --textTertiary:   #686E76;
-    --yellow:         #F2B84B;
-    --yellowBg:       #2A2110;
-    --yellowText:     #F5CB78;
-    --green:          #45D483;
-    --greenBg:        #10251A;
-    --greenText:      #7FE3AC;
-    --red:            #F26D6D;
-    --redBg:          #2A1414;
-    --redText:        #F59B9B;
-    --blue:           #4DA3FF;
-    --blueBg:         #101C2B;
-    --blueText:       #8CC2FF;
-    --grayBg:         #1C1F23;
-    --grayText:       #B7BCC3;
     --mono:           "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
     /* La font dell'interfaccia, dichiarata: serve dove un contenitore
        impone il monospazio e un pezzo di testo deve tornare normale
@@ -374,7 +349,7 @@ STYLE = f"""
       width: 22px; height: 22px; border-radius: 50%;
       /* Cifra e bordo un gradino sopra il terziario: il numero nel cerchio
          era quasi invisibile da spento (visto dall'utente). */
-      border: 1px solid #40454C;
+      border: 1px solid var(--borderHover);
       font-family: var(--mono); font-size: 11px; color: {TESTO_2};
       flex: 0 0 auto; }}
   .st-key-fasi [data-testid="stButtonGroup"] button:hover {{
@@ -426,23 +401,23 @@ STYLE = f"""
   /* La chip in coda alla colonna Analisi: senza margine si appiccicava al
      testo sopra e sbordava sotto il bordo della riga. */
   .au-chip-riga {{ margin-top: .3rem; }}
-  .au-ok   {{ background: rgba(69,212,131,.10); border-color: rgba(69,212,131,.25);
+  .au-ok   {{ background: rgb(var(--greenRgb) / .10); border-color: rgb(var(--greenRgb) / .25);
              color:{VERDE}; }}
-  .au-warn {{ background: rgba(242,184,75,.10); border-color: rgba(242,184,75,.25);
+  .au-warn {{ background: rgb(var(--yellowRgb) / .10); border-color: rgb(var(--yellowRgb) / .25);
              color:{GIALLO}; }}
   /* "fatta" è BLU, non verde: il verde è già di "consigliato", e due chip
      verdi nella stessa colonna si leggevano come la stessa cosa (detto
      dall'utente). Il blu qui dice "capitolo chiuso". */
-  .au-fatta {{ background: var(--blueBg); border-color: rgba(77,163,255,.30);
+  .au-fatta {{ background: var(--blueBg); border-color: rgb(var(--blueRgb) / .30);
              color: var(--blueText); }}
   /* In coda: grigio, neutro — il file aspetta il suo turno nella catena. */
-  .au-coda {{ background: var(--grayBg); border-color: rgba(138,144,153,.30);
+  .au-coda {{ background: var(--grayBg); border-color: rgb(var(--grayRgb) / .30);
              color: var(--grayText); }}
-  .au-dim  {{ background: rgba(138,144,153,.10);border-color: rgba(138,144,153,.25);
+  .au-dim  {{ background: rgb(var(--grayRgb) / .10);border-color: rgb(var(--grayRgb) / .25);
              color:{TESTO_2}; }}
   /* Rosso e non ambra: l'ambra dice "guarda", il rosso dice "così non
      parte". Sono due cose diverse e la riga si comporta diversamente. */
-  .au-err  {{ background: var(--redBg); border-color: rgba(242,109,109,.35);
+  .au-err  {{ background: var(--redBg); border-color: rgb(var(--redRgb) / .35);
              color: var(--redText); }}
   .au-hint {{ color: {TESTO_2}; font-size:13px; line-height:1.55; }}
   /* Salti d'ingresso dei gruppi UGUALI (misurati: ~27px l'uno). Il primo
@@ -460,9 +435,9 @@ STYLE = f"""
   .st-key-fasi [role="radio"]::after {{
       position: absolute; top: -6px; right: -6px;
       min-width: 18px; height: 18px; padding: 0 5px;
-      border-radius: 9px; background: var(--primary); color: #06232A;
+      border-radius: 9px; background: var(--primary); color: var(--onPrimary);
       font-size: 11px; font-weight: 700; line-height: 18px;
-      text-align: center; box-shadow: 0 0 0 2px #101113; }}
+      text-align: center; box-shadow: 0 0 0 2px var(--bg); }}
   .au-tar-riga {{ display: flex; justify-content: space-between;
                  align-items: baseline; font-size: 12.25px; color: {TESTO};
                  margin: 0; }}
@@ -617,22 +592,22 @@ STYLE = f"""
   .au-cnf th {{ text-align: left; font-weight: 500; font-size: 11px;
       letter-spacing: .04em; text-transform: uppercase;
       color: var(--grayText); padding: 0 10px 4px 0;
-      border-bottom: 1px solid rgba(138,144,153,.25); }}
+      border-bottom: 1px solid rgb(var(--grayRgb) / .25); }}
   .au-cnf td {{ padding: 6px 10px 6px 0; font-variant-numeric: tabular-nums;
-      border-bottom: 1px solid rgba(138,144,153,.12); }}
+      border-bottom: 1px solid rgb(var(--grayRgb) / .12); }}
   .au-cnf .au-cnf-nome {{ font-weight: 600; }}
   .au-cnf .au-cnf-scarto {{ color: var(--grayText); }}
   /* L'avviso vero e proprio: giallo, la stessa famiglia delle chip
      `au-warn` e degli avvisi del referto. Distinto dalla nota grigia di
      congelamento, che e' una didascalia e non un avviso. */
-  .au-nota-avviso {{ background: rgba(242,184,75,.10);
-      border: 1px solid rgba(242,184,75,.25);
-      border-left: 3px solid rgba(242,184,75,.55);
+  .au-nota-avviso {{ background: rgb(var(--yellowRgb) / .10);
+      border: 1px solid rgb(var(--yellowRgb) / .25);
+      border-left: 3px solid rgb(var(--yellowRgb) / .55);
       border-radius: 6px; padding: 8px 12px; margin: 6px 0 4px;
-      font-size: 12px; line-height: 1.5; color: #E8C98A; }}
+      font-size: 12px; line-height: 1.5; color: var(--yellowText); }}
   .au-nota-congelo {{ background: var(--grayBg);
-      border: 1px solid rgba(138, 144, 153, .30);
-      border-left: 3px solid rgba(138, 144, 153, .55);
+      border: 1px solid rgb(var(--grayRgb) / .30);
+      border-left: 3px solid rgb(var(--grayRgb) / .55);
       border-radius: 6px; padding: 8px 12px; margin: 6px 0 4px;
       font-size: 12px; line-height: 1.5; color: var(--grayText); }}
   /* Le etichette di sezione hanno bisogno di uno stacco dichiarato. Misurato,
@@ -802,7 +777,7 @@ STYLE = f"""
       border: 1px solid {BORDO}; border-radius: 6px;
       padding: 9px 12px; font-size: 12.5px; font-weight: 400;
       line-height: 1.45; letter-spacing: normal; text-transform: none;
-      font-family: var(--font); box-shadow: 0 6px 20px rgba(0,0,0,.45);
+      font-family: var(--font); box-shadow: 0 6px 20px rgb(var(--shadowRgb) / .45);
       /* Le chip sono `nowrap` — devono stare su una riga — e il fumetto
          EREDITA quel valore: il testo si stendeva su una riga sola larga
          1.800px dentro un riquadro da 264, e quel traboccamento allargava
@@ -871,7 +846,7 @@ STYLE = f"""
      posizione e la punta no: quelle le decide un popover in JavaScript e
      BaseWeb la punta non la disegna proprio. Ma colore, carattere, corpo,
      riquadro e ombra sì, e sono quelli che si notano.
-     Misurati i suoi valori di partenza: fondo #22262B, angoli 8px, nessun
+     Misurati i suoi valori di partenza: fondo var(--sidebar2), angoli 8px, nessun
      bordo, testo pieno a 12.25/18.375, imbottitura 5.25/10.5. */
   [data-testid="stTooltipContent"] {{
       max-width: 264px !important;
@@ -881,7 +856,7 @@ STYLE = f"""
       padding: 9px 12px !important;
       font-family: var(--font) !important;
       font-size: 12.5px !important; line-height: 1.45 !important;
-      box-shadow: 0 6px 20px rgba(0,0,0,.45) !important; }}
+      box-shadow: 0 6px 20px rgb(var(--shadowRgb) / .45) !important; }}
   /* Il testo dentro eredita, ma Streamlit ci mette un paragrafo con le sue
      misure: vanno riportate anche li'. */
   [data-testid="stTooltipContent"] p {{
@@ -913,12 +888,12 @@ STYLE = f"""
   /* Ogni scheda si tinge del suo verdetto — bordo E un velo di fondo, così
      la fila si legge a colpo d'occhio senza leggere le chip. Il velo sta
      sotto il 6%: deve orientare, non urlare. */
-  .au-consigliato {{ border-color: rgba(69,212,131,.35);
-                    background: rgba(69,212,131,.05); }}
-  .au-verifica {{ border-color: rgba(242,184,75,.3);
-                 background: rgba(242,184,75,.04); }}
-  .au-sconsigliato {{ border-color: rgba(242,109,109,.3);
-                     background: rgba(242,109,109,.04); }}
+  .au-consigliato {{ border-color: rgb(var(--greenRgb) / .35);
+                    background: rgb(var(--greenRgb) / .05); }}
+  .au-verifica {{ border-color: rgb(var(--yellowRgb) / .3);
+                 background: rgb(var(--yellowRgb) / .04); }}
+  .au-sconsigliato {{ border-color: rgb(var(--redRgb) / .3);
+                     background: rgb(var(--redRgb) / .04); }}
   .au-m-testa {{ display: flex; align-items: center; gap: 8px;
                 margin-bottom: 6px; flex-wrap: wrap; }}
   .au-m-nome {{ font-size: 13.5px; font-weight: 600; }}
@@ -989,7 +964,7 @@ STYLE = f"""
      (vedi header) e lo gira all'input vero. Qui solo la manina. */
   [class*="st-key-clip"] {{ cursor: pointer; }}
   [class*="st-key-clip"]:has(input:checked) {{
-      border-color: rgba(42,201,222,.55); background: var(--primaryBg); }}
+      border-color: rgb(var(--primaryRgb) / .55); background: var(--primaryBg); }}
   [class*="st-key-clip"] .au-c-desc {{ font-size: 11px; color: {TESTO_3};
       line-height: 1.45; padding: 0 3px 3px; }}
   [class*="st-key-clip"] [data-testid="stCheckbox"] p {{ font-size: 13px;
@@ -1081,7 +1056,7 @@ STYLE = f"""
      tag. Verificato nel DOM prima di scrivere questa regola. */
   [data-testid="stMultiSelectTagsContainer"] > span > span {{
       background: var(--primaryBg) !important;
-      border: 1px solid rgba(42,201,222,.3);
+      border: 1px solid rgb(var(--primaryRgb) / .3);
       color: var(--primaryHover) !important;
       border-radius: 5px !important;
       padding: 3px 6px 3px 10px !important;
@@ -1112,7 +1087,7 @@ STYLE = f"""
      ciano, cioè invisibile. */
   /* Solo il quadratino, non tutto quello che sta dentro la casella: il
      suggerimento "?" vive lì dentro, e la regola larga dipingeva anche
-     quello di `#08262B` — verde scuro su fondo scuro, illeggibile. */
+     quello di `var(--onPrimary)` — verde scuro su fondo scuro, illeggibile. */
   [data-testid="stCheckbox"] label > div:not([data-testid]) svg,
   [data-testid="stCheckbox"] label > div:not([data-testid]) svg polyline,
   [data-testid="stCheckbox"] label > div:not([data-testid]) svg path {{
@@ -1206,7 +1181,7 @@ STYLE = f"""
                 margin-top: 8px; white-space: nowrap; overflow: hidden;
                 text-overflow: ellipsis; }}
   .au-busy {{ background: var(--primaryBg); color: var(--primaryHover);
-             border-color: rgba(42,201,222,.3); }}
+             border-color: rgb(var(--primaryRgb) / .3); }}
   /* La barra dentro la riga: sotto la testata, sopra il pannello. Il testo
      accanto è già tutto etichettato, quindi può stare in piccolo. */
   /* Barra a tutta larghezza, testo sotto a destra: due righe DELIBERATE.
@@ -1259,27 +1234,27 @@ STYLE = f"""
      si schiarisce. Un `background` piatto cancellerebbe il gradiente, che
      e' l'unica cosa che dice a colpo d'occhio in che stato e' la riga. */
   [class*="st-key-jrow"]:has(.au-sel):has([class*="st-key-det"]:not([class*="st-key-dett"]) button:hover) {{
-      background: linear-gradient(90deg, #1B2E34 0%, #1F262A 50%); }}
+      background: linear-gradient(90deg, rgb(var(--primaryRgb) / .12) 0%, var(--rowBgHover) 50%); }}
   [class*="st-key-jrow"]:has(.au-tag.au-busy):has([class*="st-key-det"]:not([class*="st-key-dett"]) button:hover) {{
-      background: linear-gradient(90deg, #0D3A44 0%, #1F262A 50%); }}
+      background: linear-gradient(90deg, rgb(var(--primaryRgb) / .22) 0%, var(--rowBgHover) 50%); }}
   [class*="st-key-jrow"]:has(.au-compiuta):has([class*="st-key-det"]:not([class*="st-key-dett"]) button:hover) {{
-      background: linear-gradient(90deg, #0B3A2C 0%, #1F262A 50%); }}
+      background: linear-gradient(90deg, rgb(var(--greenRgb) / .16) 0%, var(--rowBgHover) 50%); }}
   /* Il riquadro col processo in corso si "alza" dal piano della pagina:
      ombra scura a due strati (contatto + diffusa) e superficie un filo
      piu' chiara — in tema scuro l'elevazione si legge cosi', l'ombra da
      sola su fondo quasi nero non basta. Voluta discreta (utente). */
   [class*="st-key-riga"]:has(.au-s-corso),
   [class*="st-key-jrow"]:has(.au-tag.au-busy) {{
-      background: rgba(255, 255, 255, .035);
+      background: rgb(var(--overlayRgb) / .035);
       /* Lo zoom leggero completa l'effetto "sopraelevato". 1.025 scelto
          dall'utente (1.01 era troppo timido). */
       transform: scale(1.025);
       /* Alone piu' ampio: i tre strati restano (contatto, media
          distanza, diffusa) ma con raggi maggiori, cosi' la riga sembra
          piu' staccata dal piano senza diventare piu' scura. */
-      box-shadow: 0 -12px 30px -6px rgba(0, 0, 0, .50),
-                  0 6px 18px rgba(0, 0, 0, .45),
-                  0 22px 46px -10px rgba(0, 0, 0, .65); }}
+      box-shadow: 0 -12px 30px -6px rgb(var(--shadowRgb) / .50),
+                  0 6px 18px rgb(var(--shadowRgb) / .45),
+                  0 22px 46px -10px rgb(var(--shadowRgb) / .65); }}
   [class*="st-key-jrow"] [data-testid="stHorizontalBlock"] {{
       align-items: center; padding: 11px 16px; }}
   /* Due chip nella stessa cella di stato (es. "fatto" + "1 avviso"):
@@ -1397,16 +1372,16 @@ STYLE = f"""
      meta' larghezza. Tre stati, tre colori, stessa grammatica. */
   [class*="st-key-jrow"]:has(.au-sel) {{
       border-left-color: var(--primary);
-      background: linear-gradient(90deg, #16262B 0%, #191F22 50%); }}
+      background: linear-gradient(90deg, rgb(var(--primaryRgb) / .08) 0%, var(--rowBg) 50%); }}
   /* In corso: la stessa velatura, piu' viva. */
   [class*="st-key-jrow"]:has(.au-tag.au-busy) {{
-      background: linear-gradient(90deg, #0A2E36 0%, #191F22 50%); }}
+      background: linear-gradient(90deg, rgb(var(--primaryRgb) / .16) 0%, var(--rowBg) 50%); }}
   /* Fatto DURANTE la maratona: la riga resta viva e si prende il bordo
      verde delle cose concluse. Il nome torna a piena luce, altrimenti la
      regola generica delle righe non selezionate lo lascerebbe smorto. */
   [class*="st-key-jrow"]:has(.au-compiuta) {{
       border-left-color: var(--green);
-      background: linear-gradient(90deg, #082B21 0%, #191F22 50%); }}
+      background: linear-gradient(90deg, rgb(var(--greenRgb) / .10) 0%, var(--rowBg) 50%); }}
   [class*="st-key-jrow"]:has(.au-compiuta) .au-name {{ color: {TESTO}; }}
   /* Concluso ma CON AVVISI: il fondo resta quello verde delle cose fatte
      — il file c'e' ed e' a posto — e cambia solo il bordo, che diventa
@@ -1467,7 +1442,7 @@ STYLE = f"""
       border-radius: 6px !important;
       min-height: 0 !important; }}
   .st-key-sceltaTutti [data-testid="stSelectbox"] > div {{
-      background: var(--backgroundColor, #101113) !important;
+      background: var(--backgroundColor, var(--bg)) !important;
       border: 1px solid {BORDO_VIVO} !important;
       border-radius: 6px !important;
       min-height: 0 !important; }}
@@ -1477,7 +1452,7 @@ STYLE = f"""
   .st-key-sceltaTutti [data-testid="stSelectbox"] input {{
       font-size: 12px !important; }}
   [class*="st-key-jrow"] [data-testid="stSelectbox"]:hover > div {{
-      border-color: #40454C !important; }}
+      border-color: var(--borderHover) !important; }}
   /* Congelati: `disabled` li spegne davvero, ma rispondevano ancora al
      passaggio del mouse — un invito a cliccare qualcosa che non fa
      niente. La casella durante la catena e' gia' un finto indicatore
@@ -1528,12 +1503,12 @@ STYLE = f"""
      troppo squillante (ritarato con l'utente). */
   [class*="st-key-jrow"] [data-testid="stCheckbox"]:hover
       label > div:first-of-type {{
-      border-color: #565C66 !important;
-      background: rgba(255, 255, 255, .07) !important; }}
+      border-color: var(--borderHover2) !important;
+      background: rgb(var(--overlayRgb) / .07) !important; }}
   [class*="st-key-jrow"] [data-testid="stSelectbox"]:hover > div,
   .st-key-sceltaTutti [data-testid="stSelectbox"]:hover > div {{
-      background: rgba(255, 255, 255, .07);
-      border-color: #565C66 !important; }}
+      background: rgb(var(--overlayRgb) / .07);
+      border-color: var(--borderHover2) !important; }}
 
   /* La fascia-contenitore dei Sorgenti: la veste grafica sta sul
      CONTENITORE (che ospita anche la CTA, un widget vero), la .au-fascia
@@ -1562,7 +1537,7 @@ STYLE = f"""
       border: 1px solid {BORDO_VIVO} !important; background: none !important;
       box-shadow: none !important; padding: 6px 14px !important; }}
   [class*="st-key-rianTutti"] button p {{ font-size: 12.5px;
-      font-weight: 500; color: var(--codeTextColor, #C6CBD2); }}
+      font-weight: 500; color: var(--codeTextColor, var(--textCode)); }}
   [class*="st-key-rianTutti"] button [data-testid="stIconMaterial"] {{
       font-size: 15px; color: var(--textSecondary); }}
 
@@ -1626,7 +1601,7 @@ STYLE = f"""
   [data-testid="stSidebar"] [data-testid="stCheckbox"] label:has(input:checked)
       > div:not([data-testid]) {{ background: var(--primary) !important; }}
   [data-testid="stSidebar"] [data-testid="stCheckbox"] label:has(input:checked)
-      > div:not([data-testid]) > div {{ background: #0B2A2F !important;
+      > div:not([data-testid]) > div {{ background: var(--knobOn) !important;
       /* BaseWeb sposta il pomello con un translateX calcolato sulla SUA
          geometria (traccia 28, pomello 11): sulla nostra 30/13 lo portava
          3px troppo a destra, fuori dalla traccia (misurato: pomello a 53 su
@@ -1665,7 +1640,7 @@ STYLE = f"""
      l'unico modo che regge anche su Safari, dove il CSS sui comandi non ha
      presa. Le regole su `[data-testid=stVideo]` restano per il ripiego. */
   .au-clip {{ width: 100%; display: block; border-radius: .5rem;
-             background: #000; pointer-events: none; }}
+             background: var(--clipBg); pointer-events: none; }}
   video[data-testid="stVideo"] {{
       border-radius: .5rem; display: block; pointer-events: none; }}
   video[data-testid="stVideo"]::-webkit-media-controls,
@@ -1699,14 +1674,14 @@ STYLE = f"""
      pagina e non ha nulla sotto contro cui spingere. */
   .st-key-barra {{ position: fixed; bottom: 0; left: 0; right: 0;
                   width: auto !important; max-width: none !important;
-                  z-index: 100; background: rgba(16,17,19,.92);
+                  z-index: 100; background: rgb(var(--bgRgb) / .92);
                   backdrop-filter: blur(8px);
                   -webkit-backdrop-filter: blur(8px);
                   border-top: 1px solid {BORDO_VIVO};
                   /* Più chiara del fondo pagina, o non si distingueva
                      dall'elenco che le scorre sotto: è una fascia di
                      comando, deve staccarsi. */
-                  box-shadow: 0 -10px 30px rgba(0,0,0,.55);
+                  box-shadow: 0 -10px 30px rgb(var(--shadowRgb) / .55);
                   /* Passo unico da 16px sopra e sotto: prima 20 dichiarati
                      ma 21/14 misurati, per i margini interni delle bande
                      (incoerenza vista dall'utente). Qui sotto i margini
@@ -1822,7 +1797,7 @@ STYLE = f"""
   [class*="st-key-fasciaAnalisi"] .au-avviso {{ margin: -6px 0 32px; }}
   .au-avviso {{ display: flex; align-items: center; gap: 10px;
                background: var(--yellowBg);
-               border: 1px solid rgba(242,184,75,.2);
+               border: 1px solid rgb(var(--yellowRgb) / .2);
                border-left: 3px solid var(--yellow);
                border-radius: 6px; padding: 10px 14px;
                color: {GIALLO}; font-size: 12px; line-height: 1.5;
@@ -1833,7 +1808,7 @@ STYLE = f"""
      dettagli, e la collisione li tingeva tutti di rosso (successo). */
   .au-gpu-occupata {{ display: flex; align-items: center; gap: 10px;
                background: var(--redBg);
-               border: 1px solid rgba(242,109,109,.25);
+               border: 1px solid rgb(var(--redRgb) / .25);
                border-left: 3px solid var(--red);
                border-radius: 6px; padding: 8px 12px;
                color: var(--redText); font-size: 12.5px; line-height: 1.5;
@@ -1891,7 +1866,7 @@ STYLE = f"""
 
   .au-gpu-pausa {{ display: flex; align-items: center; gap: 10px;
                background: var(--yellowBg);
-               border: 1px solid rgba(242,184,75,.25);
+               border: 1px solid rgb(var(--yellowRgb) / .25);
                border-left: 3px solid var(--yellow);
                border-radius: 6px; padding: 8px 12px;
                color: {GIALLO}; font-size: 12.5px; line-height: 1.5;
@@ -1923,14 +1898,14 @@ STYLE = f"""
       flex: 1; display: flex; flex-direction: column; }}
   [data-testid="stSidebarUserContent"] > div >
       [data-testid="stVerticalBlock"] {{ flex: 1; }}
-  [data-testid="stLayoutWrapper"]:has(> .st-key-spegnimento) {{
+  [data-testid="stLayoutWrapper"]:has(> .st-key-piede) {{
       position: sticky; bottom: 0; z-index: 6; margin-top: auto;
-      background: #1A1D21; border-top: 1px solid #33373D;
+      background: var(--sidebar); border-top: 1px solid var(--borderStrong);
       padding-top: 0; }}
   /* 16px dalla linea alla CTA e 16px dalla CTA al fondo: la CTA stava a
      6px dal bordo finestra, "molto attaccata" (utente). Stesso passo della
      barra di Lavorazione. */
-  .st-key-spegnimento {{ padding: 16px 0 16px; }}
+  .st-key-piede {{ padding: 14px 0 16px; }}
 
   /* Le tre schede restano APPICCICATE in alto e il contenuto ci scorre
      sotto: senza, per cambiare scheda da fondo pagina si risaliva tutto
@@ -1980,14 +1955,14 @@ STYLE = f"""
          sbordatura vera (margini negativi, `100vw`) gli farebbe comparire
          una barra orizzontale. L'ombra invece viene semplicemente tagliata
          al bordo di `stMain`, che e' esattamente dove deve fermarsi. */
-      box-shadow: -400px 0 0 0 #101113, 400px 0 0 0 #101113; }}
+      box-shadow: -400px 0 0 0 var(--bg), 400px 0 0 0 var(--bg); }}
   [data-testid="stLayoutWrapper"]:has(> .st-key-marchio) {{
-      position: sticky; top: 45px; z-index: 26; background: #101113;
+      position: sticky; top: 45px; z-index: 26; background: var(--bg);
       margin-top: -17px; margin-bottom: -14px;
       padding-top: 17px; padding-bottom: 14px; }}
   [data-testid="stLayoutWrapper"]:has(> .st-key-fasi) {{
       position: sticky; top: 45px; z-index: 25;
-      background: #101113; padding-top: 16px; padding-bottom: 0;
+      background: var(--bg); padding-top: 16px; padding-bottom: 0;
       /* La linea sotto le schede: qui e non su `.st-key-fasi`, perche' qui
          la larghezza e' quella dell'area intera. Vedi il commento accanto
          al blocco. */
@@ -1999,13 +1974,13 @@ STYLE = f"""
          assoluto. Dichiarare `relative` piu' in basso SOVRASCRIVE `sticky`
          e la testata smette di restare in cima — introdotto e corretto il
          12/08, notato dall'utente in dieci secondi. */
-      box-shadow: -400px 0 0 0 #101113, 400px 0 0 0 #101113,
-                  0 6px 12px -8px rgba(0, 0, 0, .6); }}
+      box-shadow: -400px 0 0 0 var(--bg), 400px 0 0 0 var(--bg),
+                  0 6px 12px -8px rgb(var(--shadowRgb) / .6); }}
   [data-testid="stLayoutWrapper"]:has(> .st-key-fasi)::after {{
       content: ""; position: absolute; left: 0; right: 0; bottom: -1px;
       height: 1px; background: {BORDO}; pointer-events: none;
       box-shadow: -400px 0 0 0 {BORDO}, 400px 0 0 0 {BORDO}; }}
-  [data-testid="stHeader"] {{ background: #101113 !important; }}
+  [data-testid="stHeader"] {{ background: var(--bg) !important; }}
 
   /* Fuori dal programma della catena: la riga si spegne del tutto —
      saturazione zero, alpha basso, niente interazioni. Durante la maratona
@@ -2023,11 +1998,11 @@ STYLE = f"""
      aspetto spento — il ciano, anche semitrasparente, invitava ancora a
      de-spuntare (detto dall'utente due volte, la seconda con le specifiche:
      "scala di grigio e un po' trasparente"). */
-  .au-cb-finta.au-cb-si {{ background: rgba(138, 144, 153, .25);
-      border-color: rgba(138, 144, 153, .40); position: relative; }}
+  .au-cb-finta.au-cb-si {{ background: rgb(var(--grayRgb) / .25);
+      border-color: rgb(var(--grayRgb) / .40); position: relative; }}
   .au-cb-finta.au-cb-si::after {{ content: ''; position: absolute;
       left: 5px; top: 1px; width: 5px; height: 10px;
-      border: solid rgba(183, 188, 195, .70); border-width: 0 2px 2px 0;
+      border: solid rgb(var(--textGrayRgb) / .70); border-width: 0 2px 2px 0;
       transform: rotate(45deg); }}
 
   /* Le colonne della PAGELLA non sono la testata della riga: si disfano le
@@ -2087,12 +2062,12 @@ STYLE = f"""
      sulla linea di base e risultava più alta del testo accanto. Dentro un
      contenitore flex che allinea al centro, si allinea davvero. */
   .au-rotella {{ width: .72rem; height: .72rem; border-radius: 50%; flex: none;
-                border: 2px solid rgba(150,150,150,.3);
-                border-top-color: rgba(190,190,190,.95);
+                border: 2px solid rgb(var(--grayRgb) / .3);
+                border-top-color: rgb(var(--textGrayRgb) / .95);
                 animation: au-gira .7s linear infinite; }}
   @keyframes au-gira {{ to {{ transform: rotate(360deg); }} }}
   @media (prefers-reduced-motion: reduce) {{
-    .au-rotella {{ animation: none; border-top-color: rgba(150,150,150,.3); }}
+    .au-rotella {{ animation: none; border-top-color: rgb(var(--grayRgb) / .3); }}
   }}
 
   /* --- animazioni ------------------------------------------------------
@@ -2154,7 +2129,7 @@ STYLE = f"""
   /* Come per il passaggio del mouse: `border-color` avrebbe riscritto anche
      il lato sinistro, cancellando il colore dello stato sulla riga aperta. */
   [class*="st-key-riga"]:has(.au-open) {{
-      background: rgba(255,255,255,.03);
+      background: rgb(var(--overlayRgb) / .03);
       border-top-color: {BORDO_VIVO}; border-right-color: {BORDO_VIVO};
       border-bottom-color: {BORDO_VIVO}; }}
 
@@ -2362,7 +2337,7 @@ STYLE = f"""
      a quel punto il rosso deve pesare, sta per succedere davvero. */
   [class*="st-key-ferma"] button,
   [class*="st-key-scarta"] button {{
-      border-color: rgba(242, 109, 109, .45) !important;
+      border-color: rgb(var(--redRgb) / .45) !important;
       /* Nemmeno il fondo scuro predefinito: dentro una riga colorata era
          una toppa grigia. Il bordo rosso basta a farlo riconoscere. */
       background: transparent !important; }}
@@ -2371,17 +2346,17 @@ STYLE = f"""
   [class*="st-key-ferma"] button:hover,
   [class*="st-key-scarta"] button:hover {{
       border-color: var(--red) !important;
-      background: rgba(242, 109, 109, .08) !important; }}
+      background: rgb(var(--redRgb) / .08) !important; }}
   [class*="st-key-fermasi"] button,
   [class*="st-key-scartasi"] button {{
       background: var(--red) !important;
       border-color: var(--red) !important; }}
   [class*="st-key-fermasi"] button p,
   [class*="st-key-scartasi"] button p {{
-      color: #2A0F0F !important; font-weight: 600; }}
+      color: var(--onRed) !important; font-weight: 600; }}
   [class*="st-key-fermasi"] button:hover,
   [class*="st-key-scartasi"] button:hover {{
-      background: #F58585 !important; border-color: #F58585 !important; }}
+      background: var(--redHover) !important; border-color: var(--redHover) !important; }}
 
   /* PAUSA: azzurro, non rosso. Ferma e' un'azione che costa lavoro — il
      blocco riparte da capo — e il rosso lo dice. La pausa non costa niente
@@ -2421,12 +2396,12 @@ STYLE = f"""
       min-width: 132px !important; width: auto !important; }}
 
   [class*="st-key-pausa_tutto"] button {{
-      border-color: rgba(42, 201, 222, .45) !important;
+      border-color: rgb(var(--primaryRgb) / .45) !important;
       background: transparent !important; }}
   [class*="st-key-pausa_tutto"] button p {{ color: {CIANO} !important; }}
   [class*="st-key-pausa_tutto"] button:hover {{
       border-color: {CIANO} !important;
-      background: rgba(42, 201, 222, .08) !important; }}
+      background: rgb(var(--primaryRgb) / .08) !important; }}
 
   /* La chevron non è una chiamata all'azione: è l'indicatore di un
      accordion. Niente cornice, niente sfondo — solo il triangolo, che si
@@ -2538,7 +2513,7 @@ STYLE = f"""
       font-size: 16px; color: var(--textSecondary); }}
   [class*="st-key-ric"] button p {{
       font-size: 12.5px; font-weight: 500;
-      color: var(--codeTextColor, #C6CBD2); transition: color .12s ease; }}
+      color: var(--codeTextColor, var(--textCode)); transition: color .12s ease; }}
   /* L'HOVER STANDARD delle CTA secondarie: identico ovunque (chiesto
      dall'utente: "Seleziona tutti" brillava ciano, "Rianalizza" appena).
      Un filo piu' visibile del vecchio Rianalizza, meno del ciano di
@@ -2547,8 +2522,8 @@ STYLE = f"""
   [data-testid="stElementContainer"]:not([class*="st-key-ferma"]):not(
       [class*="st-key-scarta"]):not([class*="st-key-det"]):not(
       [class*="st-key-finder"]) .stButton button[kind="secondary"]:hover {{
-      background: #22262C !important;
-      border-color: #40454C !important; }}
+      background: var(--sidebar2) !important;
+      border-color: var(--borderHover) !important; }}
   [data-testid="stElementContainer"]:not([class*="st-key-ferma"]):not(
       [class*="st-key-scarta"]):not([class*="st-key-det"]):not(
       [class*="st-key-finder"]) .stButton
@@ -2560,6 +2535,494 @@ STYLE = f"""
     [class*="st-key-dett"] {{ transition: none; }}
     [data-testid="stHorizontalBlock"], .stButton button {{ transition: none; }}
   }}
+
+  /* ===================================================================
+     Redesign 1.6 — sidebar. Misure dalla tavola "Sidebar" del design:
+     titoli 17/600, note 12.5 nel grigio 2, occhielli 10.5 maiuscoli,
+     etichette 13.5/500, valori in mono 12, riquadri con raggio 10.
+     =================================================================== */
+  [data-testid="stSidebar"] {{ background: var(--sidebar); }}
+  [data-testid="stSidebarUserContent"] {{ margin-top: 0; padding-top: 4px; }}
+  .au-sb-titolo {{ display: flex; align-items: center; gap: 8px;
+      font-size: 17px; font-weight: 600; letter-spacing: -.01em;
+      line-height: 1.3; margin: 16px 0 2px; color: var(--textPrimary); }}
+  .au-sb-pref {{ margin-top: 6px; padding-top: 24px;
+      border-top: 1px solid var(--borderStrong); }}
+  .au-sb-nota {{ font-size: 12.5px; line-height: 1.45;
+      color: var(--textSecondary); margin: 4px 0 0; }}
+  .au-lock-chip {{ margin-left: auto; display: inline-flex;
+      align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px;
+      background: rgb(var(--primaryRgb) / .10);
+      border: 1px solid rgb(var(--primaryRgb) / .30);
+      color: var(--textPrimary); font: 400 11px var(--mono);
+      white-space: nowrap; }}
+  .au-lock-nota {{ padding: 10px 12px; border-radius: 8px;
+      background: var(--sidebar2); border: 1px solid var(--borderStrong);
+      font-size: 12.5px; line-height: 1.45; color: var(--textCode); }}
+  [data-testid="stSidebar"] .au-eyebrow.au-sgruppo {{ margin: 14px 0 2px;
+      font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
+      color: var(--textTertiary); }}
+  [data-testid="stSidebar"] .au-sb-eti {{ font-size: 13.5px;
+      font-weight: 500; }}
+  [data-testid="stSidebar"] .au-sb-val {{ font: 400 12px var(--mono);
+      color: var(--textCode); }}
+  /* Cursori: binario da 3, pomello da 12 con un anello del colore del
+     fondo su cui sta, cosi' si legge come un ritaglio (tutti e due i temi). */
+  [data-testid="stSidebar"] [data-testid="stSlider"] [data-orientation="horizontal"][style]
+      > div:first-child {{ height: 3px; }}
+  [data-testid="stSidebar"] [data-testid="stSlider"] [data-orientation="horizontal"][style]
+      > div:nth-child(2) {{ width: 12px !important; height: 12px !important;
+      background: var(--primaryStrong) !important;
+      box-shadow: 0 0 0 2px var(--sidebar) !important; }}
+  .st-key-adv [data-testid="stSlider"] [data-orientation="horizontal"][style]
+      > div:nth-child(2) {{ box-shadow: 0 0 0 2px var(--sidebarCard) !important; }}
+  /* «Avanzate»: un riquadro tono su tono che si apre. Lo stato (tutte di
+     fabbrica / N cambiate) e' una pillola scritta dal CSS di ogni giro. */
+  .st-key-adv [data-testid="stExpander"] details {{
+      background: var(--sidebarCard); border: 1px solid var(--borderStrong);
+      border-radius: 10px; }}
+  .st-key-adv summary {{ padding: 12px 14px; }}
+  .st-key-adv summary:hover {{ background: transparent; }}
+  .st-key-adv summary p {{ display: flex; align-items: center; gap: 8px;
+      font-size: 13.5px; font-weight: 600; }}
+  .st-key-adv summary p::after {{ margin-left: auto; padding: 1px 8px;
+      border-radius: 999px; border: 1px solid var(--borderStrong);
+      color: var(--textSecondary); font: 400 11px var(--mono);
+      white-space: nowrap; }}
+  .st-key-adv [data-testid="stExpanderDetails"] {{ padding: 0 14px 14px; }}
+  .au-adv-nota {{ font-size: 12px; color: var(--textSecondary);
+      margin: -6px 0 2px; }}
+  .au-cambiata {{ display: flex; align-items: center; gap: 6px;
+      font: 400 11px var(--mono); color: var(--primaryText);
+      margin: -6px 0 0 40px; }}
+  .au-cambiata span {{ width: 5px; height: 5px; border-radius: 50%;
+      background: var(--primary); flex: none; }}
+  .st-key-cDisco + div .au-cambiata, .au-sb-eti + .au-cambiata {{
+      margin-left: 0; }}
+  .au-sb-regola {{ font-size: 12px; line-height: 1.45;
+      color: var(--textSecondary); margin-top: -4px; }}
+  .au-sb-ridotto {{ padding: 8px 10px; border-radius: 6px;
+      background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .3);
+      font-size: 12px; line-height: 1.45; color: var(--yellowText); }}
+  .au-sb-sospeso {{ padding: 10px 12px; border-radius: 8px;
+      background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .3);
+      font-size: 12.5px; line-height: 1.45; color: var(--yellowText); }}
+  .st-key-cSospeso button {{ background: transparent !important;
+      border: 1px solid rgb(var(--yellowRgb) / .45) !important;
+      color: var(--yellowText) !important; min-height: 30px; }}
+  /* Preferenze: lingua e tema affiancati, poi un riquadro con cartelle,
+     taratura e aggiornamenti, una riga per voce. */
+  .st-key-cLinguaTema {{ gap: 12px; align-items: flex-end;
+      flex-wrap: nowrap; }}
+  .st-key-cLingua {{ flex: 1 1 auto; min-width: 0; }}
+  .st-key-cTema {{ flex: 0 0 auto; width: auto; }}
+  .st-key-cLinguaTema [data-testid="stWidgetLabel"] p {{
+      font-size: 13.5px; font-weight: 500; color: var(--textPrimary); }}
+  .st-key-cTema [data-testid="stButtonGroup"] > div {{ gap: 2px;
+      padding: 2px; border-radius: 8px; height: 36px; box-sizing: border-box;
+      border: 1px solid var(--borderStrong); background: var(--sidebar2); }}
+  .st-key-cTema [data-testid="stButtonGroup"] button {{ min-height: 0;
+      height: 30px; width: 34px; padding: 0; border: 0 !important;
+      background: transparent; color: var(--textSecondary); }}
+  .st-key-cTema [data-testid="stButtonGroup"] button[kind$="Active"] {{
+      background: var(--sidebarCard); color: var(--primaryText);
+      box-shadow: 0 1px 2px rgb(var(--shadowRgb) / .25); }}
+  .st-key-prefCard {{ background: var(--sidebarCard);
+      border: 1px solid var(--borderStrong); border-radius: 10px;
+      gap: 0 !important; }}
+  .st-key-prefCard > div {{ padding: 12px 14px; }}
+  .st-key-prefCard > div + div {{ border-top: 1px solid var(--borderFaint); }}
+  .au-pref-eti {{ display: flex; align-items: center; gap: 6px;
+      font-size: 13.5px; font-weight: 500; color: var(--textPrimary); }}
+  .au-percorso {{ display: block; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; font: 400 12px var(--mono) !important;
+      color: var(--textCode) !important; background: none !important;
+      padding: 0 !important; }}
+  [class*="st-key-cCartellaPerc"] {{ flex-wrap: nowrap; gap: 8px; }}
+  [class*="st-key-cCartellaPerc"] > div:first-child {{ flex: 1 1 auto;
+      min-width: 0; }}
+  [class*="st-key-cCartellaPerc"] > div:last-child {{ flex: 0 0 auto;
+      width: auto; }}
+  .st-key-cTarRiga {{ flex-wrap: nowrap; gap: 8px; }}
+  .st-key-cTarRiga > div:first-child {{ flex: 1 1 auto; min-width: 0; }}
+  .st-key-cTarRiga > div:last-child {{ flex: 0 0 auto; width: auto; }}
+  .au-tar-mai, .au-tar-ok {{ display: block; font: 400 11.5px var(--mono);
+      margin-top: 2px; }}
+  .au-tar-mai {{ color: var(--textSecondary); }}
+  .au-tar-ok {{ color: var(--greenText); }}
+  /* I pulsanti piccoli delle Preferenze (Cambia…, Ricalibra/Calibra ora):
+     annullano il travestimento da link della versione precedente. */
+  [data-testid="stSidebar"] :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) {{
+      position: static; transform: none; }}
+  :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button {{
+      min-height: 28px !important; height: 28px; padding: 0 10px !important;
+      border-radius: 6px; white-space: nowrap; text-decoration: none;
+      border: 1px solid var(--borderStrong) !important;
+      color: var(--textCode) !important; }}
+  :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button p {{
+      font-size: 12.5px; font-weight: 500; }}
+  .st-key-apriTaratura button[kind="primary"] {{
+      background: var(--primaryStrong) !important; border: 0 !important;
+      color: var(--onPrimary) !important; }}
+  .st-key-apriTaratura button[kind="primary"] p {{ font-weight: 600; }}
+  /* Il piede: versione e «About» a sinistra, su due righe alte quanto il
+     pulsante Esci a destra; sempre sul bordo basso della finestra. */
+  .st-key-piede {{ flex-wrap: nowrap; justify-content: space-between;
+      background: var(--sidebar); }}
+  .au-piede {{ display: flex; flex-direction: column; line-height: 16px;
+      font: 400 11.5px var(--mono); color: var(--textSecondary); }}
+  .au-piede a {{ font-family: var(--font); font-size: 12px;
+      color: var(--textSecondary) !important; text-decoration: underline;
+      text-underline-offset: 2px; }}
+  .st-key-esci, .st-key-fermasi_app {{ width: auto !important; flex: none; }}
+  .st-key-esci button, .st-key-fermasi_app button {{ height: 32px;
+      min-height: 32px; padding: 0 12px; white-space: nowrap; }}
+  /* L'avviso di aggiornamento: un riquadro velato d'accento. */
+  .st-key-cAggiorna {{ padding: 12px 14px; border-radius: 10px;
+      background: rgb(var(--primaryRgb) / .08);
+      border: 1px solid rgb(var(--primaryRgb) / .35); margin-top: 12px; }}
+  .au-agg-testa {{ display: flex; align-items: center; gap: 8px;
+      font-size: 13.5px; }}
+  .au-agg-testa a {{ margin-left: auto; font-size: 12.5px;
+      color: var(--textSecondary) !important; text-decoration: underline; }}
+
+  /* ===================================================================
+     Redesign 1.6 — struttura: sidebar da 360, barra dei passi in cima
+     senza il vuoto di prima, contenuto a 40px dai bordi.
+     =================================================================== */
+  [data-testid="stSidebar"] {{ width: 360px !important; min-width: 360px !important;
+      max-width: 360px !important; border-right: 1px solid var(--borderStrong); }}
+  [data-testid="stSidebarUserContent"] {{ padding-left: 20px !important;
+      padding-right: 20px !important; }}
+  [data-testid="stSidebarHeader"], [data-testid="stSidebarCollapseButton"],
+  [data-testid="stSidebarCollapsedControl"] {{ display: none !important; }}
+  [data-testid="stHeader"] {{ display: none !important; }}
+  .block-container {{ padding: 0 40px 4rem !important; max-width: none !important; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-fasi) {{ top: 0 !important;
+      margin-left: -40px; margin-right: -40px; padding: 15px 40px 14px !important;
+      min-width: calc(100% + 80px);
+      box-shadow: none !important; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-fasi)::after {{
+      box-shadow: none !important; }}
+  .st-key-fasi {{ padding-bottom: 0 !important; gap: 16px; flex-wrap: nowrap; }}
+  .st-key-passi {{ width: auto !important; flex: 0 0 auto; padding: 4px;
+      gap: 0 !important; border: 1px solid var(--borderColor);
+      border-radius: 12px; background: var(--surface); }}
+  .st-key-passi [class*="st-key-passo"] {{ width: auto !important; }}
+  .st-key-passi button {{ position: relative; width: 250px; height: 55px;
+      min-height: 55px; padding: 0 40px 0 51px !important;
+      justify-content: flex-start; text-align: left; border-radius: 8px;
+      border: 1px solid transparent !important; background: transparent !important;
+      background-repeat: no-repeat !important; box-shadow: none !important;
+      transform: none !important; }}
+  .st-key-passi button > div {{ justify-content: flex-start; }}
+  .st-key-passi button p {{ display: flex; flex-direction: column;
+      align-items: flex-start; font-size: 14px; font-weight: 600;
+      line-height: 19px; color: var(--textPrimary); white-space: nowrap; }}
+  .st-key-passi button p::after {{ font-size: 12.5px; font-weight: 400;
+      line-height: 18px; color: var(--textSecondary); }}
+  .st-key-passi button::before {{ position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%); width: 24px; height: 24px;
+      box-sizing: border-box; border-radius: 50%;
+      border: 1px solid var(--borderHover); display: inline-flex;
+      align-items: center; justify-content: center;
+      font: 500 11px var(--mono); color: var(--textSecondary); }}
+  .st-key-passi button[kind="primary"] {{
+      border-color: var(--primary) !important;
+      background-color: rgb(var(--primaryRgb) / .08) !important; }}
+  .st-key-passi button[kind="primary"]::before {{
+      background: var(--primary); border-color: var(--primary);
+      color: var(--onPrimary); font-weight: 600; }}
+  .st-key-passi button[kind="primary"] p::after {{ color: var(--primaryText); }}
+  .st-key-passi button:hover:not(:disabled) {{
+      background-color: var(--surfaceHover) !important; }}
+  .st-key-passi button[kind="primary"]:hover {{
+      background-color: rgb(var(--primaryRgb) / .12) !important; }}
+  .st-key-passi button:disabled {{ cursor: default; opacity: 1; }}
+  .st-key-passi button:disabled p {{ color: var(--textSecondary); }}
+  .st-key-passi button:disabled::before {{
+      background: var(--textTertiary); border: 0;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='8' y='11' width='8' height='6' rx='1.2' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M9.6 11V9.2a2.4 2.4 0 0 1 4.8 0V11' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
+  .st-key-passi button::after {{ display: none; position: absolute; right: 14px;
+      top: 50%; transform: translateY(-50%); min-width: 20px; height: 20px;
+      padding: 0 5px; box-sizing: border-box; border-radius: 999px;
+      align-items: center; justify-content: center;
+      background: var(--primary); color: var(--onPrimary);
+      font: 600 11px var(--mono); }}
+  .au-fasi-stato {{ margin-left: auto; display: flex; align-items: center;
+      gap: 8px; font: 400 12px var(--mono); color: var(--textSecondary);
+      white-space: nowrap; }}
+  .au-fasi-stato span {{ width: 6px; height: 6px; border-radius: 50%;
+      background: var(--dot); }}
+  .au-fasi-stato.au-vivo {{ color: var(--primaryText); }}
+  .au-fasi-stato.au-vivo span {{ background: var(--primary);
+      box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .2); }}
+  .st-key-fasi [data-testid="stElementContainer"]:has(.au-fasi-stato) {{
+      margin-left: auto; width: auto; }}
+
+  /* I blocchi che portano solo stile o script non occupano posto: ognuno
+     prenderebbe il suo spazio di colonna (16px) e in cima alla pagina se ne
+     sommavano tre prima della barra dei passi. Fuori dal flusso, ma vivi:
+     un iframe nascosto esegue lo stesso il suo script. */
+  [data-testid="stElementContainer"]:has([data-testid="stMarkdownContainer"] > style:only-child),
+  [data-testid="stElementContainer"]:has([data-testid="stIFrame"]) {{
+      position: absolute !important; width: 0 !important; height: 0 !important;
+      overflow: hidden !important; margin: 0 !important; }}
+  .st-key-passi button[kind="primary"] p {{ color: var(--textPrimary) !important; }}
+
+  [data-testid="stSidebarContent"] {{ padding-left: 0 !important;
+      padding-right: 0 !important; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-passi) {{
+      flex: 0 0 auto !important; width: auto !important; }}
+  .st-key-passi {{ width: fit-content !important; }}
+  /* «Avanzate»: titolo e sottotitolo su due righe, la pillola a destra. */
+  .st-key-adv summary {{ position: relative; padding: 12px 110px 12px 14px; }}
+  .st-key-adv summary [data-testid="stMarkdownContainer"]::after {{
+      content: var(--adv-nota); display: block; font-size: 12px;
+      font-weight: 400; line-height: 1.3; color: var(--textSecondary);
+      margin-top: 2px; }}
+  .st-key-adv summary p::after {{ position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%); margin: 0; }}
+  .st-key-adv summary p {{ display: block; line-height: 1.35; }}
+  .au-adv-nota {{ display: none; }}
+  /* Righe delle Preferenze: compatte come nel design (76px le cartelle). */
+  .st-key-prefCard [data-testid="stVerticalBlock"] {{ gap: 6px !important; }}
+  .st-key-prefCard > div {{ padding: 12px 14px !important; }}
+  .au-agg-nota {{ font-size: 12px; color: var(--textSecondary);
+      margin: -6px 0 0 44px; }}
+  .st-key-swAggiorn [data-testid="stTooltipIcon"] {{ display: none; }}
+  .st-key-cLinguaTema [data-testid="stWidgetLabel"] {{ min-height: 21px;
+      margin-bottom: 6px; }}
+
+  [data-testid="stSidebar"] .au-eyebrow.au-sgruppo {{ margin-top: 22px; }}
+  .st-key-adv summary {{ padding-right: 118px !important; }}
+  .au-sb-pref {{ margin-top: 14px; padding-top: 28px; margin-bottom: 14px; }}
+  .au-agg-nota {{ margin-left: 40px; }}
+  .st-key-cTaratura {{ gap: 2px !important; }}
+
+  /* ===================================================================
+     Redesign 1.6 — Sorgenti senza video.
+     =================================================================== */
+  .au-titolo-pagina {{ font-size: 24px; font-weight: 600;
+      letter-spacing: -.02em; line-height: 1.25; margin-top: 28px;
+      color: var(--textPrimary); }}
+  .au-sotto-pagina {{ font-size: 14px; line-height: 1.5; max-width: 720px;
+      color: var(--textSecondary); margin-top: 6px; }}
+  .st-key-vuotoGriglia {{ gap: 24px !important; align-items: stretch;
+      flex-wrap: nowrap; margin-top: 12px; }}
+  .st-key-cartelleCard, .st-key-questoMac {{ background: var(--surface);
+      border: 1px solid var(--borderColor); border-radius: 12px; }}
+  .st-key-cartelleCard {{ flex: 1 1 auto; min-width: 0; gap: 16px !important;
+      padding: 24px 24px 0; }}
+  .st-key-questoMac {{ flex: 0 0 340px; width: 340px !important; padding: 20px;
+      gap: 14px !important; }}
+  .au-card-testa {{ display: flex; gap: 16px; align-items: flex-start; }}
+  .au-card-testa.au-centrata {{ align-items: center; gap: 14px; }}
+  .au-tessera {{ width: 48px; height: 48px; flex: none; box-sizing: border-box;
+      border-radius: 10px; background: rgb(var(--primaryRgb) / .10);
+      border: 1px solid rgb(var(--primaryRgb) / .35); display: flex;
+      align-items: center; justify-content: center; color: var(--primaryText); }}
+  .au-card-titolo {{ font-size: 18px; font-weight: 600; letter-spacing: -.01em;
+      color: var(--textPrimary); line-height: 1.3; }}
+  .au-card-testo {{ font-size: 13.5px; line-height: 1.55;
+      color: var(--textSecondary); margin-top: 6px; }}
+  .au-centrata .au-card-testo {{ font-size: 12.5px; margin-top: 3px; }}
+  .st-key-cartelleBox {{ background: var(--insetBackground);
+      border: 1px solid var(--borderColor); border-radius: 10px;
+      padding: 12px 14px; gap: 6px !important; }}
+  .au-occhio {{ display: flex; align-items: center; gap: 10px;
+      font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--textTertiary); }}
+  .au-osserva {{ display: inline-flex; align-items: center; gap: 6px;
+      font: 400 11px var(--mono); letter-spacing: 0; text-transform: none;
+      color: var(--primaryText); }}
+  .au-osserva span {{ width: 6px; height: 6px; border-radius: 50%;
+      background: var(--primary); box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .18); }}
+  .st-key-rigaInput, .st-key-rigaOutput {{ flex-wrap: nowrap; gap: 10px !important; }}
+  .st-key-rigaInput > div:first-child, .st-key-rigaOutput > div:first-child {{
+      flex: 1 1 auto; min-width: 0; }}
+  .st-key-rigaInput [class*="st-key-"], .st-key-rigaOutput [class*="st-key-"] {{
+      flex: 0 0 auto; width: auto !important; }}
+  .au-percorso-grande {{ display: block; overflow: hidden; white-space: nowrap;
+      text-overflow: ellipsis; font: 400 13px var(--mono) !important;
+      color: var(--textPrimary) !important; background: none !important;
+      padding: 0 !important; }}
+  .st-key-rigaInput button, .st-key-rigaOutput button {{ height: 34px;
+      min-height: 34px; white-space: nowrap; }}
+  .st-key-rigaOutput button {{ height: 30px; min-height: 30px; }}
+  .au-freccia {{ display: flex; align-items: center; gap: 10px;
+      margin: 4px 0 2px; }}
+  .au-freccia span {{ width: 22px; height: 22px; flex: none; box-sizing: border-box;
+      border-radius: 50%; background: var(--surfaceHover);
+      border: 1px solid var(--borderStrong); display: inline-flex;
+      align-items: center; justify-content: center; color: var(--textSecondary); }}
+  .au-freccia em {{ font: normal 400 11px var(--mono); color: var(--textSecondary); }}
+  .au-freccia i {{ flex: 1; height: 1px; background: var(--borderColor); }}
+  .au-card-nota {{ font-size: 12px; color: var(--textSecondary); }}
+  .au-tre {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px; margin: 0 -24px; padding: 18px 24px 20px;
+      border-top: 1px solid var(--borderColor); }}
+  .au-tre .au-occhio {{ margin-bottom: 8px; }}
+  .au-tre p {{ margin: 0; font-size: 12.5px; line-height: 1.5;
+      color: var(--textCode); }}
+  .au-formati {{ display: flex; flex-wrap: wrap; gap: 6px; }}
+  .au-formati span {{ padding: 2px 8px; border-radius: 999px;
+      background: var(--surfaceHover); border: 1px solid var(--borderStrong);
+      font: 400 11px var(--mono); color: var(--grayText); }}
+  .st-key-tarDaFare {{ padding: 14px; border-radius: 10px; gap: 10px !important;
+      background: rgb(var(--primaryRgb) / .06);
+      border: 1px solid rgb(var(--primaryRgb) / .35); }}
+  .au-tar-testa {{ display: flex; align-items: center; gap: 10px; }}
+  .au-tar-testa code, .au-passo-testa code {{ width: 24px; height: 24px; flex: none;
+      box-sizing: border-box; border-radius: 50%; border: 1.5px solid var(--idleEdge);
+      display: inline-flex; align-items: center; justify-content: center;
+      font: 400 12px var(--mono) !important; color: var(--textCode) !important;
+      background: none !important; padding: 0 !important; }}
+  .au-tar-testa b {{ font-size: 13.5px; font-weight: 600; }}
+  .au-tar-testa small, .au-passo-testa small {{ margin-left: auto;
+      font: 400 11px var(--mono); color: var(--grayText); padding: 2px 8px;
+      border-radius: 999px; background: var(--surfaceHover);
+      border: 1px solid var(--borderStrong); white-space: nowrap; }}
+  .au-tar-testo {{ margin: 0; font-size: 12.5px; line-height: 1.5;
+      color: var(--textSecondary); }}
+  .st-key-calibraMac button {{ height: 38px; font-weight: 600; white-space: nowrap; }}
+  .st-key-tarFatta {{ padding: 12px 14px; border-radius: 10px; flex-wrap: nowrap;
+      background: var(--insetBackground); border: 1px solid var(--borderColor); }}
+  .au-tar-fatta {{ display: flex; align-items: center; gap: 12px; }}
+  .au-tar-fatta > span:last-child {{ display: flex; flex-direction: column; gap: 3px; }}
+  .au-tar-fatta b {{ font-size: 13.5px; font-weight: 600; }}
+  .au-tar-fatta code {{ font: 400 11px var(--mono) !important;
+      color: var(--greenText) !important; background: none !important; padding: 0 !important; }}
+  .au-spunta {{ width: 24px; height: 24px; flex: none; box-sizing: border-box;
+      border-radius: 50%; background: var(--greenBg); border: 1.5px solid var(--green);
+      color: var(--greenText); display: inline-flex; align-items: center;
+      justify-content: center; }}
+  .au-mac-righe > div {{ padding: 10px 0; }}
+  .au-mac-righe > div:first-child {{ border-bottom: 1px solid var(--borderColor); }}
+  .au-mac-righe > div:last-child {{ padding-bottom: 0; }}
+  .au-mac-riga {{ display: flex; align-items: center; gap: 10px; }}
+  .au-mac-riga b {{ font-size: 13.5px; font-weight: 500; }}
+  .au-mac-riga code {{ margin-left: auto; font: 400 12px var(--mono) !important;
+      color: var(--textCode) !important; background: none !important; padding: 0 !important; }}
+  .au-mac-righe p {{ margin: 3px 0 0; font-size: 12px; line-height: 1.45;
+      color: var(--textSecondary); }}
+  .au-chip-ok {{ margin-left: auto; display: inline-flex; align-items: center;
+      gap: 6px; font: 400 11px var(--mono); color: var(--greenText);
+      padding: 2px 8px; border-radius: 999px; background: var(--greenBg);
+      border: 1px solid rgb(var(--greenRgb) / .3); white-space: nowrap; }}
+  .au-chip-ok span {{ width: 5px; height: 5px; border-radius: 50%; background: var(--green); }}
+  .au-passi-titolo {{ margin: 28px 0 10px; }}
+  .au-passi {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px; }}
+  .au-passo {{ padding: 16px; border-radius: 10px; background: var(--insetBackground);
+      border: 1px solid var(--borderColor); }}
+  .au-passo-zero {{ border-style: dashed; border-color: var(--borderStrong); }}
+  .au-passo-qui {{ border-color: rgb(var(--primaryRgb) / .55);
+      background: rgb(var(--primaryRgb) / .06); }}
+  .au-passo-qui small {{ background: none; border: 0; padding: 0;
+      color: var(--primaryText); }}
+  .au-passo-zero small {{ background: none; border: 0; padding: 0;
+      font-family: var(--font); color: var(--textSecondary); }}
+  .au-passo-fatto small {{ background: none; border: 0; padding: 0;
+      font-family: var(--font); color: var(--greenText); }}
+  .au-passo-testa {{ display: flex; align-items: center; gap: 8px; }}
+  .au-passo-testa code {{ width: auto; height: auto; border: 0; font-size: 11px !important;
+      color: var(--textSecondary) !important; }}
+  .au-passo-testa b {{ font-size: 14px; font-weight: 600; }}
+  .au-passo p {{ margin: 8px 0 0; font-size: 12.5px; line-height: 1.5;
+      color: var(--textSecondary); }}
+  .au-passo-fatto .au-spunta {{ width: 16px; height: 16px; }}
+
+  [data-testid="stLayoutWrapper"]:has(> .st-key-cartelleCard) {{
+      flex: 1 1 auto !important; min-width: 0; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-questoMac) {{
+      flex: 0 0 340px !important; width: 340px !important; }}
+  .st-key-cartelleCard, .st-key-questoMac {{ height: 100%; box-sizing: border-box; }}
+  .st-key-cartelleBox {{ padding: 12px 14px !important; }}
+  .au-titolo-pagina {{ margin-top: 12px; }}
+  .au-tre p, .au-tar-testo, .au-mac-righe p, .au-passo p, .au-card-testo {{
+      margin-bottom: 0 !important; }}
+  [data-testid="stMarkdownContainer"] .au-tre p {{ font-size: 12.5px; }}
+  [data-testid="stMarkdownContainer"] p.au-tar-testo {{ font-size: 12.5px; }}
+  [data-testid="stMarkdownContainer"] .au-mac-righe p {{ font-size: 12px; }}
+  [data-testid="stMarkdownContainer"] .au-passo p {{ font-size: 12.5px; }}
+  .st-key-tarDaFare {{ padding: 14px !important; }}
+  .st-key-questoMac {{ padding: 20px !important; }}
+  .st-key-cartelleCard {{ padding: 24px 24px 0 !important; }}
+
+  /* ===================================================================
+     Redesign 1.6 — Sorgenti con i file, e la barra d'azione in fondo.
+     =================================================================== */
+  .st-key-testaSorgenti {{ flex-wrap: nowrap; gap: 10px !important;
+      margin-top: 12px; }}
+  .st-key-testaSorgenti > div:first-child {{ flex: 1 1 auto; min-width: 0; }}
+  .st-key-testaSorgenti [class*="st-key-"] {{ flex: 0 0 auto; width: auto !important; }}
+  .st-key-testaSorgenti .au-titolo-pagina {{ margin-top: 0; }}
+  .st-key-testaSorgenti button {{ height: 34px; min-height: 34px;
+      white-space: nowrap; }}
+  .au-cartella-riga {{ display: flex; align-items: center; gap: 10px;
+      margin-top: 4px; font-size: 13px; color: var(--textSecondary); }}
+  .au-cartella-riga code {{ font: 400 12px var(--mono) !important;
+      color: var(--textCode) !important; background: none !important;
+      padding: 0 !important; }}
+  .au-fascia-sorgenti {{ display: flex; align-items: center; gap: 10px;
+      padding: 0 16px; height: 46px; border-radius: 10px;
+      background: var(--surface); border: 1px solid var(--borderColor);
+      font-size: 13px; }}
+  .au-fascia-sorgenti b {{ font-size: 15px; font-weight: 600; }}
+  .au-fascia-sorgenti > i {{ width: 1px; height: 18px; background: var(--borderStrong); }}
+  .au-fascia-analisi {{ margin-left: auto; display: inline-flex;
+      align-items: center; gap: 10px; font: 400 12px var(--mono);
+      color: var(--primaryText); white-space: nowrap; }}
+  .au-fascia-analisi .au-barra {{ width: 120px; height: 3px; border-radius: 2px;
+      background: rgb(var(--primaryRgb) / .2); overflow: hidden; display: block; }}
+  .au-fascia-analisi .au-barra span {{ display: block; height: 100%;
+      background: var(--primary); }}
+  .au-tag.au-punto::before {{ content: ""; display: inline-block; width: 5px;
+      height: 5px; border-radius: 50%; background: currentColor;
+      margin-right: 6px; vertical-align: middle; }}
+  .au-nota-pagina {{ font-size: 13px; color: var(--textSecondary); }}
+  .st-key-barraSorgenti {{ position: fixed; bottom: 0; left: 360px; right: 0;
+      width: auto !important; z-index: 100; flex-wrap: nowrap;
+      gap: 12px !important; padding: 16px 40px;
+      background: rgb(var(--bgRgb) / .96); backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 1px solid var(--borderColor); }}
+  .st-key-barraSorgenti > div:first-child {{ flex: 1 1 auto; min-width: 0; }}
+  .st-key-barraSorgenti [class*="st-key-vai"] {{ flex: 0 0 auto; width: auto !important; }}
+  .st-key-barraSorgenti button {{ height: 40px; min-height: 40px; padding: 0 18px;
+      white-space: nowrap; }}
+  .st-key-barraSorgenti button p {{ font-size: 14px; font-weight: 600; }}
+  .au-barra-testo {{ font-size: 13.5px; color: var(--textCode); }}
+  .block-container:has(.st-key-barraSorgenti) {{ padding-bottom: 7rem !important; }}
+
+  .au-analisi-corso {{ display: flex; align-items: center; gap: 8px;
+      font: 400 12px var(--mono); color: var(--primaryText); }}
+  .au-analisi-corso span {{ width: 7px; height: 7px; border-radius: 50%;
+      background: var(--primary); box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .2); }}
+  .au-analisi-barra {{ margin-top: 8px; height: 3px; border-radius: 2px;
+      background: rgb(var(--primaryRgb) / .15); overflow: hidden; }}
+  .au-analisi-barra span {{ display: block; width: 35%; height: 100%;
+      background: var(--primary); animation: au-scorre 1.6s ease-in-out infinite; }}
+  @keyframes au-scorre {{ 0% {{ transform: translateX(-100%); }}
+      100% {{ transform: translateX(300%); }} }}
+  .au-analisi-coda {{ display: flex; align-items: center; gap: 8px;
+      font: 400 12px var(--mono); color: var(--textSecondary); }}
+  .au-analisi-coda span {{ width: 6px; height: 6px; border-radius: 50%;
+      background: var(--dot); }}
+  .au-chip-righe {{ display: flex; gap: 6px; margin-top: 6px; }}
+  .au-tag.au-ok {{ color: var(--greenText); background: var(--greenBg);
+      border: 1px solid rgb(var(--greenRgb) / .3); }}
+  /* Niente piu' riga "sollevata" durante l'analisi: il ciano basta. */
+  [class*="st-key-riga"]:has(.au-s-corso) {{ transform: none !important;
+      margin: 0 !important; box-shadow: none !important;
+      background: var(--surface) !important; }}
+  [class*="st-key-riga"]:has(.au-analisi-coda) {{ opacity: .7;
+      border-left-color: var(--idleEdge) !important; }}
+  .au-cartella-riga {{ white-space: nowrap; min-width: 0; }}
+  .au-cartella-riga code {{ overflow: hidden; text-overflow: ellipsis;
+      min-width: 0; max-width: 520px; }}
+  .au-cartella-riga .au-osserva {{ flex: none; }}
 
 </style>
 """
@@ -2787,66 +3250,123 @@ def entry_for(path: str) -> dict | None:
 #  Intestazione, schede, impostazioni
 # ===========================================================================
 
-def _pallini_schede() -> None:
-    """Quante cose stanno aspettando, per scheda: un pallino come su iOS.
+def _stato_fasi() -> dict:
+    """Cosa dice ogni passo della barra, e cosa e' bloccato, adesso.
 
-    Il numero arriva dal CSS e non dal testo del pulsante: le schede sono
-    un `segmented_control` di Streamlit, e cambiarne le etichette
-    cambierebbe anche i valori con cui la selezione si confronta.
+    Una funzione sola per testata e barre: i numeri devono essere gli stessi
+    ovunque compaiano.
     """
-    coda_analisi = analizzatore()
-    quante = {
-        "Sorgenti": len(coda_analisi.in_coda) + (1 if coda_analisi.in_corso
-                                                 else 0),
-    }
+    files = load_library()
+    n = len(files)
+    coda = analizzatore()
+    attesa = len(coda.in_coda) + (1 if coda.in_corso else 0)
+    fatti = max(0, n - attesa)
+    stato: dict = {"vuota": n == 0, "badge": {}, "linea": {}}
+    if n == 0:
+        stato["Sorgenti"] = t("fasi.sorg_vuota")
+    elif attesa:
+        stato["Sorgenti"] = t("fasi.sorg_analisi", fatti=fatti, n=n)
+        stato["linea"]["Sorgenti"] = fatti / n
+        stato["badge"]["Sorgenti"] = attesa
+    else:
+        stato["Sorgenti"] = tn("fasi.sorg_pronte", n)
+        stato["fatta"] = True
+    if n == 0:
+        stato["Confronto"] = stato["Lavorazione"] = t("fasi.bloccata")
+    else:
+        stato["Confronto"] = t("fasi.conf_libero")
+        stato["Lavorazione"] = t("fasi.lav_libero")
+    stato["voce"] = t("fasi.stato_libero")
+    stato["attivo"] = False
+    conf = confronto.stato()
+    if conf and conf.get("state") == confronto.IN_CORSO:
+        totale = max(int(conf.get("total") or 0), 1)
+        pct = int(100 * min((int(conf.get("done") or 0)
+                             + float(conf.get("fraction") or 0)) / totale, 1))
+        stato["Confronto"] = t("fasi.conf_corso", pct=pct)
+        stato["linea"]["Confronto"] = pct / 100
+        stato["voce"] = t("fasi.stato_confronto", pct=pct)
+        stato["attivo"] = True
     catena = monitor.catena()
-    if catena:
-        # Il file in corso piu' quelli che aspettano il loro turno.
-        resta = int(catena.get("totale") or 0) - int(catena.get("numero") or 0)
-        quante["Lavorazione"] = max(0, resta) + 1
+    vivo = next((l for l in monitor.lavori() if l.vivo), None)
+    if catena or vivo:
+        numero = int((catena or {}).get("numero") or 1)
+        totale = int((catena or {}).get("totale") or 1)
+        pct = (int(100 * vivo.fatti / vivo.totale)
+               if vivo and vivo.totale else 0)
+        stato["Lavorazione"] = t("fasi.lav_corso", numero=numero,
+                                 totale=totale, pct=pct)
+        stato["linea"]["Lavorazione"] = pct / 100
+        stato["badge"]["Lavorazione"] = max(0, totale - numero) + 1
+        stato["voce"] = t("fasi.stato_lavoro", numero=numero, totale=totale)
+        stato["attivo"] = True
+    elif monitor.pausa() is not None:
+        stato["Lavorazione"] = t("fasi.lav_pausa")
+        stato["voce"] = t("fasi.lav_pausa")
+        stato["attivo"] = True
+    if taratura.in_corso():
+        stato["voce"] = t("fasi.stato_taratura")
+        stato["attivo"] = True
+    return stato
 
-    regole = []
-    for scheda, n in quante.items():
-        if not n:
-            continue
-        indice = SEZIONI.index(scheda) + 1
-        regole.append(
-            f'.st-key-fasi [role="radio"]:nth-of-type({indice})::after '
-            f'{{ content: "{n if n < 100 else "99+"}"; }}')
-    if regole:
-        st.markdown("<style>" + "".join(regole) + "</style>",
-                    unsafe_allow_html=True)
+
+def _vai(sezione: str) -> None:
+    st.session_state["sezione"] = sezione
 
 
 def header() -> str:
-    # Niente nome ne' logo sopra le schede (deciso con l'utente): il nome e'
-    # gia' nel titolo della finestra o della scheda del browser, e il logo
-    # era quello vecchio. Versione e sottotitolo stanno in fondo alla sidebar.
-    with st.container(key="fasi"):
-        # La scheda attiva vive anche nell'URL (?scheda=lavorazione): al
-        # refresh la sessione muore ma l'indirizzo resta, e la pagina si
-        # riapre dov'era — prima si tornava sempre in Sorgenti (detto
-        # dall'utente). L'ancora #hash non funzionerebbe: il server non la
-        # riceve mai; il query param sì.
-        dal_url = str(st.query_params.get("scheda") or "").capitalize()
-        predefinita = dal_url if dal_url in SEZIONI else SEZIONI[0]
-        # `format_func`: i valori restano gli identificativi italiani (URL,
-        # CSS, confronti nel codice), cambia solo la scritta.
-        scelta = st.segmented_control(
-            "Fasi", SEZIONI, key="sezione", default=predefinita,
-            format_func=lambda s: t(f"tab.{s}"),
-            label_visibility="collapsed")
-        _pallini_schede()
-    # Le tendine di Streamlit sono combobox: scrivendoci si filtrano le
-    # voci, e con tre opzioni il filtro produce solo "No results" e
-    # perplessita' (visto dall'utente). Non esiste un interruttore nativo:
-    # si disarmano i tasti-carattere sugli input delle tendine, lasciando
-    # vive frecce, Invio ed Esc. L'iframe e' SEMPRE presente e in posizione
-    # stabile: e' la regola anti-adozione imparata col Confronto.
-    # (Il "consigliato dentro l'elenco aperto" e' stato tolto DI PROPOSITO:
-    # ogni via provata — riscrivere i nodi, marcare le opzioni da un
-    # osservatore — o sfarfallava o si avvitava in un loop di mutazioni che
-    # strangolava la pagina. Il consiglio vive nella chip accanto, punto.)
+    """La barra dei passi: Sorgenti, Confronto, Lavorazione.
+
+    Si legge come una sequenza (il lavoro ha un ordine) e si usa come delle
+    schede (l'ordine non e' obbligato). Ogni passo dice in una riga a che
+    punto e'; Confronto e Lavorazione restano chiusi finche' non c'e' niente
+    da elaborare (deciso dall'utente). I tre pulsanti sono `st.button`
+    perche' le schede di Streamlit non sanno spegnerne una sola: numero,
+    lucchetto, sottotitolo e pallino arrivano dal CSS di ogni giro.
+    """
+    stato = _stato_fasi()
+    # La scheda attiva vive anche nell'URL (?scheda=lavorazione): al refresh
+    # la sessione muore ma l'indirizzo resta, e la pagina si riapre dov'era.
+    dal_url = str(st.query_params.get("scheda") or "").capitalize()
+    attiva = (st.session_state.get("sezione")
+              or (dal_url if dal_url in SEZIONI else SEZIONI[0]))
+    if stato["vuota"] and attiva != SEZIONI[0]:
+        attiva = SEZIONI[0]
+    regole = []
+    with st.container(key="fasi", horizontal=True, vertical_alignment="center"):
+        with st.container(key="passi", horizontal=True, gap=None):
+            for i, sezione in enumerate(SEZIONI, start=1):
+                chiusa = stato["vuota"] and i > 1
+                classe = f".st-key-passo{i} button"
+                st.button(t(f"tab.{sezione}"), key=f"passo{i}",
+                          on_click=_vai, args=(sezione,), disabled=chiusa,
+                          type="primary" if sezione == attiva else "secondary")
+                regole.append(f'{classe} p::after {{ content: "{stato[sezione]}"; }}')
+                if chiusa:
+                    regole.append(f'{classe}::before {{ content: ""; }}')
+                elif i == 1 and stato.get("fatta") and sezione != attiva:
+                    regole.append(f'{classe}::before {{ content: "✓"; '
+                                  'color: var(--greenText); '
+                                  'border-color: var(--green); }')
+                else:
+                    regole.append(f'{classe}::before {{ content: "{i}"; }}')
+                if (n := stato["badge"].get(sezione)):
+                    regole.append(f'{classe}::after {{ content: "{n if n < 100 else "99+"}"; '
+                                  'display: inline-flex; }')
+                if (q := stato["linea"].get(sezione)) is not None:
+                    # La barretta sotto il sottotitolo: piena fin dove si e'
+                    # arrivati, su un binario velato dello stesso colore.
+                    regole.append(
+                        f'{classe} {{ background-image: linear-gradient(var(--primary), '
+                        'var(--primary)), linear-gradient(rgb(var(--primaryRgb) / .2), '
+                        'rgb(var(--primaryRgb) / .2)) !important; background-size: '
+                        f'calc((100% - 91px) * {q:.3f}) 2px, calc(100% - 91px) 2px '
+                        '!important; background-position: 51px calc(100% - 6px) '
+                        '!important; }')
+        st.markdown(f"<div class='au-fasi-stato{' au-vivo' if stato['attivo'] else ''}'>"
+                    f"<span></span>{esc(stato['voce'])}</div>",
+                    unsafe_allow_html=True)
+    st.markdown("<style>" + "".join(regole) + "</style>", unsafe_allow_html=True)
     st.iframe(
         "<script>const D=window.parent.document;"
         "if(!D.__auTendineMute){D.__auTendineMute=true;"
@@ -2868,7 +3388,6 @@ def header() -> str:
         "if(inp)inp.click();"
         "},true);"
         "}</script>", height=1)
-    attiva = scelta or st.session_state.get("sezione") or SEZIONI[0]
     if st.query_params.get("scheda") != attiva.lower():
         st.query_params["scheda"] = attiva.lower()
     return attiva
@@ -2948,6 +3467,8 @@ _IMPOSTAZIONI_DEFAULT = {
     # Un controllo al giorno su GitHub, spegnibile: e' l'unica connessione
     # che AnimeUp fa da solo dopo il primo avvio.
     "aggiornamenti": True,
+    # Sistema, Scuro o Chiaro (vedi `animeup.tema`).
+    "tema": "system",
 }
 
 
@@ -3021,6 +3542,8 @@ def _impostazioni_pulite(dati: object) -> dict:
         puliti["preset"] = dati["preset"]
     if dati.get("lingua") in i18n.LINGUE:
         puliti["lingua"] = dati["lingua"]
+    if dati.get("tema") in tema.SCELTE:
+        puliti["tema"] = dati["tema"]
     for chiave, minimo, massimo in (("crf", 14, 24),
                                     ("disco", MINIMO_SPAZIO_GB, _tetto_spazio()[0]),
                                     ("pausa", 0, 30)):
@@ -3629,36 +4152,26 @@ def _note_cartelle_assenti() -> list[str]:
     return note
 
 
-def _riga_cartella(quale: str, congelata: bool) -> None:
-    """Una delle due cartelle: dove sta, e come cambiarla.
-
-    Stesso disegno della riga Taratura: etichetta e link sulla stessa riga,
-    il percorso sotto.
-    """
+def _riga_cartella(quale: str, congelata: bool, dove=st) -> None:
+    """Una delle due cartelle: etichetta col «?» sopra, percorso e Cambia…
+    sotto. Due righe e non una: in italiano etichetta e pulsante insieme non
+    ci stanno nella larghezza della sidebar."""
     _, variabile, testo = _CARTELLE[quale]
-    with st.sidebar.container(key=f"cCartellaRiga_{quale}"):
+    with dove.container(key=f"cCartellaRiga_{quale}"):
         st.markdown(
-            "<div class='au-tar-riga' style='padding-right: 58px'>"
-            f"<span>{t(testo)}{_icona_perche(t(testo + '_aiuto'))}</span>"
-            "</div>", unsafe_allow_html=True)
-        st.button(t("sb.cartella_cambia"), key=f"apriCartella_{quale}",
-                  disabled=congelata, on_click=_scegli_cartella, args=(quale,))
-    st.sidebar.markdown(
-        f"<div class='au-meta au-cartella'>{esc(_breve(_cartella_attuale(quale)))}</div>",
-        unsafe_allow_html=True)
-    if (assente := os.environ.get(variabile)):
-        nota = t("sb.cartella_assente", scelta=_breve(assente),
-                 attuale=_breve(_cartella_attuale(quale)))
-        st.sidebar.markdown(f"<div class='au-nota-viva au-nota-avviso'>{esc(nota)}</div>",
-                            unsafe_allow_html=True)
-
-
-def _righe_cartelle(congelata: bool) -> None:
-    _riga_cartella("input", congelata)
-    _riga_cartella("output", congelata)
-    nuova = st.session_state.get("cartella_cambiata")
-    if nuova:
-        st.sidebar.caption(t("sb.cartella_riavvia", cartella=_breve(nuova)))
+            f"<div class='au-pref-eti'>{t(testo)}{_icona_perche(t(testo + '_aiuto'))}</div>",
+            unsafe_allow_html=True)
+        with st.container(horizontal=True, vertical_alignment="center",
+                          key=f"cCartellaPerc_{quale}"):
+            st.markdown(f"<code class='au-percorso'>{esc(_breve(_cartella_attuale(quale)))}</code>",
+                        unsafe_allow_html=True)
+            st.button(t("sb.cartella_cambia"), key=f"apriCartella_{quale}",
+                      disabled=congelata, on_click=_scegli_cartella, args=(quale,))
+        if (assente := os.environ.get(variabile)):
+            nota = t("sb.cartella_assente", scelta=_breve(assente),
+                     attuale=_breve(_cartella_attuale(quale)))
+            st.markdown(f"<div class='au-sb-ridotto'>{esc(nota)}</div>",
+                        unsafe_allow_html=True)
 
 
 def _nomi_impostazioni(chiavi: list[str]) -> list[str]:
@@ -3674,16 +4187,76 @@ def _nomi_impostazioni(chiavi: list[str]) -> list[str]:
     return [nomi.get(c, c) for c in chiavi]
 
 
+def _motivo_blocco() -> str | None:
+    """Perche' la sidebar e' bloccata adesso, o None.
+
+    Una lavorazione, un confronto o una taratura in corso: in tutti e tre i
+    casi cambiare un valore non avrebbe effetto su cio' che gira (porta i
+    parametri con cui e' partito) e confonderebbe la pagina.
+    """
+    if (monitor.catena() is not None or monitor.pausa() is not None
+            or any(l.vivo for l in monitor.lavori())):
+        return "lavoro"
+    if confronto.in_corso():
+        return "confronto"
+    if taratura.in_corso():
+        return "taratura"
+    return None
+
+
+# Le impostazioni dentro «Avanzate», col valore di fabbrica scritto come lo
+# legge l'utente: e' la riga «cambiata · di fabbrica …» sotto il controllo.
+_AVANZATE = ("dedup", "denoise", "forza", "approfondita", "disco", "pausa")
+
+
+def _testo_fabbrica(chiave: str, valore) -> str:
+    if isinstance(valore, bool):
+        return t("sb.abilitato" if valore else "sb.disabilitato")
+    if chiave == "disco":
+        return f"{valore} GB"
+    if chiave == "pausa":
+        return t("sb.pausa_nessuna") if valore == 0 else f"{valore} min"
+    return str(valore)
+
+
+def _cambiata(dove, chiave: str, fabbrica: dict) -> None:
+    """La riga «cambiata · di fabbrica …» sotto un controllo avanzato."""
+    if st.session_state.get(f"w_{chiave}") != fabbrica[chiave]:
+        dove.markdown(
+            "<div class='au-cambiata'><span></span>"
+            f"{t('sb.cambiato', valore=esc(_testo_fabbrica(chiave, fabbrica[chiave])))}"
+            "</div>", unsafe_allow_html=True)
+
+
+def _ripristina_avanzate(fabbrica: dict) -> None:
+    for chiave in _AVANZATE:
+        st.session_state[f"w_{chiave}"] = fabbrica[chiave]
+
+
+def _chiedi_uscita() -> None:
+    """Il «Esci da AnimeUp» della sidebar, nell'app: lo fa l'app.
+
+    Come ⌘Q: se c'e' qualcosa in corso l'app chiede conferma con la sua
+    finestra, poi ferma e chiude. Qui si lascia solo la richiesta.
+    """
+    stato = os.environ.get("ANIMEUP_STATO")
+    if stato:
+        try:
+            (Path(stato) / "quit-request").write_text(str(time.time()))
+        except OSError:
+            pass
+
+
 def sidebar() -> dict:
-    # Con una catena in corso le impostazioni si CONGELANO: cambiarle non
+    # Con qualcosa in corso le impostazioni si CONGELANO: cambiarle non
     # avrebbe alcun effetto reale (la catena porta i parametri scritti nel
     # suo comando, e Avvia/Riprendi sono spenti), ma rigiudicava le righe
     # coi valori nuovi — l'episodio "fatto" smetteva di esserlo solo perché
     # il CRF a schermo era cambiato: "un effetto ottico orrendo" (detto
-    # dall'utente, e aveva ragione).
-    congelata = (monitor.catena() is not None
-                 or monitor.pausa() is not None
-                 or any(l.vivo for l in monitor.lavori()))
+    # dall'utente, e aveva ragione). Dal redesign si blocca TUTTO, lingua,
+    # tema e cartelle compresi (deciso dall'utente): resta vivo solo Esci.
+    motivo = _motivo_blocco()
+    congelata = motivo is not None
     # La sidebar dichiara con che stato si è disegnata: vive FUORI dal
     # fragment che si auto-aggiorna, quindi da sola non si accorgerebbe mai
     # di una catena nata o morta nel frattempo — dopo un Riprendi restava
@@ -3694,115 +4267,47 @@ def sidebar() -> dict:
     salvate = _impostazioni_carica()
     for chiave, valore in salvate.items():
         st.session_state.setdefault(f"w_{chiave}", valore)
-    # Gerarchia a tre livelli, decisa con l'utente dopo che "Impostazioni
-    # globali / Opzioni avanzate" faceva sembrare congelate solo le prime
-    # (e le avanzate globali non meno delle altre): un titolo-madre
-    # "Impostazioni" con la nota di stato sotto — così copre TUTTO — e due
-    # sezioni sorelle, "Di base" e "Avanzate".
+    fabbrica = _predefiniti()
+    app = os.environ.get("ANIMEUP_APP") == "1"
+    regole: list[str] = []
+
     nuova = aggiornamenti.disponibile(attivo=salvate.get("aggiornamenti", True))
     if nuova:
-        app = os.environ.get("ANIMEUP_APP") == "1"
         # Nell'app l'aggiornamento lo fa l'app stessa (scarica, verifica il
         # checksum, si sostituisce): qui si chiede soltanto. Nella cartella
         # portatile resta il link alla release, da scaricare a mano.
-        link = (f"<a href='{esc(nuova['url'])}' target='_blank'>"
-                f"{t('sb.aggiornamento_note' if app else 'sb.aggiornamento_link')}</a>")
-        st.sidebar.markdown(
-            "<div class='au-nota-viva au-nota-avviso'>"
-            f"{t('sb.aggiornamento', versione=esc(nuova['versione']))} {link}</div>",
-            unsafe_allow_html=True)
-        if app:
-            if st.sidebar.button(t("sb.aggiornamento_installa"), key="installaAgg",
-                                 type="primary", use_container_width=True,
-                                 icon=":material/system_update_alt:"):
-                _chiedi_aggiornamento()
-            if st.session_state.get("aggiornamento_chiesto"):
-                st.sidebar.caption(t("sb.aggiornamento_chiesto"))
-    st.sidebar.markdown(f"<div class='au-sb-titolo'>{t('sb.titolo')}</div>",
-                        unsafe_allow_html=True)
+        with st.sidebar.container(key="cAggiorna"):
+            link = (f"<a href='{esc(nuova['url'])}' target='_blank'>"
+                    f"{t('sb.aggiornamento_note' if app else 'sb.aggiornamento_link')}</a>")
+            st.markdown(
+                "<div class='au-agg-testa'>"
+                f"<b>{t('sb.aggiornamento', versione=esc(nuova['versione']))}</b>"
+                f"{link}</div>", unsafe_allow_html=True)
+            if app:
+                if st.button(t("sb.aggiornamento_installa"), key="installaAgg",
+                             type="primary", disabled=congelata):
+                    _chiedi_aggiornamento()
+                st.caption(t("sb.aggiornamento_chiesto"))
+
+    # --- Impostazioni globali -------------------------------------------
+    blocco = ""
+    if congelata:
+        blocco = (f"<span class='au-lock-chip'>{_ICONA_LUCCHETTO}"
+                  f"{t('sb.lock_' + motivo)}</span>")
+    st.sidebar.markdown(
+        f"<div class='au-sb-titolo'><span>{t('sb.titolo')}</span>{blocco}</div>"
+        f"<div class='au-sb-nota'>{t('sb.valgono')}</div>",
+        unsafe_allow_html=True)
     # Il posto dell'avviso «file sospeso» sta QUI, in alto, anche se il suo
-    # contenuto si sa solo in fondo (serve il confronto con i widget). Prima
-    # veniva scritto dove veniva calcolato — in coda, dopo dodici elementi —
-    # e bastava aprire «Impostazioni avanzate» o avere una finestra bassa
-    # perche' scivolasse fuori dall'area visibile: un avviso che si vede
-    # solo se scorri e' un avviso che meta' delle volte non esiste
-    # (segnalato dall'utente il 12/08, misurato: 1.057 px di contenuto in
-    # 582 px di sidebar).
+    # contenuto si sa solo in fondo (serve il confronto con i widget): un
+    # avviso che si vede solo se scorri e' un avviso che meta' delle volte
+    # non esiste (segnalato dall'utente il 12/08).
     posto_sospeso = st.sidebar.empty()
     if congelata:
-        # `au-nota-viva`: è l'unico testo che SPIEGA il congelamento, e il
-        # dimmer qui sotto lo risparmia — spegnere anche la spiegazione
-        # lascerebbe solo il mistero.
-        st.sidebar.markdown("<div class='au-nota-viva au-nota-congelo'>"
-                            f"{t('sb.congelata')}</div>",
+        nota = {"lavoro": "sb.congelata", "confronto": "sb.congelata_confronto",
+                "taratura": "sb.congelata_taratura"}[motivo]
+        st.sidebar.markdown(f"<div class='au-lock-nota'>{t(nota)}</div>",
                             unsafe_allow_html=True)
-        # Congelata DAVVERO anche all'occhio: `disabled=` spegne i widget ma
-        # le toggle restavano col loro ciano e i tooltip vivi — "tutto
-        # dovrebbe essere in scala di grigi" (detto dall'utente). Il blocco
-        # di stile esiste solo in questo stato, quindi non serve marcare
-        # niente: sparisce da solo quando la sidebar si sblocca. Il filtro
-        # grigio vince anche sui colori forzati con !important.
-        st.sidebar.markdown(
-            "<style>"
-            "[data-testid='stSidebar'] [data-testid='stSlider'],"
-            "[data-testid='stSidebar'] [data-testid='stCheckbox'] {"
-            "  filter: saturate(0); opacity: .45; pointer-events: none; }"
-            "[data-testid='stSidebar'] [data-testid='stSlider'] "
-            "[data-testid='stTooltipIcon'],"
-            "[data-testid='stSidebar'] [data-testid='stCheckbox'] "
-            "[data-testid='stTooltipIcon'] { display: none; }"
-            # I suggerimenti ora sono NOSTRI e vivono fuori dai contenitori
-            # dei widget: cadevano fuori da entrambe le regole qui sopra e
-            # restavano vivi e a colori mentre tutto il resto era spento,
-            # col fumetto che si apriva sbiadito al 45% (audit del
-            # 2026-08-10). Si spengono con le loro etichette.
-            "[data-testid='stSidebar'] .au-sb-eti,"
-            "[data-testid='stSidebar'] .au-sb-aiuto {"
-            "  opacity: .45; }"
-            # TUTTI i suggerimenti della sidebar, non due classi scelte a
-            # mano: quello della riga Taratura non stava in nessuna delle due
-            # e restava vivo e a colori. E `pointer-events` ferma il mouse ma
-            # NON il fuoco da tastiera: con Tab il fumetto si apriva lo
-            # stesso, sbiadito al 45%. Si spegne il fumetto, non solo il
-            # puntatore. (Niente `filter` sul contenitore: creerebbe un
-            # blocco di contenimento e romperebbe l'ancoraggio del fumetto,
-            # che finiva tagliato dal bordo alto — audit del 2026-08-10.)
-            "[data-testid='stSidebar'] .au-info,"
-            "[data-testid='stSidebar'] .au-perche {"
-            "  pointer-events: none; }"
-            "[data-testid='stSidebar'] .au-info .au-bolla,"
-            "[data-testid='stSidebar'] .au-perche .au-bolla {"
-            "  display: none !important; }"
-            # Anche titoli, sottotitoli ed etichette di sezione: spenti.
-            # Restano vivi solo la nota che spiega il congelamento e la
-            # fascia Chiudi (che congelata non è mai).
-            "[data-testid='stSidebar'] :is([data-testid='stMarkdownContainer'],"
-            "[data-testid='stCaptionContainer'])"
-            ":not(:has(.au-nota-viva)):not(.st-key-spegnimento *) {"
-            "  opacity: .45; }"
-            "</style>", unsafe_allow_html=True)
-    else:
-        st.sidebar.caption(t("sb.valgono"))
-    st.sidebar.markdown(f"<div class='au-sb-sezione'>{t('sb.di_base')}</div>",
-                        unsafe_allow_html=True)
-    regole: list[str] = []
-
-    # La lingua in testa alle impostazioni di base (scelto dall'utente), con
-    # l'etichetta nelle due lingue: chi si ritrova l'interfaccia in una
-    # lingua che non legge deve poterla trovare lo stesso. Non si congela:
-    # non tocca nessuna lavorazione.
-    # Sotto un gruppo suo, come «Uscita»: attaccata al titolo della sezione
-    # stava troppo stretta (detto dall'utente), e il gruppo da' lo stesso
-    # respiro degli altri controlli.
-    st.sidebar.markdown(
-        f"<div class='au-eyebrow au-sgruppo'>{t('sb.interfaccia')}</div>",
-        unsafe_allow_html=True)
-    _etichetta_sb("Language · Lingua", t("sb.lingua_aiuto"),
-                  predefinito=i18n.LINGUE[i18n.PREDEFINITA])
-    with st.sidebar.container(key="cLingua"):
-        lingua = st.selectbox(
-            "Language · Lingua", list(i18n.LINGUE), key="w_lingua",
-            format_func=i18n.LINGUE.get, label_visibility="collapsed")
 
     st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.uscita')}</div>",
                         unsafe_allow_html=True)
@@ -3815,17 +4320,15 @@ def sidebar() -> dict:
             "Altezza finale", options=[720, 1080, 1440, 2160],
             key="w_altezza", disabled=congelata,
             label_visibility="collapsed")
-
     _etichetta_sb(
-        "CRF (x265)", t("sb.crf_aiuto"),
-        str(st.session_state.get("w_crf", 18)), predefinito="18")
+        t("sb.crf"),
+        t("sb.crf_aiuto"), str(st.session_state.get("w_crf", 18)), predefinito="18")
     with st.sidebar.container(key="cCrf"):
         crf = st.slider(
             "CRF (x265)", 14, 24, key="w_crf", disabled=congelata,
             label_visibility="collapsed")
-
     _etichetta_sb(
-        "Preset x265", t("sb.preset_aiuto"),
+        t("sb.preset"), t("sb.preset_aiuto"),
         str(st.session_state.get("w_preset", "slower")),
         predefinito="slower")
     with st.sidebar.container(key="cPreset"):
@@ -3834,144 +4337,119 @@ def sidebar() -> dict:
             key="w_preset", disabled=congelata,
             label_visibility="collapsed")
 
-    # Da qui in giù sono regolazioni per chi sa cosa sta toccando: sezione
-    # SORELLA di "Di base" (stesso grado), figlia di "Impostazioni" come
-    # tutto il resto.
-    st.sidebar.divider()
-    st.sidebar.markdown(f"<div class='au-sb-sezione'>{t('sb.avanzate')}</div>",
+    # --- Avanzate: un riquadro che si apre --------------------------------
+    # L'intestazione dice se c'e' qualcosa di cambiato: un interruttore
+    # toccato non deve potersi nascondere qui dentro. Si apre anche a
+    # sidebar bloccata, per guardare i valori; i controlli restano spenti.
+    cambiate = [k for k in _AVANZATE
+                if st.session_state.get(f"w_{k}") != fabbrica[k]]
+    stato_av = (tn("sb.avanzate_cambiate", len(cambiate)) if cambiate
+                else t("sb.avanzate_tutte"))
+    regole.append(
+        f'.st-key-adv summary p::after {{ content: "{stato_av}"; }}'
+        f'.st-key-adv {{ --adv-nota: "{t("sb.avanzate_nota")}"; }}')
+    if cambiate:
+        regole.append('.st-key-adv summary p::after { color: var(--primaryText);'
+                      ' border-color: rgb(var(--primaryRgb) / .45); }')
+    adv = st.sidebar.expander(t("sb.avanzate"), key="adv")
+    with adv:
+        st.markdown(f"<div class='au-adv-nota'>{t('sb.avanzate_nota')}</div>"
+                    f"<div class='au-eyebrow au-sgruppo'>{t('sb.preelab')}</div>",
+                    unsafe_allow_html=True)
+        with st.container(key="swDedup"):
+            dedup = st.toggle(t("sb.dedup"), key="w_dedup", disabled=congelata)
+            _aiuto_a_destra(t("sb.dedup_aiuto"), t("sb.abilitato"))
+        _cambiata(adv, "dedup", fabbrica)
+        with st.container(key="swDenoise"):
+            denoise = st.toggle(t("sb.denoise"), key="w_denoise", disabled=congelata)
+            _aiuto_a_destra(t("sb.denoise_aiuto"), t("sb.disabilitato"))
+        _cambiata(adv, "denoise", fabbrica)
+        with st.container(key="swForza"):
+            forza = st.toggle(t("sb.forza"), key="w_forza", disabled=congelata)
+            _aiuto_a_destra(t("sb.forza_aiuto"), t("sb.disabilitato"))
+        _cambiata(adv, "forza", fabbrica)
+        with st.container(key="swApprof"):
+            approfondita = st.toggle(t("sb.approf"), key="w_approfondita",
+                                     disabled=congelata)
+            _aiuto_a_destra(t("sb.approf_aiuto"), t("sb.abilitato"))
+        _cambiata(adv, "approfondita", fabbrica)
+
+        st.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.risorse')}</div>",
+                    unsafe_allow_html=True)
+        # Il TETTO COMPLESSIVO di disco per un file, non la dimensione di un
+        # blocco: la divisione in blocchi la decide l'app. Il massimo del
+        # cursore e' lo spazio LIBERO VERO, sul disco dei video finiti.
+        _tetto_max, _libero_gb = _tetto_spazio()
+        _disco_ora = st.session_state.get("w_disco", _tetto_max)
+        # Il valore ricordato non entra piu' nel disco di oggi: si abbassa e
+        # lo si DICE. (Chiesto da Interstellar0verdrive l'11/08.)
+        ridotto = None
+        if _disco_ora > _tetto_max:
+            ridotto = t("sb.disco_ridotto", ora=_disco_ora, libero=_libero_gb,
+                        tetto=_tetto_max)
+            st.session_state["w_disco"] = _tetto_max
+            _disco_ora = _tetto_max
+        _etichetta_sb(t("sb.disco"), t("sb.disco_aiuto"), f"{_disco_ora} GB",
+                      predefinito=t("sb.disco_predefinito", tetto=_tetto_max,
+                                    libero=_libero_gb), dove=adv)
+        _cambiata(adv, "disco", fabbrica)
+        with st.container(key="cDisco"):
+            disco = st.slider(t("sb.disco"), MINIMO_SPAZIO_GB, _tetto_max,
+                              key="w_disco", disabled=congelata,
+                              label_visibility="collapsed")
+        st.markdown(f"<div class='au-sb-regola'>{t('sb.disco_regola', libero=_libero_gb)}</div>",
+                    unsafe_allow_html=True)
+        if ridotto:
+            st.markdown(f"<div class='au-sb-ridotto'>{ridotto}</div>",
                         unsafe_allow_html=True)
-    st.sidebar.caption(t("sb.avanzate_nota"))
 
-    st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.preelab')}</div>",
+        _pausa_ora = st.session_state.get("w_pausa", 5)
+        _etichetta_sb(
+            t("sb.pausa"), t("sb.pausa_aiuto"),
+            t("sb.pausa_nessuna") if _pausa_ora == 0 else f"{_pausa_ora} min",
+            predefinito="5 min", dove=adv)
+        _cambiata(adv, "pausa", fabbrica)
+        with st.container(key="cPausa"):
+            # Default 5 e non 0 (scelta dell'utente): nelle maratone la pausa
+            # deve esserci senza doversene ricordare; 0 spegne la funzione.
+            pausa = st.slider(t("sb.pausa"), 0, 30, key="w_pausa",
+                              disabled=congelata, label_visibility="collapsed")
+        if cambiate:
+            st.button(t("sb.ripristina_avanzate"), key="ripristinaAvanzate",
+                      icon=":material/restart_alt:", disabled=congelata,
+                      on_click=_ripristina_avanzate, args=(fabbrica,))
+
+    # --- Preferenze ----------------------------------------------------
+    st.sidebar.markdown(f"<div class='au-sb-titolo au-sb-pref'>"
+                        f"<span>{t('sb.preferenze')}</span></div>",
                         unsafe_allow_html=True)
-    with st.sidebar.container(key="swDedup"):
-        dedup = st.toggle(t("sb.dedup"), key="w_dedup",
-                          disabled=congelata)
-        _aiuto_a_destra(t("sb.dedup_aiuto"), t("sb.abilitato"))
-    with st.sidebar.container(key="swDenoise"):
-        denoise = st.toggle(t("sb.denoise"), key="w_denoise",
-                            disabled=congelata)
-        _aiuto_a_destra(t("sb.denoise_aiuto"), t("sb.disabilitato"))
-    with st.sidebar.container(key="swForza"):
-        forza = st.toggle(t("sb.forza"), key="w_forza",
-                          disabled=congelata)
-        _aiuto_a_destra(t("sb.forza_aiuto"), t("sb.disabilitato"))
-
-    with st.sidebar.container(key="swApprof"):
-        # Spento davvero come gli altri, non solo ingrigito dal CSS della
-        # sidebar congelata: grigio e basta restava raggiungibile da tastiera.
-        approfondita = st.toggle(t("sb.approf"),
-                                 key="w_approfondita",
-                                 disabled=congelata)
-        _aiuto_a_destra(t("sb.approf_aiuto"), t("sb.abilitato"))
-
-    st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.sistema')}</div>",
+    with st.sidebar.container(key="cLinguaTema", horizontal=True):
+        with st.container(key="cLingua"):
+            # L'etichetta nella lingua in uso (deciso dall'utente): "Language"
+            # o "Lingua" si capisce anche da chi legge l'altra.
+            lingua = st.selectbox(
+                t("sb.lingua"), list(i18n.LINGUE), key="w_lingua",
+                format_func=i18n.LINGUE.get, disabled=congelata)
+        with st.container(key="cTema"):
+            scelta_tema = st.segmented_control(
+                t("sb.tema"), list(tema.SCELTE), key="w_tema", required=True,
+                format_func=lambda m: _ICONE_TEMA[m], disabled=congelata)
+    with st.sidebar.container(key="prefCard"):
+        # Le cartelle si scelgono solo nell'app: nella modalita' a cartella
+        # stanno accanto al programma (o dove dicono le variabili da Terminale).
+        if app:
+            _riga_cartella("input", congelata, dove=st)
+            _riga_cartella("output", congelata, dove=st)
+            nuova_cartella = st.session_state.get("cartella_cambiata")
+            if nuova_cartella:
+                st.caption(t("sb.cartella_riavvia", cartella=_breve(nuova_cartella)))
+        _riga_taratura(congelata)
+        with st.container(key="swAggiorn"):
+            controlla_agg = st.toggle(t("sb.controlla_agg"), key="w_aggiornamenti",
+                                      disabled=congelata,
+                                      help=t("sb.controlla_agg_aiuto"))
+            st.markdown(f"<div class='au-agg-nota'>{t('sb.controlla_agg_nota')}</div>",
                         unsafe_allow_html=True)
-    # Il TETTO COMPLESSIVO, non la dimensione di un blocco: si chiede quanto
-    # disco dedicare a un file, e la divisione in blocchi la decide l'app.
-    # L'etichetta vecchia («Spazio per blocco») descriveva un dettaglio di
-    # implementazione e prometteva un limite che non era: con 40 GB impostati
-    # il picco vero era 165 su un film da due ore e 359 a 1080p, perché quel
-    # numero governava i soli fotogrammi ingranditi mentre i sorgenti si
-    # estraggono tutti insieme e costano quello che costano.
-    #
-    # Il massimo del cursore è lo spazio LIBERO VERO meno un margine: fissarlo
-    # a 120 GB significava impedire di dedicare a un film le centinaia di
-    # giga che quel film chiede, su un disco che ce li ha.
-    _tetto_max, _libero_gb = _tetto_spazio()
-    # Il ripiego e' il tetto, non un 40 scritto a mano: quel numero non e'
-    # piu' il predefinito di nessun ramo del codice, e comparirebbe a
-    # schermo come valore corrente nell'unico giro in cui la sessione non e'
-    # ancora stata seminata.
-    _disco_ora = st.session_state.get("w_disco", _tetto_max)
-    # Il valore ricordato non entra piu' nel disco di oggi: si abbassa e lo si
-    # DICE. Un'impostazione corretta in silenzio e' un'impostazione che
-    # l'utente crede ancora di avere. (Chiesto da Interstellar0verdrive l'11/08.)
-    if _disco_ora > _tetto_max:
-        st.sidebar.markdown(
-            f"<div class='au-nota-viva au-nota-congelo'>"
-            f"{t('sb.disco_ridotto', ora=_disco_ora, libero=_libero_gb, tetto=_tetto_max)}"
-            "</div>",
-            unsafe_allow_html=True)
-        st.session_state["w_disco"] = _tetto_max
-        _disco_ora = _tetto_max
-    _etichetta_sb(
-        t("sb.disco"), t("sb.disco_aiuto"),
-        f"{_disco_ora} GB",
-        # Il predefinito e' una REGOLA, non un numero: scriverne uno fisso
-        # («40 GB») voleva dire mostrare per mesi un valore che nessun ramo
-        # del codice produceva piu' (segnalato dall'utente il 12/08).
-        predefinito=t("sb.disco_predefinito", tetto=_tetto_max, libero=_libero_gb))
-    with st.sidebar.container(key="cDisco"):
-        disco = st.slider(
-            t("sb.disco"), MINIMO_SPAZIO_GB, _tetto_max,
-            key="w_disco",
-            disabled=congelata, label_visibility="collapsed")
-
-    _pausa_ora = st.session_state.get("w_pausa", 5)
-    _etichetta_sb(
-        t("sb.pausa"), t("sb.pausa_aiuto"),
-        t("sb.pausa_nessuna") if _pausa_ora == 0 else f"{_pausa_ora} min",
-        predefinito="5 min")
-    with st.sidebar.container(key="cPausa"):
-        # Default 5 e non 0 (scelta dell'utente): nelle maratone la pausa
-        # deve esserci senza doversene ricordare; 0 spegne la funzione.
-        pausa = st.slider(
-            t("sb.pausa"), 0, 30, key="w_pausa",
-            disabled=congelata, label_visibility="collapsed")
-
-    # La voce di manutenzione: data dell'ultima taratura e l'ingresso alla
-    # modale. Vive in Sistema perche' e' della macchina, non del lavoro.
-    with st.sidebar.container(key="swAggiorn"):
-        controlla_agg = st.toggle(t("sb.controlla_agg"), key="w_aggiornamenti",
-                                  disabled=congelata)
-        _aiuto_a_destra(t("sb.controlla_agg_aiuto"), t("sb.abilitato"))
-
-    # Le cartelle si scelgono solo nell'app: nella modalita' a cartella
-    # stanno accanto al programma (o dove dicono le variabili da Terminale).
-    if os.environ.get("ANIMEUP_APP") == "1":
-        _righe_cartelle(congelata)
-
-    voce_tar = taratura.carica()
-    if voce_tar:
-        import datetime as _dt
-        _q = _dt.datetime.fromtimestamp(voce_tar["quando"])
-        stato_tar = _q.strftime(t("fmt.data_ora"))
-        azione, spazio_link = t("sb.taratura_ripeti"), 42
-    else:
-        stato_tar, azione, spazio_link = (t("sb.taratura_mai"),
-                                          t("sb.taratura_esegui"), 66)
-    # Calendario nello stesso tratto delle altre icone di casa (stroke 2).
-    _cal = ("<svg width='12' height='12' viewBox='0 0 24 24' fill='none' "
-            "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
-            "stroke-linejoin='round' aria-hidden='true'>"
-            "<rect x='3' y='4' width='18' height='18' rx='2'/>"
-            "<line x1='16' y1='2' x2='16' y2='6'/>"
-            "<line x1='8' y1='2' x2='8' y2='6'/>"
-            "<line x1='3' y1='10' x2='21' y2='10'/></svg>")
-    _aiuto_tar = t("sb.taratura_aiuto")
-    _perche = _icona_perche(_aiuto_tar)
-    with st.sidebar.container(key="cTarRiga"):
-        st.markdown(
-            f"<div class='au-tar-riga' style='padding-right: "
-            f"{spazio_link}px'><span>{t('sb.taratura')}{_perche}</span>"
-            f"<span class='au-meta au-tar-data'>{_cal} {stato_tar}</span>"
-            f"</div>", unsafe_allow_html=True)
-        # DENTRO il contenitore della riga: il CSS che lo posiziona a destra
-        # di "Taratura" e' agganciato a `[data-testid="stSidebar"]`, quindi
-        # fuori dalla sidebar non aggancia piu' niente e il pulsante finisce
-        # in cima all'area principale, orfano della sua etichetta. E' gia'
-        # successo: una de-indentazione di quattro spazi durante un lavoro
-        # sul CSS lo ha spostato per un giorno intero senza che nessun test
-        # se ne accorgesse.
-        # Spento durante una lavorazione: la taratura e' un benchmark, e
-        # misurare una GPU occupata da' numeri falsi (il passo 1 lo dice
-        # gia', ma il pulsante restava cliccabile). In piu' Streamlit ammette
-        # UNA sola modale per giro: se il clic cadeva nello stesso giro del
-        # resoconto di fine coda, la pagina andava in errore.
-        if st.button(azione, key="apriTaratura", disabled=congelata):
-            st.session_state.pop("tar_fase", None)
-            _modale_taratura()
 
     st.sidebar.markdown("<style>" + "\n".join(regole) + "</style>",
                         unsafe_allow_html=True)
@@ -3980,7 +4458,8 @@ def sidebar() -> dict:
                "dedup": dedup, "denoise": denoise, "forza": forza,
                "disco": disco, "pausa": pausa,
                "approfondita": approfondita, "lingua": lingua,
-               "aggiornamenti": controlla_agg}
+               "aggiornamenti": controlla_agg,
+               "tema": scelta_tema or salvate.get("tema", tema.SISTEMA)}
     # Persistenza: si scrive solo quando qualcosa e' cambiato davvero.
     if attuali != salvate:
         _impostazioni_scrivi(attuali)
@@ -3992,106 +4471,268 @@ def sidebar() -> dict:
         ricetta = _ricetta_sospesa()
         diversi = _diversi_dal_sospeso(ricetta, attuali)
         if diversi:
-            # GIALLO e non grigio: e' un avviso, non una didascalia. Col
-            # grigio della nota di congelamento si leggeva come testo di
-            # contorno (chiesto dall'utente il 12/08). Niente rosso pero':
-            # non c'e' niente di rotto e il Riprendi resta blindato sui
-            # parametri suoi — e' informazione, non pericolo.
-            with posto_sospeso.container():
+            with posto_sospeso.container(key="cSospeso"):
                 st.markdown(
-                    "<div class='au-nota-viva au-nota-avviso'>"
+                    "<div class='au-sb-sospeso'>"
                     f"{t('sb.sospeso', diversi=', '.join(_nomi_impostazioni(diversi)))}"
-                    "</div>",
-                    unsafe_allow_html=True)
-                # Niente `st.rerun()`: il richiamo ne provoca gia' uno, e
-                # chiamarlo qui significherebbe scrivere nello stato dal
-                # corpo dello script — cioe' il difetto che questa forma
-                # evita.
+                    "</div>", unsafe_allow_html=True)
                 st.button(t("sb.ripristina"), key="ripristina_parametri",
-                          use_container_width=True,
                           on_click=_ripristina_parametri, args=(ricetta,))
 
-    # Il distintivo verde "cartella autonoma" diceva solo che va tutto bene:
-    # informazione da zero pixel. Si parla soltanto quando c'e' un problema
-    # di portabilità — cioè quando serve davvero saperlo.
+    # Si parla di portabilita' soltanto quando c'e' un problema.
     mancanti = [n for n, _t, s in PATHS.portability_report() if s != "ok"]
     if mancanti:
-        st.sidebar.divider()
         st.sidebar.markdown(
             f"<span class='au-tag au-warn'>{tn('sb.dipendenze', len(mancanti))}</span>",
             unsafe_allow_html=True)
         st.sidebar.caption(t("sb.non_autonoma"))
 
-    # Chiudere TUTTO da qui: "chiudo la finestra = ho chiuso l'app" è il
-    # modello mentale di chiunque, e costringere al Terminale lo tradiva
-    # (detto dall'utente). Conferma a due passi con scadenza, come i Ferma.
-    # La fascia è ANCORATA in fondo alla sidebar (sticky): prima il
-    # pulsante finiva fuori dall'area di scroll e per trovarlo bisognava
-    # sapere che c'era — il contenuto ora le scorre sotto.
-    st.sidebar.markdown(f"<div class='au-sb-versione'>"
-                        f"{t('header.sottotitolo', versione=__version__)}</div>",
-                        unsafe_allow_html=True)
-
-    # Nell'app per macOS si esce dal menu (⌘Q), che ferma il server e chiude
-    # la finestra insieme: il pulsante spegnerebbe solo il server, lasciando
-    # la finestra vuota davanti all'utente.
-    if os.environ.get("ANIMEUP_APP") == "1":
-        return {"altezza": altezza, "crf": crf, "dedup": dedup, "preset": preset,
-                "denoise": denoise, "disco": disco, "forza": forza, "pausa": pausa,
-                "approfondita": approfondita}
-    with st.sidebar.container(key="spegnimento"):
-        conferma_off = st.session_state.get("conferma_spegni")
-        spegni_armato = (isinstance(conferma_off, float)
-                         and time.time() - conferma_off < 10)
-        if not spegni_armato:
-            if st.button(t("sb.chiudi"), use_container_width=True,
-                         icon=":material/power_settings_new:",
-                         help=t("sb.chiudi_aiuto")):
-                st.session_state["conferma_spegni"] = time.time()
-                st.rerun()
-        else:
-            # Se una catena è viva va DETTO prima della conferma: chiudere
-            # l'interfaccia non la ferma, ed è una feature, ma se lo sai.
-            if congelata:
-                st.markdown(
-                    "<div class='au-gpu-pausa' style='margin-bottom:10px'>"
-                    f"{t('sb.chiudi_avviso')}</div>",
-                    unsafe_allow_html=True)
-            if st.button(t("sb.chiudi_conferma"), use_container_width=True,
-                         key="fermasi_app"):
-                st.session_state.pop("conferma_spegni", None)
-                _spegni_interfaccia(congelata)
-            if st.button(t("sb.annulla"), use_container_width=True,
-                         key="spegni_annulla"):
-                st.session_state.pop("conferma_spegni", None)
-                st.rerun()
-
+    _piede_sidebar(app, congelata)
     return {"altezza": altezza, "crf": crf, "dedup": dedup, "preset": preset,
             "denoise": denoise, "disco": disco, "forza": forza, "pausa": pausa,
             "approfondita": approfondita}
 
 
+_ICONA_LUCCHETTO = (
+    "<svg width='11' height='11' viewBox='0 0 24 24' fill='none' "
+    "stroke='currentColor' stroke-width='2.2' stroke-linecap='round' "
+    "stroke-linejoin='round' aria-hidden='true'><rect x='4' y='11' width='16' "
+    "height='10' rx='2'/><path d='M8 11V7a4 4 0 0 1 8 0v4'/></svg>")
+
+_ICONE_TEMA = {"system": ":material/contrast:", "dark": ":material/dark_mode:",
+               "light": ":material/light_mode:"}
+
+
+def _riga_taratura(congelata: bool) -> None:
+    """La taratura nelle Preferenze: quando, e come rifarla.
+
+    Mai fatta: un pulsante pieno «Calibrate now», dello stesso colore degli
+    interruttori accanto (deciso dall'utente). Fatta: la data, e «Recalibrate»
+    neutro, perche' non c'e' niente di urgente.
+    """
+    voce_tar = taratura.carica()
+    if voce_tar:
+        import datetime as _dt
+        quando = _dt.datetime.fromtimestamp(voce_tar["quando"]).strftime(t("fmt.data_ora"))
+        stato = f"<span class='au-tar-ok'>{t('sb.taratura_ultima', quando=quando)}</span>"
+        azione, tipo = t("sb.taratura_ripeti"), "secondary"
+    else:
+        stato = (f"<span class='au-tar-mai'>{t('sb.taratura_mai')} · "
+                 f"{t('sb.taratura_mai_nota')}</span>")
+        azione, tipo = t("sb.taratura_esegui"), "primary"
+    with st.container(key="cTaratura"):
+        with st.container(key="cTarRiga", horizontal=True,
+                          vertical_alignment="center"):
+            st.markdown(
+                f"<div class='au-pref-eti'>{t('sb.taratura')}"
+                f"{_icona_perche(t('sb.taratura_aiuto'))}</div>",
+                unsafe_allow_html=True)
+            # Spento durante una lavorazione: la taratura e' un benchmark, e
+            # misurare una GPU occupata da' numeri falsi. In piu' Streamlit
+            # ammette UNA sola modale per giro.
+            if st.button(azione, key="apriTaratura", type=tipo,
+                         disabled=congelata):
+                st.session_state.pop("tar_fase", None)
+                _modale_taratura()
+        st.markdown(stato, unsafe_allow_html=True)
+
+
+def _piede_sidebar(app: bool, congelata: bool) -> None:
+    """In fondo alla finestra: versione e «About» a sinistra, Esci a destra.
+
+    Nell'app chiudere la finestra non ferma niente (AnimeUp resta acceso,
+    come HandBrake): per uscire davvero c'e' questo pulsante, che fa quello
+    che fa ⌘Q, conferma compresa. Nella cartella portatile spegne
+    l'interfaccia, come faceva «Chiudi», con la sua conferma a due passi.
+    """
+    with st.sidebar.container(key="piede", horizontal=True,
+                              vertical_alignment="center"):
+        st.markdown(
+            "<div class='au-piede'>"
+            f"<span>{t('sb.versione', versione=__version__)}</span>"
+            "<a href='https://github.com/Interstellar0verdrive/AnimeUp' "
+            f"target='_blank'>{t('sb.about')}</a></div>",
+            unsafe_allow_html=True)
+        if app:
+            st.button(t("sb.esci"), key="esci", on_click=_chiedi_uscita)
+            return
+        conferma_off = st.session_state.get("conferma_spegni")
+        armato = (isinstance(conferma_off, float)
+                  and time.time() - conferma_off < 10)
+        if not armato:
+            if st.button(t("sb.esci"), key="esci", help=t("sb.chiudi_aiuto")):
+                st.session_state["conferma_spegni"] = time.time()
+                st.rerun()
+        elif st.button(t("sb.chiudi_conferma"), key="fermasi_app", type="primary"):
+            st.session_state.pop("conferma_spegni", None)
+            _spegni_interfaccia(congelata)
+
+
+def _svg(percorso: str, lato: int = 22, tratto: float = 1.8) -> str:
+    """Un'icona a tratto, nel colore del testo che la contiene."""
+    return (f"<svg width='{lato}' height='{lato}' viewBox='0 0 24 24' fill='none' "
+            f"stroke='currentColor' stroke-width='{tratto}' stroke-linecap='round' "
+            f"stroke-linejoin='round' aria-hidden='true'>{percorso}</svg>")
+
+
+_I_CARTELLA = "<path d='M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><path d='M12 11v5M9.5 13.5 12 16l2.5-2.5'/>"
+_I_MAC = "<rect x='4' y='5' width='16' height='11' rx='1.5'/><path d='M2 19h20'/>"
+_I_GIU = "<path d='M12 5v14M6 13l6 6 6-6'/>"
+_I_SPUNTA = "<path d='M4.5 12.5 9.5 17.5 19.5 7'/>"
+
+
+def _sorgenti_vuota() -> None:
+    """La pagina Sorgenti senza video: da dove si parte, e cosa serve.
+
+    Due riquadri — le due cartelle, e questo Mac — e i quattro passi di un
+    lotto, col passo in cui si e'. Il drag and drop non c'e': i video si
+    copiano nella cartella col Finder, e qui compaiono da soli.
+    """
+    app = os.environ.get("ANIMEUP_APP") == "1"
+    voce_tar = taratura.carica()
+    st.markdown(
+        f"<div class='au-titolo-pagina'>{t('src.vuoto_titolo')}</div>"
+        f"<div class='au-sotto-pagina'>{t('src.vuoto_testo')}</div>",
+        unsafe_allow_html=True)
+    for nota in _note_cartelle_assenti():
+        st.warning(nota)
+    with st.container(key="vuotoGriglia", horizontal=True):
+        with st.container(key="cartelleCard"):
+            st.markdown(
+                "<div class='au-card-testa'>"
+                f"<div class='au-tessera'>{_svg(_I_CARTELLA)}</div><div>"
+                f"<div class='au-card-titolo'>{t('src.cartelle_titolo')}</div>"
+                f"<div class='au-card-testo'>"
+                f"{t('src.cartelle_testo' if app else 'src.cartelle_testo_cartella')}"
+                "</div></div></div>", unsafe_allow_html=True)
+            with st.container(key="cartelleBox"):
+                st.markdown(
+                    f"<div class='au-occhio'>{t('src.eti_input')}"
+                    f"<span class='au-osserva'><span></span>{t('src.osserva')}</span></div>",
+                    unsafe_allow_html=True)
+                with st.container(key="rigaInput", horizontal=True,
+                                  vertical_alignment="center"):
+                    st.markdown(f"<code class='au-percorso-grande'>"
+                                f"{esc(_breve(PATHS.input))}</code>",
+                                unsafe_allow_html=True)
+                    if st.button(t("src.apri_input"), key="apriInput", type="primary",
+                                 icon=":material/folder_open:"):
+                        PATHS.input.mkdir(parents=True, exist_ok=True)
+                        subprocess.run(["open", str(PATHS.input)], check=False)
+                    if app:
+                        st.button(t("src.cambia"), key="cambiaInput",
+                                  on_click=_scegli_cartella, args=("input",))
+                st.markdown(
+                    "<div class='au-freccia'>"
+                    f"<span>{_svg(_I_GIU, 12, 2)}</span>"
+                    f"<em>{t('src.freccia')}</em><i></i></div>"
+                    f"<div class='au-occhio'>{t('src.eti_output')}</div>",
+                    unsafe_allow_html=True)
+                with st.container(key="rigaOutput", horizontal=True,
+                                  vertical_alignment="center"):
+                    st.markdown(f"<code class='au-percorso-grande'>"
+                                f"{esc(_breve(PATHS.output))}</code>",
+                                unsafe_allow_html=True)
+                    if app:
+                        st.button(t("src.cambia"), key="cambiaOutput",
+                                  on_click=_scegli_cartella, args=("output",))
+                st.markdown(f"<div class='au-card-nota'>{t('src.lavoro_accanto')}</div>",
+                            unsafe_allow_html=True)
+                if st.session_state.get("cartella_cambiata"):
+                    st.caption(t("sb.cartella_riavvia",
+                                 cartella=_breve(st.session_state["cartella_cambiata"])))
+            formati = "".join(f"<span>{e}</span>" for e in
+                              (".mkv", ".mp4", ".mov", ".avi", ".m4v", ".ts", ".webm"))
+            st.markdown(
+                "<div class='au-tre'>"
+                f"<div><div class='au-occhio'>{t('src.formati')}</div>"
+                f"<div class='au-formati'>{formati}</div></div>"
+                f"<div><div class='au-occhio'>{t('src.buono')}</div>"
+                f"<p>{t('src.buono_testo')}</p></div>"
+                f"<div><div class='au-occhio'>{t('src.non_gestito')}</div>"
+                f"<p>{t('src.non_gestito_testo')}</p></div></div>",
+                unsafe_allow_html=True)
+        with st.container(key="questoMac"):
+            st.markdown(
+                "<div class='au-card-testa au-centrata'>"
+                f"<div class='au-tessera'>{_svg(_I_MAC)}</div><div>"
+                f"<div class='au-card-titolo'>{t('src.mac_titolo')}</div>"
+                f"<div class='au-card-testo'>"
+                f"{t('src.mac_pronto' if voce_tar else 'src.mac_un_passo')}</div>"
+                "</div></div>", unsafe_allow_html=True)
+            _blocco_taratura(voce_tar)
+            liberi = int(gb_liberi(PATHS.output))
+            mancanti = [n for n, _t, s in PATHS.portability_report() if s != "ok"]
+            strumenti = (f"<span class='au-chip-ok'><span></span>{t('src.strumenti_ok')}</span>"
+                         if not mancanti else
+                         f"<span class='au-tag au-warn'>{t('src.strumenti_mancano')}</span>")
+            st.markdown(
+                "<div class='au-mac-righe'>"
+                f"<div><div class='au-mac-riga'><b>{t('src.spazio')}</b>"
+                f"<code>{liberi} GB</code></div>"
+                f"<p>{t('src.spazio_testo')}</p></div>"
+                f"<div><div class='au-mac-riga'><b>{t('src.strumenti')}</b>{strumenti}</div>"
+                f"<p>{t('src.strumenti_testo')}</p></div></div>",
+                unsafe_allow_html=True)
+
+    if voce_tar:
+        passo0 = (f"<div class='au-passo au-passo-fatto'><div class='au-passo-testa'>"
+                  f"<span class='au-spunta'>{_svg(_I_SPUNTA, 9, 2.6)}</span>"
+                  f"<b>{t('src.tar_fatta')}</b><small>{t('src.fatto')}</small></div>"
+                  f"<p>{t('src.passo0_fatto')}</p></div>")
+    else:
+        passo0 = (f"<div class='au-passo au-passo-zero'><div class='au-passo-testa'>"
+                  f"<code>0</code><b>{t('src.passo0')}</b>"
+                  f"<small>{t('src.tar_prima')}</small></div>"
+                  f"<p>{t('src.passo0_testo')}</p></div>")
+    st.markdown(
+        f"<div class='au-occhio au-passi-titolo'>{t('src.passi')}</div>"
+        f"<div class='au-passi'>{passo0}"
+        "<div class='au-passo au-passo-qui'><div class='au-passo-testa'>"
+        f"<code>1</code><b>{t('tab.Sorgenti')}</b><small>{t('src.qui')}</small></div>"
+        f"<p>{t('src.passo1_testo')}</p></div>"
+        "<div class='au-passo'><div class='au-passo-testa'>"
+        f"<code>2</code><b>{t('tab.Confronto')}</b></div>"
+        f"<p>{t('src.passo2_testo')}</p></div>"
+        "<div class='au-passo'><div class='au-passo-testa'>"
+        f"<code>3</code><b>{t('tab.Lavorazione')}</b></div>"
+        f"<p>{t('src.passo3_testo')}</p></div></div>",
+        unsafe_allow_html=True)
+
+
+def _blocco_taratura(voce_tar) -> None:
+    """La taratura nel riquadro «Questo Mac»: da fare, o fatta e quando."""
+    if voce_tar:
+        import datetime as _dt
+        quando = _dt.datetime.fromtimestamp(voce_tar["quando"]).strftime(t("fmt.data_ora"))
+        with st.container(key="tarFatta", horizontal=True, vertical_alignment="center"):
+            st.markdown(
+                f"<div class='au-tar-fatta'><span class='au-spunta'>{_svg(_I_SPUNTA, 12, 2.4)}</span>"
+                f"<span><b>{t('src.tar_fatta')}</b>"
+                f"<code>{t('sb.taratura_ultima', quando=quando)}</code></span></div>",
+                unsafe_allow_html=True)
+            if st.button(t("sb.taratura_ripeti"), key="ricalibraMac",
+                         disabled=_motivo_blocco() is not None):
+                st.session_state.pop("tar_fase", None)
+                _modale_taratura()
+        return
+    with st.container(key="tarDaFare"):
+        st.markdown(
+            "<div class='au-tar-testa'><code>0</code>"
+            f"<b>{t('src.tar_titolo')}</b><small>{t('src.tar_prima')}</small></div>"
+            f"<p class='au-tar-testo'>{t('src.tar_testo')}</p>",
+            unsafe_allow_html=True)
+        if st.button(t("sb.taratura_esegui"), key="calibraMac", type="primary",
+                     use_container_width=True,
+                     disabled=_motivo_blocco() is not None):
+            st.session_state.pop("tar_fase", None)
+            _modale_taratura()
+
+
 def page_sorgenti(cfg: dict) -> None:
     files = load_library()
     if not files:
-        st.markdown(f"#### {t('src.vuoto_titolo')}")
-        st.info(t("src.vuoto_testo", cartella=PATHS.input))
-        for nota in _note_cartelle_assenti():
-            st.warning(nota)
-        app = os.environ.get("ANIMEUP_APP") == "1"
-        st.caption(t("src.vuoto_cartella_app" if app else "src.vuoto_cartella_cartella"))
-        c1, c2, _ = st.columns([1, 1.4, 3], gap="small")
-        if c1.button(t("src.apri_input"), key="apriInput",
-                     icon=":material/folder_open:"):
-            PATHS.input.mkdir(parents=True, exist_ok=True)
-            subprocess.run(["open", str(PATHS.input)], check=False)
-        if app:
-            c2.button(t("src.scegli_cartella"), key="sceltaCartellaVuoto",
-                      icon=":material/drive_folder_upload:",
-                      on_click=_scegli_cartella, args=("input",))
-            if st.session_state.get("cartella_cambiata"):
-                st.caption(t("sb.cartella_riavvia",
-                             cartella=_breve(st.session_state["cartella_cambiata"])))
+        _sorgenti_vuota()
         return
 
     alta = sum(1 for f in files if f["height"] >= CLEAN_SOURCE_MIN_HEIGHT)
@@ -4107,106 +4748,74 @@ def page_sorgenti(cfg: dict) -> None:
 
     durata = sum(_secondi(f["duration"]) for f in files)
 
-    # Titolo e sottotitolo come nelle altre due schede: erano l'unica
-    # pagina senza, e chi arriva qui per la prima volta non aveva una riga
-    # che gli dicesse cosa sta guardando (chiesto dall'utente).
-    st.markdown(
-        f"<div class='au-sezione'>{t('src.titolo')}</div>"
-        "<div class='au-hint' style='margin-bottom:20px'>"
-        f"{t('src.sottotitolo')}</div>",
-        unsafe_allow_html=True)
-
-    # Una fascia al posto di titolo + paragrafo + tre riquadri di spiegazione.
-    # Quei tre elementi dicevano in venti righe quello che qui sta in una, e
-    # occupavano la parte alta della pagina — cioè il posto dove si guarda per
-    # primo — con testo che si legge una volta sola nella vita dello strumento.
-    # Il conteggio dell'analisi è l'unica cosa che cambia nel tempo, ed è
-    # l'unica che ha diritto di stare in alto.
-    chip = []
-    if alta:
-        chip.append(f"<span class='au-tag au-dim'>{alta} &ge; "
-                    f"{CLEAN_SOURCE_MIN_HEIGHT}p</span>")
-    # La soglia scritta nella chip: «N sotto soglia» lasciava indovinare
-    # quale, mentre la chip accanto la dice («≥ 560p»).
-    if len(files) - alta:
-        chip.append(f"<span class='au-tag au-dim'>"
-                    f"{t('src.sotto_soglia', n=len(files) - alta, soglia=CLEAN_SOURCE_MIN_HEIGHT)}"
-                    "</span>")
-    # Conta i FILE, non gli avvisi: chiave sua e parole sue, perche' la chip
-    # della riga ha lo stesso aspetto ma conta gli avvisi di quel file, e con
-    # lo stesso «N avvisi» due numeri diversi si leggevano come uno.
-    con_avvisi = sum(1 for f in files
-                     if (r := library.cached_report(Path(f["path"]))) and r.warnings())
-    if con_avvisi:
-        chip.append(f"<span class='au-tag au-warn'>"
-                    f"{tn('src.file_con_avvisi', con_avvisi)}</span>")
-    analizzati = sum(1 for f in files
-                     if library.cached_report(Path(f["path"])) is not None)
     # Lo stato dell'analisi serve gia' qui, per la fascia in alto. La coda
     # e' gia' stata accodata da `main`, per tutte le schede: qui si legge e
     # basta.
     lavoro = analizzatore()
     corrente, in_coda = lavoro.in_corso, lavoro.in_coda
-    # La struttura (contenitore con chiave + due colonne) NON cambia mai
-    # forma fra i due stati: e' la lezione dei pannelli doppi — un elemento
-    # che compare e scompare sposta la conta posizionale e Streamlit adotta
-    # nodi altrui. Cambia solo il CONTENUTO della colonna destra: barra di
-    # avanzamento mentre si analizza, CTA "Rianalizza tutti" a riposo (una
-    # barra piena in eterno non informava di niente, detto dall'utente).
-    with st.container(key="fasciaSorgenti"):
-        fs1, fs2 = st.columns([5, 1])
-        fs1.markdown(
-            f"<div class='au-fascia au-fascia-nuda'>"
-            f"<b>{tn('src.file_in_input', len(files))}</b>"
-            f"<span class='au-meta'>{t('src.di_video', durata=hms(durata))}</span>"
-            f"{''.join(chip)}</div>", unsafe_allow_html=True)
-        # `al_lavoro` e non il solo conteggio dei referti: chiedendo una
-        # RIANALISI i referti vecchi restano (di proposito, cosi' l'elenco
-        # non si svuota), quindi "analizzati" era gia' al massimo e in alto
-        # restava la CTA come se non stesse succedendo niente — mentre
-        # sotto le righe dicevano "in coda" (visto dall'utente).
-        da_fare = len(in_coda) + (1 if corrente else 0)
-        if lavoro.al_lavoro or analizzati < len(files):
-            # `max(0, ...)`: la coda dell'analizzatore puo' contenere file
-            # spariti da INPUT nel frattempo, e "analisi -1/5" con la barra
-            # a larghezza negativa e' un modo curioso di informare.
-            fatti = max(0, min(analizzati, len(files) - da_fare))
-            fs2.markdown(
-                f"<span class='au-fascia-dx'><span class='au-meta'>"
-                f"{t('src.analisi_conta', fatti=fatti, totale=len(files))}</span>"
-                f"<span class='au-barra'><span style='width:"
-                f"{fatti / max(1, len(files)) * 100:.0f}%'></span>"
-                f"</span></span>", unsafe_allow_html=True)
-        elif fs2.button(t("src.rianalizza_tutti"), key="rianTutti",
-                        icon=":material/refresh:",
-                        help=t("src.rianalizza_tutti_aiuto")):
+    analizzati = sum(1 for f in files
+                     if library.cached_report(Path(f["path"])) is not None)
+    da_fare = len(in_coda) + (1 if corrente else 0)
+    in_analisi = lavoro.al_lavoro or analizzati < len(files)
+    # Conta i FILE, non gli avvisi: la chip della riga ha lo stesso aspetto ma
+    # conta gli avvisi di quel file.
+    con_avvisi = sum(1 for f in files
+                     if (r := library.cached_report(Path(f["path"]))) and r.warnings())
+
+    # Titolo a sinistra con la cartella che si sta guardando; a destra le
+    # due azioni della pagina.
+    with st.container(key="testaSorgenti", horizontal=True,
+                      vertical_alignment="bottom"):
+        st.markdown(
+            f"<div class='au-titolo-pagina'>{t('src.titolo')}</div>"
+            f"<div class='au-cartella-riga'>{t('src.da_elaborare')}"
+            f"<code>{esc(_breve(PATHS.input))}</code>"
+            f"<span class='au-osserva'><span></span>{t('src.osserva')}</span></div>",
+            unsafe_allow_html=True)
+        if st.button(t("src.apri_input"), key="apriInputPieno"):
+            subprocess.run(["open", str(PATHS.input)], check=False)
+        if st.button(t("src.rianalizza_tutti"), key="rianTutti",
+                     disabled=in_analisi, help=t("src.rianalizza_tutti_aiuto")):
             analizzatore().accoda([Path(f["path"]) for f in files],
                                   approfondita=cfg.get("approfondita", True),
                                   rifai=True)
             st.rerun()
 
-
-
-    # L'analisi parte da sola, in ordine, mentre si guarda l'elenco: costa una
-    # ventina di secondi a file e non ha senso farla pagare all'utente un
-    # pulsante alla volta.
-    # L'avviso sta PRIMA dell'elenco, non in fondo: dice cosa sta succedendo
-    # adesso, e in fondo alla pagina lo si legge quando non serve più. Stesso
-    # giallo della chip sulla riga, così i due si riconoscono come la stessa
-    # cosa a due livelli di dettaglio.
-    # Il contenitore c'e' SEMPRE, anche quando non c'e' niente da dire. È
-    # quello che risolve i pannelli doppi: comparendo, la fascia inseriva un
-    # elemento prima dell'elenco e spostava tutto di una posizione, e per un
+    # Una fascia sola: quanti file, quanto video, le soglie, gli avvisi, e a
+    # destra l'analisi che avanza (in ciano: e' un processo attivo, non un
+    # avviso).
+    chip = []
+    alta = sum(1 for f in files if f["height"] >= CLEAN_SOURCE_MIN_HEIGHT)
+    if alta:
+        chip.append(f"<span class='au-tag au-dim'>{alta} &ge; "
+                    f"{CLEAN_SOURCE_MIN_HEIGHT}p</span>")
+    if len(files) - alta:
+        chip.append(f"<span class='au-tag au-dim'>"
+                    f"{t('src.sotto_soglia', n=len(files) - alta, soglia=CLEAN_SOURCE_MIN_HEIGHT)}"
+                    "</span>")
+    if con_avvisi:
+        chip.append(f"<span class='au-tag au-warn au-punto'>"
+                    f"{tn('src.file_con_avvisi', con_avvisi)}</span>")
+    destra = ""
+    if in_analisi:
+        # `max(0, ...)`: la coda puo' contenere file spariti da INPUT.
+        fatti = max(0, min(analizzati, len(files) - da_fare))
+        destra = (f"<span class='au-fascia-analisi'>"
+                  f"{t('src.analisi_barra', fatti=fatti, totale=len(files))}"
+                  f"<span class='au-barra'><span style='width:"
+                  f"{fatti / max(1, len(files)) * 100:.0f}%'></span></span></span>")
+    st.markdown(
+        "<div class='au-fascia-sorgenti'>"
+        f"<b>{tn('src.n_file', len(files))}</b>"
+        f"<span class='au-meta'>{t('src.di_video', durata=hms(durata))}</span>"
+        f"<i></i>{''.join(chip)}{destra}</div>", unsafe_allow_html=True)
+    # Il contenitore c'e' SEMPRE, anche quando non c'e' niente da dire:
+    # comparendo, la nota spostava tutto di una posizione e per un
     # fotogramma Streamlit assegnava il pannello aperto alla riga precedente.
-    # Misurato: 9 fotogrammi su 23 con due pannelli, sempre uno nella riga
-    # sopra. Con il contenitore fisso l'albero non cambia forma.
     with st.container(key="fasciaAnalisi"):
-        if lavoro.al_lavoro:
-            rimasti = len(in_coda) + (1 if corrente else 0)
-            st.markdown(
-                "<div class='au-avviso'><span class='au-rotella'></span>"
-                f"{tn('src.analisi_in_corso', rimasti)}</div>",
-                unsafe_allow_html=True)
+        if in_analisi:
+            st.markdown(f"<div class='au-nota-pagina'>{t('src.gia_aperte')}</div>",
+                        unsafe_allow_html=True)
 
     pesi = [4.6, 1.2, 0.9, 3.6, 0.5]
     with st.container(key="intest"):
@@ -4265,13 +4874,17 @@ def page_sorgenti(cfg: dict) -> None:
             if str(path) == corrente:
                 # Gialla, non grigia: a colpo d'occhio si deve vedere DOVE sta
                 # lavorando, non solo che qualcosa sta lavorando.
+                # Ciano: e' un processo attivo, non un avviso.
                 c[3].markdown(
-                    "<span class='au-tag au-warn au-lavoro'>"
-                    f"<span class='au-rotella'></span>{t('src.riga_in_corso')}</span>",
-                    unsafe_allow_html=True)
+                    "<div class='au-analisi-corso au-s-corso'><span></span>"
+                    f"{t('src.riga_in_corso')}</div><div class='au-analisi-barra'>"
+                    "<span></span></div>", unsafe_allow_html=True)
             elif str(path) in in_coda:
+                prossimo = in_coda and str(path) == in_coda[0]
                 c[3].markdown(
-                    f"<span class='au-tag au-dim'>{t('src.riga_in_coda')}</span>",
+                    "<div class='au-analisi-coda'><span></span>"
+                    f"{t('src.riga_in_coda')}"
+                    f"{' · ' + t('src.prossimo') if prossimo else ''}</div>",
                     unsafe_allow_html=True)
             elif rep is None:
                 c[3].markdown(
@@ -4306,9 +4919,15 @@ def page_sorgenti(cfg: dict) -> None:
 
                 avvisi = rep.warnings()
                 blocco = f"<div class='au-meta'>{esc(' · '.join(sintesi))}</div>"
+                chip_riga = []
                 if avvisi:
-                    blocco += (f"<div><span class='au-tag au-warn au-chip-riga'>"
-                               f"{tn('src.avvisi', len(avvisi))}</span></div>")
+                    chip_riga.append(f"<span class='au-tag au-warn au-chip-riga au-punto'>"
+                                     f"{tn('src.avvisi', len(avvisi))}</span>")
+                if getattr(rep, "dedup_campione", None) is not None:
+                    chip_riga.append(f"<span class='au-tag au-ok au-chip-riga'>dedup "
+                                     f"{rep.dedup_campione:.0%}</span>")
+                if chip_riga:
+                    blocco += f"<div class='au-chip-righe'>{''.join(chip_riga)}</div>"
                 c[3].markdown(blocco, unsafe_allow_html=True)
 
             # La chevron è l'unico comando della riga chiusa. "Rianalizza"
@@ -4406,6 +5025,24 @@ def page_sorgenti(cfg: dict) -> None:
                             lavoro.accoda([path], rifai=True)
                             st.rerun()
                         _dettagli(rep)
+
+    # La barra d'azione in fondo: cosa conviene fare adesso, e i due passi
+    # successivi. L'azione principale e' una sola, il Confronto.
+    if con_avvisi:
+        messaggio = tn("src.barra_avvisi", con_avvisi)
+    elif in_analisi:
+        messaggio = t("src.barra_analisi")
+    else:
+        messaggio = t("src.barra_ok")
+    with st.container(key="barraSorgenti", horizontal=True,
+                      vertical_alignment="center"):
+        st.markdown(f"<div class='au-barra-testo'>{messaggio}</div>",
+                    unsafe_allow_html=True)
+        st.button(t("src.vai_lavorazione"), key="vaiLavorazione",
+                  on_click=_vai, args=(SEZIONI[2],))
+        st.button(t("src.vai_confronto"), key="vaiConfronto", type="primary",
+                  icon=":material/arrow_forward:", icon_position="right",
+                  on_click=_vai, args=(SEZIONI[1],))
 
     # Finché c'e' lavoro, la pagina si riguarda da sola: è l'unico modo per
     # far avanzare gli stati, dato che il thread non può toccare la pagina.
@@ -7519,6 +8156,29 @@ def _pagina_primo_avvio() -> bool:
     return True
 
 
+def _applica_tema(scelta: str) -> None:
+    """I colori del tema scelto, e lo stesso tema per i widget di Streamlit.
+
+    Le variabili si riscrivono a ogni giro (costano un `<style>` di poche
+    righe). I widget nativi invece prendono il tema che Streamlit legge dal
+    browser all'avvio della pagina: se non e' quello scelto lo si scrive li'
+    e si ricarica, una volta sola — al giro dopo coincidono. La scelta e'
+    gia' salvata su disco quando si arriva qui, quindi un ricaricamento non
+    perde niente, e le lavorazioni, che sono processi a parte, non se ne
+    accorgono.
+    """
+    if scelta not in tema.SCELTE:
+        scelta = tema.SISTEMA
+    st.markdown(f"<style>{tema.css(scelta)}</style>", unsafe_allow_html=True)
+    voluto = json.dumps(tema.streamlit(scelta))
+    st.iframe(
+        "<script>try{const W=window.parent;"
+        "const K='stActiveTheme-'+W.location.pathname+'-v2';"
+        f"const V={json.dumps(voluto)};"
+        "if(W.localStorage.getItem(K)!==V){W.localStorage.setItem(K,V);"
+        "W.location.reload();}}catch(e){}</script>", height=1)
+
+
 def main() -> None:
     try:
         PATHS.ensure_dirs()
@@ -7529,6 +8189,8 @@ def main() -> None:
     # widget scrive la sessione e Streamlit rifa' il giro: qui la si trova.
     i18n.imposta(st.session_state.get("w_lingua")
                  or _impostazioni_carica()["lingua"])
+    _applica_tema(st.session_state.get("w_tema")
+                  or _impostazioni_carica()["tema"])
     if _pagina_primo_avvio():
         return
     sezione = header()
