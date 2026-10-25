@@ -702,13 +702,13 @@ def _sorgente_288p(dst: Path) -> Path:
     return f
 
 
-@caso("--forza arriva davvero fino al piano, da CLI")
+@caso("--force arriva davvero fino al piano, da CLI")
 def _() -> None:
-    """`--forza` era dichiarato in `plan` e in `run` ma non veniva mai passato
+    """`--force` (allora `--forza`) era dichiarato in `plan` e in `run` ma non veniva mai passato
     a `build_plan`: l'opzione non faceva niente e la soglia di 1.25x era
-    invalicabile. Stessa classe di difetto di `--modello`, già corretta."""
+    invalicabile. Stessa classe di difetto di `--model`, già corretta."""
     out = subprocess.run(
-        [str(ROOT / "animeup"), "plan", "--altezza", "800", "--forza",
+        [str(ROOT / "animeup"), "plan", "--height", "800", "--force",
          str(CAMPIONI / "clip20s.mkv")],
         capture_output=True, text=True, timeout=300,
     )
@@ -717,12 +717,24 @@ def _() -> None:
     rifiuti = [i18n.catalogo(lingua)["cli.non_elaborabile"].format(nome="", errore="")
                for lingua in i18n.LINGUE]
     assert not any(r in out.stdout for r in rifiuti), \
-        "--forza non viene passato a build_plan: rifiuta comunque"
+        "--force non viene passato a build_plan: rifiuta comunque"
     # La CLI parla la lingua salvata nelle impostazioni, non quella fissata
     # qui per i test: l'avviso si cerca nella sua.
     forzato = i18n.catalogo(i18n.preferita())["mot.plan.forzato"].split(":")[0]
     assert forzato in out.stdout, \
-        "--forza passa ma l'avviso non arriva a schermo"
+        "--force passa ma l'avviso non arriva a schermo"
+
+
+@caso("le opzioni della CLI hanno nomi inglesi")
+def _() -> None:
+    """Le opzioni erano nate in italiano (`--forza`, `--si`, `--altezza`…) e
+    un utente inglese se le trovava nell'aiuto. Ora sono solo inglesi."""
+    aiuto = subprocess.run([str(ROOT / "animeup"), "run", "--help"],
+                           capture_output=True, text=True, timeout=120,
+                           env={**os.environ, "COLUMNS": "200"}).stdout
+    assert "--yes" in aiuto and "--height" in aiuto and "--force" in aiuto, aiuto[-600:]
+    for vecchio in ("--si ", "--altezza", "--forza", "--disco", "--modello", "--pausa"):
+        assert vecchio not in aiuto, f"{vecchio} ancora nell'aiuto"
 
 
 @caso("l'interfaccia non lancia due lavorazioni in parallelo")
@@ -841,7 +853,7 @@ def _() -> None:
             assert p.model_height >= p.target_height, (
                 f"{chiave}: produce {p.model_width}x{p.model_height} per un "
                 f"bersaglio {p.target_width}x{p.target_height}, senza dirlo")
-        # Con --forza si procede, ma l'avviso c'e'.
+        # Con --force si procede, ma l'avviso c'e'.
         p = build_plan(r, target_height=1080, model_key="cugan-denoise",
                        forza=True)
         assert any("sotto il bersaglio" in w for w in p.warnings), p.warnings
@@ -1124,8 +1136,8 @@ def _() -> None:
 
 @caso("un bersaglio assurdo viene rifiutato, non fatto esplodere")
 def _() -> None:
-    """`--altezza 0 --forza` usciva con ZeroDivisionError e un traceback;
-    `--altezza -100` produceva un piano con uscita -132x-100."""
+    """`--height 0 --force` usciva con ZeroDivisionError e un traceback;
+    `--height -100` produceva un piano con uscita -132x-100."""
     from animeup.plan import PlanError
     r = probe_source(CAMPIONI / "clip20s.mkv", with_fields=False)
     for altezza in (0, -100, 8):
@@ -1380,7 +1392,7 @@ def _() -> None:
 
 @caso("la pausa fra due file si dichiara su disco e scade da sola")
 def _() -> None:
-    """Durante la pausa (`--pausa`) nessun lucchetto esiste, ma la catena è
+    """Durante la pausa (`--pause`) nessun lucchetto esiste, ma la catena è
     viva: senza il marcatore la barra direbbe "GPU libera" e un secondo
     lancio colliderebbe col primo al risveglio. Un marcatore scaduto, di un
     processo morto o illeggibile deve valere come assente."""
@@ -2329,7 +2341,7 @@ def _etichetta_del_lancio():
             < sorgente.index("if not plans:")), "identita' troppo tardi"
 
     interfaccia = (ROOT / "ui" / "app.py").read_text()
-    assert '"--lancio", etichetta_lancio' in interfaccia
+    assert '"--launch", etichetta_lancio' in interfaccia
 
 
 @caso("il tempo bruciato da un file fallito non diventa una pausa")
@@ -5035,10 +5047,10 @@ def _() -> None:
 @caso("l'interfaccia di fabbrica risponde solo da questo Mac")
 def _() -> None:
     """Il server ascoltava su tutte le interfacce: chiunque sulla stessa rete
-    poteva avviare e fermare lavorazioni. Ora serve --rete per aprirlo."""
+    poteva avviare e fermare lavorazioni. Ora serve --network per aprirlo."""
     cli = (ROOT / "src" / "animeup" / "cli.py").read_text()
     assert '"--server.address", "0.0.0.0" if rete else "127.0.0.1"' in cli
-    assert 'typer.Option("--rete"' in cli
+    assert 'typer.Option("--network"' in cli
 
 
 @caso("la lingua salvata torna al riavvio, e una sconosciuta non rompe niente")

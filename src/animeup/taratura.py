@@ -724,7 +724,7 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
 # --- la taratura in un processo suo --------------------------------------
 # Come il confronto: girava dentro la pagina, e un ricaricamento (o la
 # sessione del browser che si chiude) poteva fermarla a meta'. Ora la pagina
-# lancia `animeup taratura --fondo` staccato dalla sessione e legge a che
+# lancia `animeup calibrate --background` staccato dalla sessione e legge a che
 # punto e' da `cache/calibration-status.json`.
 
 IN_CORSO, FINITA, FALLITA, INTERROTTA = "running", "done", "failed", "interrupted"
@@ -769,7 +769,7 @@ def stato_fondo(p: Paths | None = None) -> dict | None:
 
 
 def avvia_fondo(p: Paths | None = None) -> bool:
-    """Lancia `animeup taratura --fondo`. False se una gira gia'."""
+    """Lancia `animeup calibrate --background`. False se una gira gia'."""
     from .paths import code_root
 
     p = p or PATHS
@@ -786,7 +786,7 @@ def avvia_fondo(p: Paths | None = None) -> bool:
                   "previous": carica(p), "new": None, "error": ""}, p)
     log = p.cache / "calibration.log"
     with log.open("w") as fh:
-        proc = subprocess.Popen([str(code_root() / "animeup"), "taratura", "--fondo"],
+        proc = subprocess.Popen([str(code_root() / "animeup"), "calibrate", "--background"],
                                 stdout=fh, stderr=fh, stdin=subprocess.DEVNULL,
                                 start_new_session=True)
     s = stato_fondo(p) or {}

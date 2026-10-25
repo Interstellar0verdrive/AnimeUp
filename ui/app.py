@@ -4767,7 +4767,7 @@ def _modale_fine_coda(lancio: dict) -> None:
 def _contenuto_taratura() -> None:
     """La taratura in tre passi: cosa fa, il cronometro, i risultati.
 
-    Gira in un processo suo (`animeup taratura --fondo`): la finestra si puo'
+    Gira in un processo suo (`animeup calibrate --background`): la finestra si puo'
     chiudere e riaprire, e un ricaricamento non la ferma. Qui si legge solo
     il suo file di stato.
     """
@@ -8220,7 +8220,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
             # pipeline la tiene solo per un difetto (e allora l'uscita diventa
             # .DEFECTIVE, quindi qui non si arriva), percio' e' un residuo —
             # una versione vecchia che la teneva per gli avvisi, una pulizia
-            # interrotta, `--tieni-temp`. Si libera con lo stesso Scarta in
+            # interrotta, `--keep-temp`. Si libera con lo stesso Scarta in
             # due passi delle lavorazioni a meta'.
             if concluso and lav is not None and c[6].button(
                     t("lavb.scarta"), key=f"scarta{i}",
@@ -9010,7 +9010,7 @@ def _riprendi(piano, cartella: Path | None, cfg: dict) -> bool:
 def _avvia(piani, cfg: dict, modello: str | None = None) -> bool:
     """Lancia la lavorazione: gruppi diversi UNO DOPO L'ALTRO, mai insieme.
 
-    La CLI accetta un solo `--modello` per invocazione mentre qui la scelta è
+    La CLI accetta un solo `--model` per invocazione mentre qui la scelta è
     per file: si raggruppa. Prima il modello non veniva passato affatto e il
     processo ricadeva sul consigliato, producendo un file diverso da quello
     annunciato a schermo.
@@ -9061,27 +9061,27 @@ def _avvia(piani, cfg: dict, modello: str | None = None) -> bool:
     # stesso e l'ultimo si spacciava per l'intera maratona.
     etichetta_lancio = f"{int(time.time())}-{os.getpid()}"
     for modello, gruppo in per_modello.items():
-        comando = [str(CODICE / "animeup"), "run", "--si",
-                   "--lancio", etichetta_lancio,
-                   "--altezza", str(cfg["altezza"]), "--crf", str(cfg["crf"]),
-                   "--preset", cfg["preset"], "--modello", modello,
-                   "--disco", str(cfg["disco"])]
+        comando = [str(CODICE / "animeup"), "run", "--yes",
+                   "--launch", etichetta_lancio,
+                   "--height", str(cfg["altezza"]), "--crf", str(cfg["crf"]),
+                   "--preset", cfg["preset"], "--model", modello,
+                   "--disk", str(cfg["disco"])]
         if not cfg["dedup"]:
             comando.append("--no-dedup")
         if cfg.get("pausa"):
-            comando += ["--pausa", str(cfg["pausa"])]
+            comando += ["--pause", str(cfg["pausa"])]
             # I gruppi dopo il primo riposano anche PRIMA di partire: sono
             # la continuazione della stessa maratona, non un lancio nuovo.
             if comandi:
-                comando.append("--pausa-prima")
+                comando.append("--pause-first")
         if len(per_modello) > 1:
-            comando += ["--catena-totale", str(totale_catena),
-                        "--catena-inizio", str(precedenti)]
+            comando += ["--chain-total", str(totale_catena),
+                        "--chain-start", str(precedenti)]
         precedenti += len(gruppo)
         if cfg["denoise"]:
             comando.append("--denoise")
         if cfg["forza"]:
-            comando.append("--forza")
+            comando.append("--force")
         comando += [str(x.source.path) for x in gruppo]
         comandi.append(" ".join(shlex.quote(a) for a in comando))
 

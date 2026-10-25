@@ -797,7 +797,7 @@ class Job:
             # Va in `note` e non in `warnings`: `JobResult.ok` richiede
             # `not warnings`, e la CLI pulisce la cartella di lavoro solo
             # quando l'esito è ok. Un avviso che si ripresenta a ogni lancio
-            # avrebbe reso `--tieni-temp` permanentemente attivo senza dirlo,
+            # avrebbe reso `--keep-temp` permanentemente attivo senza dirlo,
             # lasciando su disco due cartelle da sedici gigabyte l'una.
             p.say(t("mot.pipe.fase_cartelle"),
                   t("mot.pipe.cartella_abbandonata", cartella=vecchia.name))

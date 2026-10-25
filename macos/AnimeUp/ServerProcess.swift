@@ -81,7 +81,7 @@ final class ServerProcess {
         posix_spawnattr_setsigmask(&attr, &noSignals)
 
         let argv = ["/bin/bash", paths.launcher.path,
-                    "ui", "--porta", String(serverPort), "--senza-browser"]
+                    "ui", "--port", String(serverPort), "--no-browser"]
         let envp = environment().map { "\($0.key)=\($0.value)" }
 
         let cArgv = argv.map { strdup($0) } + [nil]

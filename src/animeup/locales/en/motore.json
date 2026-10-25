@@ -21,7 +21,7 @@
   "mot.plan.scala_non_supportata": "The {modello} model doesn't support scale {scala} (available: {disponibili}).",
   "mot.plan.sintesi_scala": "unsupported scale",
   "mot.plan.bersaglio_abbassato": "Target lowered from {chiesto}p to {ottenuto}p: from {sorgente}, 4x is the most you can ask of a model without it inventing everything.",
-  "mot.plan.rimedio_scala_forzata": "The scale is forced to {scala}: drop --scala and let it choose, or lower the target to {altezza}p",
+  "mot.plan.rimedio_scala_forzata": "The scale is forced to {scala}: drop --scale and let it choose, or lower the target to {altezza}p",
   "mot.plan.rimedio_scegli": "Choose {modelli}",
   "mot.plan.o": " or ",
   "mot.plan.rimedio_nessuno": "No model in the catalogue goes higher: from {sorgente} the honest maximum is {altezza}p. Lower the target",

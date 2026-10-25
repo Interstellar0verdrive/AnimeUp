@@ -36,7 +36,7 @@ jobs:
           key: animeup-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('src/animeup/setup.py', 'animeup', 'uv.lock', '.python-version') }}
 
       - name: Setup (binari e modelli in bin/)
-        run: ./animeup setup --si
+        run: ./animeup setup --yes
 
       # `setup` non fallisce se un download va male: lo dice e prosegue.
       - name: Verifica i binari

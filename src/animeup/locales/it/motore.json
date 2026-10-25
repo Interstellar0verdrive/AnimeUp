@@ -21,7 +21,7 @@
   "mot.plan.scala_non_supportata": "Il modello {modello} non supporta la scala {scala} (disponibili: {disponibili}).",
   "mot.plan.sintesi_scala": "scala non supportata",
   "mot.plan.bersaglio_abbassato": "Bersaglio abbassato da {chiesto}p a {ottenuto}p: da {sorgente} il quadruplo è il massimo che si può chiedere a un modello senza inventare tutto.",
-  "mot.plan.rimedio_scala_forzata": "La scala è forzata a {scala}: togli --scala e lasciala scegliere, oppure abbassa il bersaglio a {altezza}p",
+  "mot.plan.rimedio_scala_forzata": "La scala è forzata a {scala}: togli --scale e lasciala scegliere, oppure abbassa il bersaglio a {altezza}p",
   "mot.plan.rimedio_scegli": "Scegli {modelli}",
   "mot.plan.o": " o ",
   "mot.plan.rimedio_nessuno": "Nessun modello del catalogo arriva più in alto: da {sorgente} il massimo onesto è {altezza}p. Abbassa il bersaglio",

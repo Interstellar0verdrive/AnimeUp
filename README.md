@@ -53,7 +53,7 @@ Project, CC BY-SA 3.0.</sub>
   **all original tracks remuxed**: audio, subtitles, chapters and attachments,
   fansub fonts included.
 - **Honest time estimates.** Estimates are calibrated on *your* Mac
-  (`./animeup taratura`) and include the encoding passes, not just the
+  (`./animeup calibrate`) and include the encoding passes, not just the
   upscale.
 
 ## Requirements
@@ -125,11 +125,11 @@ launch; interrupted jobs stay resumable.
 ### Command line
 
 ```bash
-./animeup ui              # web UI (port 8899; --porta N to change it)
+./animeup ui              # web UI (port 8899; --port N to change it)
 ./animeup analyze FILE    # analyse a source
 ./animeup plan FILE       # show what would be done, without doing it
 ./animeup run FILE        # run a job from the terminal (same pipeline as the UI)
-./animeup taratura        # calibrate time estimates on this Mac (~10 min)
+./animeup calibrate       # calibrate time estimates on this Mac (~10 min)
 ./animeup doctor          # check that the folder is self-contained
 ./animeup setup           # (re)download missing binaries and models
 ./animeup test            # regression tests
@@ -190,7 +190,7 @@ folder, handy to keep on an external drive or to use from the Terminal.
    download FFmpeg (once). Keep it open while you use AnimeUp: it's the
    server.
 3. The interface opens in your browser at <http://localhost:8899>. It's only
-   reachable from this Mac; `./animeup ui --rete` also lets other devices on
+   reachable from this Mac; `./animeup ui --network` also lets other devices on
    your network open it.
 
 ### Option C: from source

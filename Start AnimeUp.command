@@ -43,4 +43,4 @@ for b in ffmpeg ffprobe realesrgan-ncnn-vulkan realcugan-ncnn-vulkan; do
   fi
 done
 
-exec ./animeup ui --porta "$PORTA"
+exec ./animeup ui --port "$PORTA"

@@ -80,12 +80,12 @@ def analyze(
     ] = None,
     duplicates: Annotated[
         bool,
-        typer.Option("--duplicati/--no-duplicati",
+        typer.Option("--duplicates/--no-duplicates",
                      help=t("cli.analyze.duplicati")),
     ] = False,
     quick: Annotated[
         bool,
-        typer.Option("--veloce", help=t("cli.analyze.veloce")),
+        typer.Option("--quick", help=t("cli.analyze.veloce")),
     ] = False,
 ) -> None:
     """Analizza i sorgenti e mostra il referto, senza modificare nulla."""
@@ -116,12 +116,12 @@ def plan_cmd(
         typer.Argument(help=t("cli.opz.targets")),
     ] = None,
     altezza: Annotated[
-        int, typer.Option("--altezza", help=t("cli.opz.altezza"))
+        int, typer.Option("--height", help=t("cli.opz.altezza"))
     ] = 1080,
     crf: Annotated[int, typer.Option("--crf", help=t("cli.opz.crf"))] = 18,
     scala: Annotated[
         int | None,
-        typer.Option("--scala", help=t("cli.opz.scala")),
+        typer.Option("--scale", help=t("cli.opz.scala")),
     ] = None,
     denoise: Annotated[
         bool, typer.Option("--denoise/--no-denoise", help=t("cli.opz.denoise"))
@@ -129,18 +129,18 @@ def plan_cmd(
     dedup: Annotated[
         bool, typer.Option("--dedup/--no-dedup", help=t("cli.opz.dedup"))
     ] = True,
-    forza: Annotated[bool, typer.Option("--forza",
+    forza: Annotated[bool, typer.Option("--force",
         help=t("cli.opz.forza"))] = False,
     # `plan` è l'unico comando di sola lettura: senza queste due non poteva
     # riprodurre ciò che `run` avrebbe fatto, e mostrava blocchi, picco su
     # disco e riga di codifica diversi da quelli veri.
     preset: Annotated[str, typer.Option("--preset",
         help=t("cli.opz.preset"))] = "slower",
-    disco: Annotated[float, typer.Option("--disco",
+    disco: Annotated[float, typer.Option("--disk",
         help=t("cli.opz.disco"))] = 40.0,
     modello: Annotated[
         str | None,
-        typer.Option("--modello", "-m",
+        typer.Option("--model", "-m",
                      help=t("cli.opz.modello")),
     ] = None,
 ) -> None:
@@ -188,42 +188,42 @@ def run_cmd(
         list[Path] | None,
         typer.Argument(help=t("cli.opz.targets")),
     ] = None,
-    altezza: Annotated[int, typer.Option("--altezza",
+    altezza: Annotated[int, typer.Option("--height",
         help=t("cli.opz.altezza"))] = 1080,
     crf: Annotated[int, typer.Option("--crf",
         help=t("cli.opz.crf"))] = 18,
-    forza: Annotated[bool, typer.Option("--forza",
+    forza: Annotated[bool, typer.Option("--force",
         help=t("cli.opz.forza"))] = False,
-    disco: Annotated[float, typer.Option("--disco",
+    disco: Annotated[float, typer.Option("--disk",
         help=t("cli.opz.disco"))] = 40.0,
     preset: Annotated[str, typer.Option("--preset",
         help=t("cli.opz.preset"))] = "slower",
-    scala: Annotated[int | None, typer.Option("--scala",
+    scala: Annotated[int | None, typer.Option("--scale",
         help=t("cli.opz.scala"))] = None,
     denoise: Annotated[bool, typer.Option("--denoise/--no-denoise",
         help=t("cli.opz.denoise"))] = False,
     dedup: Annotated[bool, typer.Option("--dedup/--no-dedup",
         help=t("cli.opz.dedup"))] = True,
     conferma: Annotated[
-        bool, typer.Option("--si", help=t("cli.run.si"))
+        bool, typer.Option("--yes", help=t("cli.run.si"))
     ] = False,
     tieni_temp: Annotated[
-        bool, typer.Option("--tieni-temp", help=t("cli.run.tieni_temp"))
+        bool, typer.Option("--keep-temp", help=t("cli.run.tieni_temp"))
     ] = False,
     modello: Annotated[
         str | None,
-        typer.Option("--modello", "-m",
+        typer.Option("--model", "-m",
                      help=t("cli.opz.modello")),
     ] = None,
-    pausa: Annotated[int, typer.Option("--pausa",
+    pausa: Annotated[int, typer.Option("--pause",
         help=t("cli.run.pausa"))] = 0,
-    pausa_prima: Annotated[bool, typer.Option("--pausa-prima",
+    pausa_prima: Annotated[bool, typer.Option("--pause-first", hidden=True,
         help=t("cli.run.pausa_prima"))] = False,
-    catena_totale: Annotated[int, typer.Option("--catena-totale",
+    catena_totale: Annotated[int, typer.Option("--chain-total", hidden=True,
         help=t("cli.run.catena_totale"))] = 0,
-    catena_inizio: Annotated[int, typer.Option("--catena-inizio",
+    catena_inizio: Annotated[int, typer.Option("--chain-start", hidden=True,
         help=t("cli.run.catena_inizio"))] = 0,
-    lancio: Annotated[str, typer.Option("--lancio",
+    lancio: Annotated[str, typer.Option("--launch", hidden=True,
         help=t("cli.run.lancio"))] = "",
 ) -> None:
     """Esegue la lavorazione completa."""
@@ -289,7 +289,7 @@ def run_cmd(
 
     for plan in plans:
         render_plan(plan, console)
-    # `--pausa-prima` finge un file già lavorato: così anche il primo della
+    # `--pause-first` finge un file già lavorato: così anche il primo della
     # catena riposa, che è ciò che serve al secondo gruppo di un lancio.
     gia_lavorato = pausa_prima
     # `uscita_esiste` e non `output.exists()`: riconosce anche il nome
@@ -636,7 +636,7 @@ def doctor() -> None:
 
 @app.command(help=t("cli.setup.aiuto"))
 def setup(
-    si: Annotated[bool, typer.Option("--si", help=t("cli.setup.si"))] = False,
+    si: Annotated[bool, typer.Option("--yes", help=t("cli.setup.si"))] = False,
 ) -> None:
     """Scarica binari e modelli mancanti dentro bin/, per rendere la cartella portabile."""
     from .setup import vendor_all
@@ -657,10 +657,9 @@ def test() -> None:
 
 @app.command(help=t("cli.ui.aiuto"))
 def ui(
-    porta: Annotated[int, typer.Option("--porta", help=t("cli.ui.porta"))] = 8899,
-    rete: Annotated[bool, typer.Option("--rete", help=t("cli.ui.rete"))] = False,
-    senza_browser: Annotated[bool, typer.Option(
-        "--senza-browser", help=t("cli.ui.senza_browser"))] = False,
+    porta: Annotated[int, typer.Option("--port", help=t("cli.ui.porta"))] = 8899,
+    rete: Annotated[bool, typer.Option("--network", help=t("cli.ui.rete"))] = False,
+    senza_browser: Annotated[bool, typer.Option("--no-browser", help=t("cli.ui.senza_browser"))] = False,
 ) -> None:
     """Apre l'interfaccia nel browser.
 
@@ -692,7 +691,7 @@ def ui(
         dire(t("cli.ui.occupata", porta=porta), "yellow")
         dire(t("cli.ui.vecchia"), "yellow")
         console.print(f"\n  [bold]lsof -ti :{porta} | xargs kill[/bold]\n")
-        dire(t("cli.ui.altra_porta", comando=f"./animeup ui --porta {porta + 1}"),
+        dire(t("cli.ui.altra_porta", comando=f"./animeup ui --port {porta + 1}"),
              "dim")
         raise typer.Exit(1)
 
@@ -740,9 +739,9 @@ def version() -> None:
     console.print(f"AnimeUp {__version__}")
 
 
-@app.command(help=t("cli.tar.aiuto"))
+@app.command(name="calibrate", help=t("cli.tar.aiuto"))
 def taratura(
-    fondo: Annotated[bool, typer.Option("--fondo", hidden=True)] = False,
+    fondo: Annotated[bool, typer.Option("--background", hidden=True)] = False,
 ) -> None:
     """Misura la velocità di QUESTA macchina e tara le stime.
 

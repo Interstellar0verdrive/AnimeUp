@@ -1,6 +1,6 @@
 # Samples
 
-Freely licensed video files, used by calibration (`./animeup taratura`)
+Freely licensed video files, used by calibration (`./animeup calibrate`)
 and safe to redistribute. No copyrighted content: this folder ships with
 the project.
 

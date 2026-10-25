@@ -237,7 +237,7 @@ class Plan:
     recommendation: Recommendation | None = None
     warnings: list[str] = field(default_factory=list)
     # Ritmi delle fasi fuori GPU: di fabbrica, oppure misurati da
-    # `./animeup taratura` su questa macchina. Vivono nel piano perché le
+    # `./animeup calibrate` su questa macchina. Vivono nel piano perché le
     # proprieta' di stima non hanno accesso ai Paths.
     fps_estrazione: float = 60.0
     fps_codifica: float = FPS_CODIFICA
@@ -971,7 +971,7 @@ def build_plan(
         # ingrandimento minimo, perché il rimedio esiste sempre: un altro
         # modello, oppure un bersaglio più basso.
         # Con la scala FORZATA a mano, cambiare modello non serve a niente: il
-        # limite lo ha imposto chi ha scritto `--scala`. Suggerire un altro
+        # limite lo ha imposto chi ha scritto `--scale`. Suggerire un altro
         # modello sarebbe un'istruzione sbagliata, e le istruzioni sbagliate
         # costano più del silenzio.
         if scale_override:

@@ -377,7 +377,7 @@ def esiti(paths: Paths | None = None) -> dict[str, dict]:
 def pausa(paths: Paths | None = None) -> tuple[float, int] | None:
     """(scadenza, pid) se una catena di lavorazioni sta riposando fra due file.
 
-    Il marcatore lo scrive la CLI (`--pausa`); qui si legge e basta, come
+    Il marcatore lo scrive la CLI (`--pause`); qui si legge e basta, come
     tutto il resto. Un marcatore scaduto o di un processo morto vale come
     assente: non si cancella (sola lettura), lo toglierà la CLI o il
     prossimo giro di pausa lo sovrascrivera'.
