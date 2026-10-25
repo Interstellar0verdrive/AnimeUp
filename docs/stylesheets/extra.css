@@ -403,6 +403,24 @@
   width: 100%;
 }
 
+.md-typeset .animeup-guide-path .animeup-guide-path__wide {
+  max-width: 820px;
+}
+
+.md-typeset .animeup-guide-path .animeup-guide-path__narrow {
+  display: none;
+}
+
+@media screen and (max-width: 44em) {
+  .md-typeset .animeup-guide-path .animeup-guide-path__wide {
+    display: none;
+  }
+
+  .md-typeset .animeup-guide-path .animeup-guide-path__narrow {
+    display: block;
+  }
+}
+
 @media screen and (max-width: 30em) {
   .md-typeset figure.animeup-flow {
     padding: 0.35rem;
