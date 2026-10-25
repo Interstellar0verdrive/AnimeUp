@@ -16,7 +16,7 @@
   "pa.voce_ffmpeg": "**FFmpeg 9.0.2**: legge, analizza e codifica il video. Si scarica invece di essere incluso per via della licenza (GPLv3).",
   "pa.voce_ncnn": "**Real-ESRGAN e Real-CUGAN**: i motori di upscale, con i loro modelli.",
   "pa.nota": "Circa {mb} MB, dalle release ufficiali dei progetti, verificati con il checksum. Si fa una volta sola: dopo AnimeUp funziona anche offline.",
-  "pa.scarica": "Scarica e continua (circa {mb} MB)",
+  "pa.scarica": "Scarica e continua",
   "pa.in_corso": "Scarico e verifico gli strumenti…",
   "pa.errore": "Il download non è andato a buon fine. Controlla la connessione e riprova; quanto già scaricato resta.",
   "pa.riprova": "Riprova",

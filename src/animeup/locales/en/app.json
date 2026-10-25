@@ -16,7 +16,7 @@
   "pa.voce_ffmpeg": "**FFmpeg 9.0.2**: reads, analyses and encodes the video. It's downloaded rather than included because of its licence (GPLv3).",
   "pa.voce_ncnn": "**Real-ESRGAN and Real-CUGAN**: the upscaling engines, with their models.",
   "pa.nota": "About {mb} MB, from the projects' official releases, verified by checksum. It's done once: after that AnimeUp works offline.",
-  "pa.scarica": "Download and continue (about {mb} MB)",
+  "pa.scarica": "Download and continue",
   "pa.in_corso": "Downloading and checking the tools…",
   "pa.errore": "The download didn't complete. Check the connection and try again; what's already downloaded is kept.",
   "pa.riprova": "Try again",

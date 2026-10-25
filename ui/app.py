@@ -3704,6 +3704,10 @@ STYLE = f"""
   .au-pa-log {{ font: 400 11.5px var(--mono); color: var(--textCode); padding: 10px 12px;
       border-radius: 8px; background: var(--insetBackground);
       border: 1px solid var(--borderColor); white-space: pre-wrap; margin: 8px 0 0; }}
+  /* Il -1rem sotto i markdown di Streamlit incollava il pulsante alla nota
+     (segnalato dall'utente): margine azzerato e un po' d'aria sopra la CTA. */
+  .st-key-benvenuto [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .st-key-paScarica, .st-key-paRiprova {{ margin-top: 8px; }}
   .st-key-paScarica button, .st-key-paRiprova button {{ height: 40px; padding: 0 20px;
       white-space: nowrap; }}
   .st-key-paScarica button p, .st-key-paRiprova button p {{ font-size: 14px; font-weight: 600; }}
@@ -9170,7 +9174,7 @@ def _pagina_primo_avvio() -> bool:
             return True
         if lavoro.finita and not primo_avvio.serve():
             return False
-        if st.button(t("pa.scarica", mb=primo_avvio.peso_mb()), type="primary",
+        if st.button(t("pa.scarica"), type="primary",
                      key="paScarica"):
             lavoro.avvia()
             st.rerun()
