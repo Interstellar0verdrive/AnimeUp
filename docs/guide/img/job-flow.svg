@@ -1,4 +1,4 @@
-<svg class="animeup-flow__svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 1144" role="img" aria-labelledby="animeup-flow-title animeup-flow-description">
+<svg class="animeup-flow__svg" xmlns="http://www.w3.org/2000/svg" width="440" height="1144" viewBox="0 0 440 1144" role="img" aria-labelledby="animeup-flow-title animeup-flow-description">
   <title id="animeup-flow-title">From source file to finished AnimeUp video</title>
   <desc id="animeup-flow-description">A vertical flow from INPUT through analysis, planning, checks, extraction in phase 1 of 3, deduplication, the GPU and CPU chunk loop in phase 2 of 3, final encoding and assembly in phase 3 of 3, verification, and a finished MKV in OUTPUT. On success, a job report is saved and the job folder is removed.</desc>
   <style>
