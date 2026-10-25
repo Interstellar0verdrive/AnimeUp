@@ -87,7 +87,7 @@ Examples with **Output height** at 1080p, for animevideov3 or CUGAN no-denoise:
 
 And for other targets: 720p to 1440p and 1080p to 2160p both use x4 (2:1 exactly).
 
-The scale appears in the output file name (`x3`, `x4`). On the command line you can force it with `--scala`; see the [command-line reference](../reference/command-line.md).
+The scale appears in the output file name (`x3`, `x4`). On the command line you can force it with `--scale`; see the [command-line reference](../reference/command-line.md).
 
 ## When a model can't reach the target
 
@@ -131,6 +131,8 @@ The upscaler downloads come with more model files than AnimeUp uses (in `bin/mod
 | Real-CUGAN "pro" | Silently corrupted 2 frames out of 240: one with altered colour channels, one completely black |
 | Real-CUGAN conservative | Visible banding on soft gradients |
 | Real-ESRGAN x4plus-anime | Softer than animevideov3, and 4 times slower |
+
+Newer community models (AnimeJaNai, Fallin Soft, Adore and others) were also tested against the two AnimeUp uses: see [Newer anime models, compared](model-study.md).
 
 ## Before you move on
 
