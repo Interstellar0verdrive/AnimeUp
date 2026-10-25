@@ -181,6 +181,10 @@
   width: 0.4rem;
 }
 
+.animeup-theme-control:has(select:is(:hover, :focus-visible))::after {
+  color: var(--animeup-accent);
+}
+
 .animeup-theme-control label {
   display: none;
 }
