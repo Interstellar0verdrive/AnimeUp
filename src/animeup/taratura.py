@@ -142,6 +142,19 @@ def _misura_clip(p: Paths, sorgente: Path) -> tuple[int, int, int]:
     return larghezza, altezza, pacchetti
 
 
+def nomi_tappe() -> list[str]:
+    """I nomi delle tappe, nell'ordine di `preventivo`, nella lingua di ADESSO.
+
+    Lo stato su disco li porta nella lingua di chi ha lanciato il giro: la
+    pagina li ridice con questi, cosi' un cambio di lingua vale anche per una
+    taratura gia' in corso.
+    """
+    nomi = [t("mot.taratura.tappa_estrazione"), t("mot.taratura.tappa_salvataggio")]
+    nomi += [t("mot.taratura.tappa_upscale", modello=modello.short, scala=scala)
+             for _k, modello, scala in _combinazioni()]
+    return nomi + [t("mot.taratura.tappa_codifica"), t("mot.taratura.tappa_scansione")]
+
+
 def preventivo(paths: Paths | None = None, *,
                clip: Path | None = None) -> list[tuple[str, float]]:
     """Le tappe del giro, ciascuna col suo costo atteso in secondi.
