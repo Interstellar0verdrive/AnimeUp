@@ -1783,6 +1783,15 @@ STYLE = f"""
   .au-valore {{ font-family: var(--mono); font-size: 12.5px; color: {TESTO};
                font-variant-numeric: tabular-nums; line-height: 1.45; }}
   .au-ind > span {{ white-space: nowrap; }}
+  /* `_pezzi`: il «·» vive nel margine sinistro di ogni pezzo; il contenitore
+     esterno taglia la striscia in cui cade quello del primo pezzo di ogni
+     riga. Un pezzo piu' lungo della riga va a capo da se'. */
+  .au-pz {{ display: block; overflow: hidden; }}
+  .au-pz > span {{ display: flex; flex-wrap: wrap; margin-left: -1.1em; }}
+  .au-pz > span > span {{ position: relative; padding-left: 1.1em; min-width: 0; }}
+  .au-pz > span > span::before {{ content: "·"; position: absolute; left: 0;
+      width: 1.1em; text-align: center; }}
+  :is(b, span, code, em) > .au-pz {{ display: inline-block; vertical-align: top; max-width: 100%; }}
   .au-nomis {{ white-space: nowrap; margin-top: 8px; }}
   [data-testid="stColumn"]:has(.au-nomis) {{ flex: 0 0 auto !important; width: auto !important; }}
   /* I valori che cambieranno il risultato si distinguono dagli altri: chi
@@ -2730,7 +2739,7 @@ STYLE = f"""
      e tre i passi crescono insieme). */
   .st-key-passi button > div, .st-key-passi button p {{ width: 100%; min-width: 0; }}
   .st-key-passi button p::after {{ font-size: 12.5px; font-weight: 400;
-      line-height: 18px; color: var(--textSecondary); white-space: normal;
+      line-height: 18px; color: var(--textSecondary); white-space: pre-line;
       max-width: 100%; }}
   .st-key-passi {{ align-items: stretch !important; }}
   .st-key-passi > [class*="st-key-passo"] {{ align-self: stretch; display: flex;
@@ -3934,6 +3943,48 @@ def _vai(sezione: str) -> None:
     st.session_state["sezione"] = sezione
 
 
+_LARGHEZZE_PASSI: dict | None = None
+
+
+def _larghezza_sottotitolo(testo: str) -> float:
+    """Quanto e' largo `testo` nel carattere dei sottotitoli dei passi (Inter
+    12.5px), in px: misurato carattere per carattere nel browser una volta
+    (ui/larghezze_passi.json), cosi' si sa prima di disegnare se ci sta."""
+    global _LARGHEZZE_PASSI
+    if _LARGHEZZE_PASSI is None:
+        try:
+            _LARGHEZZE_PASSI = json.loads(
+                (Path(__file__).parent / "larghezze_passi.json").read_text())
+        except (OSError, ValueError):
+            _LARGHEZZE_PASSI = {}
+    return sum(float(_LARGHEZZE_PASSI.get(c, 7.5)) for c in testo)
+
+
+def _regole_sottotitolo(classe: str, testo: str, chiusa: bool) -> list[str]:
+    """Il sottotitolo di un passo: su una riga se ci sta, altrimenti a capo
+    dove c'era il «·», che sparisce («File 1 di 2» / «55%»).
+
+    Il CSS non sa togliere un carattere quando la riga si spezza, quindi si
+    preparano le due versioni e una media query sceglie: lo spazio del
+    sottotitolo dipende solo dalla larghezza della finestra (vedi la barra
+    dei passi sotto i 1360px), e la larghezza del testo la conosciamo.
+    """
+    sel = f"{classe} p::after"
+    pezzi = testo.split(" · ")
+    if len(pezzi) == 1:
+        return [f'{sel} {{ content: "{testo}"; }}']
+    una = f'{sel} {{ content: "{testo}"; }}'
+    due = f'{sel} {{ content: "{"\\A ".join(pezzi)}"; }}'
+    serve = _larghezza_sottotitolo(testo) + 2          # un filo di margine
+    destra = 14 if chiusa else 40                      # spazio del contatore
+    if serve > 250 - 51 - 40:                          # non ci sta mai
+        return [due]
+    if serve <= 176 - 51 - destra:                     # ci sta sempre
+        return [una]
+    soglia = min(1360, int(3 * (serve + 51 + destra) + 476))
+    return [una, f"@media (max-width: {soglia}px) {{ {due} }}"]
+
+
 def header() -> str:
     """La barra dei passi: Sorgenti, Confronto, Lavorazione.
 
@@ -3961,12 +4012,7 @@ def header() -> str:
                 st.button(t(f"tab.{sezione}"), key=f"passo{i}",
                           on_click=_vai, args=(sezione,), disabled=chiusa,
                           type="primary" if sezione == attiva else "secondary")
-                # Su due righe si va a capo prima del «·», mai fra «·» e il
-                # numero: "File 1 di 2 ·" / "55%" si leggeva male.
-                # (`\\0000a0`: sei cifre, o il «55%» dopo verrebbe letto come
-                # parte del codice.)
-                sotto = stato[sezione].replace(" · ", " ·\\0000a0")
-                regole.append(f'{classe} p::after {{ content: "{sotto}"; }}')
+                regole += _regole_sottotitolo(classe, stato[sezione], chiusa)
                 if chiusa:
                     regole.append(f'{classe}::before {{ content: ""; }}')
                 elif i == 1 and stato.get("fatta") and sezione != attiva:
@@ -4449,7 +4495,7 @@ def _contenuto_fine_coda(lancio: dict) -> None:
         cifre.append((t("lav.fine_pause"), stima_hm(respiro)))
     st.markdown(
         f"<div class='au-fine-testa'>{icona}<div><b>{t('lav.fine_titolo')}</b>"
-        f"<span>{sotto}{' · ' + quando if quando else ''}</span></div></div>"
+        f"<span>{_pezzi(sotto + (' · ' + quando if quando else ''))}</span></div></div>"
         "<div class='au-fine-cifre'>" + "".join(
             f"<div><span>{esc(k)}</span><b>{esc(v)}</b></div>" for k, v in cifre)
         + "</div>", unsafe_allow_html=True)
@@ -4864,6 +4910,24 @@ def _unito(testo: str) -> str:
     # spazio dopo «·» si attaccava al numero e si andava a capo PRIMA del «·».
     return "\u00a0· ".join(" →\u00a0".join(pezzo(q) for q in parte.split(" → "))
                             for parte in testo.split(" · "))
+
+
+def _pezzi(testo: str) -> str:
+    """Un testo «a · b · c» che va a capo fra un pezzo e l'altro, senza
+    lasciare il «·» in fondo o in testa a una riga (chiesto dall'utente:
+    «File 1 di 2» / «55%», non «File 1 di 2 ·» / «55%»).
+
+    Ogni pezzo porta il suo «·» nel margine a sinistra; il contenitore
+    nasconde quella striscia, quindi il punto si vede solo fra due pezzi
+    sulla stessa riga e sparisce dove un pezzo apre una riga nuova (vedi
+    `.au-pz`). Dentro un pezzo i numeri restano attaccati (`_unito`).
+    """
+    parti = [p for p in testo.split(" · ") if p.strip()]
+    if len(parti) <= 1:
+        return esc(_unito(testo))
+    return ("<span class='au-pz'><span>"
+            + "".join(f"<span>{esc(_unito(p))}</span>" for p in parti)
+            + "</span></span>")
 
 
 def _breve(percorso: str | Path) -> str:
@@ -5686,7 +5750,7 @@ def page_sorgenti(cfg: dict) -> None:
                     sintesi.append(", ".join(tracce))
 
                 avvisi = rep.warnings()
-                blocco = f"<div class='au-meta'>{esc(_unito(' · '.join(sintesi)))}</div>"
+                blocco = f"<div class='au-meta'>{_pezzi(' · '.join(sintesi))}</div>"
                 chip_riga = []
                 if avvisi:
                     chip_riga.append(f"<span class='au-tag au-warn au-chip-riga au-punto'>"
@@ -5887,7 +5951,7 @@ def _dettagli(rep) -> None:
         celle = "".join(
             f"<div class='au-voce'><span class='au-etichetta'>{esc(k)}</span>"
             f"<span class='au-valore{' au-attenzione' if occhio else ''}'>"
-            f"{esc(_unito(str(v)))}</span></div>"
+            f"{_pezzi(str(v))}</span></div>"
             for k, v, occhio in voci
         )
         pezzi.append(f"<div class='au-blocco'><div class='au-gtitolo'>{titolo}</div>"
@@ -6099,7 +6163,7 @@ def _schede_modelli(plan, path: Path, praticabili: dict[str, str]) -> list[str]:
                 st.markdown(
                     (f"<span class='au-tag {classe}'>{esc(testo)}</span>" if testo else "")
                     + f"<div class='au-m-desc'>{esc(modello.description[:1].upper() + modello.description[1:])}</div>"
-                    f"<div class='au-m-vel'>{esc(_unito(meta))}</div>",
+                    f"<div class='au-m-vel'>{_pezzi(meta)}</div>",
                     unsafe_allow_html=True)
             if acceso and not morta:
                 chiavi.append(k)
@@ -6366,7 +6430,7 @@ def _barra_confronto(plan, path: Path, cfg: dict, prescelti: list,
             durata = max(0.0, float(fatto.get("ended") or 0) - float(fatto.get("started") or 0))
             st.markdown(
                 f"<div class='au-barra-pronto'><span class='au-spunta'>{_svg(_I_SPUNTA, 12, 2.4)}</span>"
-                f"<div><b>{t('conf.pronto_barra', n=n_file, tempo=hms(durata))}</b>"
+                f"<div><b>{_pezzi(t('conf.pronto_barra', n=n_file, tempo=hms(durata)))}</b>"
                 f"<span>{t('conf.pronto_nota')}</span></div></div>",
                 unsafe_allow_html=True)
             if st.button(t("conf.torna_clip"), key="tornaClip"):
@@ -6642,7 +6706,7 @@ def _risultati(path: Path) -> None:
                     # sparirebbero.
                     lato = 480
                     st.markdown(
-                        f"<div class='au-occhio au-res-sez'>{t('conf.fermo', lato=lato)}"
+                        f"<div class='au-occhio au-res-sez'>{_pezzi(t('conf.fermo', lato=lato))}"
                         f"<span class='au-sez-nota'>{t('conf.fermo_nota')}</span></div>",
                         unsafe_allow_html=True)
                     try:
@@ -6876,7 +6940,7 @@ def _scheda_monitor(lav, campioni: dict, stati: dict | None = None) -> str:
         # cioe' proprio il difetto che questa modifica esiste per chiudere.
         # Il piano non c'e' (sono orfani) quindi niente ripiego da taratura:
         # o si e' misurato un turno, o non si somma niente.
-        extra = f"<span class='au-meta'>{_avanzamento_testo(lav, campioni, stati)}</span>"
+        extra = f"<span class='au-meta'>{_pezzi(_avanzamento_testo(lav, campioni, stati))}</span>"
     else:
         stato = f"<span class='au-tag au-warn'>{t('lav.mon_interrotto')}</span>"
         extra = f"<span class='au-meta'>{t('lav.mon_riprendibile')}</span>"
@@ -7012,8 +7076,8 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
         f"<span style='width:{_riempimento(lav) * 100:.1f}%'></span></div>"
         f"<b>{quota:.0%}</b></div>"
         f"<div class='au-riga-tappe'>{''.join(tappe)}"
-        f"<span class='au-riga-misure'>{esc(' · '.join(misure))}</span></div>"
-        f"<div class='au-riga-dett'>{esc(dettaglio)}</div></div>",
+        f"<span class='au-riga-misure'>{_pezzi(' · '.join(misure))}</span></div>"
+        f"<div class='au-riga-dett'>{_pezzi(dettaglio)}</div></div>",
         unsafe_allow_html=True)
     if lav.registro is not None:
         if st.button(t("lav.mostra_log"), key=f"log_{cartella}", type="tertiary"):
@@ -8379,7 +8443,7 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
     for titolo, voci in gruppi:
         celle = "".join(
             f"<div class='au-voce'><span class='au-etichetta'>{esc(k)}</span>"
-            f"<span class='au-valore'>{esc(_unito(str(v)))}</span></div>" for k, v in voci)
+            f"<span class='au-valore'>{_pezzi(str(v))}</span></div>" for k, v in voci)
         pezzi.append(f"<div class='au-blocco'><div class='au-gtitolo'>{titolo}"
                      f"</div><div class='au-griglia'>{celle}</div></div>")
     pezzi.append(
