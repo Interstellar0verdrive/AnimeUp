@@ -204,7 +204,15 @@
   word-spacing: 0.15rem;
 }
 
-.animeup-theme-control select:focus-visible,
+.animeup-theme-control select:is(:hover, :focus-visible) {
+  border-color: var(--animeup-accent);
+  color: var(--animeup-accent);
+}
+
+.animeup-theme-control select:focus-visible {
+  outline: 0;
+}
+
 .animeup-github:focus-visible {
   outline: 2px solid var(--animeup-accent);
   outline-offset: 2px;
