@@ -3422,6 +3422,30 @@ STYLE = f"""
       white-space: nowrap; }}
   .st-key-paScarica button p, .st-key-paRiprova button p {{ font-size: 14px; font-weight: 600; }}
 
+  /* Precisione (confronto con le tavole): chip piu' basse, nomi in
+     semibold, righe da 64px come nel design. */
+  .au-tag {{ padding: 1px 8px; line-height: 16px; }}
+  .au-chip-riga {{ margin-top: 0; }}
+  .au-chip-righe {{ margin-top: 6px; }}
+  [class*="st-key-riga"] .au-name, [class*="st-key-jrow"] .au-name {{ font-weight: 600; }}
+  [class*="st-key-riga"] [data-testid="stHorizontalBlock"] {{ padding-top: 10px !important;
+      padding-bottom: 10px !important; }}
+  .au-cartella-riga code {{ white-space: nowrap; }}
+
+  /* «Fatto» e' verde, come il bordo della riga conclusa (il blu non lo usa
+     nessuno). */
+  .au-fatta {{ background: var(--greenBg) !important; border-color: rgb(var(--greenRgb) / .3) !important;
+      color: var(--greenText) !important; }}
+  .au-finito, [class*="st-key-jrow"]:has(.au-fatta) .au-stima-riga {{ color: var(--greenText); }}
+  .au-riga-dett {{ padding-right: 110px; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; }}
+  .st-key-pausa_tutto button p, [class*="st-key-riprendi_tutto"] button p {{
+      color: var(--textPrimary) !important; }}
+  .st-key-ferma_tutto button {{ background: transparent !important;
+      border: 1px solid rgb(var(--redRgb) / .55) !important; }}
+  .st-key-ferma_tutto button p {{ color: var(--redText) !important; }}
+  .au-sb-titolo {{ flex-wrap: nowrap; white-space: nowrap; }}
+
 </style>
 """
 st.markdown(STYLE, unsafe_allow_html=True)

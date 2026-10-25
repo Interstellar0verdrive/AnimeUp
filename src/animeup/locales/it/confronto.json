@@ -114,7 +114,7 @@
   "conf.solo_scala": "Funziona solo a {scala}×: {altezza}p da questo file",
   "conf.clip_titolo": "Clip difficili",
   "conf.trovate": "{n} trovate",
-  "conf.clip_nota": "Di solito ne bastano due: una Motion più una Static o Dark.",
+  "conf.clip_nota": "Di solito ne bastano due: una di movimento più una statica o scura.",
   "conf.trova_spiega": "AnimeUp scansiona tutto il file per movimento e luminosità, poi sceglie fino a otto clip da 10 secondi dove i modelli si distinguono di più: due per tipo fra Motion, Static, Dark e Bright. Meno di un minuto, e la scansione resta salvata.",
   "conf.prova": "Mette alla prova: {prove}",
   "conf.piu_originale": "originale ingrandito",
