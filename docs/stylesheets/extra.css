@@ -204,7 +204,15 @@
   word-spacing: 0.15rem;
 }
 
-.animeup-theme-control select:focus-visible,
+.animeup-theme-control select:is(:hover, :focus-visible) {
+  border-color: var(--animeup-accent);
+  color: var(--animeup-accent);
+}
+
+.animeup-theme-control select:focus-visible {
+  outline: 0;
+}
+
 .animeup-github:focus-visible {
   outline: 2px solid var(--animeup-accent);
   outline-offset: 2px;
@@ -401,6 +409,26 @@
   background: var(--animeup-surface);
   border: 1px solid var(--animeup-border);
   border-radius: 0.45rem;
+}
+
+/* Material sizes table wrappers to their contents, which leaves short tables
+   narrower than notes and the rest of the reading column. */
+.md-typeset .md-typeset__scrollwrap {
+  margin: 1em 0;
+}
+
+.md-typeset .md-typeset__table {
+  box-sizing: border-box;
+  display: block;
+  overflow-x: auto;
+  padding: 0;
+  width: 100%;
+}
+
+.md-typeset .md-typeset__table > table:not([class]) {
+  display: table;
+  max-width: none;
+  width: 100%;
 }
 
 .md-typeset table:not([class]) th,
@@ -896,6 +924,10 @@
   width: 16px;
 }
 
+.md-sidebar--primary .md-nav__item:not(.md-nav__item--section) {
+  border-top: 0;
+}
+
 .md-nav--primary > .md-nav__list > .md-nav__item--section {
   border-top: 1px solid var(--animeup-border);
   margin-bottom: 0;
@@ -1089,19 +1121,73 @@
 }
 
 @media screen and (max-width: 60em) {
-  .md-sidebar--primary .md-nav__source,
-  .md-nav--primary > .md-nav__list > .md-nav__item--active > label.md-nav__link,
-  .md-nav--primary > .md-nav__list > .md-nav__item--active > .md-nav--secondary {
-    display: none;
+  .md-sidebar--primary,
+  .md-sidebar--primary .md-sidebar__scrollwrap {
+    background: var(--animeup-surface);
   }
 
-  .md-nav--primary > .md-nav__list > .md-nav__item--active > a.md-nav__link {
+  .md-sidebar--primary .md-nav--primary {
+    background: transparent;
+    left: 8px;
+    right: 8px;
+    width: auto;
+  }
+
+  .md-sidebar--primary .md-nav--primary .md-nav,
+  .md-sidebar--primary .md-nav--primary .md-nav__title,
+  .md-sidebar--primary .md-nav--primary .md-nav__list {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .md-nav--primary > .md-nav__title > .md-nav__button.md-logo {
+    display: none !important;
+  }
+
+  .md-sidebar--primary .md-nav__source,
+  .md-nav--primary .md-nav__item--active > label.md-nav__link[for="__toc"],
+  .md-nav--primary .md-nav--secondary,
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > .md-nav > .md-nav__title,
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > label.md-nav__link .md-nav__icon {
+    display: none !important;
+  }
+
+  /* Flatten Material's drill-down navigation inside the mobile drawer. */
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > .md-nav {
+    display: block !important;
+    height: auto !important;
+    opacity: 1 !important;
+    position: static !important;
+    transform: none !important;
+    visibility: visible !important;
+    width: 100%;
+  }
+
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > .md-nav > .md-nav__list {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .md-nav--primary > .md-nav__list > .md-nav__item--nested > label.md-nav__link {
+    color: var(--animeup-text);
+    cursor: default;
+    font-size: 15px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  .md-nav--primary .md-nav__item--active > a.md-nav__link {
     display: flex !important;
   }
 
   .md-sidebar--primary .md-nav__link {
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.4;
+    padding: 4px 9px;
+  }
+
+  .md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav__link {
+    padding-left: 0;
   }
 
   .animeup-search-toggle {
@@ -1151,8 +1237,16 @@
   }
 
   .md-content__inner {
+    box-sizing: border-box;
+    margin: 0 auto !important;
     max-width: 800px;
     padding: 26px 20px 40px;
+    width: 100%;
+  }
+
+  .md-footer__inner.md-grid {
+    max-width: 800px;
+    padding: 16px 20px 36px;
   }
 }
 
