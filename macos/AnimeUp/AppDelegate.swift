@@ -39,6 +39,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             paths = p
             detectLanguage(state: p.state, data: p.data)
             applyTheme()
+            // Requests left by a previous session (written while the app
+            // wasn't watching) must not quit or update this one.
+            for stale in ["quit-request", "update-request"] {
+                try? FileManager.default.removeItem(at: p.state.appendingPathComponent(stale))
+            }
         } catch {
             buildMenus()
             NSApp.activate(ignoringOtherApps: true)
@@ -407,10 +412,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !quitConfirmed, let paths else { return .terminateNow }
         let running = RunningJobs.pids(output: paths.output)
-        guard !running.isEmpty else { return .terminateNow }
+        let background = RunningJobs.background(state: paths.state)
+        guard !running.isEmpty || !background.isEmpty else { return .terminateNow }
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.alertStyle = .warning
+        if running.isEmpty {
+            alert.messageText = tr("Quit AnimeUp and stop what's running?", "Uscire da AnimeUp e fermare quello che è in corso?")
+            alert.informativeText = tr(
+                "A calibration or a model comparison is running. Quitting stops it: a calibration saves nothing until it finishes, a comparison keeps the clips already made.\n\nTo let it finish, close the window instead.",
+                "È in corso una taratura o un confronto dei modelli. Uscendo si ferma: la taratura non salva niente finché non finisce, il confronto tiene le clip già fatte.\n\nPer lasciarlo finire chiudi invece la finestra.")
+            alert.addButton(withTitle: tr("Stop and Quit", "Ferma e esci"))
+            alert.addButton(withTitle: tr("Cancel", "Annulla"))
+            guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+            RunningJobs.stop(background)
+            quitConfirmed = true
+            return .terminateNow
+        }
         alert.messageText = tr("Quit AnimeUp and stop the job?", "Uscire da AnimeUp e fermare la lavorazione?")
         alert.informativeText = tr(
             "A job is running. Quitting stops it and the rest of the queue. The work done is saved one chunk at a time, so you can resume later and lose at most the chunk in progress.\n\nTo keep it working, close the window instead: AnimeUp carries on in the background and the Dock icon brings it back.",
@@ -419,7 +437,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         alert.addButton(withTitle: tr("Cancel", "Annulla"))
         guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
         server?.writeLog("[app] quit with a job running: stopping it\n")
-        RunningJobs.stop(running)
+        RunningJobs.stop(running + background)
         quitConfirmed = true
         return .terminateNow
     }

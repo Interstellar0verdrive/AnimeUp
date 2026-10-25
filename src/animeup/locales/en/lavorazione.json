@@ -145,5 +145,8 @@
   "lav.tar_riprova": "Try again",
   "lav.tar_mostra_log": "Show log",
   "sb.taratura_corso": "running · {pct}%",
-  "sb.taratura_mostra": "Show"
+  "sb.taratura_mostra": "Show",
+  "lav.avvia_gia": "A queue is already running: wait for it to finish, or stop it first.",
+  "lav.fine_motivo_non_avviato": "not started",
+  "lav.fine_testo_non_avviato": "The queue stopped before reaching this file."
 }

@@ -5130,6 +5130,8 @@ def _() -> None:
     stato = {"tarando": True}
     ambiente = _esegui_app(_app_pezzi("_avvia", "_riprendi"), {
         "taratura": _types.SimpleNamespace(in_corso=lambda: stato["tarando"]),
+        "monitor": _types.SimpleNamespace(lancio_vivo=lambda: False,
+                                          catena=lambda: None, pausa=lambda: None),
         "st": _types.SimpleNamespace(error=lambda m, **_k: errori.append(m)),
         "t": i18n.t,
         # Oltre la guardia la prima cosa che si tocca e' il registro: se ci

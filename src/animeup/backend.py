@@ -84,7 +84,10 @@ def _build_command(
 # nessuno se ne accorga. Misurato: cinquanta minuti di realcugan orfano dopo
 # un kill "pulito" del padre.
 _GRUPPI_ATTIVI: set[int] = set()
-_GRUPPI_GUARDIA = threading.Lock()
+# RLock: il gestore di SIGTERM/SIGUSR1 la prende nello stesso thread che
+# poteva gia' tenerla (add/discard in upscale_dir), e con un Lock semplice
+# la CLI restava appesa per sempre.
+_GRUPPI_GUARDIA = threading.RLock()
 
 
 def abbatti_gruppi_attivi() -> None:

@@ -20,7 +20,9 @@ enum RunningJobs {
         let fm = FileManager.default
         let jobs = output.appendingPathComponent("JOBS", isDirectory: true)
         var found: [pid_t] = []
-        for marker in [".queue", ".pause"] {
+        // .launch is the shell running every model group of a launch: it
+        // covers the gaps where .queue doesn't exist yet or anymore.
+        for marker in [".launch", ".queue", ".pause"] {
             let url = jobs.appendingPathComponent(marker)
             if let raw = try? Data(contentsOf: url),
                let json = try? JSONSerialization.jsonObject(with: raw) as? [String: Any],
@@ -37,6 +39,24 @@ enum RunningJobs {
         }
         var seen = Set<pid_t>()
         return found.filter { $0 > 1 && seen.insert($0).inserted && isOurs($0) }
+    }
+
+    /// A calibration or a model comparison running in the background: they
+    /// live on after the window closes, and Quit has to know about them too.
+    static func background(state: URL) -> [pid_t] {
+        let files = ["cache/calibration-status.json", "cache/compare/status.json"]
+        var found: [pid_t] = []
+        for file in files {
+            let url = state.appendingPathComponent(file)
+            if let raw = try? Data(contentsOf: url),
+               let json = try? JSONSerialization.jsonObject(with: raw) as? [String: Any],
+               json["state"] as? String == "running",
+               let pid = (json["pid"] as? NSNumber)?.int32Value,
+               pid > 1, isOurs(pid) {
+                found.append(pid)
+            }
+        }
+        return found
     }
 
     /// SIGTERM to each job's process group (or the process alone).

@@ -145,5 +145,8 @@
   "lav.tar_riprova": "Riprova",
   "lav.tar_mostra_log": "Mostra il log",
   "sb.taratura_corso": "in corso · {pct}%",
-  "sb.taratura_mostra": "Mostra"
+  "sb.taratura_mostra": "Mostra",
+  "lav.avvia_gia": "C'è già una coda in corso: aspetta che finisca, o fermala prima.",
+  "lav.fine_motivo_non_avviato": "non avviato",
+  "lav.fine_testo_non_avviato": "La coda si è fermata prima di arrivare a questo file."
 }

@@ -46,3 +46,19 @@ def di_animeup(pid: int) -> bool:
     if stato.startswith("Z"):
         return False             # morto, in attesa che il padre lo raccolga
     return "animeup" in comando.lower()
+
+
+def tieni_sveglio() -> None:
+    """Il Mac non va in stop finche' questo processo lavora.
+
+    Una coda lanciata la sera si fermava al primo stop per inattivita' e
+    ripartiva solo al risveglio: le ore della notte andavano perse. Si chiede
+    a `caffeinate` di impedire lo stop di sistema (lo schermo si spegne lo
+    stesso) e di smettere da solo quando questo processo esce, comunque esca.
+    """
+    try:
+        subprocess.Popen(["/usr/bin/caffeinate", "-i", "-w", str(os.getpid())],
+                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
+    except OSError:
+        pass                     # non su macOS, o senza caffeinate: pazienza

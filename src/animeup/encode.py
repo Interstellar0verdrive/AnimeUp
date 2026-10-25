@@ -175,9 +175,14 @@ def encode_segment(
 
 
 def concat_and_mux(
-    plan: Plan, segments: list[Path], work: Path, *, paths: Paths | None = None
-) -> None:
-    """Unisce i segmenti e vi rimonta audio, sottotitoli e capitoli."""
+    plan: Plan, segments: list[Path], work: Path, *, paths: Paths | None = None,
+    rinomina: bool = True,
+) -> Path:
+    """Unisce i segmenti e vi rimonta audio, sottotitoli e capitoli.
+
+    Con `rinomina=False` il file resta col nome provvisorio, che si ritorna:
+    la pipeline lo verifica e solo dopo gli da' il nome buono (vedi `_esegui`).
+    """
     p = paths or PATHS
     # Il demuxer concat cita i percorsi fra apici singoli: un apostrofo nel
     # nome (frequente in italiano, "La principessa d'argento") chiude la
@@ -233,10 +238,14 @@ def concat_and_mux(
         # Interrotti o falliti: il mezzo file non deve restare a ingombrare.
         provvisorio.unlink(missing_ok=True)
         raise
+    if not rinomina:
+        return provvisorio
     os.replace(provvisorio, plan.output)
+    return plan.output
 
 
-def verify_output(plan: Plan, expected_frames: int, *, paths: Paths | None = None) -> tuple[int, str]:
+def verify_output(plan: Plan, expected_frames: int, *, paths: Paths | None = None,
+                  file: Path | None = None) -> tuple[int, str]:
     """Controlla che il file finale abbia i fotogrammi e la geometria attesi."""
     p = paths or PATHS
     # I campi si leggono per NOME. Riconoscerli confrontandoli con i valori
@@ -247,7 +256,7 @@ def verify_output(plan: Plan, expected_frames: int, *, paths: Paths | None = Non
             str(p.ffprobe.path), "-v", "error", "-select_streams", "v:0",
             "-count_packets",
             "-show_entries", "stream=width,height,nb_read_packets",
-            "-of", "default=nw=1:nk=0", str(plan.output),
+            "-of", "default=nw=1:nk=0", str(file or plan.output),
         ],
         capture_output=True, text=True, check=False,
     ).stdout
@@ -263,7 +272,8 @@ def verify_output(plan: Plan, expected_frames: int, *, paths: Paths | None = Non
     return fotogrammi, f"{larghezza or '?'}x{altezza or '?'}"
 
 
-def audio_risponde_al_seek(plan: Plan, *, paths: Paths | None = None) -> bool:
+def audio_risponde_al_seek(plan: Plan, *, paths: Paths | None = None,
+                           file: Path | None = None) -> bool:
     """Fa quello che farà il player: salta a metà file e prova a SENTIRE.
 
     Il conteggio dei pacchetti non basta: nel caso reale (ep01) i pacchetti
@@ -278,7 +288,7 @@ def audio_risponde_al_seek(plan: Plan, *, paths: Paths | None = None) -> bool:
     meta = max(1.0, float(plan.source.duration) / 2)
     esito = subprocess.run(
         [str(p.ffmpeg.path), "-hide_banner", "-v", "info",
-         "-ss", f"{meta:.3f}", "-t", "2", "-i", str(plan.output),
+         "-ss", f"{meta:.3f}", "-t", "2", "-i", str(file or plan.output),
          "-map", "0:a:0", "-af", "volumedetect", "-f", "null", "-"],
         capture_output=True, text=True, check=False, timeout=120,
     )

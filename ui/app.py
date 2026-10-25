@@ -4185,6 +4185,10 @@ def _lancio_da_mostrare() -> dict | None:
     dell'interfaccia farebbe altrimenti ricomparire la stessa modale, e una
     finestra che torna dopo che l'hai chiusa e' peggio che non averla.
     """
+    # Fra un gruppo di modelli e l'altro c'e' gia' un resoconto su disco, ma
+    # la coda non e' finita: il resoconto vero arriva alla fine.
+    if monitor.lancio_vivo() or monitor.catena() is not None:
+        return None
     lancio = monitor.ultimo_lancio()
     if not lancio or not lancio.get("fine"):
         return None
@@ -4192,7 +4196,37 @@ def _lancio_da_mostrare() -> dict | None:
         visto = float(_lancio_visto_file().read_text().strip())
     except (OSError, ValueError):
         visto = 0.0
-    return lancio if float(lancio["fine"]) > visto else None
+    if float(lancio["fine"]) <= visto:
+        return None
+    # Un lancio in cui ogni file era gia' finito («Niente da fare»): non c'e'
+    # niente da riassumere, e una modale «0 di N» con la spunta verde mente.
+    presenti = set(lancio.get("presenti") or [])
+    if not (any(n not in presenti for n in lancio.get("previsti") or [])
+            or lancio.get("scartati") or lancio.get("riusciti")):
+        _segna_lancio_visto(lancio)
+        return None
+    return lancio
+
+
+def _non_avviati(lancio: dict) -> list[str]:
+    """I file del lancio che nessun gruppo ha mai cominciato.
+
+    Fermata la coda nella pausa prima del secondo file, o nel primo gruppo di
+    una catena per modello, gli altri non comparivano in nessuna lista: il
+    resoconto diceva «1 di 1» con la spunta verde. L'elenco intero sta nel
+    marcatore `.launch` scritto all'avvio.
+    """
+    visti = set()
+    for chiave in ("riusciti", "falliti", "interrotti", "scartati", "presenti"):
+        visti.update(lancio.get(chiave) or [])
+    tutti = list(lancio.get("previsti") or [])
+    try:
+        marcatore = json.loads((PATHS.work / ".launch").read_text())
+        if marcatore.get("label") == lancio.get("lancio"):
+            tutti += [n for n in marcatore.get("files") or [] if n not in tutti]
+    except (OSError, ValueError, AttributeError):
+        pass
+    return [n for n in tutti if n not in visti]
 
 
 def _segna_lancio_visto(lancio: dict) -> None:
@@ -4216,12 +4250,17 @@ def _contenuto_fine_coda(lancio: dict) -> None:
     motivo, e solo un fallimento vero e' rosso.
     """
     riusciti = list(lancio.get("riusciti") or [])
-    # "Non completati" sono TRE cose diverse: falliti, non pianificabili, e
-    # fermati a mano col Ferma per-file.
+    # "Non completati" sono QUATTRO cose diverse: falliti, non pianificabili,
+    # fermati a mano col Ferma per-file, e mai cominciati (la coda fermata
+    # prima che ci arrivasse).
     falliti = [(n, "fallito") for n in lancio.get("falliti") or []]
     falliti += [(n, "fermato") for n in lancio.get("interrotti") or []]
     falliti += [(n, "scartato") for n in lancio.get("scartati") or []]
-    previsti = list(lancio.get("previsti") or []) or riusciti + [n for n, _m in falliti]
+    falliti += [(n, "non_avviato") for n in _non_avviati(lancio)]
+    presenti = set(lancio.get("presenti") or [])
+    previsti = [n for n in (lancio.get("previsti") or []) if n not in presenti]
+    previsti += [n for n, m in falliti if m == "non_avviato" and n not in previsti]
+    previsti = previsti or riusciti + [n for n, _m in falliti]
     n_ok, n_tot = len(riusciti), len(previsti)
     secondi = float(lancio.get("secondi") or 0)
     orologio = float(lancio.get("fine") or 0) - float(lancio.get("inizio") or 0)
@@ -4693,7 +4732,7 @@ def _motivo_blocco() -> str | None:
     parametri con cui e' partito) e confonderebbe la pagina.
     """
     if (monitor.catena() is not None or monitor.pausa() is not None
-            or any(l.vivo for l in monitor.lavori())):
+            or monitor.lancio_vivo() or any(l.vivo for l in monitor.lavori())):
         return "lavoro"
     if confronto.in_corso():
         return "confronto"
@@ -6142,8 +6181,12 @@ def _barra_confronto(plan, path: Path, cfg: dict, prescelti: list,
         if nuovo != riferimento:
             st.session_state[f"originale_{path}"] = nuovo
             st.rerun()
+        # Non durante una coda: si dividerebbero la GPU, e i tempi delle clip
+        # (quelli che stimano l'episodio intero) uscirebbero falsi.
+        occupato = _motivo_blocco() in ("lavoro", "taratura")
         premi = st.button(t("conf.elabora"), type="primary", key="elaboraClip",
-                          disabled=not prescelti or not modelli)
+                          disabled=not prescelti or not modelli or occupato,
+                          help=t("conf.occupato") if occupato else None)
     if premi:
         _avvia_confronto(cfg, plan.source.geometry.height, path, prescelti,
                          preview.variants_for(*chiavi, reference=riferimento))
@@ -8255,6 +8298,12 @@ def _avvia(piani, cfg: dict, modello: str | None = None) -> bool:
     if taratura.in_corso():
         st.error(t("lav.avvia_taratura"), icon="⚠️")
         return False
+    # Mai due code insieme: si scavalcavano, ognuna segnava «fallito» i file
+    # che l'altra stava gia' lavorando, e si toglievano i marcatori a vicenda.
+    if (monitor.lancio_vivo() or monitor.catena() is not None
+            or monitor.pausa() is not None):
+        st.error(t("lav.avvia_gia"), icon="⚠️")
+        return False
     registro = PATHS.registro_coda
     registro.parent.mkdir(parents=True, exist_ok=True)
 
@@ -8310,6 +8359,14 @@ def _avvia(piani, cfg: dict, modello: str | None = None) -> bool:
     # Un attimo per intercettare il fallimento immediato: annunciare "Avviata"
     # mentre la shell risponde 127 è peggio che non annunciare nulla.
     time.sleep(0.6)
+    try:
+        PATHS.work.mkdir(parents=True, exist_ok=True)
+        (PATHS.work / ".launch").write_text(json.dumps(
+            {"pid": proc.pid, "started": time.time(), "total": totale_catena,
+             "label": etichetta_lancio,
+             "files": [x.source.path.name for g in per_modello.values() for x in g]}))
+    except OSError:
+        pass
     if proc.poll() not in (None, 0):
         st.error(t("lav.avvia_fallito", codice=proc.poll(), registro=registro),
                  icon="⚠️")

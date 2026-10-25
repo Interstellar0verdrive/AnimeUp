@@ -398,6 +398,26 @@ def pausa(paths: Paths | None = None) -> tuple[float, int] | None:
     return (fino, pid)
 
 
+def lancio_vivo(paths: Paths | None = None) -> bool:
+    """Un lancio dell'interfaccia e' ancora vivo, dall'inizio alla fine?
+
+    `.queue` nasce solo dopo che tutti i file sono stati pianificati e sparisce
+    fra un gruppo di modelli e il successivo: in quei buchi la pagina credeva
+    la coda finita (resoconto a meta', sidebar sbloccata, taratura permessa)
+    e l'app chiudeva senza chiedere. `.launch` porta il PID della shell che
+    fa girare tutti i gruppi, scritto dall'interfaccia appena la lancia.
+    """
+    from .processi import di_animeup
+
+    p = paths or PATHS
+    try:
+        dati = json.loads((p.work / ".launch").read_text())
+        pid = int(dati["pid"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+    return di_animeup(pid)
+
+
 def catena(paths: Paths | None = None) -> dict | None:
     """A che punto è la catena di lavorazioni, se una è in corso.
 
@@ -960,7 +980,9 @@ def ultimo_lancio(paths: Paths | None = None) -> dict | None:
         "fine": max(fini),
         "previsti": _unisci("previsti"), "riusciti": _unisci("riusciti"),
         "falliti": _unisci("falliti"), "scartati": _unisci("scartati"),
-        "interrotti": _unisci("interrotti"),
+        "interrotti": _unisci("interrotti"), "presenti": _unisci("presenti"),
+        "catena_totale": max((int(_numero(d.get("catena_totale")) or 0) for d in pezzi),
+                             default=0),
         "secondi": sum(_numero(d.get("secondi")) or 0 for d in pezzi),
         "avvisi": int(sum(_numero(d.get("avvisi")) or 0 for d in pezzi)),
         "dedup_medio": (round(sum(dedup) / len(dedup), 3) if dedup else None),
