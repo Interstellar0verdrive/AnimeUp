@@ -836,7 +836,9 @@ STYLE = f"""
      (utente, che aveva ragione anche qui). `z-index` transisce a scatti,
      quindi un ritardo di 0,3 s in discesa lo tiene su per tutta la durata
      del blip; in salita il ritardo e' zero, sotto. */
-  .au-info, .au-perche {{ transition: z-index 0s .3s; }}
+  /* .45 e non .3: il fumetto finisce di sparire a .3 + .12; scendendo
+     prima, le icone vicine gli passavano sopra durante la dissolvenza. */
+  .au-info, .au-perche {{ transition: z-index 0s .45s; }}
   .au-info:hover, .au-info:focus-within, .au-info:focus-visible,
   .au-perche:hover, .au-perche:focus-within, .au-perche:focus-visible {{
       z-index: 240; transition: z-index 0s 0s; }}
@@ -857,7 +859,11 @@ STYLE = f"""
      restano aperti (l'utente li trovava capricciosi, e lo erano: chi non
      aveva il link ignorava il puntatore e si chiudeva appena lo si
      raggiungeva). Il ponte copre gli 8px fra icona e fumetto. */
-  :is(.au-info, .au-perche):is(:hover, :focus-within) .au-bolla {{ pointer-events: auto; }}
+  /* Solo al passaggio, MAI col fuoco: dopo un clic l'icona restava col
+     fuoco, e il fumetto invisibile continuava a prendere il mouse — passarci
+     sopra lo riapriva e copriva quello che c'era sotto (bug segnalato
+     dall'utente). */
+  :is(.au-info, .au-perche):hover .au-bolla {{ pointer-events: auto; }}
   :is(.au-info, .au-perche) .au-bolla::after {{ content: ""; position: absolute; left: 0; right: 0;
       top: 100%; height: 12px; }}
   .au-agg-tip .au-bolla {{ pointer-events: none !important; }}
@@ -2800,16 +2806,26 @@ STYLE = f"""
       color: var(--onRed) !important; }}
   .st-key-esci button, .st-key-fermasi_app button {{ height: 32px;
       min-height: 32px; padding: 0 12px; white-space: nowrap; }}
-  /* L'avviso di aggiornamento: un riquadro velato d'accento. */
+  /* L'avviso di aggiornamento: in giallo, come un avviso, con la CTA gialla
+     piena. In ciano si confondeva col resto della barra (detto dall'utente). */
   .st-key-cAggiorna [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
   .st-key-cAggiorna {{ gap: 10px !important; }}
   .st-key-cAggiorna {{ padding: 12px 14px; border-radius: 10px;
-      background: rgb(var(--primaryRgb) / .08);
-      border: 1px solid rgb(var(--primaryRgb) / .35); margin-top: 12px; }}
+      background: var(--yellowBg);
+      border: 1px solid rgb(var(--yellowRgb) / .45); margin-top: 12px; }}
   .au-agg-testa {{ display: flex; align-items: center; gap: 8px;
-      font-size: 13.5px; }}
+      font-size: 13.5px; color: var(--yellowText); }}
   .au-agg-testa a {{ margin-left: auto; font-size: 12.5px;
-      color: var(--textSecondary) !important; text-decoration: underline; }}
+      color: var(--yellowText) !important; text-decoration: underline; }}
+  .st-key-cAggiorna [data-testid="stCaptionContainer"] p {{ color: var(--yellowText) !important;
+      opacity: .85; }}
+  .st-key-installaAgg .stButton button[kind="primary"] {{
+      background: var(--yellow) !important; border-color: var(--yellow) !important; }}
+  .st-key-installaAgg .stButton button[kind="primary"] p {{ color: var(--onYellow) !important; }}
+  .st-key-installaAgg .stButton button[kind="primary"]:hover {{
+      background: var(--yellowHover) !important; border-color: var(--yellowHover) !important; }}
+  .st-key-installaAgg .stButton button[kind="primary"]:active {{
+      background: var(--yellowActive) !important; }}
 
   /* ===================================================================
      Redesign 1.6 — struttura: sidebar da 360, barra dei passi in cima
@@ -2874,6 +2890,13 @@ STYLE = f"""
   .st-key-passi button[kind="primary"]:hover {{
       background-color: rgb(var(--primaryRgb) / .12) !important; }}
   .st-key-passi button:disabled {{ cursor: default; opacity: 1; }}
+  /* Un passo chiuso dice «non ancora» anche al puntatore (chiesto
+     dall'utente): il divieto, non la freccia di un testo qualsiasi. */
+  .st-key-passi [class*="st-key-passo"] button:disabled,
+  .st-key-passi [class*="st-key-passo"] button:disabled * {{ cursor: not-allowed !important; }}
+  /* Un passo chiuso non ha mai il contatore a destra: il suo spazio va al
+     sottotitolo a qualunque larghezza (prima solo sotto i 1360). */
+  .st-key-passi button:disabled {{ padding-right: 14px !important; }}
   .st-key-passi button:disabled p {{ color: var(--textSecondary); }}
   .st-key-passi button:disabled::before {{
       background: var(--textTertiary); border: 0;
@@ -3232,6 +3255,9 @@ STYLE = f"""
   .au-tar-fatta b {{ font-size: 13.5px; font-weight: 600; }}
   .au-tar-fatta code {{ font: 400 11px var(--mono) !important;
       color: var(--greenText) !important; background: none !important; padding: 0 !important; }}
+  .au-tar-viva .au-spunta {{ background: rgb(var(--primaryRgb) / .10);
+      border-color: var(--primary); color: var(--primaryText); }}
+  .au-tar-viva code {{ color: var(--primaryText) !important; }}
   .au-spunta {{ width: 24px; height: 24px; flex: none; box-sizing: border-box;
       border-radius: 50%; background: var(--greenBg); border: 1.5px solid var(--green);
       color: var(--greenText); display: inline-flex; align-items: center;
@@ -4191,7 +4217,29 @@ def _larghezza_sottotitolo(testo: str) -> float:
     return sum(float(_LARGHEZZE_PASSI.get(c, 7.5)) for c in testo)
 
 
-def _regole_sottotitolo(classe: str, testo: str, chiusa: bool) -> list[str]:
+def _larghezza_passi(stato: dict) -> int:
+    """La larghezza comune dei tre passi, dai loro testi.
+
+    Larghi 230 fissi, con un sottotitolo corto («No videos yet») restava
+    mezzo passo vuoto a destra: i tre sembravano lontani fra loro e Start,
+    stretto, incollato ai Sorgenti (visto dall'utente). Ora sono larghi
+    quanto il piu' lungo dei loro testi, fra 180 e 230: uguali fra loro,
+    col ritmo giusto.
+    """
+    serve = 0.0
+    for sez in SEZIONI:
+        sotto = max((_larghezza_sottotitolo(p) for p in str(stato[sez]).split(" · ")),
+                    default=0.0) if len(str(stato[sez])) else 0.0
+        intero = _larghezza_sottotitolo(str(stato[sez]))
+        titolo = _larghezza_sottotitolo(t(f"tab.{sez}")) * 1.2   # 14px semibold
+        serve = max(serve, titolo, intero if intero <= 230 - 51 - 40 else sotto)
+    # A destra: 40px per il contatore sui passi aperti (il loro padding ce li
+    # tiene sempre), 14 su quelli chiusi, che non ne hanno mai.
+    return int(min(230, max(180, serve + 2 + 51 + (14 if stato["vuota"] else 40))))
+
+
+def _regole_sottotitolo(classe: str, testo: str, chiusa: bool,
+                        larghezza: int = 230) -> list[str]:
     """Il sottotitolo di un passo: su una riga se ci sta, altrimenti a capo
     dove c'era il «·», che sparisce («File 1 di 2» / «55%»).
 
@@ -4211,7 +4259,7 @@ def _regole_sottotitolo(classe: str, testo: str, chiusa: bool) -> list[str]:
     # che ha preso il suo posto): sopra i 1360 c'e' posto accanto alla barra
     # laterale, sotto la barra diventa un cassetto e la pagina prende tutta
     # la larghezza (vedi `_cassetto_sidebar`).
-    return [una] if serve <= 230 - 51 - destra else [due]
+    return [una] if serve <= larghezza - 51 - destra else [due]
 
 
 def header() -> str:
@@ -4240,7 +4288,9 @@ def header() -> str:
         attiva = SEZIONI[0]
     st.session_state["era_vuota"] = stato["vuota"]
     st.session_state["sezione"] = attiva
-    regole = []
+    larghezza = _larghezza_passi(stato)
+    regole = [f'.st-key-passi [class*="st-key-passo"]:not(.st-key-passo0) button '
+              f'{{ width: {larghezza}px; }}']
     with st.container(key="fasi", horizontal=True, vertical_alignment="center"):
         with st.container(key="passi", horizontal=True, gap=None):
             st.button(t("tab.Inizio"), key="passo0", on_click=_vai, args=(INIZIO,),
@@ -4251,7 +4301,7 @@ def header() -> str:
                 st.button(t(f"tab.{sezione}"), key=f"passo{i}",
                           on_click=_vai, args=(sezione,), disabled=chiusa,
                           type="primary" if sezione == attiva else "secondary")
-                regole += _regole_sottotitolo(classe, stato[sezione], chiusa)
+                regole += _regole_sottotitolo(classe, stato[sezione], chiusa, larghezza)
                 if chiusa:
                     regole.append(f'{classe}::before {{ content: ""; }}')
                 elif i == 1 and stato.get("fatta") and sezione != attiva:
@@ -5096,6 +5146,8 @@ def _modale_taratura() -> None:
         titolo = t("lav.tar_titolo_risultati")
     elif s_tar.get("state") == taratura.FINITA and not s_tar.get("seen"):
         titolo = t("lav.tar_titolo_finita")
+    elif s_tar.get("state") == taratura.IN_CORSO:
+        titolo = t("lav.tar_titolo_corso")
     else:
         titolo = t("lav.tar_titolo")
     st.dialog(titolo, width="medium",
@@ -5435,6 +5487,28 @@ def _cursore_a_scatti(chiave: str, nome: str, scelte: list, congelata: bool):
     return scelte[indice]
 
 
+def _puntini_scatti(chiave: str, n: int) -> str:
+    """I valori possibili di un cursore a scatti, come puntini sul binario.
+
+    Il pomello ora segue il mouse, ma non si capiva se i valori fossero 5 o
+    50 (detto dall'utente): passandoci sopra, o trascinando, compare un
+    puntino per ogni valore, sotto al pomello. Il riquadro sborda di 3px per
+    lato, cosi' il centro di ogni puntino cade esattamente dove si ferma il
+    centro del pomello (0 … 100%).
+    """
+    punti = ", ".join("radial-gradient(circle, var(--textSecondary) 0 2px, transparent 2.5px)"
+                      for _ in range(n))
+    posizioni = ", ".join(f"{i * 100 / (n - 1):.4f}% 50%" for i in range(n))
+    base = f'.st-key-{chiave} [data-testid="stSlider"] [role="group"] > div'
+    return (f'{base}::after {{ content: ""; position: absolute; left: -3px; right: -3px; '
+            f'top: 50%; height: 6px; transform: translateY(-50%); pointer-events: none; '
+            f'background-image: {punti}; background-size: 6px 6px; background-repeat: no-repeat; '
+            f'background-position: {posizioni}; opacity: 0; transition: opacity .15s ease; }}'
+            f'.st-key-{chiave}:is(:hover, :active) [data-testid="stSlider"] [role="group"] > div::after '
+            f'{{ opacity: 1; }}'
+            f'{base} > div[style*="position: absolute"] {{ z-index: 1; }}')
+
+
 def _aggancia(chiave: str, scelte: list) -> None:
     posizione = float(st.session_state.get(f"w_{chiave}_pos") or 0)
     indice = min(max(int(round(posizione)), 0), len(scelte) - 1)
@@ -5561,7 +5635,11 @@ def sidebar() -> dict:
         "[data-testid='stCheckbox'],.au-info,.au-perche,a.au-tar-vedi)"
         "{ filter: saturate(0); pointer-events: none; }"
         "[data-testid='stSidebar'] :is(.au-info, .au-perche) .au-bolla"
-        "{ display: none !important; }</style>" if congelata else "<style></style>",
+        "{ display: none !important; }"
+        # La riga della taratura resta viva mentre e' lei a girare: titolo
+        # acceso accanto a «Mostra» (chiesto dall'utente).
+        + (".st-key-cTarRiga .au-pref-eti { opacity: 1 !important; }" if motivo == "taratura" else "")
+        + "</style>" if congelata else "<style></style>",
         unsafe_allow_html=True)
 
     # Il «Predefinito: …» dei fumetti diventa un link quando il valore e'
@@ -5597,6 +5675,10 @@ def sidebar() -> dict:
         predefinito="slower", ripristina=rip("preset"))
     with st.sidebar.container(key="cPreset"):
         preset = _cursore_a_scatti("preset", "Preset x265", _SCELTE_PRESET, congelata)
+    if not congelata:
+        regole += [_puntini_scatti("cAltezza", len(_SCELTE_ALTEZZA)),
+                   _puntini_scatti("cCrf", len(_SCELTE_CRF)),
+                   _puntini_scatti("cPreset", len(_SCELTE_PRESET))]
 
     # --- Avanzate: un riquadro che si apre --------------------------------
     # L'intestazione dice se c'e' qualcosa di cambiato: un interruttore
@@ -5782,8 +5864,7 @@ def _riga_taratura(congelata: bool) -> None:
     if fondo.get("state") == taratura.IN_CORSO:
         # In corso: si puo' sempre riaprire la finestra per guardarla, anche
         # con la sidebar bloccata (e' lei a bloccarla).
-        stato = (f"<span class='au-tar-corso'><i></i>"
-                 f"{t('sb.taratura_corso', pct=round(float(fondo.get('fraction') or 0) * 100))}</span>")
+        stato = None
         azione, tipo, congelata = t("sb.taratura_mostra"), "secondary", False
     elif voce_tar:
         import datetime as _dt
@@ -5810,7 +5891,10 @@ def _riga_taratura(congelata: bool) -> None:
                          disabled=congelata):
                 st.session_state.pop("tar_fase", None)
                 _modale_taratura()
-        st.markdown(stato, unsafe_allow_html=True)
+        if stato is None:
+            _tar_corso_sidebar()
+        else:
+            st.markdown(stato, unsafe_allow_html=True)
     # I pulsanti che premono i link «risultati» e l'app, a cartella scelta
     # (vedi `_cassetto_sidebar` e `_cartella_dal_mac`).
     with st.container(key="premiNascosti"):
@@ -5929,6 +6013,8 @@ _I_SPUNTA = "<path d='M4.5 12.5 9.5 17.5 19.5 7'/>"
 _I_ATTENZIONE = "<path d='M12 4 2.5 20h19z'/><path d='M12 10v4.5M12 17.2v.1'/>"
 _I_INFO = "<circle cx='12' cy='12' r='9'/><path d='M12 7.5v5.5M12 16.3v.1'/>"
 _I_AVANTI = "<path d='M9 6l6 6-6 6'/>"
+_I_CLESSIDRA = ("<path d='M6.5 3h11M6.5 21h11'/><path d='M8 3v3.2a4 4 0 0 0 1.6 3.2L12 11.5l2.4-2.1"
+                "A4 4 0 0 0 16 6.2V3M8 21v-3.2a4 4 0 0 1 1.6-3.2l2.4-2.1 2.4 2.1a4 4 0 0 1 1.6 3.2V21'/>")
 
 
 def _pagina_inizio() -> None:
@@ -6084,8 +6170,51 @@ def _scheda_mac() -> str:
     return " · ".join(p for p in pezzi if p)
 
 
+def _avanzamento_taratura() -> tuple[int, str]:
+    """(percentuale, «circa N minuti») della taratura in corso."""
+    s = taratura.stato_fondo() or {}
+    pct = round(float(s.get("fraction") or 0) * 100)
+    resta = s.get("left")
+    manca = tn("lav.tar_resta", max(1, round(float(resta) / 60))) if resta is not None else ""
+    return pct, manca
+
+
+# La percentuale si aggiorna da sola mentre la taratura va avanti: fuori da
+# un fragment restava ferma al giro in cui si era chiusa la finestra (visto
+# dall'utente). Finita, un giro completo rimette la data.
+@st.fragment(run_every=2)
+def _tar_corso_sidebar() -> None:
+    if not taratura.in_corso():
+        st.rerun()
+        return
+    pct, _manca = _avanzamento_taratura()
+    st.markdown(f"<span class='au-tar-corso'><i></i>{t('sb.taratura_corso', pct=pct)}</span>",
+                unsafe_allow_html=True)
+
+
+@st.fragment(run_every=2)
+def _tar_corso_scheda() -> None:
+    if not taratura.in_corso():
+        st.rerun()
+        return
+    pct, manca = _avanzamento_taratura()
+    st.markdown(
+        f"<div class='au-tar-fatta au-tar-viva'><span class='au-spunta'>{_svg(_I_CLESSIDRA, 13, 2)}</span>"
+        f"<span><b>{t('src.tar_corso')}</b>"
+        f"<code>{pct}%{' · ' + manca if manca else ''}</code></span></div>",
+        unsafe_allow_html=True)
+
+
 def _blocco_taratura(voce_tar) -> None:
-    """La taratura nel riquadro «Questo Mac»: da fare, o fatta e quando."""
+    """La taratura nel riquadro «Questo Mac»: da fare, fatta e quando, o in
+    corso — in ciano con la clessidra e la percentuale, come nella sidebar,
+    al posto della data della taratura di prima."""
+    if taratura.in_corso():
+        with st.container(key="tarFatta", horizontal=True, vertical_alignment="center"):
+            _tar_corso_scheda()
+            if st.button(t("sb.taratura_mostra"), key="ricalibraMac"):
+                _modale_taratura()
+        return
     if voce_tar:
         import datetime as _dt
         quando = _dt.datetime.fromtimestamp(voce_tar["quando"]).strftime(t("fmt.data_ora"))

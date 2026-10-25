@@ -186,6 +186,7 @@
   "src.tar_prima": "first time only",
   "src.tar_testo": "About 10 minutes with the GPU idle, so every estimate matches this Mac's real speed. The measurements are remembered; recalibrate whenever you want to update them.",
   "src.tar_fatta": "Calibrated",
+  "src.tar_corso": "Calibrating",
   "src.spazio": "Free space for finished videos",
   "src.spazio_testo": "On the disk of Finished videos, where a job's work files can take tens of GB.",
   "src.strumenti": "Video tools",

@@ -22,6 +22,7 @@
   "lav.fine_e_altri": "e altri {n}",
   "lav.fine_apri": "Mostra nel Finder",
   "lav.tar_titolo": "Taratura delle stime",
+  "lav.tar_titolo_corso": "Taratura in corso",
   "lav.tar_titolo_finita": "Taratura finita",
   "lav.tar_titolo_risultati": "Risultati della taratura",
   "lav.tar_intro": "Misura quanto è veloce davvero questo Mac, così ogni stima usa la sua velocità e non i numeri di un altro Mac. Serve solo la prima volta; ricalibra quando vuoi aggiornare i numeri.",

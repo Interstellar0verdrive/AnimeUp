@@ -407,8 +407,8 @@ def _impronta(cartella: Path, quanti: int = 6) -> list[str] | None:
     return fuori
 
 
-def _prova_salvataggio(p: Paths, frames: Path,
-                       lavoro: Path) -> tuple[int, list[dict]]:
+def _prova_salvataggio(p: Paths, frames: Path, lavoro: Path,
+                       parziale=None) -> tuple[int, list[dict]]:
     """Quanti thread di salvataggio rendono di piu' su questa macchina.
 
     Si prova dove il salvataggio morde davvero (animevideov3 x4) e si
@@ -449,7 +449,11 @@ def _prova_salvataggio(p: Paths, frames: Path,
     # distingue da un ottimo vero — ed e' esattamente l'equivoco in cui siamo
     # caduti col MacBook, dove l'8 sembrava una scelta e invece era un bordo.
     da_provare = candidati_salvataggio()
-    for quanti in da_provare:
+    for n_prova, quanti in enumerate(da_provare):
+        # A che punto della tappa si e': sei prove sono un minuto o due, e
+        # senza la percentuale restava ferma all'1% (visto dall'utente).
+        if parziale:
+            parziale(n_prova / len(da_provare))
         dst = lavoro / f"salv-{quanti}"
         shutil.rmtree(dst, ignore_errors=True)
         dst.mkdir(parents=True)
@@ -588,6 +592,16 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
         resta = (costo_totale - fatto) * fattore
         avanzamento(etichetta, passo, passi, fatto / costo_totale, resta)
 
+    def _dentro(etichetta: str, quota: float) -> None:
+        """A meta' di una tappa lunga: la sua parte gia' fatta."""
+        if not avanzamento or passo < 1:
+            return
+        fatto = sum(costi[:passo - 1]) + costi[passo - 1] * quota
+        speso = time.monotonic() - partenza
+        fattore = speso / fatto if fatto > 0 and speso > 0 else 1.0
+        avanzamento(etichetta, passo, passi, fatto / costo_totale,
+                    (costo_totale - fatto) * fattore)
+
     # --- 1. estrazione: gli stessi flag della produzione (encode.py) -------
     _di(t("mot.taratura.tappa_estrazione"))
     frames = lavoro / "frames"
@@ -622,7 +636,9 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
 
     from .backend import upscale_dir
     _di(t("mot.taratura.tappa_salvataggio"))
-    salvataggio, prove_salvataggio = _prova_salvataggio(p, frames, lavoro)
+    salvataggio, prove_salvataggio = _prova_salvataggio(
+        p, frames, lavoro,
+        parziale=lambda q: _dentro(t("mot.taratura.tappa_salvataggio"), q))
 
     # --- 3. upscale: ogni combinazione modello x scala ----------------------
 

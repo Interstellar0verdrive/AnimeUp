@@ -71,6 +71,10 @@ TOKEN: dict[str, tuple[str, str]] = {
     "yellow":          ("#F2B84B", "#C78100"),
     "yellowBg":        ("#2A2110", "#FFF5DF"),
     "yellowText":      ("#F5CB78", "#7F5300"),
+    # la CTA gialla piena (l'avviso di aggiornamento): testo scuro su tutti e due
+    "yellowHover":     ("#F5C66A", "#D68C00"),
+    "yellowActive":    ("#DDA43A", "#B06F00"),
+    "onYellow":        ("#2A1D05", "#1F1500"),
     "red":             ("#F26D6D", "#D9402E"),
     "redBg":           ("#2A1414", "#FDECEC"),
     "redText":         ("#F59B9B", "#B42323"),

@@ -22,6 +22,7 @@
   "lav.fine_e_altri": "and {n} more",
   "lav.fine_apri": "Show in Finder",
   "lav.tar_titolo": "Calibrate estimates",
+  "lav.tar_titolo_corso": "Calibration in progress",
   "lav.tar_titolo_finita": "Calibration finished",
   "lav.tar_titolo_risultati": "Calibration results",
   "lav.tar_intro": "Measures how fast this Mac really is, so every estimate uses its own speed instead of figures from another Mac. Needed only the first time; recalibrate whenever you want to update the numbers.",

@@ -186,6 +186,7 @@
   "src.tar_prima": "solo la prima volta",
   "src.tar_testo": "Circa 10 minuti con la GPU libera, così ogni stima corrisponde alla velocità vera di questo Mac. Le misure vengono ricordate: ricalibra quando vuoi aggiornarle.",
   "src.tar_fatta": "Calibrato",
+  "src.tar_corso": "Taratura in corso",
   "src.spazio": "Spazio libero per i video finiti",
   "src.spazio_testo": "Sul disco dei video finiti, dove i file di lavoro di una lavorazione possono occupare decine di GB.",
   "src.strumenti": "Strumenti video",
