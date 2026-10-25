@@ -365,6 +365,38 @@
   border-radius: 0.7rem;
 }
 
+.md-typeset figure.animeup-flow {
+  background: var(--animeup-surface);
+  border: 1px solid var(--animeup-border);
+  border-radius: 0.8rem;
+  box-sizing: border-box;
+  display: block;
+  margin: 1.5rem 0 1.25rem;
+  padding: 0.8rem;
+  width: 100%;
+}
+
+.md-typeset .animeup-flow .animeup-flow__svg {
+  --flow-bg: var(--animeup-bg);
+  --flow-card: var(--animeup-surface);
+  --flow-line: var(--animeup-border);
+  --flow-ink: var(--animeup-text);
+  --flow-muted: var(--animeup-muted);
+  --flow-accent: var(--animeup-accent);
+  --flow-accent-soft: color-mix(in srgb, var(--animeup-accent) 12%, var(--animeup-surface));
+  display: block;
+  height: auto;
+  margin: 0 auto;
+  max-width: 440px;
+  width: 100%;
+}
+
+@media screen and (max-width: 30em) {
+  .md-typeset figure.animeup-flow {
+    padding: 0.35rem;
+  }
+}
+
 .md-typeset table:not([class]) {
   background: var(--animeup-surface);
   border: 1px solid var(--animeup-border);
