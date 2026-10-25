@@ -65,7 +65,6 @@ url = "app/static/JetBrainsMono-Medium.ttf"
 weight = 500
 
 [theme.dark]
-base = "dark"
 primaryColor = "#2AC9DE"
 backgroundColor = "#101113"
 secondaryBackgroundColor = "#17191C"
@@ -96,7 +95,6 @@ secondaryBackgroundColor = "#22262B"
 borderColor = "#33373D"
 
 [theme.light]
-base = "light"
 primaryColor = "#0E99B1"
 backgroundColor = "#F6F7F9"
 secondaryBackgroundColor = "#FFFFFF"

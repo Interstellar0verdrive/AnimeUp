@@ -204,12 +204,15 @@
   "src.n_file.uno": "{n} file",
   "src.n_file.altri": "{n} file",
   "src.analisi_barra": "analisi {fatti} di {totale}",
-  "src.gia_aperte": "Confronto e Lavorazione sono già aperti. I file ancora in attesa compaiono lì come in sospeso e si completano da soli.",
+  "src.gia_aperte": "Intanto puoi usare le altre schede: i file non ancora analizzati compaiono lì in attesa e si completano da soli.",
   "src.barra_avvisi.uno": "Apri il file con avvisi prima di spenderci ore di GPU.",
   "src.barra_avvisi.altri": "Apri i {n} file con avvisi prima di spenderci ore di GPU.",
   "src.barra_ok": "Tutti i file sono analizzati. Prova i modelli su qualche clip, o vai direttamente in Lavorazione.",
   "src.barra_analisi": "L'analisi è in corso: puoi già andare avanti, il resto si completa da solo.",
   "src.vai_lavorazione": "Vai a Lavorazione",
   "src.vai_confronto": "Avanti: confronta i modelli",
-  "src.prossimo": "prossimo"
+  "src.prossimo": "prossimo",
+  "src.banner_analisi": "Analisi in corso",
+  "src.banner_mancano.uno": "manca 1 file",
+  "src.banner_mancano.altri": "mancano {n} file"
 }

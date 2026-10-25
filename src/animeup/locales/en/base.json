@@ -204,12 +204,15 @@
   "src.n_file.uno": "{n} file",
   "src.n_file.altri": "{n} files",
   "src.analisi_barra": "analysing {fatti} of {totale}",
-  "src.gia_aperte": "Compare and Processing are already open. Files still waiting show up there as pending and fill in by themselves.",
+  "src.gia_aperte": "Meanwhile you can use the other tabs: files not analysed yet show up there as pending and fill in by themselves.",
   "src.barra_avvisi.uno": "Open the file with warnings before you spend GPU hours on it.",
   "src.barra_avvisi.altri": "Open the {n} files with warnings before you spend GPU hours on them.",
   "src.barra_ok": "Every file is analysed. Test the models on a few clips, or go straight to Processing.",
   "src.barra_analisi": "Analysis is running: you can already move on, the rest fills in by itself.",
   "src.vai_lavorazione": "Go to Processing",
   "src.vai_confronto": "Next: compare models",
-  "src.prossimo": "next"
+  "src.prossimo": "next",
+  "src.banner_analisi": "Analysing",
+  "src.banner_mancano.uno": "1 file to go",
+  "src.banner_mancano.altri": "{n} files to go"
 }
