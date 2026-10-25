@@ -15,7 +15,7 @@ _DIAGRAMS = {
 
 _HOME_PICTURE = '''<picture>
   <source media="(max-width: 44em)" srcset="img/guide-path-mobile.svg">
-  <img src="img/guide-path.svg" width="820" height="420" alt="Six steps to use AnimeUp: install, optionally calibrate your Mac on first use, inspect sources, compare models, process the files, and collect the output.">
+  <img src="img/guide-path.svg" width="820" height="372" alt="Set up AnimeUp with Install and optional first-use Calibrate, then follow four numbered steps: Sources, Compare, Processing, Output.">
 </picture>'''
 
 
