@@ -110,7 +110,9 @@ struct AppPaths {
         let pointer = state.appendingPathComponent(file)
         guard let text = try? String(contentsOf: pointer, encoding: .utf8) else { return nil }
         let line = text.split(whereSeparator: \.isNewline).first.map(String.init) ?? ""
-        let path = (line.trimmingCharacters(in: .whitespaces) as NSString).expandingTildeInPath
+        // Only the line end goes: a folder name may really end with a space,
+        // and trimming it pointed the app at a new, empty sibling folder.
+        let path = (line.trimmingCharacters(in: .newlines) as NSString).expandingTildeInPath
         return path.hasPrefix("/") ? path : nil
     }
 
@@ -131,7 +133,20 @@ struct AppPaths {
                                missing: String?) -> (URL, String?) {
         guard let path = chosen(state: state, file: file) else { return (fallback, missing) }
         let url = URL(fileURLWithPath: path, isDirectory: true)
-        return isReachable(url) ? (url, nil) : (fallback, path)
+        // Reachable but impossible to create (a read-only disk, permissions):
+        // stopping the launch there left no way to pick another folder,
+        // because the folder picker lives in the interface.
+        guard isReachable(url),
+              (try? FileManager.default.createDirectory(
+                  at: url, withIntermediateDirectories: true)) != nil
+        else { return (fallback, path) }
+        return (url, nil)
+    }
+
+    /// A folder skipped at launch (its disk wasn't there) can be used now.
+    static func cameBack(_ path: String?) -> Bool {
+        guard let path else { return false }
+        return isReachable(URL(fileURLWithPath: path, isDirectory: true))
     }
 
     /// A folder is usable if it exists, or if it can be created because its

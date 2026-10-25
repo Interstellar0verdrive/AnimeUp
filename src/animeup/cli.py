@@ -842,6 +842,9 @@ def _scrivi_esito(plan, result) -> None:
             fh.write(su_disco.dumps({
                 "file": plan.source.path.name,
                 "output": plan.output.name,
+                # Il percorso intero: OUTPUT si puo' cambiare dopo, e
+                # «Mostra nel Finder» deve trovare il file dov'e' davvero.
+                "output_path": str(plan.output),
                 "secondi": round(result.seconds, 1),
                 "avvisi": [str(w) for w in result.warnings],
                 "difettosa": bool(result.difettosa),

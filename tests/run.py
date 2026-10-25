@@ -5100,7 +5100,8 @@ def _() -> None:
     # 1. Il marcatore: vivo se il PID esiste, morto se no.
     with tempfile.TemporaryDirectory() as tmp:
         radice = Path(tmp)
-        finti = _types.SimpleNamespace(root=radice, work=radice / "JOBS")
+        finti = _types.SimpleNamespace(root=radice, work=radice / "JOBS",
+                                       cache=radice / "cache")
         assert not taratura.in_corso(finti), "nessun marcatore, eppure in corso"
         marcatore = radice / "JOBS" / ".calibration" / "running.lock"
         marcatore.parent.mkdir(parents=True)
@@ -5315,6 +5316,37 @@ def _() -> None:
                    for k in n.keywords):
             senza.append(chiave)
     assert not senza, f"interruttori non spenti con la sidebar congelata: {senza}"
+
+
+@caso("un sorgente dal nome lunghissimo ha un nome d'uscita valido")
+def _() -> None:
+    """Oltre i 255 byte il controllo dell'uscita alzava ENAMETOOLONG e la coda
+    intera moriva prima di cominciare."""
+    from animeup.plan import output_name
+    for stem in ("a" * 240, "アニメ" * 40, "ok"):
+        nome = output_name(stem, target_height=1080, scale=4, model_tag="animevideov3",
+                           crf=18, denoise=True, dedup=True, preset="veryslow")
+        assert len((nome + ".mkv.incomplete").encode("utf-8")) <= 255, len(nome)
+    assert output_name("ok", target_height=1080, scale=2, model_tag="m",
+                       crf=18).startswith("ok ["), "un nome corto non si tocca"
+
+
+@caso("un disco esterno scollegato non ha lo spazio del disco di avvio")
+def _() -> None:
+    from animeup.paths import gb_liberi
+    assert gb_liberi(Path("/Volumes/AnimeUpNonEsiste/OUTPUT")) == 0.0
+    assert gb_liberi(Path(tempfile.gettempdir()) / "non" / "ancora") > 0
+
+
+@caso("rinominare la cartella dei video da elaborare non perde il lavoro fatto")
+def _() -> None:
+    """L'identita' del sorgente conteneva il nome della cartella: spostati i
+    video in una cartella nuova, le lavorazioni interrotte ripartivano da capo."""
+    from animeup.pipeline import identita_sorgente
+    a = identita_sorgente(Path("/v/INPUT/ep.mkv"), Path("/v/INPUT"))
+    b = identita_sorgente(Path("/w/Anime Folder/ep.mkv"), Path("/w/Anime Folder"))
+    assert a == b == "INPUT/ep.mkv", (a, b)
+    assert identita_sorgente(Path("/altrove/ep.mkv"), Path("/v/INPUT")) == "/altrove/ep.mkv"
 
 
 def main() -> int:

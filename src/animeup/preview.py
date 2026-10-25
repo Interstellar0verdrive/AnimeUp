@@ -581,7 +581,7 @@ def render(
     # nuova, accumulando duplicati in anteprime/.
     base = safe_name(
         plan.source.path.stem,
-        identita_sorgente(plan.source.path, p.input.parent),
+        identita_sorgente(plan.source.path, p.input),
         con_data=False,
     )
     folder = p.previews / base / firma / candidate.slug

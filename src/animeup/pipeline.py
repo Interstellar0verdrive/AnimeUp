@@ -194,7 +194,7 @@ def safe_name(stem: str, identita: str = "", quando: float | None = None,
     return f"{ripulito[:80]} {data:%Y-%m-%d} {impronta}"
 
 
-def identita_sorgente(path: Path, root: Path) -> str:
+def identita_sorgente(path: Path, cartella_input: Path) -> str:
     """Come si identifica un sorgente, in modo che sopravviva alla copia.
 
     L'impronta della cartella di lavoro nasceva dal percorso ASSOLUTO. Sul
@@ -205,14 +205,15 @@ def identita_sorgente(path: Path, root: Path) -> str:
     restano orfani senza che nulla lo dica. Bastava rinominare la cartella di
     progetto per ottenere lo stesso effetto.
 
-    Per i file dentro il progetto si usa quindi il percorso RELATIVO alla
-    radice, che la copia conserva. La radice e' la cartella che contiene
-    INPUT: con la disposizione di sempre l'identita' resta `INPUT/<nome>`,
-    anche dopo che la 1.6 ha separato INPUT da OUTPUT. Per quelli fuori resta l'assoluto: non c'e'
-    niente di meglio, ed è comunque il caso raro.
+    Per i file dentro la cartella dei video da elaborare si usa quindi il
+    percorso RELATIVO a quella cartella, che la copia conserva, preceduto da
+    `INPUT/` qualunque sia il suo nome: con la disposizione di sempre e'
+    l'identita' della 1.5, e dalla 1.6 la cartella si puo' scegliere e
+    rinominare senza perdere il lavoro gia' fatto. Per quelli fuori resta
+    l'assoluto: non c'e' niente di meglio, ed è comunque il caso raro.
     """
     try:
-        return str(path.resolve().relative_to(root.resolve()))
+        return str(Path("INPUT") / path.resolve().relative_to(cartella_input.resolve()))
     except (ValueError, OSError):
         return str(path.resolve())
 
@@ -480,7 +481,7 @@ class Job:
         # del nome il lavoro già fatto restava orfano.
         base = safe_name(
             plan.source.path.stem,
-            identita_sorgente(plan.source.path, self.paths.input.parent),
+            identita_sorgente(plan.source.path, self.paths.input),
         )
         impronta = base.rsplit(" ", 1)[-1]
         # Impronta della convenzione PRECEDENTE (percorso assoluto). Va ancora

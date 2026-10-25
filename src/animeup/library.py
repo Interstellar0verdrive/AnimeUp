@@ -142,7 +142,7 @@ def _cache_path(path: Path, paths: Paths) -> Path:
     # a file su una serie intera, lasciando per giunta i vecchi JSON orfani.
     from .pipeline import identita_sorgente
     impronta = hashlib.sha1(
-        identita_sorgente(Path(path), paths.input.parent).encode("utf-8")
+        identita_sorgente(Path(path), paths.input).encode("utf-8")
     ).hexdigest()[:12]
     breve = re.sub(r"[^\w.-]+", "_", path.stem)[:80].strip("_")
     return folder / f"{breve or 'file'}-{impronta}.json"
