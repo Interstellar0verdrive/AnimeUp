@@ -152,8 +152,16 @@ def output_name(
         flags += " dd"
     if preset != "slower":
         flags += f" {preset}"
-    return (f"{stem} [{etichetta} {target_height}p {model_tag} "
-            f"x{scale} crf{crf}{flags}]")
+    coda = f" [{etichetta} {target_height}p {model_tag} x{scale} crf{crf}{flags}]"
+    # Un nome di file sta in 255 byte, e dopo vengono ancora ".mkv" e i
+    # suffissi dei file a meta' (".incomplete", ".DEFECTIVE"): con un
+    # sorgente dal nome lunghissimo il nome d'uscita non si poteva nemmeno
+    # controllare, e la coda intera moriva prima di cominciare. Solo in quel
+    # caso si accorcia il nome originale, al confine di un carattere.
+    spazio = 228 - len(coda.encode("utf-8"))
+    if len(stem.encode("utf-8")) > spazio:
+        stem = stem.encode("utf-8")[:spazio].decode("utf-8", "ignore").rstrip() + "…"
+    return stem + coda
 
 
 @dataclass
@@ -273,7 +281,12 @@ class Plan:
     @property
     def uscita_esiste(self) -> bool:
         """Il file finale c'e' gia', con questo nome o con quello vecchio."""
-        return any(p.exists() for p in self.uscite_note)
+        def _c_e(p: Path) -> bool:
+            try:
+                return p.exists()
+            except OSError:  # nome troppo lungo, disco sparito
+                return False
+        return any(_c_e(p) for p in self.uscite_note)
 
     @property
     def correzione(self) -> float:

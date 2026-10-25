@@ -29,5 +29,11 @@
   "pa.ffmpeg_titolo": "FFmpeg 9.0.2",
   "pa.ffmpeg_testo": "Legge, analizza e codifica il video. Si scarica invece di essere incluso per via della sua licenza (GPLv3).",
   "pa.ncnn_titolo": "Real-ESRGAN e Real-CUGAN",
-  "pa.ncnn_testo": "I motori di upscale, con i loro modelli."
+  "pa.ncnn_testo": "I motori di upscale, con i loro modelli.",
+  "sb.cambio_occupato": "Le cartelle non si cambiano mentre qualcosa è in corso.",
+  "sb.cambio_uguale": "Scegli due cartelle diverse: i video finiti finirebbero fra quelli da elaborare.",
+  "sb.cambio_lavori.uno": "1 lavorazione interrotta resta in {cartella}. Per riprenderla sposta la sua cartella JOBS in quella nuova, o torna indietro.",
+  "sb.cambio_lavori.altri": "{n} lavorazioni interrotte restano in {cartella}. Per riprenderle sposta la sua cartella JOBS in quella nuova, o torna indietro.",
+  "sb.cambio_lavori_ok": "Cambia comunque",
+  "src.disco_assente": "La cartella non è raggiungibile: il disco è collegato?"
 }

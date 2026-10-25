@@ -57,8 +57,16 @@ def gb_liberi(cartella: Path) -> float:
     usato): si misura sul primo antenato che c'e', che sta sullo stesso disco.
     """
     for candidata in (cartella, *cartella.parents):
+        # Un disco esterno scollegato: risalendo si arrivava a /Volumes, che
+        # sta sul disco di avvio, e si diceva lo spazio di quello.
+        if candidata.parent == Path("/Volumes"):
+            if not candidata.exists():
+                return 0.0
         if candidata.exists():
-            return shutil.disk_usage(candidata).free / 1_073_741_824
+            try:
+                return shutil.disk_usage(candidata).free / 1_073_741_824
+            except OSError:
+                return 0.0
     return shutil.disk_usage("/").free / 1_073_741_824
 
 
@@ -201,9 +209,18 @@ class Paths:
         from .migrazione import migra
 
         migra(self)
+        # Una per volta: un disco di INPUT scollegato non deve impedire di
+        # creare OUTPUT, i registri e la cache. Il primo errore si rilancia
+        # alla fine, dopo aver fatto il possibile.
+        errore: OSError | None = None
         for d in (self.input, self.output, self.logs, self.job_logs,
                   self.work, self.previews, self.analisi):
-            d.mkdir(parents=True, exist_ok=True)
+            try:
+                d.mkdir(parents=True, exist_ok=True)
+            except OSError as exc:
+                errore = errore or exc
+        if errore is not None:
+            raise errore
 
     # --- binari esterni ---------------------------------------------------
     def _find(self, name: str, *, required: bool = True) -> Tool | None:

@@ -195,10 +195,18 @@ def in_corso(paths: Paths | None = None) -> bool:
     import os
 
     p = paths or PATHS
+    # Il blocco sta nella cartella di lavoro, che segue OUTPUT: cambiata
+    # OUTPUT a meta' giro, non lo si vedeva piu'. Lo stato del giro lanciato
+    # dalla pagina sta invece nella cartella dello stato, che non cambia.
+    fondo = stato_fondo(p)
+    if fondo and fondo.get("state") == IN_CORSO:
+        return True
     marcatore = p.work / ".calibration" / "running.lock"
     try:
         pid = int(marcatore.read_text().strip())
     except (OSError, ValueError):
+        return False
+    if pid <= 0:
         return False
     try:
         os.kill(pid, 0)
@@ -736,8 +744,11 @@ def stato_fondo(p: Paths | None = None) -> dict | None:
         return None
     if dati.get("state") == IN_CORSO:
         try:
-            os.kill(int(dati.get("pid") or 0), 0)
-        except (ProcessLookupError, ValueError):
+            pid = int(dati.get("pid") or 0)
+            if pid <= 0:
+                raise ValueError(pid)
+            os.kill(pid, 0)
+        except (ProcessLookupError, ValueError, TypeError):
             dati["state"] = INTERROTTA
         except OSError:
             pass

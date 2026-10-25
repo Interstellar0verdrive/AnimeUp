@@ -178,6 +178,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             if AppPaths.choices(state: paths.state) != self.folderChoices {
                 self.switchDataFolder(); return
             }
+            // A drive that wasn't connected at launch is back: move to the
+            // chosen folder, but never under a running job's feet.
+            if AppPaths.cameBack(paths.unavailableInput) || AppPaths.cameBack(paths.unavailableOutput),
+               RunningJobs.pids(output: paths.output).isEmpty {
+                self.switchDataFolder(); return
+            }
             self.checkUpdateRequest()
             self.checkQuitRequest()
             self.applyTheme()

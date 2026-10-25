@@ -29,5 +29,11 @@
   "pa.ffmpeg_titolo": "FFmpeg 9.0.2",
   "pa.ffmpeg_testo": "Reads, analyses and encodes the video. Downloaded rather than included because of its licence (GPLv3).",
   "pa.ncnn_titolo": "Real-ESRGAN and Real-CUGAN",
-  "pa.ncnn_testo": "The upscaling engines, with their models."
+  "pa.ncnn_testo": "The upscaling engines, with their models.",
+  "sb.cambio_occupato": "Folders can't change while something is running.",
+  "sb.cambio_uguale": "Pick two different folders: finished videos would end up among the ones to process.",
+  "sb.cambio_lavori.uno": "1 interrupted job stays in {cartella}. To resume it, move its JOBS folder into the new one, or switch back.",
+  "sb.cambio_lavori.altri": "{n} interrupted jobs stay in {cartella}. To resume them, move its JOBS folder into the new one, or switch back.",
+  "sb.cambio_lavori_ok": "Change anyway",
+  "src.disco_assente": "The folder isn't reachable: is its drive connected?"
 }

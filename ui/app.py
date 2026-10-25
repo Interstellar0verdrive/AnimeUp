@@ -4568,16 +4568,59 @@ def _scegli_cartella(quale: str) -> None:
     questo stesso Mac). Annullare non cambia niente. Scelta una cartella,
     l'app riavvia il server su quella e la pagina si ricarica da sola."""
     file, _, testo = _CARTELLE[quale]
+    # Il pulsante e' gia' spento quando qualcosa gira; questa e' la cintura:
+    # cambiata OUTPUT, il server nuovo non vede piu' lavori, code e taratura
+    # di quella vecchia e lascerebbe partire un secondo giro accanto al primo.
+    if _motivo_blocco() is not None:
+        st.toast(t("sb.cambio_occupato"))
+        return
     esito = subprocess.run(
         ["osascript", "-e",
          f'POSIX path of (choose folder with prompt "{t(testo + "_prompt")}")'],
         capture_output=True, text=True, check=False)
     scelta = esito.stdout.strip()
     stato = os.environ.get("ANIMEUP_STATO")
-    if esito.returncode == 0 and scelta and stato:
+    if esito.returncode != 0 or not scelta or not stato:
+        return
+    nuova = Path(scelta).resolve()
+    altra = _cartella_attuale("output" if quale == "input" else "input")
+    try:
+        uguale = nuova == altra.resolve()
+    except OSError:
+        uguale = False
+    if uguale:
+        st.toast(t("sb.cambio_uguale"))
+        return
+    if quale == "output" and nuova != PATHS.output.resolve():
+        # Le lavorazioni interrotte restano nella JOBS di prima, e da qui
+        # non si vedrebbero piu': lo si dice prima, non dopo.
+        try:
+            lasciati = sum(1 for d in PATHS.work.iterdir()
+                           if d.is_dir() and not d.name.startswith("."))
+        except OSError:
+            lasciati = 0
+        if lasciati:
+            avviso = tn("sb.cambio_lavori", lasciati, n=lasciati,
+                        cartella=_breve(PATHS.output)).replace('"', "'")
+            ok = t("sb.cambio_lavori_ok").replace('"', "'")
+            no = t("sb.annulla").replace('"', "'")
+            conferma = subprocess.run(
+                ["osascript", "-e",
+                 f'display dialog "{avviso}" buttons {{"{no}", "{ok}"}} '
+                 f'default button "{no}" cancel button "{no}" with icon caution'],
+                capture_output=True, text=True, check=False)
+            if conferma.returncode != 0:
+                return
+    if nuova == _cartella_attuale(quale).resolve():
+        # La stessa di adesso: l'app non riavvia niente, e un «Passo a…»
+        # resterebbe li' per tutta la sessione.
+        return
+    try:
         Path(stato).mkdir(parents=True, exist_ok=True)
-        (Path(stato) / file).write_text(str(Path(scelta).resolve()) + "\n")
-        st.session_state["cartella_cambiata"] = str(Path(scelta).resolve())
+        (Path(stato) / file).write_text(str(nuova) + "\n")
+    except OSError:
+        return
+    st.session_state["cartella_cambiata"] = str(nuova)
 
 
 def _icona_perche(testo: str) -> str:
@@ -5094,11 +5137,16 @@ def _sorgenti_vuota() -> None:
                                 unsafe_allow_html=True)
                     if st.button(t("src.apri_input"), key="apriInput", type="primary",
                                  icon=":material/folder_open:"):
-                        PATHS.input.mkdir(parents=True, exist_ok=True)
-                        subprocess.run(["open", str(PATHS.input)], check=False)
+                        try:
+                            PATHS.input.mkdir(parents=True, exist_ok=True)
+                        except OSError:
+                            st.toast(t("src.disco_assente"))
+                        else:
+                            subprocess.run(["open", str(PATHS.input)], check=False)
                     if app:
                         st.button(t("src.cambia"), key="cambiaInput",
-                                  on_click=_scegli_cartella, args=("input",))
+                                  on_click=_scegli_cartella, args=("input",),
+                                  disabled=_motivo_blocco() is not None)
                 st.markdown(
                     "<div class='au-freccia'>"
                     f"<span>{_svg(_I_GIU, 12, 2)}</span>"
@@ -5112,7 +5160,8 @@ def _sorgenti_vuota() -> None:
                                 unsafe_allow_html=True)
                     if app:
                         st.button(t("src.cambia"), key="cambiaOutput",
-                                  on_click=_scegli_cartella, args=("output",))
+                                  on_click=_scegli_cartella, args=("output",),
+                                  disabled=_motivo_blocco() is not None)
                 st.markdown(f"<div class='au-card-nota'>{t('src.lavoro_accanto')}</div>",
                             unsafe_allow_html=True)
                 if st.session_state.get("cartella_cambiata"):
@@ -8115,8 +8164,10 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
         if esito.get("fotogrammi"):
             voci.append((t("lav.det_velocita"),
                          f"{esito['fotogrammi'] / secondi:.1f} fps"))
+        uscita_file = (Path(esito["output_path"]) if esito.get("output_path")
+                       else PATHS.output / str(esito.get("output") or ""))
         try:
-            peso = (PATHS.output / esito["output"]).stat().st_size / 1048576
+            peso = uscita_file.stat().st_size / 1048576
             voci.append((t("lav.det_peso"), f"{peso:.0f} MB"))
         except (OSError, KeyError, TypeError):
             pass
@@ -8150,12 +8201,9 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
                     # `open -R` rivela il FILE nella cartella d'uscita: il
                     # server gira sullo stesso Mac dell'utente, è legittimo.
                     if cella.button(t("lav.det_finder",
-                                      cartella=PATHS.output.name),
+                                      cartella=uscita_file.parent.name),
                                     key=f"finder_{plan.output.name}"):
-                        subprocess.run(
-                            ["open", "-R",
-                             str(PATHS.output / esito["output"])],
-                            check=False)
+                        subprocess.run(["open", "-R", str(uscita_file)], check=False)
         for a in avvisi:
             st.markdown(f"<div class='au-avviso'><span class='au-icona'>"
                         f"&#9888;</span>{esc(str(a))}</div>",
@@ -8584,6 +8632,12 @@ def main() -> None:
     except (OSError, KeyError, TypeError):
         pass
     cfg = sidebar()
+    # Una cartella scelta su un disco non collegato all'avvio: si lavora sul
+    # ripiego, e va detto su ogni scheda, non solo in un angolo della sidebar
+    # (la pagina vuota dei Sorgenti lo dice gia' da se').
+    if not (sezione == SEZIONI[0] and not load_library()):
+        for nota in _note_cartelle_assenti():
+            st.warning(nota)
     # Il resoconto di fine coda, se ce n'e' uno da mostrare. Qui e non dentro
     # Lavorazione: la coda puo' finire con l'utente su un'altra scheda, o con
     # l'app chiusa, e il resoconto non deve dipendere da dove si trovava.
