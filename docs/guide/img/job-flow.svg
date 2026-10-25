@@ -1,0 +1,91 @@
+<svg class="animeup-flow__svg" xmlns="http://www.w3.org/2000/svg" width="440" height="1144" viewBox="0 0 440 1144" role="img" aria-labelledby="animeup-flow-title animeup-flow-description">
+  <title id="animeup-flow-title">From source file to finished AnimeUp video</title>
+  <desc id="animeup-flow-description">A vertical flow from INPUT through analysis, planning, checks, extraction in phase 1 of 3, deduplication, the GPU and CPU chunk loop in phase 2 of 3, final encoding and assembly in phase 3 of 3, verification, and a finished MKV in OUTPUT. On success, a job report is saved and the job folder is removed.</desc>
+  <style>
+    .animeup-flow__svg { --flow-bg: #f5f8f9; --flow-card: #fff; --flow-line: #d9e1e5; --flow-ink: #17252b; --flow-muted: #475963; --flow-accent: #0078a8; --flow-accent-soft: #e5f3f7; font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    @media (prefers-color-scheme: dark) { .animeup-flow__svg { --flow-bg: #101113; --flow-card: #17191c; --flow-line: #353b41; --flow-ink: #e8eaed; --flow-muted: #c6cbd2; --flow-accent: #2ac9de; --flow-accent-soft: #16353a; } }
+    .flow-surface { fill: var(--flow-card); }
+    .flow-card { fill: var(--flow-bg); stroke: var(--flow-line); stroke-width: 1.5; }
+    .flow-card--phase, .flow-card--output { fill: var(--flow-accent-soft); stroke: var(--flow-accent); }
+    .flow-number { fill: var(--flow-accent-soft); stroke: var(--flow-accent); stroke-width: 1.25; }
+    .flow-number-text { fill: var(--flow-accent); font-size: 11px; font-weight: 800; text-anchor: middle; }
+    .flow-title { fill: var(--flow-ink); font-size: 17px; font-weight: 750; letter-spacing: -.02em; }
+    .flow-caption { fill: var(--flow-muted); font-size: 14px; }
+    .flow-mono { fill: var(--flow-ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 17px; font-weight: 700; }
+    .flow-label { fill: var(--flow-accent); font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+    .flow-phase { fill: var(--flow-accent-soft); stroke: var(--flow-accent); stroke-width: 1; }
+    .flow-phase-text { fill: var(--flow-accent); font-size: 10px; font-weight: 800; letter-spacing: .035em; text-anchor: middle; }
+    .flow-link { fill: none; stroke: var(--flow-accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  </style>
+  <rect class="flow-surface" x="0" y="0" width="440" height="1144" rx="16" />
+  <rect class="flow-card" x="20" y="16" width="400" height="58" rx="12" />
+  <circle class="flow-number" cx="55" cy="45" r="18" />
+  <text class="flow-number-text" x="55" y="49">IN</text>
+  <text class="flow-label" x="88" y="39">SOURCE FILE</text>
+  <text class="flow-mono" x="88" y="61">INPUT/episode.mkv</text>
+  <path class="flow-link" d="M220 79v19m-5-6 5 6 5-6" />
+  <rect class="flow-card" x="20" y="104" width="400" height="80" rx="12" />
+  <circle class="flow-number" cx="55" cy="144" r="18" />
+  <text class="flow-number-text" x="55" y="148">01</text>
+  <text class="flow-title" x="88" y="139">Analysis</text>
+  <text class="flow-caption" x="88" y="164">Inspect streams, timestamps and frame rate</text>
+  <path class="flow-link" d="M220 189v19m-5-6 5 6 5-6" />
+  <rect class="flow-card" x="20" y="214" width="400" height="80" rx="12" />
+  <circle class="flow-number" cx="55" cy="254" r="18" />
+  <text class="flow-number-text" x="55" y="258">02</text>
+  <text class="flow-title" x="88" y="244">Plan</text>
+  <text class="flow-caption" x="88" y="265">Size, model, scale, chunks and estimate</text>
+  <text class="flow-caption" x="88" y="284">No media processing yet</text>
+  <path class="flow-link" d="M220 299v19m-5-6 5 6 5-6" />
+  <rect class="flow-card" x="20" y="324" width="400" height="80" rx="12" />
+  <circle class="flow-number" cx="55" cy="364" r="18" />
+  <text class="flow-number-text" x="55" y="368">03</text>
+  <text class="flow-title" x="88" y="359">Preflight checks</text>
+  <text class="flow-caption" x="88" y="384">Free space, writable OUTPUT/, job lock</text>
+  <path class="flow-link" d="M220 409v19m-5-6 5 6 5-6" />
+  <rect class="flow-card flow-card--phase" x="20" y="434" width="400" height="92" rx="12" />
+  <circle class="flow-number" cx="55" cy="480" r="18" />
+  <text class="flow-number-text" x="55" y="484">04</text>
+  <rect class="flow-phase" x="312" y="445" width="94" height="22" rx="11" />
+  <text class="flow-phase-text" x="359" y="460">PHASE 1/3</text>
+  <text class="flow-title" x="88" y="469">Extraction</text>
+  <text class="flow-caption" x="88" y="492">Decode every frame into a PNG</text>
+  <text class="flow-caption" x="88" y="513">One sequential pass</text>
+  <path class="flow-link" d="M220 531v19m-5-6 5 6 5-6" />
+  <rect class="flow-card" x="20" y="556" width="400" height="80" rx="12" />
+  <circle class="flow-number" cx="55" cy="596" r="18" />
+  <text class="flow-number-text" x="55" y="600">05</text>
+  <text class="flow-title" x="88" y="591">Deduplication</text>
+  <text class="flow-caption" x="88" y="616">Identify repeated frames to skip</text>
+  <path class="flow-link" d="M220 641v19m-5-6 5 6 5-6" />
+  <rect class="flow-card flow-card--phase" x="20" y="666" width="400" height="112" rx="12" />
+  <circle class="flow-number" cx="55" cy="722" r="18" />
+  <text class="flow-number-text" x="55" y="726">06</text>
+  <rect class="flow-phase" x="312" y="677" width="94" height="22" rx="11" />
+  <text class="flow-phase-text" x="359" y="692">PHASE 2/3</text>
+  <text class="flow-title" x="88" y="701">Chunk loop</text>
+  <text class="flow-caption" x="88" y="724">GPU upscale each chunk → restore repeats</text>
+  <text class="flow-caption" x="88" y="745">CPU encode completed segments</text>
+  <text class="flow-caption" x="88" y="766">Final segment is encoded in phase 3</text>
+  <path class="flow-link" d="M220 783v19m-5-6 5 6 5-6" />
+  <rect class="flow-card flow-card--phase" x="20" y="808" width="400" height="102" rx="12" />
+  <circle class="flow-number" cx="55" cy="859" r="18" />
+  <text class="flow-number-text" x="55" y="863">07</text>
+  <rect class="flow-phase" x="312" y="819" width="94" height="22" rx="11" />
+  <text class="flow-phase-text" x="359" y="834">PHASE 3/3</text>
+  <text class="flow-title" x="88" y="843">Assembly</text>
+  <text class="flow-caption" x="88" y="866">Encode last chunk; join segments</text>
+  <text class="flow-caption" x="88" y="887">Copy audio, subtitles, fonts and chapters</text>
+  <path class="flow-link" d="M220 915v19m-5-6 5 6 5-6" />
+  <rect class="flow-card" x="20" y="940" width="400" height="80" rx="12" />
+  <circle class="flow-number" cx="55" cy="980" r="18" />
+  <text class="flow-number-text" x="55" y="984">08</text>
+  <text class="flow-title" x="88" y="975">Verification</text>
+  <text class="flow-caption" x="88" y="1000">Check frame count, size and audio</text>
+  <path class="flow-link" d="M220 1025v19m-5-6 5 6 5-6" />
+  <rect class="flow-card flow-card--output" x="20" y="1050" width="400" height="78" rx="12" />
+  <circle class="flow-number" cx="55" cy="1089" r="18" />
+  <path class="flow-link" d="m47 1089 5 5 11-12" />
+  <text class="flow-title" x="88" y="1083">Finished MKV in OUTPUT/</text>
+  <text class="flow-caption" x="88" y="1107">On success: report saved · JOBS/ removed</text>
+</svg>

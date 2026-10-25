@@ -78,10 +78,11 @@ markdown_extensions:
       custom_checkbox: true
 
 extra_css:
-  - stylesheets/extra.css?v=20261025-fixed-sidebars
+  - stylesheets/extra.css?v=20261025-job-flow
 
 hooks:
   - hooks/hide_markdown_nav.py
+  - hooks/inline_guide_svg.py
 
 extra_javascript:
   - javascripts/theme-select.js
