@@ -1109,10 +1109,27 @@
 }
 
 @media screen and (max-width: 60em) {
+  .md-sidebar--primary,
+  .md-sidebar--primary .md-sidebar__scrollwrap {
+    background: var(--animeup-surface);
+  }
+
   .md-sidebar--primary .md-nav--primary {
+    background: transparent;
     left: 8px;
     right: 8px;
     width: auto;
+  }
+
+  .md-sidebar--primary .md-nav--primary .md-nav,
+  .md-sidebar--primary .md-nav--primary .md-nav__title,
+  .md-sidebar--primary .md-nav--primary .md-nav__list {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .md-nav--primary > .md-nav__title > .md-nav__button.md-logo {
+    display: none !important;
   }
 
   .md-sidebar--primary .md-nav__source,
