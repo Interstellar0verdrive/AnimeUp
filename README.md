@@ -1,6 +1,6 @@
-<img src="macos/icon/AnimeUp-Dark-1024.png" alt="AnimeUp icon" width="128" align="right">
-
 # AnimeUp
+
+<img src="macos/icon/AnimeUp-Dark-1024.png" alt="AnimeUp icon" width="128" align="right">
 
 [![tests](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml/badge.svg)](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml)
 [![latest release](https://img.shields.io/github/v/release/Interstellar0verdrive/AnimeUp)](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest)
