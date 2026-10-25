@@ -21,10 +21,7 @@
   "pa.errore": "The download didn't complete. Check the connection and try again; what's already downloaded is kept.",
   "pa.riprova": "Try again",
   "sb.cartella_assente": "The folder {scelta} isn't available (is its drive connected?). For now AnimeUp is using {attuale}.",
-  "src.vuoto_cartella_app": "Both folders can be anywhere, external drives included, and stay chosen until you change them: here or in the sidebar.",
-  "src.vuoto_cartella_cartella": "This is the INPUT folder inside the AnimeUp folder.",
   "src.apri_input": "Open in Finder",
-  "src.scegli_cartella": "Change folder…",
   "sb.aggiornamento_installa": "Install update",
   "sb.aggiornamento_note": "What's new",
   "sb.aggiornamento_chiesto": "AnimeUp will ask you to confirm, download the update, check it and restart."

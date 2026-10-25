@@ -31,6 +31,7 @@ VOCABOLARIO: dict[str, str] = {
     "approfondita": "deep_analysis",
     "lingua": "language",
     "aggiornamenti": "check_updates",
+    "tema": "theme",
     # storico dei file (history.jsonl)
     "secondi": "seconds",
     "avvisi": "warnings",

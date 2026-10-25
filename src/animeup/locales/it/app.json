@@ -21,10 +21,7 @@
   "pa.errore": "Il download non è andato a buon fine. Controlla la connessione e riprova; quanto già scaricato resta.",
   "pa.riprova": "Riprova",
   "sb.cartella_assente": "La cartella {scelta} non è disponibile (il disco è collegato?). Per ora AnimeUp usa {attuale}.",
-  "src.vuoto_cartella_app": "Le due cartelle possono stare dove vuoi, anche su dischi esterni, e restano scelte finché non le cambi: da qui o nella barra laterale.",
-  "src.vuoto_cartella_cartella": "È la cartella INPUT dentro la cartella di AnimeUp.",
   "src.apri_input": "Apri nel Finder",
-  "src.scegli_cartella": "Cambia cartella…",
   "sb.aggiornamento_installa": "Installa l'aggiornamento",
   "sb.aggiornamento_note": "Novità",
   "sb.aggiornamento_chiesto": "AnimeUp ti chiederà conferma, scaricherà l'aggiornamento, lo verificherà e si riavvierà."
