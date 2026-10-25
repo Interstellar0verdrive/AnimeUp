@@ -58,6 +58,9 @@ TOKEN: dict[str, tuple[str, str]] = {
     "primaryHover":    ("#57D4E5", "#0F9FB9"),
     "onPrimary":       ("#07282C", "#FFFFFF"),
     "knobOn":          ("#07282C", "#FFFFFF"),
+    # interruttore spento: tono su tono col fondo (in chiaro: chiaro, non grigio scuro)
+    "toggleOff":       ("#3A3F46", "#D5D9DF"),
+    "knobOff":         ("#9BA1A9", "#FFFFFF"),
     # rampe di stato: colore (bordi, pallini), fondo, testo
     "green":           ("#45D483", "#12A150"),
     "greenBg":         ("#10251A", "#E6F5EC"),
@@ -88,6 +91,7 @@ TERNE: dict[str, tuple[str, str]] = {
     "grayRgb":     ("138 144 153", "107 113 121"),
     "textGrayRgb": ("183 188 195", "74 80 88"),
     "bgRgb":       ("16 17 19", "246 247 249"),
+    "sidebarRgb":  ("26 29 33", "236 238 241"),       # = sidebar, per le sfumature
     # Ombre: nere sul tema scuro, blu notte appena accennato sul chiaro.
     "shadowRgb":   ("0 0 0", "16 24 40"),
     # Le velature "piu' chiaro del fondo" del tema scuro, che sul chiaro

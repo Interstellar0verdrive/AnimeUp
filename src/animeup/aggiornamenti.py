@@ -106,3 +106,22 @@ def disponibile(*, attivo: bool = True, adesso: float | None = None) -> dict | N
         return {"versione": salvato["ultima"].lstrip("v"),
                 "url": salvato.get("url") or PAGINA_RELEASE}
     return None
+
+
+def controlla_ora() -> tuple[str, str]:
+    """Il controllo chiesto a mano (l'icona accanto alla versione): aspetta
+    la risposta, al massimo qualche secondo, e dice com'e' andata.
+
+    («nuova», versione) se ce n'e' una piu' nuova, («aggiornato», versione in
+    uso) se no, («errore», "") se GitHub non risponde.
+    """
+    prima = float(_leggi().get("controllato") or 0)
+    _chiedi_a_github()
+    salvato = _leggi()
+    if float(salvato.get("controllato") or 0) <= prima or not salvato.get("ultima"):
+        return ("errore", "")
+    ultima, attuale = versione(salvato["ultima"]), versione(__version__)
+    if ultima and attuale and ultima > attuale:
+        return ("nuova", salvato["ultima"].lstrip("v"))
+    return ("aggiornato", __version__)
+
