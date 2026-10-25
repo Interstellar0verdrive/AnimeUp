@@ -794,3 +794,32 @@ def avvia_fondo(p: Paths | None = None) -> bool:
         s["pid"] = proc.pid
         scrivi_stato(s, p)
     return True
+
+
+def ferma_fondo(p: Paths | None = None) -> bool:
+    """Ferma la taratura lanciata dalla pagina. Non salva niente: i numeri
+    di prima restano. Lo stato diventa «interrotta» e gia' vista, cosi' la
+    finestra riparte dall'inizio invece di mostrare un errore."""
+    import signal
+
+    from .processi import di_animeup
+
+    s = stato_fondo(p) or {}
+    if s.get("state") != IN_CORSO:
+        return False
+    try:
+        pid = int(s.get("pid") or 0)
+    except (TypeError, ValueError):
+        pid = 0
+    if pid > 1 and di_animeup(pid):
+        try:
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
+        except OSError:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except OSError:
+                pass
+    s.update({"state": INTERROTTA, "seen": True, "error": ""})
+    scrivi_stato(s, p)
+    return True
+
