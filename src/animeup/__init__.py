@@ -6,4 +6,4 @@ Riscrittura 2026 di upscale_batch_v5.sh, con tre obiettivi:
   - lavorare a blocchi, per rendere fattibili i file lunghi e ripartire dopo un crash
 """
 
-__version__ = "1.5.2"
+__version__ = "1.6.0"
