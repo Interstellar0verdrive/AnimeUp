@@ -43,14 +43,10 @@ AnimeUp is for people who keep a local anime library at DVD or web-rip resolutio
 
 ## The path at a glance
 
-| Step | What you do | Time |
-|---|---|---|
-| 1. Install | Unzip, double-click **Avvia AnimeUp.command**, allow it in Privacy & Security | A few minutes, once |
-| 2. Calibrate | **Run now** next to **Calibration** in the sidebar | About 10 minutes, once per Mac |
-| 3. Sources | Copy episodes into `INPUT/` and read their analysis | Seconds per file |
-| 4. Compare | Test the models on difficult clips and pick one by eye | A few minutes per series |
-| 5. Processing | Tick the files, check the model, **Start processing** | Minutes to hours per episode |
-| 6. Output | Collect the files from `OUTPUT/` | — |
+<picture>
+  <source media="(max-width: 44em)" srcset="img/guide-path-mobile.svg">
+  <img src="img/guide-path.svg" width="820" height="420" alt="Six steps to use AnimeUp: install, optionally calibrate your Mac on first use, inspect sources, compare models, process the files, and collect the output.">
+</picture>
 
 Step 2 is optional but recommended: without it AnimeUp still works, but every time estimate comes from a different Mac.
 
