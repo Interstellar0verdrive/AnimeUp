@@ -14,9 +14,9 @@ Install the app (or the portable folder), approve it once in macOS, and let the 
 | | **The app** (recommended) | The portable folder | From source (`git clone`) |
 |---|---|---|---|
 | For | Most people | Running from an external drive, or from the Terminal | Following development |
-| You get | `AnimeUp.app`, a normal Mac app with its own window | A folder you open with `Start AnimeUp.command`; the interface opens in your browser | The repository |
-| Your videos (`INPUT/`, `OUTPUT/`) | `~/Movies/AnimeUp` (each folder changeable in the sidebar) | Inside the folder | Inside the folder |
-| AnimeUp's own data, tools and Python | `~/Library/Application Support/AnimeUp` | Inside the folder | Inside the folder |
+| You get | `AnimeUp.app`, a normal Mac app with its own window | A folder you open with `Avvia AnimeUp.command`; the interface opens in your browser | The repository |
+| Your files | `~/Movies/AnimeUp` (changeable in the sidebar) | Inside the folder | Inside the folder |
+| AnimeUp's tools and Python | `~/Library/Application Support/AnimeUp` | Inside the folder | Inside the folder |
 | Gatekeeper prompt | Yes, once | Yes, once | No |
 | Updating | Replace the app | Download the new zip | `git pull` |
 
@@ -47,35 +47,30 @@ If something goes wrong in step 1, a window shows the last lines of the log with
 
 | What | Where |
 |---|---|
-| The videos to process | `~/Movies/AnimeUp/INPUT`, or the folder you choose in the sidebar as **Videos to process folder** |
-| The finished videos, with each file's log (`logs/`) and the jobs in progress or interrupted (`JOBS/`) | `~/Movies/AnimeUp/OUTPUT`, or the folder you choose in the sidebar as **Finished videos folder** |
-| AnimeUp's own data: history, settings, calibration (`records/`) and caches (`cache/`) | `~/Library/Application Support/AnimeUp` |
-| Python, its environment, FFmpeg, the upscalers and their models | `~/Library/Application Support/AnimeUp` (about 1 GB) |
+| Your files: `INPUT/`, `OUTPUT/`, `JOBS/`, `anteprime/`, `registri/` | `~/Movies/AnimeUp`, or the folder you choose in the sidebar under **System → Data folder** (it can be on an external drive; AnimeUp switches to it right away and remembers it; if it isn't available at launch, for example a disconnected drive, AnimeUp uses `~/Movies/AnimeUp` and says so) |
+| Python, its environment, caches, FFmpeg, the upscalers and their models | `~/Library/Application Support/AnimeUp` (about 1 GB) |
 | The program | `AnimeUp.app`, which is never modified |
-
-Each of the two video folders can be on an external drive. AnimeUp switches to a new choice right away and remembers it until you change it. If a chosen folder isn't available at launch, for example on a disconnected drive, AnimeUp uses the default one and says so in the sidebar. [07. Output files and folders](07-output-and-folders.md#where-animeup-keeps-things) has the full list.
 
 The app runs its interface on port 8898, reachable only from this Mac, so it can run alongside the portable folder (port 8899).
 
 ### Using and updating the app
 
-- **Closing the window** doesn't quit AnimeUp: it keeps running in the background, jobs included. Click its icon in the Dock to bring the window back.
-- **Quit** with **⌘Q** (or **AnimeUp → Quit AnimeUp**). If a job is running, AnimeUp asks first: quitting stops the job and the rest of the queue. The work done so far is kept, so you can resume it later.
-- **File → Open Videos to Process Folder** (⇧⌘O) and **File → Open Finished Videos Folder** (⇧⌘F) show your videos in Finder; **File → Open in Browser** opens the same interface in your browser; **File → Show Log** opens the app's log.
+- **Quit** with **⌘Q** (or **AnimeUp → Quit AnimeUp**). Jobs in progress keep running in the background and reappear when you reopen the app. Closing the window quits the app too.
+- **File → Open Data Folder** shows your files in Finder; **File → Open in Browser** opens the same interface in your browser; **File → Show Log** opens the app's log.
 - **Updating**: once a day AnimeUp asks GitHub for the latest release and, if there's a newer one, shows a note at the top of the sidebar with an **Install update** button (you can turn the check off with **Check for updates**). Click it and confirm: AnimeUp downloads the new app from the GitHub release, checks it against the SHA256 checksum GitHub publishes for that file, checks the app inside (identifier, version, signature), replaces itself and restarts. Jobs in progress keep running; your files, settings and calibration are untouched.
 
     !!! tip "No new approval needed"
         macOS asks for **Open Anyway** again for every version downloaded with a browser, because the browser marks the file as downloaded from the internet. An update installed by AnimeUp itself carries no such mark, so it opens straight away. This needs the app to be in a folder you can write to (Applications is fine) and not running from Downloads.
 
     You can still update by hand: quit AnimeUp and replace `AnimeUp.app` in Applications with the one from the new release zip (then you'll have to approve it once in Privacy & Security).
-- **Removing** AnimeUp: delete the app, then `~/Library/Application Support/AnimeUp` (tools, Python, history, settings and calibration) and, if you no longer want them, your videos in `~/Movies/AnimeUp` (or in the folders you chose).
+- **Removing** AnimeUp: delete the app, then `~/Library/Application Support/AnimeUp` (tools and Python) and, if you no longer want them, your files in `~/Movies/AnimeUp`.
 
 ## The portable folder
 
 The rest of this page is about the portable folder and the source checkout: the same program, run from a folder you choose.
 
-1. Download `AnimeUp-<version>-macos-arm64.zip` from the [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest) and unzip it where you want AnimeUp to live: anywhere you can write to, external drives included. Choose a disk with room to spare: a single episode can temporarily take tens of GB in `OUTPUT/JOBS/`.
-2. Double-click **`Start AnimeUp.command`** and follow [The first launch](#the-first-launch).
+1. Download `AnimeUp-<version>-macos-arm64.zip` from the [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest) and unzip it where you want AnimeUp to live: anywhere you can write to, external drives included. Choose a disk with room to spare: a single episode can temporarily take tens of GB in `JOBS/`.
+2. Double-click **`Avvia AnimeUp.command`** (Italian for "Launch AnimeUp") and follow [The first launch](#the-first-launch).
 
 From source:
 
@@ -86,15 +81,15 @@ cd AnimeUp
 ./animeup ui
 ```
 
-You can also skip the two commands and double-click **`Start AnimeUp.command`**: it runs `setup` by itself when something is missing from `bin/`. If you have no `uv` on your system, the launcher downloads it too.
+You can also skip the two commands and double-click **`Avvia AnimeUp.command`**: it runs `setup` by itself when something is missing from `bin/`. If you have no `uv` on your system, the launcher downloads it too.
 
 ## Get past Gatekeeper
 
-The first time you double-click **`Start AnimeUp.command`** from the zip, macOS refuses to open it, because the script isn't signed by an identified developer. This is expected.
+The first time you double-click **`Avvia AnimeUp.command`** from the zip, macOS refuses to open it, because the script isn't signed by an identified developer. This is expected.
 
 1. Close the warning.
 2. Open **System Settings → Privacy & Security**.
-3. Scroll down to the message about `Start AnimeUp.command` and click **Open Anyway**.
+3. Scroll down to the message about `Avvia AnimeUp.command` and click **Open Anyway**.
 4. Confirm. From now on the file opens with a normal double-click.
 
 
@@ -165,28 +160,26 @@ The sidebar of the interface shows the same problem in short: a line such as **2
 
 You can move or copy the whole AnimeUp folder to another place or another Apple Silicon Mac. On the next launch the launcher checks that its Python environment points at the new location and repairs it if needed (this may need the Internet once). Don't move `src/`, `ui/` or the hidden folders out of the AnimeUp folder.
 
-!!! tip "Keeping your videos elsewhere"
-    In the portable folder the folders are chosen with environment variables, from the Terminal: `ANIMEUP_INPUT` for the videos to process, `ANIMEUP_OUTPUT` for the finished videos (and their jobs), `ANIMEUP_ROOT` for a base folder that holds both. AnimeUp's own data stays in the AnimeUp folder. See [07. Output files and folders](07-output-and-folders.md#choosing-the-folders-from-the-terminal).
+!!! tip "Keeping your data elsewhere"
+    The only setting outside the interface is the environment variable `ANIMEUP_ROOT`: point it at another folder and AnimeUp keeps `INPUT/`, `OUTPUT/`, `JOBS/` and its records there instead.
 
 ## Updating from an older version
 
-**From a `git clone`**: run `git pull` in the AnimeUp folder, then relaunch. Your `INPUT/`, `OUTPUT/`, `records/` and `cache/` aren't tracked by git, so they're left alone.
+**From a `git clone`**: run `git pull` in the AnimeUp folder, then relaunch. Your `INPUT/`, `OUTPUT/`, `JOBS/`, `anteprime/` and `registri/` aren't tracked by git, so they're left alone.
 
 **From the zip**: unzip the new version into a new folder, then move your data across from the old one before you launch it:
 
 | Move this folder | Because it holds |
 |---|---|
 | `INPUT/` | Your sources. |
-| `OUTPUT/` | Your finished files, their logs, and in `OUTPUT/JOBS/` the interrupted jobs you want to resume. |
-| `records/` | Your settings, the job history that refines the estimates, and your calibration. |
+| `OUTPUT/` | Your finished files. |
+| `JOBS/` | Interrupted jobs you want to resume. |
+| `registri/` | Your settings, the job history that refines the estimates, and your calibration. |
 
-`cache/` (source analyses and the Compare clips) can come too, or be left behind: it's regenerated on demand.
-
-!!! note "Coming from 1.5 or earlier"
-    An old folder has `INPUT/`, `OUTPUT/`, `JOBS/`, `anteprime/` and `registri/`. Move `INPUT/`, `OUTPUT/`, `JOBS/` and `registri/` into the new folder as they are: on the first launch AnimeUp moves them into the 1.6 layout by itself. See [Upgrading from 1.5](07-output-and-folders.md#upgrading-from-15).
+`anteprime/` (the Compare cache) can come too, or be left behind: it's regenerated on demand.
 
 !!! note "Coming from 1.3.2 or earlier"
-    Until version 1.3.2 the jobs folder was called `LAVORAZIONI/`. Since the interface is in English it's called `JOBS/`. You don't need to do anything: on launch, if `LAVORAZIONI/` exists and `JOBS/` doesn't, AnimeUp renames it and then moves it into `OUTPUT/` like any other old `JOBS/`, and your interrupted jobs stay resumable.
+    Until version 1.3.2 the jobs folder was called `LAVORAZIONI/`. Since the interface is in English it's called `JOBS/`. You don't need to do anything: on launch, if `LAVORAZIONI/` exists and `JOBS/` doesn't, AnimeUp renames it, and your interrupted jobs stay where it looks for them.
 
 ## Before you move on
 

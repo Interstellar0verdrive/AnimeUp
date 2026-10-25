@@ -1,0 +1,93 @@
+site_name: AnimeUp user guide
+site_description: Step-by-step guide to AnimeUp, the local, offline anime upscaler for Apple Silicon Macs.
+site_url: https://interstellar0verdrive.github.io/AnimeUp/
+repo_url: https://github.com/Interstellar0verdrive/AnimeUp
+repo_name: Interstellar0verdrive/AnimeUp
+docs_dir: docs
+site_dir: site
+exclude_docs: |
+  USER_GUIDE.md
+
+nav:
+  - Home: guide/index.md
+  - 01. Install and first launch: guide/01-install.md
+  - 02. Calibrate your Mac: guide/02-calibration.md
+  - 03. The interface and its settings: guide/03-interface.md
+  - '04. Sources: check your files': guide/04-sources.md
+  - '05. Compare: choose the model by eye': guide/05-compare.md
+  - '06. Processing: run, monitor, stop and resume': guide/06-processing.md
+  - 07. Output files and folders: guide/07-output-and-folders.md
+  - Reference:
+      - Command-line reference: guide/reference/command-line.md
+      - Troubleshooting: guide/reference/troubleshooting.md
+  - Deep dives:
+      - How a job works inside: guide/deep-dives/how-it-works.md
+      - The models and when to use them: guide/deep-dives/models.md
+      - Tuning notes: TUNING.md
+
+theme:
+  name: material
+  custom_dir: overrides
+  language: en
+  logo: assets/animeup-logo.png
+  favicon: assets/animeup-favicon.png
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - scheme: animeup-auto
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Use light appearance
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Use dark appearance
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-auto
+        name: Use system appearance
+  features:
+    - navigation.sections
+    - navigation.path
+    - navigation.footer
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+extra_css:
+  - stylesheets/extra.css?v=20261025-job-flow
+
+hooks:
+  - hooks/hide_markdown_nav.py
+  - hooks/inline_guide_svg.py
+
+extra_javascript:
+  - javascripts/theme-select.js
+  - javascripts/search-expand.js
+  - javascripts/toc-current.js
+
+extra:
+  generator: false

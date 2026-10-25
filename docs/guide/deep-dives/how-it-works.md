@@ -13,38 +13,9 @@ You don't need this page to use AnimeUp. It's for when you want to understand a 
 
 ## The whole path at a glance
 
-```text
- INPUT/episode.mkv
-      │
-      ▼
- 1. Analysis ─────── what the file really is (once, saved)
-      │
-      ▼
- 2. Plan ─────────── size, model, scale, chunks, estimate (nothing runs yet)
-      │
-      ▼
- 3. Checks ───────── free space, output folder writable, lock
-      │
-      ▼
- 4. Extraction ───── every frame → PNG, one sequential pass      ┐ phase 1/3
-      │                                                          ┘
- 5. Deduplication ── which frames are repeats
-      │
-      ▼
- 6. Chunks, one after another:                                   ┐
-      upscale (GPU) → restore repeats → encode segment (CPU)     │ phase 2/3
-      │                                                          ┘
-      ▼
- 7. Assembly ─────── join segments + copy audio, subs, fonts,    ┐ phase 3/3
-      │              chapters from the source                    ┘
-      ▼
- 8. Verification ─── frame count, size, audio
-      │
-      ▼
- OUTPUT/episode [upscale 1080p … ].mkv   + job report, JOBS/ folder deleted
-```
+<img src="../img/job-flow.svg" width="440" height="1144" alt="Flow from the source file through analysis, planning, checks, extraction, deduplication, chunk processing, assembly and verification to the finished MKV">
 
-The "phase 1/3, 2/3, 3/3" on a Processing row map onto this: extraction, the chunk loop (upscale with encoding in between), and the encoding of the last chunk plus assembly.
+The phase labels match the Processing row: **1/3** extracts the frames, **2/3** upscales and encodes chunks, and **3/3** encodes the last chunk and assembles the file. Deduplication happens between extraction and the chunk loop; verification follows assembly.
 
 ## 1. Analysis
 
@@ -57,7 +28,7 @@ Before anything is planned, AnimeUp works out what the file really contains, wit
 
 Interlaced or telecined sources are **detected and flagged, not treated**. Detection can't reliably tell hard telecine from true interlacing, and applying the wrong cure destroys the original progressive frames. Prepare such a source with a dedicated tool first.
 
-The result is saved in `cache/analysis/` and reused until the file changes, so the list opens instantly next time.
+The result is saved in `JOBS/.analisi/` and reused until the file changes, so the list opens instantly next time.
 
 **Deep analysis** (on by default, see [03. The interface](../03-interface.md)) adds one more measurement: how many frames deduplication will be able to skip. It decodes six 4-second windows spread across the file, in a single pass, and applies the same rule the real deduplication uses. Validated against real jobs, it was off by 1.3 percentage points on average. The guess it replaced, based on files of a similar length, was off by 26.9.
 
@@ -84,7 +55,7 @@ The plan turns "what the file is" into "what will be done", without running anyt
 
 1. **Disk space.** The plan's peak disk use, minus frames already extracted by an earlier run, is compared with the free space, also subtracting what other running jobs have claimed. If it doesn't fit, the job is refused before a single frame is written: *"about N GB needed, M GB free"*. A full disk halfway through wouldn't just ruin this file. It would stall the system and could corrupt other jobs' state.
 2. **The output folder is writable.** A missing permission used to be discovered at assembly, after hours of GPU work. Now AnimeUp writes a test file into `OUTPUT/` first.
-3. **The lock.** AnimeUp creates `running.lock` in the job folder, holding its process ID. If another live process holds it, the job refuses to start. A lock left behind by a crashed process is recognised as dead (zombie processes included) and taken over. If the previous owner was killed hard, AnimeUp also kills its orphaned upscaler before starting, so two processes never write the same frames.
+3. **The lock.** AnimeUp creates `in-corso.lock` in the job folder, holding its process ID. If another live process holds it, the job refuses to start. A lock left behind by a crashed process is recognised as dead (zombie processes included) and taken over. If the previous owner was killed hard, AnimeUp also kills its orphaned upscaler before starting, so two processes never write the same frames.
 
 ## 4. Extraction
 
@@ -109,7 +80,7 @@ The map is then **audited** by an independent check on the structure actually us
 
 How much it saves depends entirely on the material. On real files it skipped 11% to 57% of frames.
 
-## 6. Why chunks
+## 6. Why chunks { #why-chunks }
 
 The upscaled frames of one episode would need hundreds of gigabytes as PNG. So after extraction the frames are processed in **chunks**, one after another. Each chunk goes through:
 
@@ -149,7 +120,7 @@ When every chunk is encoded, the segments are joined in order and the rest of th
 
 Tracks are interleaved strictly by timestamp. Without that, a source with sparse subtitles and fonts once produced a file with all its audio bunched at the start, which players then treated as silent.
 
-The file is written as `<name>.mkv.incomplete` and renamed to its real name only when complete. The rename is atomic, so `OUTPUT/` never holds a truncated file under a good name.
+The file is written as `<name>.mkv.inlavorazione` and renamed to its real name only when complete. The rename is atomic, so `OUTPUT/` never holds a truncated file under a good name.
 
 ## 8. Verification and the job report
 
@@ -162,10 +133,10 @@ The finished file is checked:
 | Audio can be read after seeking into the middle | Defect |
 | The frame count couldn't be read at all | Warning only |
 
-A file with any **defect** is renamed `….DEFECTIVE.mkv` and its job folder is kept for inspection (see [07. Output files and folders](../07-output-and-folders.md)). Otherwise:
+A file with any **defect** is renamed `….PARZIALE.mkv` and its job folder is kept for inspection (see [07. Output files and folders](../07-output-and-folders.md)). Otherwise:
 
-- a line is added to `records/history.jsonl`: real duration (paused time excluded, earlier interrupted runs included), measured deduplication, warnings, model, output name. This is what makes the row say "done", and what future estimates learn from;
-- the job folder in `OUTPUT/JOBS/` is deleted.
+- a line is added to `registri/esiti.jsonl`: real duration (paused time excluded, earlier interrupted runs included), measured deduplication, warnings, model, output name. This is what makes the row say "done", and what future estimates learn from;
+- the job folder in `JOBS/` is deleted.
 
 Warnings (as opposed to defects) don't keep the job folder. A note isn't worth the 31 GB that the extracted frames of a 24-minute 720p episode take.
 
@@ -175,7 +146,7 @@ Warnings (as opposed to defects) don't keep the job folder. A note isn't worth t
 
 ## Resuming: what is kept and what is redone
 
-A job can be interrupted by **Stop**, **Stop all**, a crash, a power cut or closing the Mac's lid. Everything needed to resume is in its folder in `OUTPUT/JOBS/`. When the job starts again, AnimeUp compares two **signatures** saved in `state.json` with the current plan:
+A job can be interrupted by **Stop**, **Stop all**, a crash, a power cut or closing the Mac's lid. Everything needed to resume is in its `JOBS/` folder. When the job starts again, AnimeUp compares two **signatures** saved in `state.json` with the current plan:
 
 | Signature | Made of | If it changes |
 |---|---|---|
@@ -193,10 +164,10 @@ More safeguards on resume:
 - **Segments are recorded by the frame range they cover**, not by their number, so a different chunk layout can never stitch the wrong frames together.
 - **If extraction produced a different number of frames** than when the segments were made (which happens between FFmpeg builds, i.e. between Macs), the segments are discarded rather than reused one frame out of step.
 
-**Resume in the interface** goes one step further: it restarts with the parameters saved in `parameters.json` when the job first started, whatever the sidebar says now. That's why resuming from the interface can never throw work away. The command line has no such file to go on: running `./animeup run` again on the same file uses whatever parameters you give it, and the signatures decide what can be kept.
+**Resume in the interface** goes one step further: it restarts with the parameters saved in `parametri.json` when the job first started, whatever the sidebar says now. That's why resuming from the interface can never throw work away. The command line has no such file to go on: running `./animeup run` again on the same file uses whatever parameters you give it, and the signatures decide what can be kept.
 
 !!! info "Resuming on another Mac"
-    Job folders are identified by the file's path relative to the folder that contains `INPUT/`, not the full disk path. Copy the whole folder to another Mac (or rename it, or mount the drive somewhere else) and interrupted jobs are still found and resumed. Job folders created by older versions, which used the full path, are still recognised and renamed on their next run.
+    Job folders are identified by the file's path inside the AnimeUp folder, not the full disk path. Copy the whole folder to another Mac (or rename it, or mount the drive somewhere else) and interrupted jobs are still found and resumed. Job folders created by older versions, which used the full path, are still recognised and renamed on their next run.
 
 ## How the time estimate is built
 
@@ -209,8 +180,8 @@ The estimate on each row is the sum of steps that run one after another:
 Where those speeds come from:
 
 1. **Factory values**, measured on one specific Mac, until you calibrate.
-2. **Calibration** (`records/calibration.json`) replaces them with this Mac's real speeds. See [02. Calibrate your Mac](../02-calibration.md).
-3. **History** (`records/history.jsonl`): as soon as you've finished some files, the expected deduplication and a correction factor for "work the model doesn't count" (assembly, final checks, idle time) are learned from what similar files actually did.
+2. **Calibration** (`registri/taratura.json`) replaces them with this Mac's real speeds. See [02. Calibrate your Mac](../02-calibration.md).
+3. **History** (`registri/esiti.jsonl`): as soon as you've finished some files, the expected deduplication and a correction factor for "work the model doesn't count" (assembly, final checks, idle time) are learned from what similar files actually did.
 
 The estimate is shown as a range. Its lower end assumes the best case already seen, its upper end the worst. Without any history, the upper end adds a 25% safety margin and the lower end assumes deduplication saves up to 60% (the most observed was 57%). Once a job has run for a few minutes, the deduplication actually measured on that file replaces the guess, and the range narrows.
 
