@@ -2,7 +2,7 @@
   "sb.aggiornamento": "È disponibile AnimeUp {versione}.",
   "sb.aggiornamento_link": "Scaricala",
   "sb.controlla_agg": "Controlla gli aggiornamenti",
-  "sb.controlla_agg_aiuto": "Una volta al giorno AnimeUp chiede a GitHub qual è l'ultima release e, se ce n'è una più nuova, mostra una nota in cima alla barra laterale con il link. Non scarica né installa niente da solo. È l'unica connessione che AnimeUp fa da sé dopo il primo avvio.",
+  "sb.controlla_agg_aiuto": "A ogni avvio AnimeUp chiede a GitHub qual è l'ultima release e, se ce n'è una più nuova, mostra una nota in cima alla barra laterale con il link. Non scarica né installa niente da solo. È l'unica connessione che AnimeUp fa da sé dopo il primo avvio.",
   "sb.cartella_in": "Cartella dei video da elaborare",
   "sb.cartella_in_aiuto": "Dove copi gli episodi da ingrandire. AnimeUp la tiene d'occhio e analizza da solo i file nuovi. Può stare su un disco esterno e resta scelta finché non la cambi. Se all'avvio non è disponibile (un disco scollegato), AnimeUp usa ~/Movies/AnimeUp/INPUT e te lo dice.",
   "sb.cartella_in_prompt": "Scegli la cartella dei video da elaborare",

@@ -4143,7 +4143,7 @@ _IMPOSTAZIONI_DEFAULT = {
     # Scritto per esteso e non `i18n.PREDEFINITA`: il dizionario deve restare
     # un letterale, i test lo leggono cosi'. Sono la stessa cosa.
     "lingua": "en",
-    # Un controllo al giorno su GitHub, spegnibile: e' l'unica connessione
+    # Un controllo su GitHub a ogni avvio, spegnibile: e' l'unica connessione
     # che AnimeUp fa da solo dopo il primo avvio.
     "aggiornamenti": True,
     # Sistema, Scuro o Chiaro (vedi `animeup.tema`).
