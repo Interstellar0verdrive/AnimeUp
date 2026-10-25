@@ -543,9 +543,9 @@ STYLE = f"""
      verticale riporta la sua baseline su quella di "Taratura" e della
      data: misurato, il centraggio geometrico lo lasciava 3px sotto. */
   :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button p {{ font-size: 11.5px; }}
-  :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button:hover {{
-      background: none !important; border: none !important;
-      color: {TESTO} !important; opacity: .8; }}
+  :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button[kind="secondary"]:hover {{
+      background: var(--sidebar2) !important; border: 1px solid var(--borderHover) !important;
+      color: {TESTO} !important; }}
   [data-testid="stElementContainer"]:has(.au-sb-sezione)
       + [data-testid="stElementContainer"] .au-sgruppo {{
       margin-top: 26px; }}
@@ -2701,9 +2701,17 @@ STYLE = f"""
       color: var(--textSecondary) !important; text-decoration: underline;
       text-underline-offset: 2px; }}
   .st-key-esci, .st-key-fermasi_app {{ width: auto !important; flex: none; }}
+  /* Esci in rosso al passaggio: vince sulla regola generale delle CTA
+     secondarie, che ha un selettore lungo (i :not in piu' servono a questo). */
+  [data-testid="stElementContainer"].st-key-esci .stButton button[kind="secondary"]:hover:not(.a):not(.b):not(.c):not(.d) {{
+      background: var(--redFill) !important; border-color: var(--redFill) !important; }}
+  [data-testid="stElementContainer"].st-key-esci .stButton button[kind="secondary"]:hover:not(.a):not(.b):not(.c):not(.d) p {{
+      color: var(--onRed) !important; }}
   .st-key-esci button, .st-key-fermasi_app button {{ height: 32px;
       min-height: 32px; padding: 0 12px; white-space: nowrap; }}
   /* L'avviso di aggiornamento: un riquadro velato d'accento. */
+  .st-key-cAggiorna [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .st-key-cAggiorna {{ gap: 10px !important; }}
   .st-key-cAggiorna {{ padding: 12px 14px; border-radius: 10px;
       background: rgb(var(--primaryRgb) / .08);
       border: 1px solid rgb(var(--primaryRgb) / .35); margin-top: 12px; }}
@@ -2841,33 +2849,9 @@ STYLE = f"""
      righe i numeri non vanno a capo a meta' e i nomi lunghi si fermano a due
      righe. A 1440 non cambia niente. */
   @media (max-width: 1360px) {{
-    .st-key-passi button {{ width: clamp(176px, calc((100vw - 476px) / 3), 250px); }}
-    .au-fasi-stato {{ display: none; }}
     /* Un passo chiuso non ha mai il contatore a destra: il suo spazio va al
        sottotitolo. */
     .st-key-passi button:disabled {{ padding-right: 14px !important; }}
-    /* Sorgenti vuota: le due schede una sopra l'altra, invece di schiacciare
-       quella delle cartelle accanto ai 340px fissi di «Questo Mac». */
-    .st-key-vuotoGriglia {{ flex-wrap: wrap !important; }}
-    .st-key-vuotoGriglia > [data-testid="stLayoutWrapper"]:has(> .st-key-cartelleCard),
-    .st-key-vuotoGriglia > [data-testid="stLayoutWrapper"]:has(> .st-key-questoMac) {{
-        flex: 1 1 100% !important; width: 100% !important; }}
-    .st-key-vuotoGriglia .st-key-questoMac {{ width: 100% !important; }}
-    .st-key-vuotoGriglia :is(.st-key-cartelleCard, .st-key-questoMac) {{ height: auto !important; }}
-    /* I quattro passi di un lotto su due colonne: a quattro le chip «fatto»
-       e «sei qui» uscivano dalla scheda. */
-    .au-passi {{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }}
-    /* Le schede di dettaglio (Sorgenti, Lavorazione) su due colonne: a
-       quattro i valori andavano a capo a meta'. */
-    .au-griglia {{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }}
-    /* Confronto: il file da provare prende tutta la riga, i tre numeri
-       vanno sotto. Stretto accanto a loro, la tendina mostrava «Long C». */
-    .st-key-fileCard {{ flex-wrap: wrap !important; row-gap: 16px !important; }}
-    [data-testid="stLayoutWrapper"]:has(> .st-key-campoFile) {{ flex: 1 1 100% !important;
-        width: 100% !important; }}
-    .st-key-campoFile {{ width: 100% !important; padding-right: 0; }}
-    .st-key-fileCard > div:last-child {{ flex: 1 1 100% !important; margin-top: 14px; }}
-    .au-stat-file > div:first-child {{ border-left: 0; padding-left: 0; }}
     /* Le fasi di una riga possono andare a capo: senza i trattini, una riga
      nuova non comincia con un trattino appeso. */
     .au-tappa + .au-tappa::before {{ display: none; }}
@@ -2920,21 +2904,11 @@ STYLE = f"""
         min-width: 0 !important; }}
   }}
 
-  /* Alla larghezza minima della finestra il nome non ci starebbe:
-     risoluzione e durata, che i Sorgenti mostrano gia', lasciano il posto. */
-  @media (max-width: 1120px) {{
-    /* Risultati del confronto: tempi e indicatori uno sotto l'altro. */
-    .au-res-due {{ grid-template-columns: minmax(0, 1fr) !important; }}
-    .au-cnf th {{ white-space: nowrap; }}
-    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
-        > [data-testid="stColumn"]:is(:nth-child(3), :nth-child(4)) {{ display: none !important; }}
-    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
-        > [data-testid="stColumn"]:nth-child(5) {{ flex-basis: 132px !important; }}
-  }}
 
-  /* Il cassetto sotto i 1150px (vedi `_cassetto_sidebar`). */
+  /* Il cassetto sotto i 1360px (vedi `_cassetto_sidebar`). */
   #au-cassetto, #au-velo {{ display: none; }}
-  @media (max-width: 1150px) {{
+  @media (max-width: 1100px) {{ .au-fasi-stato {{ display: none; }} }}
+  @media (max-width: 1360px) {{
     [data-testid="stSidebar"] {{ position: fixed !important; top: 0; bottom: 0; left: 0;
         z-index: 1002; transform: translateX(-100%); transition: transform .2s ease;
         box-shadow: none; }}
@@ -3021,6 +2995,41 @@ STYLE = f"""
   .st-key-piedeVer {{ gap: 4px !important; flex-wrap: nowrap; align-items: center; }}
   .st-key-piedeVer > div:first-child {{ width: auto !important; flex: none; }}
   .st-key-controllaAgg {{ width: auto !important; flex: none; }}
+  /* I fumetti dei tre cursori in cima alla barra si aprono verso il basso:
+     verso l'alto uscivano dalla finestra (sotto la barra del titolo). */
+  [data-testid="stElementContainer"]:has(+ [data-testid="stLayoutWrapper"] >
+      :is(.st-key-cAltezza, .st-key-cCrf, .st-key-cPreset)) .au-bolla {{
+      bottom: auto; top: calc(100% + 8px); transform: translateX(-50%) translateY(-3px); }}
+  [data-testid="stElementContainer"]:has(+ [data-testid="stLayoutWrapper"] >
+      :is(.st-key-cAltezza, .st-key-cCrf, .st-key-cPreset)) .au-bolla::before {{
+      bottom: auto; top: -5px; transform: translateX(-50%) rotate(45deg); }}
+  /* Il fumetto dell'icona «controlla adesso»: lo stesso dei «?», con la
+     punta (quello nativo di Streamlit non ce l'ha). */
+  .au-ver {{ position: relative; }}
+  .au-agg-tip {{ position: absolute; left: calc(100% + 13px); top: -3px; width: 0; height: 0;
+      margin: 0 !important; }}
+  .st-key-piedeVer:has(.st-key-controllaAgg button:hover) .au-agg-tip .au-bolla {{
+      opacity: 1; transform: translateX(-50%) translateY(0);
+      transition: opacity .12s ease 0s, transform .12s ease 0s; }}
+  .au-agg-tip .au-bolla {{ white-space: nowrap; width: max-content; max-width: none; }}
+  /* La risposta del controllo aggiornamenti, al centro (vedi `_modale_esito_agg`). */
+  [role="dialog"]:has(.au-esito-agg) > h2 {{ position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip-path: inset(50%); }}
+  .au-esito-agg {{ display: flex; gap: 14px; align-items: flex-start; }}
+  .au-esito-agg b {{ display: block; font-size: 17px; font-weight: 600; margin-bottom: 4px; }}
+  .au-esito-agg span:not(.au-esito-icona) {{ font-size: 13.5px; line-height: 1.5;
+      color: var(--textSecondary); }}
+  .au-esito-icona {{ width: 40px; height: 40px; flex: none; box-sizing: border-box;
+      border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }}
+  .au-esito-ok {{ background: var(--greenBg); border: 1.5px solid var(--green); color: var(--greenText); }}
+  .au-esito-nuova {{ background: rgb(var(--primaryRgb) / .10); border: 1.5px solid var(--primary);
+      color: var(--primaryText); }}
+  .au-esito-errore {{ background: var(--yellowBg); border: 1.5px solid var(--yellow);
+      color: var(--yellowText); }}
+  .au-esito-icona b {{ font-size: 18px; margin: 0; }}
+  .st-key-esitoAggAzioni {{ justify-content: flex-end; gap: 10px !important; margin-top: 8px; }}
+  .st-key-esitoAggAzioni [class*="st-key-esito"] {{ width: auto !important; flex: none; }}
+  .st-key-esitoAggAzioni button {{ height: 38px; padding: 0 18px; white-space: nowrap; }}
   .st-key-controllaAgg button {{ min-height: 0 !important; height: 18px; width: 18px;
       padding: 0 !important; color: var(--textSecondary) !important; }}
   .st-key-controllaAgg button:hover {{ color: var(--primaryText) !important; }}
@@ -3114,7 +3123,9 @@ STYLE = f"""
       color: var(--greenText); display: inline-flex; align-items: center;
       justify-content: center; }}
   .au-mac-righe > div {{ padding: 10px 0; }}
-  .au-mac-righe > div:first-child {{ border-bottom: 1px solid var(--borderColor); }}
+  .au-mac-righe > div:not(:last-child) {{ border-bottom: 1px solid var(--borderColor); }}
+  .au-mac-val {{ display: block; margin-top: 3px; font: 400 12px var(--mono) !important;
+      color: var(--textCode) !important; background: none !important; padding: 0 !important; }}
   .au-mac-righe > div:last-child {{ padding-bottom: 0; }}
   .au-mac-riga {{ display: flex; align-items: center; gap: 10px; }}
   .au-mac-riga b {{ font-size: 13.5px; font-weight: 500; }}
@@ -3154,6 +3165,12 @@ STYLE = f"""
   [data-testid="stLayoutWrapper"]:has(> .st-key-questoMac) {{
       flex: 0 0 340px !important; width: 340px !important; }}
   .st-key-cartelleCard, .st-key-questoMac {{ height: 100%; box-sizing: border-box; }}
+  /* Alte uguali: l'altezza in % non passava attraverso l'involucro di
+     Streamlit, e «Questo Mac» da tarato restava 47px piu' corto. */
+  .st-key-vuotoGriglia > [data-testid="stLayoutWrapper"] {{ display: flex;
+      flex-direction: column; align-self: stretch; }}
+  .st-key-vuotoGriglia > [data-testid="stLayoutWrapper"] > :is(.st-key-cartelleCard, .st-key-questoMac) {{
+      flex: 1 1 auto; height: auto !important; }}
   .st-key-cartelleBox {{ padding: 12px 14px !important; }}
   .au-titolo-pagina {{ margin-top: 12px; }}
   .au-tre p, .au-tar-testo, .au-mac-righe p, .au-passo p, .au-card-testo {{
@@ -3609,6 +3626,12 @@ STYLE = f"""
   [role="dialog"]:has(.au-tar-passo) h2::after {{ font: 400 11.5px var(--mono);
       color: var(--textSecondary); margin-left: 10px; white-space: nowrap; }}
   .st-key-tarAzioni {{ align-items: center; margin-top: 4px; }}
+  .st-key-tarCorsaAzioni {{ justify-content: flex-end; gap: 10px !important; margin-top: 6px; }}
+  .st-key-tarCorsaAzioni [class*="st-key-tar"] {{ width: auto !important; flex: none; }}
+  .st-key-tarFerma button {{ height: 38px; padding: 0 16px; white-space: nowrap;
+      border-color: rgb(var(--redRgb) / .45) !important; color: var(--redText) !important;
+      background: transparent !important; }}
+  .st-key-tarFerma button p {{ color: var(--redText) !important; }}
   .st-key-tarChiudiContinua {{ align-self: flex-end; width: auto !important; margin-top: 6px; }}
   .st-key-tarChiudiContinua button {{ height: 38px; padding: 0 16px; white-space: nowrap; }}
   .st-key-tarAzioni [data-testid="stElementContainer"] {{ margin: 0 !important; }}
@@ -3623,6 +3646,9 @@ STYLE = f"""
   .au-tar-corsa-testa code {{ margin-left: auto; font: 400 12.5px var(--mono) !important;
       color: var(--primaryText) !important; background: none !important; padding: 0 !important; }}
   .au-tar-corsa .au-tar-tappe {{ margin-top: 10px; }}
+  .au-tar-voce code {{ font: 400 11px var(--mono) !important; color: var(--textTertiary) !important;
+      background: none !important; padding: 0 !important; min-width: 16px; text-align: right; }}
+  .au-tar-lista {{ grid-auto-flow: column; }}
   .au-tar-lista {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 6px 24px; padding: 12px 14px; margin: 12px 0; border-radius: 8px;
       background: var(--insetBackground); border: 1px solid var(--borderColor); }}
@@ -3642,9 +3668,10 @@ STYLE = f"""
   .au-tar-tab {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
   .au-tar-tab th {{ font-size: 10.5px; font-weight: 600; letter-spacing: .08em;
       text-transform: uppercase; color: var(--textTertiary); text-align: right;
-      padding: 0 0 8px; border-bottom: 1px solid var(--borderColor); }}
+      padding: 9px 12px; vertical-align: middle; background: var(--surfaceHover);
+      border-bottom: 1px solid var(--borderColor); }}
   .au-tar-tab th:first-child, .au-tar-tab td:first-child {{ text-align: left; }}
-  .au-tar-tab td {{ padding: 7px 0; border-bottom: 1px solid var(--rowLine);
+  .au-tar-tab td {{ padding: 7px 12px; border-bottom: 1px solid var(--rowLine);
       text-align: right; font: 400 12px var(--mono); color: var(--textCode); }}
   .au-tar-tab td:first-child {{ font: 400 13px var(--font); color: var(--textPrimary); }}
   .au-tar-frase {{ font-size: 13px; margin: 12px 0 4px; }}
@@ -4035,9 +4062,8 @@ def _regole_sottotitolo(classe: str, testo: str, chiusa: bool) -> list[str]:
     dove c'era il «·», che sparisce («File 1 di 2» / «55%»).
 
     Il CSS non sa togliere un carattere quando la riga si spezza, quindi si
-    preparano le due versioni e una media query sceglie: lo spazio del
-    sottotitolo dipende solo dalla larghezza della finestra (vedi la barra
-    dei passi sotto i 1360px), e la larghezza del testo la conosciamo.
+    sceglie qui, prima di disegnare: lo spazio del sottotitolo e' fisso, e
+    la larghezza del testo la conosciamo.
     """
     sel = f"{classe} p::after"
     pezzi = testo.split(" · ")
@@ -4047,12 +4073,10 @@ def _regole_sottotitolo(classe: str, testo: str, chiusa: bool) -> list[str]:
     due = f'{sel} {{ content: "{"\\A ".join(pezzi)}"; }}'
     serve = _larghezza_sottotitolo(testo) + 2          # un filo di margine
     destra = 14 if chiusa else 40                      # spazio del contatore
-    if serve > 250 - 51 - 40:                          # non ci sta mai
-        return [due]
-    if serve <= 176 - 51 - destra:                     # ci sta sempre
-        return [una]
-    soglia = min(1360, int(3 * (serve + 51 + destra) + 476))
-    return [una, f"@media (max-width: {soglia}px) {{ {due} }}"]
+    # Ogni passo e' largo 250px a qualunque finestra: sopra i 1360 c'e' posto
+    # accanto alla barra laterale, sotto la barra diventa un cassetto e la
+    # pagina prende tutta la larghezza (vedi `_cassetto_sidebar`).
+    return [una] if serve <= 250 - 51 - destra else [due]
 
 
 def header() -> str:
@@ -4659,10 +4683,20 @@ def _contenuto_taratura() -> None:
     if stato == taratura.IN_CORSO:
         st.markdown("<span class='au-tar-passo au-tar-p2'></span>", unsafe_allow_html=True)
         _taratura_viva()
-        if st.button(t("lav.tar_chiudi_continua"), key="tarChiudiContinua"):
-            _chiudi_taratura()
-            st.rerun()
+        with st.container(key="tarCorsaAzioni", horizontal=True):
+            # Fermarla non salva niente: i numeri di prima restano.
+            if st.button(t("lav.tar_ferma"), key="tarFerma"):
+                taratura.ferma_fondo()
+                st.rerun()
+            if st.button(t("lav.tar_chiudi_continua"), key="tarChiudiContinua"):
+                _chiudi_taratura()
+                st.rerun()
         return
+    # Interrotta senza un errore vero (fermata, o AnimeUp chiuso a meta'):
+    # si riparte dall'inizio, senza una schermata d'errore da chiudere.
+    if stato == taratura.INTERROTTA and not (s or {}).get("error") and not s.get("seen"):
+        _taratura_vista()
+        stato = None
     if stato in (taratura.FINITA, taratura.FALLITA, taratura.INTERROTTA) and not s.get("seen"):
         if stato == taratura.FINITA:
             _taratura_esito(s)
@@ -4750,7 +4784,7 @@ def _taratura_viva() -> None:
     voci = []
     for n, (nome, _c) in enumerate(tappe, start=1):
         classe = "fatta" if n < indice else "corso" if n == indice else ""
-        voci.append(f"<div class='au-tar-voce {classe}'><i></i>{esc(nome)}</div>")
+        voci.append(f"<div class='au-tar-voce {classe}'><i></i><code>{n}</code>{esc(nome)}</div>")
     manca = (f" · {tn('lav.tar_resta', max(1, round(float(resta) / 60)))}"
              if resta is not None else "")
     st.markdown(
@@ -4760,7 +4794,10 @@ def _taratura_viva() -> None:
         f"<div class='au-tar-tappe'>{''.join(segmenti)}</div>"
         f"<div class='au-tar-stato'>{esc(etichetta)}"
         f"{f' ({indice}/{totale})' if indice else ''}</div>"
-        f"<div class='au-tar-lista'>{''.join(voci)}</div>"
+        # Colonna per colonna, come si legge: prima tutta la prima, poi la
+        # seconda; e numerate, come il «(6/11)» sotto la barra.
+        f"<div class='au-tar-lista' style='grid-template-rows: repeat({(len(voci) + 1) // 2}, auto)'>"
+        f"{''.join(voci)}</div>"
         f"<p class='au-tar-p'>{t('lav.tar_chiudibile')}</p></div>",
         unsafe_allow_html=True)
 
@@ -4819,15 +4856,20 @@ def _taratura_esito(s: dict) -> None:
 
 def _taratura_fallita(s: dict) -> None:
     st.markdown("<span class='au-tar-passo au-tar-p2'></span>", unsafe_allow_html=True)
-    errore = s.get("error") or t("lav.tar_interrotta_titolo")
+    errore = str(s.get("error") or "")
     st.markdown(
         f"<div class='au-box-rosso'><b>{t('lav.tar_interrotta_titolo')}</b>"
-        f" {esc(str(errore))}</div>"
+        f"{' ' + esc(errore) if errore and errore != t('lav.tar_interrotta_titolo') else ''}</div>"
         f"<p class='au-tar-p'>{t('lav.tar_niente_salvato')}</p>",
         unsafe_allow_html=True)
     with st.container(key="tarAzioni", horizontal=True):
-        if st.button(t("lav.tar_mostra_log"), key="tarLog", type="tertiary"):
-            subprocess.run(["open", "-R", str(PATHS.cache / "calibration.log")], check=False)
+        registro = PATHS.cache / "calibration.log"
+        try:
+            pieno = registro.stat().st_size > 0
+        except OSError:
+            pieno = False
+        if pieno and st.button(t("lav.tar_mostra_log"), key="tarLog", type="tertiary"):
+            subprocess.run(["open", "-R", str(registro)], check=False)
         if st.button(t("lav.chiudi"), key="tarChiudiErr"):
             _chiudi_taratura()
             _taratura_vista()
@@ -4906,7 +4948,7 @@ def _avviso_mac(titolo: str, testo: str) -> None:
     risposta li'.
     """
     subprocess.run(
-        ["osascript", "-e",
+        ["osascript", "-e", "activate", "-e",
          f'display alert "{_testo_applescript(titolo)}" message '
          f'"{_testo_applescript(testo)}" as warning'],
         capture_output=True, text=True, check=False)
@@ -4928,7 +4970,9 @@ def _scegli_cartella(quale: str) -> None:
     partenza = (f' default location (POSIX file "{_testo_applescript(dove)}")'
                 if dove.is_dir() else "")
     esito = subprocess.run(
-        ["osascript", "-e",
+        # `activate`: il selettore in primo piano, cosi' le scorciatoie del
+        # Finder (⌘↑ per la cartella sopra) funzionano subito.
+        ["osascript", "-e", "activate", "-e",
          f'POSIX path of (choose folder with prompt '
          f'"{_testo_applescript(t(testo + "_prompt"))}"{partenza})'],
         capture_output=True, text=True, check=False)
@@ -4973,7 +5017,7 @@ def _scegli_cartella(quale: str) -> None:
             ok = _testo_applescript(t("sb.cambio_lavori_ok"))
             no = _testo_applescript(t("sb.annulla"))
             conferma = subprocess.run(
-                ["osascript", "-e",
+                ["osascript", "-e", "activate", "-e",
                  f'display dialog "{avviso}" buttons {{"{no}", "{ok}"}} '
                  f'default button "{no}" cancel button "{no}" with icon caution'],
                 capture_output=True, text=True, check=False)
@@ -5173,10 +5217,16 @@ def sidebar() -> dict:
     # mentre si lavora. Chi non l'ha mai toccato lo segue anche lui: prima
     # restava al numero di inizio sessione e «Avanzate» diceva «1 cambiata»
     # senza che nessuno avesse cambiato niente.
+    # A sidebar bloccata si ferma anche il valore di fabbrica: durante una
+    # taratura lo spazio libero scendeva di un GB e «Avanzate» tornava a
+    # dire «1 cambiata». Si riallinea allo sblocco.
     _disco_prec = st.session_state.get("disco_fabbrica_prec")
     if (_disco_prec is not None and st.session_state.get("w_disco") == _disco_prec
-            and fabbrica.get("disco") != _disco_prec and _motivo_blocco() is None):
-        st.session_state["w_disco"] = fabbrica["disco"]
+            and fabbrica.get("disco") != _disco_prec):
+        if congelata:
+            fabbrica["disco"] = _disco_prec
+        else:
+            st.session_state["w_disco"] = fabbrica["disco"]
     st.session_state["disco_fabbrica_prec"] = fabbrica.get("disco")
     app = os.environ.get("ANIMEUP_APP") == "1"
     regole: list[str] = []
@@ -5468,12 +5518,55 @@ def _riga_taratura(congelata: bool) -> None:
 
 
 def _controlla_aggiornamenti_ora() -> None:
-    # Il toast si mostra nel giro normale (vedi `_piede_sidebar`): lanciato
-    # da dentro il richiamo del pulsante non compariva.
+    # La risposta in una finestra al centro, con OK (vedi `_modale_esito_agg`):
+    # un toast in alto a destra, lontano dal clic in basso a sinistra, non si
+    # vedeva (detto dall'utente).
     st.session_state["esito_agg"] = aggiornamenti.controlla_ora()
     # Il file del controllo e' appena cambiato: la sentinella farebbe un giro
     # completo, che cancella il toast prima che si veda. Si riparte da zero.
     st.session_state.pop("firma_sentinella", None)
+
+
+def _chiudi_esito_agg() -> None:
+    st.session_state.pop("esito_agg", None)
+
+
+def _contenuto_esito_agg() -> None:
+    esito, versione_ = st.session_state.get("esito_agg") or ("errore", "")
+    icona = {"nuova": "au-esito-nuova", "aggiornato": "au-esito-ok"}.get(esito, "au-esito-errore")
+    segno = (_svg(_I_SPUNTA, 18, 2.4) if esito == "aggiornato" else
+             _svg("<path d='M12 4v11M7 10l5 5 5-5M5 20h14'/>", 18, 2.2) if esito == "nuova" else
+             "<b>!</b>")
+    st.markdown(
+        f"<div class='au-esito-agg'><span class='au-esito-icona {icona}'>{segno}</span>"
+        f"<div><b>{t('sb.esito_titolo_' + esito, versione=versione_)}</b>"
+        f"<span>{t('sb.esito_testo_' + esito, versione=versione_)}</span></div></div>",
+        unsafe_allow_html=True)
+    app = os.environ.get("ANIMEUP_APP") == "1"
+    with st.container(key="esitoAggAzioni", horizontal=True):
+        if esito == "nuova" and app:
+            if st.button(t("sb.esito_dopo"), key="esitoDopo"):
+                _chiudi_esito_agg()
+                st.rerun()
+            if st.button(t("sb.aggiornamento_installa"), key="esitoInstalla", type="primary",
+                         disabled=_motivo_blocco() is not None):
+                _chiudi_esito_agg()
+                _chiedi_aggiornamento()
+                st.rerun()
+        elif st.button("OK", key="esitoOk", type="primary"):
+            _chiudi_esito_agg()
+            st.rerun()
+
+
+def _modale_esito_agg() -> None:
+    """La risposta del controllo chiesto a mano, una volta per giro finche'
+    non la si chiude (come la taratura: un giro della pagina non la toglie)."""
+    giro = st.session_state.get("_giro")
+    if st.session_state.get("esito_agg_giro") == giro:
+        return
+    st.session_state["esito_agg_giro"] = giro
+    st.dialog(t("sb.esito_finestra"), width="small",
+              on_dismiss=_chiudi_esito_agg)(_contenuto_esito_agg)()
 
 
 def _piede_sidebar(app: bool, congelata: bool) -> None:
@@ -5484,11 +5577,6 @@ def _piede_sidebar(app: bool, congelata: bool) -> None:
     che fa ⌘Q, conferma compresa. Nella cartella portatile spegne
     l'interfaccia, come faceva «Chiudi», con la sua conferma a due passi.
     """
-    if (esito_agg := st.session_state.pop("esito_agg", None)):
-        esito, versione_ = esito_agg
-        st.toast(t(f"sb.controllo_{esito}", versione=versione_),
-                 icon=":material/system_update_alt:" if esito == "nuova" else
-                 ":material/check_circle:" if esito == "aggiornato" else ":material/wifi_off:")
     with st.sidebar.container(key="piede", horizontal=True,
                               vertical_alignment="center"):
         with st.container(key="piedeSx"):
@@ -5496,12 +5584,14 @@ def _piede_sidebar(app: bool, congelata: bool) -> None:
             # dice subito se ce n'e' una nuova o se questa e' l'ultima.
             with st.container(key="piedeVer", horizontal=True,
                               vertical_alignment="center"):
-                st.markdown(f"<div class='au-piede'><span>"
-                            f"{t('sb.versione', versione=__version__)}</span></div>",
+                st.markdown(f"<div class='au-piede'><span class='au-ver'>"
+                            f"{t('sb.versione', versione=__version__)}"
+                            "<span class='au-info au-agg-tip' aria-hidden='true'>"
+                            f"<span class='au-bolla'>{t('sb.controlla_ora')}</span>"
+                            "</span></span></div>",
                             unsafe_allow_html=True)
                 st.button("", icon=":material/refresh:", key="controllaAgg",
-                          type="tertiary", help=t("sb.controlla_ora"),
-                          on_click=_controlla_aggiornamenti_ora)
+                          type="tertiary", on_click=_controlla_aggiornamenti_ora)
             st.markdown(
                 "<div class='au-piede'>"
                 "<a href='https://github.com/Interstellar0verdrive/AnimeUp' "
@@ -5630,6 +5720,9 @@ def _sorgenti_vuota() -> None:
                          f"<span class='au-tag au-warn'>{t('src.strumenti_mancano')}</span>")
             st.markdown(
                 "<div class='au-mac-righe'>"
+                f"<div><div class='au-mac-riga'><b>{t('src.mac_chip')}</b></div>"
+                f"<code class='au-mac-val'>{esc(_scheda_mac())}</code>"
+                f"<p>{t('src.mac_chip_testo')}</p></div>"
                 f"<div><div class='au-mac-riga'><b>{t('src.spazio')}</b>"
                 f"<code>{liberi} GB</code></div>"
                 f"<p>{t('src.spazio_testo')}</p></div>"
@@ -5662,6 +5755,23 @@ def _sorgenti_vuota() -> None:
         unsafe_allow_html=True)
 
 
+@st.cache_data(show_spinner=False)
+def _scheda_mac() -> str:
+    """«Apple M4 Max · 64 GB · macOS 26.0»: cio' su cui valgono le stime."""
+    import platform
+    pezzi = [taratura.chip()]
+    try:
+        memoria = int(subprocess.run(["sysctl", "-n", "hw.memsize"], capture_output=True,
+                                     text=True, timeout=5).stdout.strip())
+        pezzi.append(f"{round(memoria / 1024 ** 3)} GB")
+    except (OSError, ValueError, subprocess.TimeoutExpired):
+        pass
+    versione = platform.mac_ver()[0]
+    if versione:
+        pezzi.append(f"macOS {versione}")
+    return " · ".join(p for p in pezzi if p)
+
+
 def _blocco_taratura(voce_tar) -> None:
     """La taratura nel riquadro «Questo Mac»: da fare, o fatta e quando."""
     if voce_tar:
@@ -5673,8 +5783,11 @@ def _blocco_taratura(voce_tar) -> None:
                 f"<span><b>{t('src.tar_fatta')}</b>"
                 f"<code>{quando}</code></span></div>",
                 unsafe_allow_html=True)
-            if st.button(t("sb.taratura_ripeti"), key="ricalibraMac",
-                         disabled=_motivo_blocco() is not None):
+            if taratura.in_corso():
+                if st.button(t("sb.taratura_mostra"), key="ricalibraMac"):
+                    _modale_taratura()
+            elif st.button(t("sb.taratura_ripeti"), key="ricalibraMac",
+                           disabled=_motivo_blocco() is not None):
                 st.session_state.pop("tar_fase", None)
                 _modale_taratura()
         return
@@ -5684,9 +5797,15 @@ def _blocco_taratura(voce_tar) -> None:
             f"<b>{t('src.tar_titolo')}</b><small>{t('src.tar_prima')}</small></div>"
             f"<p class='au-tar-testo'>{t('src.tar_testo')}</p>",
             unsafe_allow_html=True)
-        if st.button(t("sb.taratura_esegui"), key="calibraMac", type="primary",
-                     use_container_width=True,
-                     disabled=_motivo_blocco() is not None):
+        # In corso in sottofondo (finestra chiusa): «Mostra», attivo, come
+        # nella barra laterale, invece di «Calibra ora» spento.
+        if taratura.in_corso():
+            if st.button(t("sb.taratura_mostra"), key="calibraMac", type="primary",
+                         use_container_width=True):
+                _modale_taratura()
+        elif st.button(t("sb.taratura_esegui"), key="calibraMac", type="primary",
+                       use_container_width=True,
+                       disabled=_motivo_blocco() is not None):
             st.session_state.pop("tar_fase", None)
             _modale_taratura()
 
@@ -9059,7 +9178,7 @@ def _pagina_primo_avvio() -> bool:
 
 
 def _cassetto_sidebar() -> None:
-    """Sotto i 1150px la barra laterale diventa un cassetto.
+    """Sotto i 1360px la barra laterale diventa un cassetto.
 
     Chiesto dall'utente: con la finestra stretta la parte che conta e' quella
     principale. La barra esce dal flusso e la pagina prende tutta la
@@ -9299,6 +9418,8 @@ def main() -> None:
     # `_modale_taratura`); mai insieme al resoconto: una modale alla volta.
     if st.session_state.get("tar_aperta") and not st.session_state.get("fine_da_mostrare"):
         _modale_taratura()
+    elif st.session_state.get("esito_agg") and not st.session_state.get("fine_da_mostrare"):
+        _modale_esito_agg()
     _sentinella()
 
 

@@ -282,10 +282,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         let ask = NSAlert()
         ask.messageText = tr("Install AnimeUp \(release.version)?", "Installare AnimeUp \(release.version)?")
         let mb = max(1, release.size / 1_000_000)
-        ask.informativeText = tr(
-            "AnimeUp downloads the new version from GitHub (about \(mb) MB), checks it against the checksum published with the release, replaces itself and restarts. Jobs in progress keep running; your files, settings and calibration stay as they are.",
-            "AnimeUp scarica la nuova versione da GitHub (circa \(mb) MB), la verifica con il checksum pubblicato nella release, si sostituisce e si riavvia. Le lavorazioni in corso continuano; file, impostazioni e taratura restano come sono.")
-        ask.addButton(withTitle: tr("Install and Restart", "Installa e riavvia"))
+        // A job, a comparison or a calibration left running across the swap
+        // would go on with the old version's code while its files are being
+        // replaced: they are stopped first, and the dialog says so.
+        let busy = paths.map { RunningJobs.pids(output: $0.output) + RunningJobs.background(state: $0.state) } ?? []
+        var text = tr(
+            "AnimeUp downloads the new version from GitHub (about \(mb) MB), checks it against the checksum published with the release, replaces itself and restarts. Your files, settings and calibration stay as they are.",
+            "AnimeUp scarica la nuova versione da GitHub (circa \(mb) MB), la verifica con il checksum pubblicato nella release, si sostituisce e si riavvia. File, impostazioni e taratura restano come sono.")
+        if !busy.isEmpty {
+            text += "\n\n" + tr(
+                "Something is running (a job, a comparison or a calibration): AnimeUp stops it before updating. A job resumes later from its last saved chunk; a calibration has to start again.",
+                "C'è qualcosa in corso (una lavorazione, un confronto o una taratura): AnimeUp lo ferma prima di aggiornarsi. Una lavorazione si riprende poi dall'ultimo blocco salvato; una taratura va rifatta.")
+        }
+        ask.informativeText = text
+        ask.addButton(withTitle: busy.isEmpty ? tr("Install and Restart", "Installa e riavvia")
+                                              : tr("Stop and Install", "Ferma e installa"))
         ask.addButton(withTitle: tr("Cancel", "Annulla"))
         guard ask.runModal() == .alertFirstButtonReturn else { return }
 
@@ -300,10 +311,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             let newApp = try await Updater.download(release, into: work)
             window.show(line: tr("Installing and restarting…", "Installo e riavvio…"))
             let current = try Updater.replaceableLocation().get()
+            let stillBusy = paths.map { RunningJobs.pids(output: $0.output) + RunningJobs.background(state: $0.state) } ?? []
+            if !stillBusy.isEmpty {
+                RunningJobs.stop(stillBusy)
+                let deadline = Date().addingTimeInterval(15)
+                while stillBusy.contains(where: { kill($0, 0) == 0 }) && Date() < deadline {
+                    try? await Task.sleep(nanoseconds: 200_000_000)
+                }
+            }
             let old = try Updater.swap(current: current, with: newApp)
             server?.writeLog("[app] updated to \(release.version): restarting\n")
             Updater.relaunch(newApp: current, oldCopy: old)
-            quitConfirmed = true          // jobs keep running across an update
+            quitConfirmed = true          // anything running was stopped above
             NSApp.terminate(nil)
         } catch {
             window.orderOut(nil)

@@ -47,5 +47,13 @@
   "sb.controllo_nuova": "AnimeUp {versione} is available: see the note at the top of the sidebar.",
   "sb.controllo_aggiornato": "You have the latest version ({versione}).",
   "sb.controllo_errore": "Couldn't reach GitHub. Check the connection and try again.",
-  "sb.cassetto": "Settings"
+  "sb.cassetto": "Settings",
+  "sb.esito_finestra": "Updates",
+  "sb.esito_titolo_aggiornato": "You have the latest version",
+  "sb.esito_testo_aggiornato": "AnimeUp {versione} is the newest release. AnimeUp also checks by itself every time it starts.",
+  "sb.esito_titolo_nuova": "AnimeUp {versione} is available",
+  "sb.esito_testo_nuova": "Install it now, or later from the note at the top of the sidebar. Your files, settings and calibration stay as they are.",
+  "sb.esito_titolo_errore": "Couldn't check for updates",
+  "sb.esito_testo_errore": "GitHub didn't answer. Check the internet connection and try again.",
+  "sb.esito_dopo": "Later"
 }

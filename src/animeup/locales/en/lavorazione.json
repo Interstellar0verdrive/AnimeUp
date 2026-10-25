@@ -150,5 +150,6 @@
   "lav.fine_motivo_non_avviato": "not started",
   "lav.fine_testo_non_avviato": "The queue stopped before reaching this file.",
   "lav.fine_motivo_difettoso": "defective",
-  "lav.fine_testo_difettoso": "The output failed its check and was set aside as .DEFECTIVE. Run it again."
+  "lav.fine_testo_difettoso": "The output failed its check and was set aside as .DEFECTIVE. Run it again.",
+  "lav.tar_ferma": "Stop calibration"
 }

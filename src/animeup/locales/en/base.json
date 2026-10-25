@@ -214,5 +214,7 @@
   "src.prossimo": "next",
   "src.banner_analisi": "Analysing",
   "src.banner_mancano.uno": "1 file to go",
-  "src.banner_mancano.altri": "{n} files to go"
+  "src.banner_mancano.altri": "{n} files to go",
+  "src.mac_chip": "Hardware",
+  "src.mac_chip_testo": "Calibration and estimates refer to this machine: another Mac gets its own."
 }

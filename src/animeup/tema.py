@@ -56,6 +56,9 @@ TOKEN: dict[str, tuple[str, str]] = {
     "primaryStrong":   ("#2AC9DE", "#0E99B1"),
     "primaryText":     ("#2AC9DE", "#0B7284"),
     "primaryHover":    ("#57D4E5", "#0F9FB9"),
+    # premuto: un passo piu' scuro dello stesso ciano (mancava, e lo sfondo
+    # del pulsante spariva durante il clic)
+    "primaryActive":   ("#1FB3C6", "#0C8599"),
     "onPrimary":       ("#07282C", "#FFFFFF"),
     "knobOn":          ("#07282C", "#FFFFFF"),
     # interruttore spento: tono su tono col fondo (in chiaro: chiaro, non grigio scuro)
