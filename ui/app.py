@@ -1585,7 +1585,7 @@ STYLE = f"""
   [data-testid="stSidebar"] [data-testid="stCheckbox"] label > div:not([data-testid]) {{
       width: 30px !important; height: 17px !important;
       border-radius: 999px !important; flex: none;
-      background: var(--idleEdge) !important;
+      background: var(--toggleOff) !important;
       transition: background .15s ease; }}
   [data-testid="stSidebar"] [data-testid="stCheckbox"] label > div:not([data-testid]) > div {{
       width: 13px !important; height: 13px !important;
@@ -1597,7 +1597,7 @@ STYLE = f"""
          voluta, scelta a occhio dall'utente sul pannello vero). */
       border-radius: 50% !important; margin: 2px 0 !important;
       transform: translateX(0) !important;
-      background: {TESTO_2} !important;
+      background: var(--knobOff) !important;
       box-shadow: none !important; transition: background .15s ease; }}
   /* Acceso: la traccia prende il ciano e il pomello si fa scuro, così lo
      stato si legge dal colore prima che dalla posizione. */
@@ -1912,10 +1912,20 @@ STYLE = f"""
       flex: 1; display: flex; flex-direction: column; }}
   [data-testid="stSidebarUserContent"] > div >
       [data-testid="stVerticalBlock"] {{ flex: 1; }}
+  /* La linea prende tutta la larghezza della barra (non solo la colonna del
+     contenuto) e sopra di lei una sfumatura dice che le impostazioni
+     scorrono sotto il piede, che resta fermo (chiesto dall'utente). */
   [data-testid="stLayoutWrapper"]:has(> .st-key-piede) {{
       position: sticky; bottom: 0; z-index: 6; margin-top: auto;
+      margin-left: -20px; margin-right: -20px; padding: 0 20px;
+      width: calc(100% + 40px) !important; max-width: none !important;
+      box-sizing: border-box;
       background: var(--sidebar); border-top: 1px solid var(--borderStrong);
       padding-top: 0; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-piede)::before {{
+      content: ""; position: absolute; left: 0; right: 0; top: -29px; height: 28px;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgb(var(--sidebarRgb) / 0), var(--sidebar)); }}
   /* 16px dalla linea alla CTA e 16px dalla CTA al fondo: la CTA stava a
      6px dal bordo finestra, "molto attaccata" (utente). Stesso passo della
      barra di Lavorazione. */
@@ -2922,6 +2932,32 @@ STYLE = f"""
         > [data-testid="stColumn"]:nth-child(5) {{ flex-basis: 132px !important; }}
   }}
 
+  /* Il cassetto sotto i 1150px (vedi `_cassetto_sidebar`). */
+  #au-cassetto, #au-velo {{ display: none; }}
+  @media (max-width: 1150px) {{
+    [data-testid="stSidebar"] {{ position: fixed !important; top: 0; bottom: 0; left: 0;
+        z-index: 1002; transform: translateX(-100%); transition: transform .2s ease;
+        box-shadow: none; }}
+    body.au-sb-aperta [data-testid="stSidebar"] {{ transform: none;
+        box-shadow: 0 0 32px rgb(var(--shadowRgb) / .35); }}
+    #au-velo {{ display: block; position: fixed; inset: 0; z-index: 1001;
+        background: rgb(var(--shadowRgb) / .35); opacity: 0; pointer-events: none;
+        transition: opacity .2s ease; }}
+    body.au-sb-aperta #au-velo {{ opacity: 1; pointer-events: auto; }}
+    #au-cassetto {{ display: inline-flex; align-items: center; justify-content: center;
+        position: fixed; left: 16px; top: 30px; z-index: 1003; width: 36px; height: 36px;
+        padding: 0; border-radius: 8px; cursor: pointer;
+        border: 1px solid var(--borderStrong); background: var(--surface);
+        color: var(--textCode); }}
+    #au-cassetto:hover {{ color: var(--primaryText); border-color: var(--borderHover); }}
+    body.au-sb-aperta #au-cassetto {{ left: 376px; }}
+    .block-container {{ padding-left: 68px !important; }}
+    [data-testid="stLayoutWrapper"]:has(> .st-key-fasi) {{ margin-left: -68px !important;
+        padding-left: 68px !important; min-width: calc(100% + 108px) !important; }}
+    :is(.st-key-barraSorgenti, .st-key-barraConfronto) {{ left: 0 !important; }}
+    .st-key-barra {{ left: 0 !important; }}
+  }}
+
   /* Ritmo verticale misurato sulla tavola "Main" (passata pixel perfect). */
   [data-testid="stSidebar"] .au-eyebrow.au-sgruppo {{ margin: 30px 0 11px; }}
   :is(.st-key-cAltezza, .st-key-cCrf, .st-key-cPreset) {{ margin: -2px 0 4px; }}
@@ -2970,6 +3006,32 @@ STYLE = f"""
       gap: 14px !important; }}
   .au-card-testa {{ display: flex; gap: 16px; align-items: flex-start; }}
   .au-card-testa.au-centrata {{ align-items: center; gap: 14px; }}
+  /* Icone dei pulsanti pieni nel colore della loro scritta (in scuro erano
+     bianche su ciano); icone delle tessere nell'accento chiaro del design. */
+  button[kind="primary"] [data-testid="stIconMaterial"] {{ color: var(--onPrimary) !important; }}
+  .au-tessera svg {{ color: var(--primary); }}
+  /* Il -1rem di Streamlit sotto un markdown spostava lo stato a destra della
+     barra dei passi e le due righe del piede 7px piu' in basso del centro. */
+  .st-key-fasi [data-testid="stElementContainer"]:has(.au-fasi-stato) [data-testid="stMarkdownContainer"],
+  .st-key-piede [data-testid="stMarkdownContainer"],
+  [data-testid="stElementContainer"]:has(.au-cambiata) [data-testid="stMarkdownContainer"] {{
+      margin-bottom: 0 !important; }}
+  .st-key-piede {{ align-items: center !important; }}
+  .st-key-piedeSx {{ gap: 0 !important; width: auto !important; flex: 1 1 auto; }}
+  .st-key-piedeVer {{ gap: 4px !important; flex-wrap: nowrap; align-items: center; }}
+  .st-key-piedeVer > div:first-child {{ width: auto !important; flex: none; }}
+  .st-key-controllaAgg {{ width: auto !important; flex: none; }}
+  .st-key-controllaAgg button {{ min-height: 0 !important; height: 18px; width: 18px;
+      padding: 0 !important; color: var(--textSecondary) !important; }}
+  .st-key-controllaAgg button:hover {{ color: var(--primaryText) !important; }}
+  .st-key-controllaAgg [data-testid="stIconMaterial"] {{ font-size: 14px !important; }}
+  /* La tendina della lingua col bordo, come il selettore del tema accanto. */
+  .st-key-cLingua [data-testid="stSelectbox"] [data-rac][role="group"] {{
+      border: 1px solid var(--borderStrong) !important; border-radius: 8px; }}
+  /* «cambiata · di fabbrica …» attaccata all'opzione sopra, non a quella sotto. */
+  .au-cambiata {{ margin-top: -11px !important; margin-bottom: 4px; }}
+  [data-testid="stElementContainer"]:has(.au-sb-regola) [data-testid="stMarkdownContainer"] {{
+      margin-bottom: 0 !important; }}
   .au-tessera {{ width: 48px; height: 48px; flex: none; box-sizing: border-box;
       border-radius: 10px; background: rgb(var(--primaryRgb) / .10);
       border: 1px solid rgb(var(--primaryRgb) / .35); display: flex;
@@ -4831,6 +4893,25 @@ def _cartella_attuale(quale: str) -> Path:
     return PATHS.input if quale == "input" else PATHS.output
 
 
+def _testo_applescript(testo: str) -> str:
+    return str(testo).replace("\\", "\\\\").replace('"', "'")
+
+
+def _avviso_mac(titolo: str, testo: str) -> None:
+    """Un avviso nativo di macOS, sopra il selettore appena chiuso.
+
+    Un rifiuto detto con un toast nella pagina passava inosservato (visto
+    dall'utente: «il percorso non si aggiorna e non so perche'»): chi ha
+    appena scelto una cartella in una finestra del Mac si aspetta la
+    risposta li'.
+    """
+    subprocess.run(
+        ["osascript", "-e",
+         f'display alert "{_testo_applescript(titolo)}" message '
+         f'"{_testo_applescript(testo)}" as warning'],
+        capture_output=True, text=True, check=False)
+
+
 def _scegli_cartella(quale: str) -> None:
     """Il selettore di cartelle di macOS, aperto dal server (che gira su
     questo stesso Mac). Annullare non cambia niente. Scelta una cartella,
@@ -4840,11 +4921,16 @@ def _scegli_cartella(quale: str) -> None:
     # cambiata OUTPUT, il server nuovo non vede piu' lavori, code e taratura
     # di quella vecchia e lascerebbe partire un secondo giro accanto al primo.
     if _motivo_blocco() is not None:
-        st.toast(t("sb.cambio_occupato"))
+        _avviso_mac(t("sb.cambio_no_titolo"), t("sb.cambio_occupato"))
         return
+    # Si apre dove sta la cartella di adesso, non sull'ultima vista.
+    dove = _cartella_attuale(quale)
+    partenza = (f' default location (POSIX file "{_testo_applescript(dove)}")'
+                if dove.is_dir() else "")
     esito = subprocess.run(
         ["osascript", "-e",
-         f'POSIX path of (choose folder with prompt "{t(testo + "_prompt")}")'],
+         f'POSIX path of (choose folder with prompt '
+         f'"{_testo_applescript(t(testo + "_prompt"))}"{partenza})'],
         capture_output=True, text=True, check=False)
     scelta = esito.stdout.strip()
     stato = os.environ.get("ANIMEUP_STATO")
@@ -4857,7 +4943,21 @@ def _scegli_cartella(quale: str) -> None:
     except OSError:
         uguale = False
     if uguale:
-        st.toast(t("sb.cambio_uguale"))
+        _avviso_mac(t("sb.cambio_no_titolo"), t("sb.cambio_uguale"))
+        return
+    # Una dentro l'altra: i lavori di OUTPUT (JOBS, logs) finirebbero fra i
+    # video da elaborare, o i video da elaborare fra quelli finiti.
+    try:
+        annidata = (altra.resolve() in nuova.parents) or (nuova in altra.resolve().parents)
+    except OSError:
+        annidata = False
+    if annidata:
+        _avviso_mac(t("sb.cambio_no_titolo"), t("sb.cambio_annidata"))
+        return
+    # OUTPUT deve potersi scrivere (video finiti, JOBS, logs); INPUT leggere.
+    if not os.access(nuova, os.W_OK if quale == "output" else os.R_OK):
+        _avviso_mac(t("sb.cambio_no_titolo"),
+                    t("sb.cambio_no_scrivere" if quale == "output" else "sb.cambio_no_leggere"))
         return
     if quale == "output" and nuova != PATHS.output.resolve():
         # Le lavorazioni interrotte restano nella JOBS di prima, e da qui
@@ -4868,10 +4968,10 @@ def _scegli_cartella(quale: str) -> None:
         except OSError:
             lasciati = 0
         if lasciati:
-            avviso = tn("sb.cambio_lavori", lasciati, n=lasciati,
-                        cartella=_breve(PATHS.output)).replace('"', "'")
-            ok = t("sb.cambio_lavori_ok").replace('"', "'")
-            no = t("sb.annulla").replace('"', "'")
+            avviso = _testo_applescript(tn("sb.cambio_lavori", lasciati,
+                                           cartella=_breve(PATHS.output)))
+            ok = _testo_applescript(t("sb.cambio_lavori_ok"))
+            no = _testo_applescript(t("sb.annulla"))
             conferma = subprocess.run(
                 ["osascript", "-e",
                  f'display dialog "{avviso}" buttons {{"{no}", "{ok}"}} '
@@ -5367,6 +5467,15 @@ def _riga_taratura(congelata: bool) -> None:
         st.markdown(stato, unsafe_allow_html=True)
 
 
+def _controlla_aggiornamenti_ora() -> None:
+    # Il toast si mostra nel giro normale (vedi `_piede_sidebar`): lanciato
+    # da dentro il richiamo del pulsante non compariva.
+    st.session_state["esito_agg"] = aggiornamenti.controlla_ora()
+    # Il file del controllo e' appena cambiato: la sentinella farebbe un giro
+    # completo, che cancella il toast prima che si veda. Si riparte da zero.
+    st.session_state.pop("firma_sentinella", None)
+
+
 def _piede_sidebar(app: bool, congelata: bool) -> None:
     """In fondo alla finestra: versione e «About» a sinistra, Esci a destra.
 
@@ -5375,14 +5484,29 @@ def _piede_sidebar(app: bool, congelata: bool) -> None:
     che fa ⌘Q, conferma compresa. Nella cartella portatile spegne
     l'interfaccia, come faceva «Chiudi», con la sua conferma a due passi.
     """
+    if (esito_agg := st.session_state.pop("esito_agg", None)):
+        esito, versione_ = esito_agg
+        st.toast(t(f"sb.controllo_{esito}", versione=versione_),
+                 icon=":material/system_update_alt:" if esito == "nuova" else
+                 ":material/check_circle:" if esito == "aggiornato" else ":material/wifi_off:")
     with st.sidebar.container(key="piede", horizontal=True,
                               vertical_alignment="center"):
-        st.markdown(
-            "<div class='au-piede'>"
-            f"<span>{t('sb.versione', versione=__version__)}</span>"
-            "<a href='https://github.com/Interstellar0verdrive/AnimeUp' "
-            f"target='_blank'>{t('sb.about')}</a></div>",
-            unsafe_allow_html=True)
+        with st.container(key="piedeSx"):
+            # La versione col suo «controlla adesso»: un'icona piccola, che
+            # dice subito se ce n'e' una nuova o se questa e' l'ultima.
+            with st.container(key="piedeVer", horizontal=True,
+                              vertical_alignment="center"):
+                st.markdown(f"<div class='au-piede'><span>"
+                            f"{t('sb.versione', versione=__version__)}</span></div>",
+                            unsafe_allow_html=True)
+                st.button("", icon=":material/refresh:", key="controllaAgg",
+                          type="tertiary", help=t("sb.controlla_ora"),
+                          on_click=_controlla_aggiornamenti_ora)
+            st.markdown(
+                "<div class='au-piede'>"
+                "<a href='https://github.com/Interstellar0verdrive/AnimeUp' "
+                f"target='_blank'>{t('sb.about')}</a></div>",
+                unsafe_allow_html=True)
         if app:
             st.button(t("sb.esci"), key="esci", on_click=_chiedi_uscita)
             return
@@ -5556,7 +5680,7 @@ def _blocco_taratura(voce_tar) -> None:
         return
     with st.container(key="tarDaFare"):
         st.markdown(
-            "<div class='au-tar-testa'><code>0</code>"
+            "<div class='au-tar-testa'>"
             f"<b>{t('src.tar_titolo')}</b><small>{t('src.tar_prima')}</small></div>"
             f"<p class='au-tar-testo'>{t('src.tar_testo')}</p>",
             unsafe_allow_html=True)
@@ -8934,6 +9058,42 @@ def _pagina_primo_avvio() -> bool:
     return True
 
 
+def _cassetto_sidebar() -> None:
+    """Sotto i 1150px la barra laterale diventa un cassetto.
+
+    Chiesto dall'utente: con la finestra stretta la parte che conta e' quella
+    principale. La barra esce dal flusso e la pagina prende tutta la
+    larghezza; un pulsante a sinistra della barra dei passi la fa scorrere
+    sopra il contenuto, con un velo dietro; si chiude col velo, con Esc o
+    con lo stesso pulsante. Pulsante e velo vivono nella pagina madre (li
+    crea questo script una volta sola), lo stato e' una classe sul body.
+    """
+    etichetta = json.dumps(t("sb.cassetto"))
+    st.iframe(
+        "<script>try{const D=window.parent.document;"
+        "if(!D.getElementById('au-cassetto')){"
+        "const b=D.createElement('button');b.id='au-cassetto';b.type='button';"
+        "b.innerHTML='<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" "
+        "stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\">"
+        "<path d=\"M4 7h10M18 7h2M4 17h4M12 17h8\"/><circle cx=\"16\" cy=\"7\" r=\"2\"/>"
+        "<circle cx=\"10\" cy=\"17\" r=\"2\"/></svg>';"
+        "const v=D.createElement('div');v.id='au-velo';"
+        "const chiudi=()=>D.body.classList.remove('au-sb-aperta');"
+        "b.onclick=()=>D.body.classList.toggle('au-sb-aperta');v.onclick=chiudi;"
+        "D.addEventListener('keydown',e=>{if(e.key==='Escape')chiudi();});"
+        "D.body.appendChild(v);D.body.appendChild(b);}"
+        f"const b=D.getElementById('au-cassetto');b.title={etichetta};"
+        f"b.setAttribute('aria-label',{etichetta});"
+        # Al centro verticale della barra dei passi, che con i sottotitoli su
+        # due righe e' piu' alta: si rimisura a ogni giro e a ogni resize.
+        "const W=window.parent;W.auPosCassetto=()=>{const p=D.querySelector('.st-key-passi');"
+        "if(p){const r=p.getBoundingClientRect();"
+        "D.getElementById('au-cassetto').style.top=Math.round(r.top+r.height/2-18)+'px';}};"
+        "if(!W.auPosAscolto){W.auPosAscolto=1;W.addEventListener('resize',()=>W.auPosCassetto());}"
+        "W.auPosCassetto();setTimeout(W.auPosCassetto,300);setTimeout(W.auPosCassetto,1200);"
+        "}catch(e){}</script>", height=1)
+
+
 def _applica_tema(scelta: str) -> None:
     """I colori del tema scelto, e lo stesso tema per i widget di Streamlit.
 
@@ -9053,6 +9213,7 @@ def main() -> None:
                  or _impostazioni_carica()["lingua"])
     _applica_tema(st.session_state.get("w_tema")
                   or _impostazioni_carica()["tema"])
+    _cassetto_sidebar()
     if _pagina_primo_avvio():
         return
     sezione = header()

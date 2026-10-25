@@ -192,7 +192,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             self.checkUpdateRequest()
             self.checkQuitRequest()
             self.applyTheme()
+            self.followLanguage()
         }
+    }
+
+    /// Menus and About were in the language found at launch: switching the
+    /// interface to English left them in Italian until the next launch.
+    private func followLanguage() {
+        guard let paths else { return }
+        let before = italian
+        detectLanguage(state: paths.state, data: paths.data)
+        if italian != before { buildMenus() }
     }
 
     /// Dark, Light or System, as chosen in the interface's Preferences.
@@ -234,7 +244,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         }
     }
 
-    @MainActor private func runUpdate() async {
+    /// AnimeUp → Check for Updates…: the same flow as the interface's
+    /// Install update, and an answer even when there's nothing new.
+    @objc func checkForUpdates(_ sender: Any?) {
+        guard !updating else { return }
+        updating = true
+        Task { @MainActor in
+            await self.runUpdate(manual: true)
+            self.updating = false
+        }
+    }
+
+    @MainActor private func runUpdate(manual: Bool = false) async {
         if case .failure(let e) = Updater.replaceableLocation() { updateFailed(e); return }
         let release: Release
         do {
@@ -243,7 +264,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             updateFailed(error); return
         }
         guard Updater.isNewer(release.version, than: appVersion) else {
-            updateFailed(UpdateError.notNewer(release.version)); return
+            if manual {
+                NSApp.activate(ignoringOtherApps: true)
+                let alert = NSAlert()
+                alert.messageText = tr("AnimeUp is up to date", "AnimeUp è aggiornato")
+                alert.informativeText = tr("You have the latest version (\(appVersion)).",
+                                           "Hai l'ultima versione (\(appVersion)).")
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            } else {
+                updateFailed(UpdateError.notNewer(release.version))
+            }
+            return
         }
 
         NSApp.activate(ignoringOtherApps: true)
@@ -461,11 +493,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     // MARK: Menu actions
 
     @objc func showAbout(_ sender: Any?) {
-        let credits = NSAttributedString(
+        let credits = NSMutableAttributedString(
             string: tr("Local, offline anime upscaler for Apple Silicon.",
-                       "Upscaler di anime locale e offline per Apple Silicon."),
+                       "Upscaler di anime locale e offline per Apple Silicon.") + "\n",
             attributes: [.font: NSFont.systemFont(ofSize: 11),
                          .foregroundColor: NSColor.secondaryLabelColor])
+        let repo = "github.com/Interstellar0verdrive/AnimeUp"
+        credits.append(NSAttributedString(string: repo, attributes: [
+            .font: NSFont.systemFont(ofSize: 11),
+            .link: URL(string: "https://" + repo)!]))
+        let centred = NSMutableParagraphStyle()
+        centred.alignment = .center
+        credits.addAttribute(.paragraphStyle, value: centred,
+                             range: NSRange(location: 0, length: credits.length))
         NSApp.orderFrontStandardAboutPanel(options: [
             .applicationName: "AnimeUp",
             .applicationVersion: appVersion,
@@ -516,6 +556,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         // App menu (its title is replaced by the app name).
         let appMenu = submenu(in: bar, "AnimeUp")
         add(appMenu, tr("About AnimeUp", "Informazioni su AnimeUp"), #selector(showAbout(_:)), target: self)
+        add(appMenu, tr("Check for Updates…", "Controlla aggiornamenti…"),
+            #selector(checkForUpdates(_:)), target: self)
         appMenu.addItem(.separator())
         let services = add(appMenu, tr("Services", "Servizi"), nil)
         services.submenu = NSMenu()
