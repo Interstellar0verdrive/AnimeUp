@@ -35,5 +35,8 @@
   "sb.cambio_lavori.uno": "1 interrupted job stays in {cartella}. To resume it, move its JOBS folder into the new one, or switch back.",
   "sb.cambio_lavori.altri": "{n} interrupted jobs stay in {cartella}. To resume them, move its JOBS folder into the new one, or switch back.",
   "sb.cambio_lavori_ok": "Change anyway",
-  "src.disco_assente": "The folder isn't reachable: is its drive connected?"
+  "src.disco_assente": "The folder isn't reachable: is its drive connected?",
+  "mig.rimandata": "AnimeUp 1.5 is still working on a file: your records and jobs move to the 1.6 layout at the next launch after it finishes.",
+  "mig.errore": "Some files couldn't move to the 1.6 layout ({dettaglio}). Nothing was deleted; AnimeUp tries again at the next launch.",
+  "mig.jobs_altro_disco": "Interrupted jobs from AnimeUp 1.5 are in {vecchia}, on a different disk from the finished videos. To resume them, move its contents into {nuova}."
 }

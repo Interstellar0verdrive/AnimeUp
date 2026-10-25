@@ -35,5 +35,8 @@
   "sb.cambio_lavori.uno": "1 lavorazione interrotta resta in {cartella}. Per riprenderla sposta la sua cartella JOBS in quella nuova, o torna indietro.",
   "sb.cambio_lavori.altri": "{n} lavorazioni interrotte restano in {cartella}. Per riprenderle sposta la sua cartella JOBS in quella nuova, o torna indietro.",
   "sb.cambio_lavori_ok": "Cambia comunque",
-  "src.disco_assente": "La cartella non è raggiungibile: il disco è collegato?"
+  "src.disco_assente": "La cartella non è raggiungibile: il disco è collegato?",
+  "mig.rimandata": "AnimeUp 1.5 sta ancora lavorando un file: registri e lavorazioni passano alla disposizione della 1.6 al primo avvio dopo che ha finito.",
+  "mig.errore": "Alcuni file non sono passati alla disposizione della 1.6 ({dettaglio}). Non è stato cancellato niente; AnimeUp riprova al prossimo avvio.",
+  "mig.jobs_altro_disco": "Le lavorazioni interrotte di AnimeUp 1.5 sono in {vecchia}, su un disco diverso da quello dei video finiti. Per riprenderle spostane il contenuto in {nuova}."
 }

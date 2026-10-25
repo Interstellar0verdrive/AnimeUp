@@ -199,7 +199,10 @@ def in_corso(paths: Paths | None = None) -> bool:
     # OUTPUT a meta' giro, non lo si vedeva piu'. Lo stato del giro lanciato
     # dalla pagina sta invece nella cartella dello stato, che non cambia.
     fondo = stato_fondo(p)
-    if fondo and fondo.get("state") == IN_CORSO:
+    # Il giro lanciato dalla pagina scrive il suo stato PRIMA di cominciare:
+    # quella voce, vista da lui stesso, non e' «un'altra taratura».
+    if (fondo and fondo.get("state") == IN_CORSO
+            and str(fondo.get("pid")) != str(os.getpid())):
         return True
     marcatore = p.work / ".calibration" / "running.lock"
     try:
@@ -228,7 +231,10 @@ def carica(paths: Paths | None = None, *, macchina: str | None = None) -> dict |
         dati = su_disco.leggi(_file(p))
     except (OSError, ValueError):
         return None
-    voce = dati.get("macchine", {}).get(macchina or chip())
+    macchine = dati.get("macchine") if isinstance(dati, dict) else None
+    if not isinstance(macchine, dict):
+        return None              # un file scritto a mano, di forma strana
+    voce = macchine.get(macchina or chip())
     return voce if isinstance(voce, dict) else None
 
 
