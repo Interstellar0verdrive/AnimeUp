@@ -3146,6 +3146,14 @@ STYLE = f"""
       height: 5px; border-radius: 50%; background: currentColor;
       margin-right: 6px; vertical-align: middle; }}
   .au-nota-pagina {{ font-size: 13px; color: var(--textSecondary); }}
+  .au-fascia-ciano {{ display: flex; gap: 10px; align-items: flex-start; margin-top: 4px;
+      padding: 10px 14px; border-radius: 8px; background: rgb(var(--primaryRgb) / .08);
+      border: 1px solid rgb(var(--primaryRgb) / .30); font-size: 13px; line-height: 1.5;
+      color: var(--textCode); }}
+  .au-fascia-ciano > span:first-child {{ width: 7px; height: 7px; margin-top: 6px; flex: none;
+      border-radius: 50%; background: var(--primary);
+      box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .2); }}
+  .au-fascia-ciano b {{ font-weight: 600; color: var(--primaryText); }}
   .st-key-barraSorgenti {{ position: fixed; bottom: 0; left: 360px; right: 0;
       width: auto !important; z-index: 100; flex-wrap: nowrap;
       gap: 12px !important; padding: 16px 40px;
@@ -5644,8 +5652,15 @@ def page_sorgenti(cfg: dict) -> None:
     # fotogramma Streamlit assegnava il pannello aperto alla riga precedente.
     with st.container(key="fasciaAnalisi"):
         if in_analisi:
-            st.markdown(f"<div class='au-nota-pagina'>{t('src.gia_aperte')}</div>",
-                        unsafe_allow_html=True)
+            # La fascia ciano del design: chi analizza, quanti mancano, e che
+            # intanto le altre schede si possono gia' usare.
+            # Lo stesso conto della barra qui sopra («analisi 0 di 3»).
+            mancano = max(1, len(files) - max(0, min(analizzati, len(files) - da_fare)))
+            st.markdown(
+                "<div class='au-fascia-ciano'><span></span><span>"
+                f"<b>{t('src.banner_analisi')}</b>\u00a0·\u00a0"
+                f"{tn('src.banner_mancano', mancano)}. {t('src.gia_aperte')}</span></div>",
+                unsafe_allow_html=True)
 
     pesi = [4.6, 1.2, 0.9, 3.6, 0.5]
     with st.container(key="intest"):
