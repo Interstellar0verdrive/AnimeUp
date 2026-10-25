@@ -9023,8 +9023,14 @@ def _sentinella() -> None:
             if e.is_file() and Path(e.name).suffix.lower() in VIDEO_EXTENSIONS))
     except OSError:
         cartella = ()
+    # Anche il controllo degli aggiornamenti: gira in sottofondo e prima la
+    # nota compariva solo al clic successivo (all'avvio, a pagina ferma, mai).
+    try:
+        verifica = aggiornamenti._file().stat().st_mtime
+    except OSError:
+        verifica = 0.0
     firma = (cartella, confronto.in_corso(), taratura.in_corso(),
-             monitor.lancio_vivo())
+             monitor.lancio_vivo(), verifica)
     prima = st.session_state.get("firma_sentinella")
     st.session_state["firma_sentinella"] = firma
     if prima is not None and firma != prima:
