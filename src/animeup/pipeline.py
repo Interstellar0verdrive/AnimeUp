@@ -334,13 +334,10 @@ def _prenotazioni(cartella: Path) -> dict[str, float]:
         if numero <= 0:
             voce.unlink(missing_ok=True)
             continue
-        try:
-            os.kill(numero, 0)
-        except ProcessLookupError:
-            voce.unlink(missing_ok=True)      # processo morto: si pulisce
+        from .processi import di_animeup
+        if not di_animeup(numero):
+            voce.unlink(missing_ok=True)      # morto, o il numero e' d'altri
             continue
-        except (PermissionError, OSError):
-            pass                              # di un altro utente, ma vivo
         try:
             valore = float(voce.read_text().strip())
         except (OSError, ValueError):
@@ -409,26 +406,11 @@ def _processo_vivo(lock: Path) -> bool:
         return False        # illeggibile: si considera morto, non si blocca
     if pid == os.getpid():
         return False
-    try:
-        os.kill(pid, 0)     # segnale 0: non fa nulla, verifica soltanto
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True         # esiste ma è di un altro utente
-    # `kill(pid, 0)` risponde "esiste" anche per uno ZOMBIE: un processo morto
-    # il cui padre non l'ha ancora raccolto. Trattarlo da vivo teneva il
-    # lucchetto occupato — e il monitor mostrava "in corso" un lavoro morto —
-    # finché il padre non usciva. Misurato dopo un kill -9 lanciato dalla UI.
-    try:
-        esito = subprocess.run(
-            ["ps", "-o", "state=", "-p", str(pid)],
-            capture_output=True, text=True, check=False,
-        )
-        if esito.returncode == 0 and esito.stdout.strip().startswith("Z"):
-            return False
-    except OSError:
-        pass
-    return True
+    # Vivo, non ZOMBIE (morto ma non ancora raccolto dal padre: teneva il
+    # lucchetto occupato, visto dopo un kill -9 dalla UI) e davvero AnimeUp:
+    # dopo uno spegnimento il numero puo' essere di un processo qualunque.
+    from .processi import di_animeup
+    return di_animeup(pid)
 
 
 def _abbatti_orfano(work: Path) -> None:
@@ -520,6 +502,9 @@ class Job:
         )
 
         self._lucchetto_mio = False
+        # I parametri di questo lancio, scritti in parameters.json SOLO a
+        # lucchetto preso: sono la ricetta del Riprendi dell'interfaccia.
+        self.ricetta: dict | None = None
         self._avvisi: list[str] = []
         self.frames_dir = self.work / "frames"
         self.segments_dir = self.work / "segments"
@@ -742,6 +727,12 @@ class Job:
             if not mio:
                 continue
             self._lucchetto_mio = True
+            if self.ricetta is not None:
+                try:
+                    (self.work / "parameters.json").write_text(
+                        su_disco.dumps(self.ricetta, indent=2))
+                except OSError:
+                    pass
             break
         else:
             raise JobError(t("mot.pipe.lucchetto", lucchetto=lock))

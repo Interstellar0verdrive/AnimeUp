@@ -40,13 +40,8 @@ def _scrivi(f: Path, dati: dict) -> None:
 
 
 def _vivo(pid: int) -> bool:
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except OSError:
-        return True
-    return True
+    from .processi import di_animeup
+    return di_animeup(pid)
 
 
 def stato(p: Paths | None = None) -> dict | None:
@@ -62,8 +57,16 @@ def stato(p: Paths | None = None) -> dict | None:
         return None
     if not isinstance(dati, dict):
         return None
-    if dati.get("state") == IN_CORSO and not _vivo(int(dati.get("pid") or 0)):
-        dati["state"] = INTERROTTO
+    if dati.get("state") == IN_CORSO:
+        try:
+            pid = int(dati.get("pid") or 0)
+        except (ValueError, TypeError):
+            pid = 0
+        # Il pid 0 e' l'attimo fra lo stato scritto e il processo lanciato;
+        # se il lancio e' fallito non deve restare «in corso» per sempre.
+        appena = pid == 0 and time.time() - float(dati.get("started") or 0) < 15
+        if not appena and not _vivo(pid):
+            dati["state"] = INTERROTTO
     return dati
 
 
@@ -103,7 +106,7 @@ def ferma(p: Paths | None = None) -> bool:
     if not s or s.get("state") != IN_CORSO:
         return False
     pid = int(s.get("pid") or 0)
-    if pid <= 1:
+    if pid <= 1 or not _vivo(pid):
         return False
     try:
         os.killpg(os.getpgid(pid), signal.SIGTERM)

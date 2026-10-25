@@ -1309,7 +1309,7 @@ def _() -> None:
              "extracted": 1000}))
         # Un processo VERO: `_processo_vivo` risponde "lo tiene qualcun
         # altro?", quindi al PID di questo stesso processo direbbe no.
-        figlio = sp.Popen(["sleep", "30"])
+        figlio = sp.Popen([sys.executable, "-c", "import time; time.sleep(30)", "animeup-finto"])
         (vivo / "running.lock").write_text(str(figlio.pid))
         (vivo / "chunk0000-up" / "00000550.png").write_bytes(b"")
 
@@ -1354,7 +1354,7 @@ def _() -> None:
         (d / "frames").mkdir(parents=True)
         for n in range(1, 8):
             (d / "frames" / f"{n:08d}.png").write_bytes(b"")
-        figlio = sp.Popen(["sleep", "30"])
+        figlio = sp.Popen([sys.executable, "-c", "import time; time.sleep(30)", "animeup-finto"])
         (d / "running.lock").write_text(str(figlio.pid))
 
         letti = monitor.lavori(paths)
@@ -1395,7 +1395,7 @@ def _() -> None:
         paths = Paths(Path(t))
         paths.work.mkdir(parents=True)
         m = paths.work / ".pause"
-        figlio = sp.Popen(["sleep", "30"])
+        figlio = sp.Popen([sys.executable, "-c", "import time; time.sleep(30)", "animeup-finto"])
 
         m.write_text(json.dumps({"fino": t_.time() + 120, "pid": figlio.pid}))
         viva = monitor.pausa(paths)
@@ -1438,7 +1438,7 @@ def _() -> None:
             (d / "chunk0002-up" / f"{n:08d}.png").write_bytes(b"")
         (d / "state.json").write_text(json.dumps(
             {"signature": firma, "segments": [], "extracted": 1000}))
-        figlio = sp.Popen(["sleep", "30"])
+        figlio = sp.Popen([sys.executable, "-c", "import time; time.sleep(30)", "animeup-finto"])
         (d / "running.lock").write_text(str(figlio.pid))
 
         lav = monitor.lavori(paths)[0]
@@ -5105,8 +5105,19 @@ def _() -> None:
         assert not taratura.in_corso(finti), "nessun marcatore, eppure in corso"
         marcatore = radice / "JOBS" / ".calibration" / "running.lock"
         marcatore.parent.mkdir(parents=True)
-        marcatore.write_text(str(os.getpid()))
-        assert taratura.in_corso(finti), "il PID e' vivo ma non risulta in corso"
+        import subprocess as _sp
+        estraneo = _sp.Popen(["sleep", "30"])
+        finto = _sp.Popen([sys.executable, "-c", "import time; time.sleep(30)",
+                           "animeup-finto"])
+        try:
+            # Dopo uno spegnimento il numero puo' essere di chiunque.
+            marcatore.write_text(str(estraneo.pid))
+            assert not taratura.in_corso(finti), "un PID riciclato blocca la taratura"
+            marcatore.write_text(str(finto.pid))
+            assert taratura.in_corso(finti), "il PID e' vivo ma non risulta in corso"
+        finally:
+            estraneo.kill()
+            finto.kill()
 
     # 2. `_avvia` si ferma PRIMA di lanciare qualunque cosa.
     class _Lanciato(Exception):

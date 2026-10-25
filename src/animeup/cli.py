@@ -385,21 +385,19 @@ def run_cmd(
             # Il pulsante Riprendi usa QUESTI, ignorando la sidebar del
             # momento: riprendere non puo' mai buttare il lavoro fatto.
             # A file concluso la cartella sparisce, e la ricetta con lei.
-            try:
-                job.work.mkdir(parents=True, exist_ok=True)
-                (job.work / "parameters.json").write_text(su_disco.dumps({
-                    "altezza": altezza, "crf": crf, "preset": preset,
-                    "disco": int(disco), "dedup": dedup,
-                    "denoise": denoise, "forza": forza,
-                    "modello": plan.model_key,
-                    # Il totale dei fotogrammi: durante l'estrazione
-                    # state.json non esiste ancora e il monitor non avrebbe
-                    # altro modo di dire "5632 su quanti?".
-                    "fotogrammi": int(plan.frames or 0),
-                    **({"scala": scala} if scala else {}),
-                }, indent=2))
-            except OSError:
-                pass
+            # Si scrive solo a lucchetto preso (vedi Job.ricetta): un secondo
+            # lancio sullo stesso file, rifiutato, la sovrascriveva comunque.
+            job.ricetta = {
+                "altezza": altezza, "crf": crf, "preset": preset,
+                "disco": int(disco), "dedup": dedup,
+                "denoise": denoise, "forza": forza,
+                "modello": plan.model_key,
+                # Il totale dei fotogrammi: durante l'estrazione
+                # state.json non esiste ancora e il monitor non avrebbe
+                # altro modo di dire "5632 su quanti?".
+                "fotogrammi": int(plan.frames or 0),
+                **({"scala": scala} if scala else {}),
+            }
             with RichProgress(
                 TextColumn("[progress.description]{task.description}"),
                 BarColumn(), TextColumn("{task.completed}/{task.total}"),

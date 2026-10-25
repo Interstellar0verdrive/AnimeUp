@@ -8497,12 +8497,8 @@ def _pausa(lav, *, riprendi: bool) -> str:
 
 def _e_processo_nostro(pid: int) -> bool:
     """Il PID è davvero una CLI di AnimeUp? Contro i numeri riciclati."""
-    try:
-        esito = subprocess.run(["ps", "-o", "command=", "-p", str(pid)],
-                               capture_output=True, text=True, check=False)
-    except OSError:
-        return False
-    return "animeup" in esito.stdout or "python" in esito.stdout
+    from animeup.processi import di_animeup
+    return pid != os.getpid() and di_animeup(pid)
 
 
 def _termina_gruppo(pid: int) -> None:
