@@ -664,6 +664,12 @@
     display: none;
   }
 
+  /* A drawer opened on a narrow screen must not cover the desktop layout
+     when the viewport grows again. */
+  .md-overlay {
+    display: none !important;
+  }
+
   .md-header__button.md-logo {
     display: inline-flex;
   }
@@ -995,9 +1001,12 @@
   }
 
   .md-sidebar--primary {
-    left: 0;
+    /* Material moves this sidebar off-canvas below its own 76.25em breakpoint.
+       Keep it visible until our 60em layout switches to the drawer. */
+    left: 0 !important;
     position: fixed;
     top: 58px !important;
+    transform: none !important;
     width: clamp(250px, 21vw, 274px);
     z-index: 2;
   }
