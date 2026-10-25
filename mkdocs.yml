@@ -78,11 +78,12 @@ markdown_extensions:
       custom_checkbox: true
 
 extra_css:
-  - stylesheets/extra.css?v=20261025-search-sidebar
+  - stylesheets/extra.css?v=20261025-theme-spacing
 
 extra_javascript:
   - javascripts/theme-select.js
   - javascripts/search-expand.js
+  - javascripts/toc-current.js
 
 extra:
   generator: false

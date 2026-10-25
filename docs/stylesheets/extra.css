@@ -34,8 +34,8 @@
   --animeup-border: #d9e1e5;
   --animeup-text: #17252b;
   --animeup-muted: #475963;
-  --animeup-accent: #0e9fb3;
-  --animeup-link: #087c8f;
+  --animeup-accent: #0078a8;
+  --animeup-link: #0078a8;
   --animeup-warning: #a86d00;
   --animeup-success: #16834b;
   --animeup-danger: #bc3d43;
@@ -64,8 +64,8 @@
     --animeup-border: #d9e1e5;
     --animeup-text: #17252b;
     --animeup-muted: #475963;
-    --animeup-accent: #0e9fb3;
-    --animeup-link: #087c8f;
+    --animeup-accent: #0078a8;
+    --animeup-link: #0078a8;
     --animeup-warning: #a86d00;
     --animeup-success: #16834b;
     --animeup-danger: #bc3d43;
@@ -162,8 +162,23 @@
 
 .animeup-theme-control {
   align-items: center;
+  color: var(--animeup-text);
   display: flex;
+  position: relative;
   white-space: nowrap;
+}
+
+.animeup-theme-control::after {
+  border-bottom: 1.5px solid currentColor;
+  border-right: 1.5px solid currentColor;
+  content: "";
+  height: 0.4rem;
+  pointer-events: none;
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-70%) rotate(45deg);
+  width: 0.4rem;
 }
 
 .animeup-theme-control label {
@@ -183,8 +198,10 @@
 }
 
 .animeup-theme-control select {
+  appearance: none;
   cursor: pointer;
-  padding: 0.25rem 0.45rem;
+  padding: 0.25rem 1.65rem 0.25rem 0.5rem;
+  word-spacing: 0.15rem;
 }
 
 .animeup-theme-control select:focus-visible,
@@ -638,7 +655,8 @@
   }
 
   .md-sidebar--secondary {
-    border-left: 1px solid var(--animeup-border);
+    background: transparent;
+    border-left: 0;
     grid-column: 3;
     grid-row: 1;
   }
@@ -691,7 +709,11 @@
   .md-sidebar--primary .md-nav__link {
     font-size: 0.68rem;
     line-height: 1.35;
-    padding: 0.35rem 0.45rem;
+    padding: 0.2rem 0.45rem;
+  }
+
+  .md-sidebar--primary .md-nav__item--section > .md-nav > .md-nav__list {
+    padding-bottom: 0.2rem;
   }
 
   .md-sidebar--primary .md-nav--secondary {
@@ -710,10 +732,31 @@
     width: 100%;
   }
 
+  .md-sidebar--secondary .md-nav__title {
+    background: transparent;
+  }
+
+  .md-sidebar--secondary .md-nav__link {
+    border-left: 2px solid transparent;
+    padding-left: 0.5rem;
+  }
+
+  .md-sidebar--secondary .md-nav__link--active {
+    border-left-color: transparent;
+    color: var(--animeup-muted);
+    font-weight: 400;
+  }
+
+  .md-sidebar--secondary .md-nav__link.animeup-toc-current {
+    border-left-color: var(--animeup-accent);
+    color: var(--animeup-accent);
+    font-weight: 700;
+  }
+
   .md-sidebar--primary .md-nav--primary > .md-nav__title,
   .md-sidebar--primary .md-nav__item--section > .md-nav__link {
     color: var(--animeup-text);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
   }
 
@@ -805,8 +848,9 @@
 
 .md-nav--primary > .md-nav__list > .md-nav__item--section {
   border-top: 1px solid var(--animeup-border);
-  margin-top: 13px;
-  padding-top: 12px;
+  margin-bottom: 0;
+  margin-top: 9px;
+  padding-top: 8px;
 }
 
 @media screen and (min-width: 60em) {
@@ -937,7 +981,7 @@
   }
 
   .md-footer::after {
-    border-left: 1px solid var(--animeup-border);
+    background: transparent;
     grid-column: 3;
   }
 
@@ -1052,6 +1096,13 @@
 
   .md-footer__inner.md-grid {
     padding: 20px;
+  }
+}
+
+@media screen and (max-width: 22em) {
+  .animeup-header__brand {
+    gap: 0;
+    padding-right: 0;
   }
 }
 
