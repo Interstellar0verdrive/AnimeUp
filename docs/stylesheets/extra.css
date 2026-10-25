@@ -1174,6 +1174,10 @@
     padding: 4px 9px;
   }
 
+  .md-sidebar--primary .md-nav__item:not(.md-nav__item--section) {
+    border-top: 0;
+  }
+
   .md-nav--primary > .md-nav__list > .md-nav__item--section > .md-nav__link {
     padding-left: 0;
   }
