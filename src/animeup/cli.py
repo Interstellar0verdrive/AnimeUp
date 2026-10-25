@@ -347,6 +347,9 @@ def run_cmd(
             raise typer.Exit(0)
 
     falliti: list[str] = []
+    # Quali dei falliti hanno un'uscita messa da parte come .DEFECTIVE: gli
+    # altri sono morti per strada (disco pieno, ffmpeg) e si riprendono.
+    difettosi: list[str] = []
     # Il diario del lancio: serve all'interfaccia per dire com'e' andata a
     # coda finita. Deve nascere QUI e non da lei, perche' quando la coda
     # finisce il marcatore .catena sparisce e con lui ogni traccia — e
@@ -479,6 +482,7 @@ def run_cmd(
                     dire(t("cli.run.incompleta_ferma", motivo=exc.strerror or exc,
                            percorso=result.output), "red")
                 falliti.append(plan.source.path.name)
+                difettosi.append(plan.source.path.name)
             else:
                 console.print(
                     f"[green]  {t('cli.run.fatto')}[/green] "
@@ -534,7 +538,8 @@ def run_cmd(
             # spacciava per l'intera maratona.
             catena_inizio=catena_inizio, catena_totale=totale_catena,
             numero_finale=numero, lancio=etichetta,
-            presenti=[p.source.path.name for p in plans if p not in da_fare])
+            presenti=[p.source.path.name for p in plans if p not in da_fare],
+            difettosi=difettosi)
 
     # Uscita diversa da zero se qualcosa è andato storto: con `exit 0` uno
     # script chiamante vedeva successo anche con dodici episodi falliti su
@@ -935,7 +940,8 @@ def _scrivi_lancio(*, inizio: float, fine: float, previsti: list[str],
                    secondi: float, pausa_minuti: int, avvisi: int,
                    dedup: list[float], catena_inizio: int = 0,
                    catena_totale: int = 0, numero_finale: int = 0,
-                   lancio: str = "", presenti: list[str] | None = None) -> None:
+                   lancio: str = "", presenti: list[str] | None = None,
+                   difettosi: list[str] | None = None) -> None:
     """Com'e' andato QUESTO lancio, una riga per volta.
 
     Sta nel `finally` del giro: si scrive anche se la coda e' stata fermata
@@ -957,6 +963,7 @@ def _scrivi_lancio(*, inizio: float, fine: float, previsti: list[str],
                 # Gia' finiti prima di questo lancio: non sono «da fare», e
                 # senza dirlo il resoconto li contava come non avviati.
                 "presenti": list(presenti or []),
+                "difettosi": list(difettosi or []),
                 "lancio": str(lancio),
                 # Dove sono finiti: la cartella si puo' cambiare dopo, e il
                 # resoconto deve indicare quella di allora.

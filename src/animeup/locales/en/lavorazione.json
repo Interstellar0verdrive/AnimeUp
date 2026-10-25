@@ -4,7 +4,7 @@
   "lav.fmt_data_alle": "%Y-%m-%d at %H:%M",
   "lav.fmt_decimale": ".",
   "lav.nota_tarata": "Estimates calibrated on this Mac on {data}.",
-  "lav.nota_fabbrica": "Factory estimates: use \"Run now\" next to Calibration in the sidebar to tune them to this Mac in ~10 minutes.",
+  "lav.nota_fabbrica": "Factory estimates: use \"Calibrate now\" next to Calibration in the sidebar to tune them to this Mac in ~10 minutes.",
   "lav.vuoto": "No files in INPUT.",
   "lav.chiudi": "Close",
   "lav.fine_titolo": "Processing finished",
@@ -125,7 +125,7 @@
   "lav.fine_motivo_fallito": "failed",
   "lav.fine_motivo_fermato": "stopped",
   "lav.fine_motivo_scartato": "not planned",
-  "lav.fine_testo_fallito": "The output failed its check and was set aside as .DEFECTIVE. Run it again.",
+  "lav.fine_testo_fallito": "It stopped with an error; the work done is kept and Resume continues from there. The file's log says why.",
   "lav.fine_testo_fermato": "Stopped before the end. Resume it from its row.",
   "lav.fine_testo_scartato": "It couldn't be planned with these settings and was left out of the queue.",
   "lav.fine_salvati": "Saved to",
@@ -148,5 +148,7 @@
   "sb.taratura_mostra": "Show",
   "lav.avvia_gia": "A queue is already running: wait for it to finish, or stop it first.",
   "lav.fine_motivo_non_avviato": "not started",
-  "lav.fine_testo_non_avviato": "The queue stopped before reaching this file."
+  "lav.fine_testo_non_avviato": "The queue stopped before reaching this file.",
+  "lav.fine_motivo_difettoso": "defective",
+  "lav.fine_testo_difettoso": "The output failed its check and was set aside as .DEFECTIVE. Run it again."
 }

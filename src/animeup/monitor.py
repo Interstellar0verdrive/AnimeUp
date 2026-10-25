@@ -981,6 +981,7 @@ def ultimo_lancio(paths: Paths | None = None) -> dict | None:
         "previsti": _unisci("previsti"), "riusciti": _unisci("riusciti"),
         "falliti": _unisci("falliti"), "scartati": _unisci("scartati"),
         "interrotti": _unisci("interrotti"), "presenti": _unisci("presenti"),
+        "difettosi": _unisci("difettosi"),
         "catena_totale": max((int(_numero(d.get("catena_totale")) or 0) for d in pezzi),
                              default=0),
         "secondi": sum(_numero(d.get("secondi")) or 0 for d in pezzi),

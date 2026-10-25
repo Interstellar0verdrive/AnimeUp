@@ -51,6 +51,7 @@ VOCABOLARIO: dict[str, str] = {
     "scartati": "skipped",
     "interrotti": "interrupted",
     "presenti": "already_done",
+    "difettosi": "defective_outputs",
     "lancio": "launch",
     "catena_inizio": "queue_start",
     "catena_totale": "queue_total",

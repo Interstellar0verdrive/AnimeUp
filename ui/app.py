@@ -2801,6 +2801,52 @@ STYLE = f"""
   .au-agg-nota {{ margin-left: 40px; }}
   .st-key-cTaratura {{ gap: 2px !important; }}
 
+  /* Finestre strette (l'app scende fino a 1000px): sotto i 1360 la barra
+     dei passi si stringe e lascia lo stato, che ripete il passo 3; nelle
+     righe i numeri non vanno a capo a meta' e i nomi lunghi si fermano a due
+     righe. A 1440 non cambia niente. */
+  @media (max-width: 1360px) {{
+    .st-key-passi button {{ width: clamp(176px, calc((100vw - 476px) / 3), 250px);
+        padding-right: 30px !important; }}
+    .st-key-passi button p, .st-key-passi button p::after {{ max-width: 100%;
+        overflow: hidden; text-overflow: ellipsis; }}
+    .au-fasi-stato {{ display: none; }}
+    .au-cell, .au-eyebrow {{ white-space: nowrap; overflow: hidden;
+        text-overflow: ellipsis; }}
+    .au-name {{ display: -webkit-box; -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical; overflow: hidden; }}
+    .au-tag {{ max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+        white-space: nowrap; display: inline-block; vertical-align: middle; }}
+    /* La tabella di Lavorazione (otto colonne): i numeri hanno la loro
+       larghezza, il nome prende quello che resta. */
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child) {{
+        flex-wrap: nowrap !important; gap: 10px !important; }}
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
+        > [data-testid="stColumn"]:nth-child(2) {{ flex: 1 1 0 !important; min-width: 0 !important; }}
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
+        > [data-testid="stColumn"]:nth-child(3) {{ flex: 0 0 84px !important; min-width: 0 !important; }}
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
+        > [data-testid="stColumn"]:nth-child(4) {{ flex: 0 0 48px !important; min-width: 0 !important; }}
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
+        > [data-testid="stColumn"]:nth-child(5) {{ flex: 0 0 150px !important; min-width: 0 !important; }}
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
+        > [data-testid="stColumn"]:nth-child(6) {{ flex: 0 0 96px !important; min-width: 0 !important; }}
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
+        > [data-testid="stColumn"]:nth-child(7) {{ flex: 0 0 72px !important; min-width: 0 !important; }}
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
+        > [data-testid="stColumn"]:is(:nth-child(1), :nth-child(8)) {{ flex: 0 0 24px !important;
+        min-width: 0 !important; }}
+  }}
+
+  /* Alla larghezza minima della finestra il nome non ci starebbe:
+     risoluzione e durata, che i Sorgenti mostrano gia', lasciano il posto. */
+  @media (max-width: 1120px) {{
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
+        > [data-testid="stColumn"]:is(:nth-child(3), :nth-child(4)) {{ display: none !important; }}
+    [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
+        > [data-testid="stColumn"]:nth-child(5) {{ flex-basis: 132px !important; }}
+  }}
+
   /* Ritmo verticale misurato sulla tavola "Main" (passata pixel perfect). */
   [data-testid="stSidebar"] .au-eyebrow.au-sgruppo {{ margin: 30px 0 11px; }}
   :is(.st-key-cAltezza, .st-key-cCrf, .st-key-cPreset) {{ margin: -2px 0 4px; }}
@@ -3363,7 +3409,7 @@ STYLE = f"""
   .au-motivo {{ font: normal 400 11px var(--mono); padding: 1px 8px; border-radius: 999px;
       border: 1px solid var(--borderStrong); color: var(--textSecondary);
       background: var(--surfaceHover); }}
-  .au-motivo-fallito {{ color: var(--redText); background: var(--redBg);
+  .au-motivo-fallito, .au-motivo-difettoso {{ color: var(--redText); background: var(--redBg);
       border-color: rgb(var(--redRgb) / .3); }}
   .au-fine-righe > div {{ display: flex; align-items: center; padding: 9px 0;
       border-bottom: 1px solid var(--borderColor); font-size: 13.5px; }}
@@ -3565,6 +3611,10 @@ class Analizzatore:
         self._in_corso: str | None = None
         # I file per cui e' stato chiesto anche il campione della deduplica.
         self._approfondire: set[str] = set()
+        # File su cui la misura della deduplica e' stata tentata e non si
+        # puo' fare (troppo corti): senza ricordarlo, ogni ricarica li
+        # rimetteva in coda, per sempre.
+        self._non_misurabili: set[str] = set()
         self._lock = threading.Lock()
         self._thread: threading.Thread | None = None
 
@@ -3592,9 +3642,12 @@ class Analizzatore:
         da_fare = [
             p for p in percorsi
             if rifai or (r := library.cached_report(p)) is None
-            or (approfondita and r.dedup_campione is None)]
+            or (approfondita and r.dedup_campione is None
+                and str(p) not in self._non_misurabili)]
         with self._lock:
             for p in da_fare:
+                if rifai:
+                    self._non_misurabili.discard(str(p))   # si riprova
                 if approfondita:
                     self._approfondire.add(str(p))
                 # Il file IN CORSO non si riaccoda: la sua cache non è ancora
@@ -3627,13 +3680,19 @@ class Analizzatore:
                 if approfondire:
                     # Riusa il referto gia' in cassa e ci aggiunge la misura:
                     # l'analisi veloce fatta prima non viene rifatta.
-                    library.approfondisci(p)
+                    esito = library.approfondisci(p)
                     with self._lock:
                         self._approfondire.discard(str(p))
+                        if esito is None or esito.dedup_campione is None:
+                            self._non_misurabili.add(str(p))
                 else:
                     library.analyse(p, force=True)
             except Exception:                              # noqa: BLE001
-                pass          # un file illeggibile non deve fermare la coda
+                # Un file illeggibile non deve fermare la coda, ne' tornarci.
+                with self._lock:
+                    if str(p) in self._approfondire:
+                        self._approfondire.discard(str(p))
+                        self._non_misurabili.add(str(p))
 
     @property
     def in_corso(self) -> str | None:
@@ -3644,6 +3703,12 @@ class Analizzatore:
     def in_coda(self) -> set[str]:
         with self._lock:
             return {str(p) for p in self._coda}
+
+    @property
+    def prossimo(self) -> str | None:
+        """Il primo della fila, quello che parte dopo l'analisi in corso."""
+        with self._lock:
+            return str(self._coda[0]) if self._coda else None
 
     @property
     def al_lavoro(self) -> bool:
@@ -4253,7 +4318,9 @@ def _contenuto_fine_coda(lancio: dict) -> None:
     # "Non completati" sono QUATTRO cose diverse: falliti, non pianificabili,
     # fermati a mano col Ferma per-file, e mai cominciati (la coda fermata
     # prima che ci arrivasse).
-    falliti = [(n, "fallito") for n in lancio.get("falliti") or []]
+    difettosi = set(lancio.get("difettosi") or [])
+    falliti = [(n, "difettoso" if n in difettosi else "fallito")
+               for n in lancio.get("falliti") or []]
     falliti += [(n, "fermato") for n in lancio.get("interrotti") or []]
     falliti += [(n, "scartato") for n in lancio.get("scartati") or []]
     falliti += [(n, "non_avviato") for n in _non_avviati(lancio)]
@@ -4399,6 +4466,7 @@ def _contenuto_taratura() -> None:
         st.markdown("<span class='au-tar-passo au-tar-p2'></span>", unsafe_allow_html=True)
         _taratura_viva()
         if st.button(t("lav.tar_chiudi_continua"), key="tarChiudiContinua"):
+            _chiudi_taratura()
             st.rerun()
         return
     if stato in (taratura.FINITA, taratura.FALLITA, taratura.INTERROTTA) and not s.get("seen"):
@@ -4451,6 +4519,7 @@ def _taratura_intro() -> None:
                     unsafe_allow_html=True)
     with st.container(key="tarAzioni", horizontal=True):
         if st.button(t("lav.chiudi") if occupata else t("lav.tar_non_ora"), key="tarNonOra"):
+            _chiudi_taratura()
             st.rerun()
         if st.button(t("lav.tar_avvia"), type="primary", key="tarAvvia", disabled=occupata):
             taratura.avvia_fondo()
@@ -4540,6 +4609,7 @@ def _taratura_esito(s: dict) -> None:
         unsafe_allow_html=True)
     with st.container(key="tarAzioni", horizontal=True):
         if st.button(t("lav.chiudi"), type="primary", key="tarChiudi"):
+            _chiudi_taratura()
             _taratura_vista()
             st.rerun()
 
@@ -4556,6 +4626,7 @@ def _taratura_fallita(s: dict) -> None:
         if st.button(t("lav.tar_mostra_log"), key="tarLog", type="tertiary"):
             subprocess.run(["open", "-R", str(PATHS.cache / "calibration.log")], check=False)
         if st.button(t("lav.chiudi"), key="tarChiudiErr"):
+            _chiudi_taratura()
             _taratura_vista()
             st.rerun()
         if st.button(t("lav.tar_riprova"), type="primary", key="tarRiprova"):
@@ -4565,12 +4636,29 @@ def _taratura_fallita(s: dict) -> None:
 
 
 # Come per la fine coda: il titolo si traduce all'apertura, non all'avvio.
+def _chiudi_taratura() -> None:
+    st.session_state.pop("tar_aperta", None)
+
+
 def _modale_taratura() -> None:
+    """La finestra della taratura, una volta per giro.
+
+    Resta aperta da un giro all'altro (`tar_aperta`): il cronometro, a giro
+    finito, chiede un giro completo della pagina, e una modale aperta solo
+    dal clic su un pulsante spariva proprio quando doveva mostrare i
+    risultati. Si chiude coi suoi pulsanti, con la X o con ESC.
+    """
+    giro = st.session_state.get("_giro")
+    if st.session_state.get("tar_giro") == giro:
+        return
+    st.session_state["tar_giro"] = giro
+    st.session_state["tar_aperta"] = True
     st.markdown("<style>" + "".join(
         f'[role="dialog"]:has(.au-tar-p{n}) h2::after '
         f'{{ content: "{t("lav.tar_passo", n=n, totale=3)}"; }}'
         for n in (1, 2, 3)) + "</style>", unsafe_allow_html=True)
-    st.dialog(t("lav.tar_titolo"), width="medium")(_contenuto_taratura)()
+    st.dialog(t("lav.tar_titolo"), width="medium",
+              on_dismiss=_chiudi_taratura)(_contenuto_taratura)()
 
 
 def _chiedi_aggiornamento() -> None:
@@ -4805,6 +4893,15 @@ def sidebar() -> dict:
     for chiave, valore in salvate.items():
         st.session_state.setdefault(f"w_{chiave}", valore)
     fabbrica = _predefiniti()
+    # Il valore di fabbrica dello spazio segue lo spazio libero, che cambia
+    # mentre si lavora. Chi non l'ha mai toccato lo segue anche lui: prima
+    # restava al numero di inizio sessione e «Avanzate» diceva «1 cambiata»
+    # senza che nessuno avesse cambiato niente.
+    _disco_prec = st.session_state.get("disco_fabbrica_prec")
+    if (_disco_prec is not None and st.session_state.get("w_disco") == _disco_prec
+            and fabbrica.get("disco") != _disco_prec and _motivo_blocco() is None):
+        st.session_state["w_disco"] = fabbrica["disco"]
+    st.session_state["disco_fabbrica_prec"] = fabbrica.get("disco")
     app = os.environ.get("ANIMEUP_APP") == "1"
     regole: list[str] = []
 
@@ -5445,7 +5542,9 @@ def page_sorgenti(cfg: dict) -> None:
                     f"{t('src.riga_in_corso')}</div><div class='au-analisi-barra'>"
                     "<span></span></div>", unsafe_allow_html=True)
             elif str(path) in in_coda:
-                prossimo = in_coda and str(path) == in_coda[0]
+                # `in_coda` e' un insieme, senza un primo: indicizzarlo faceva
+                # cadere la pagina con due file da analizzare (il primo avvio).
+                prossimo = str(path) == analizzatore().prossimo
                 c[3].markdown(
                     "<div class='au-analisi-coda'><span></span>"
                     f"{t('src.riga_in_coda')}"
@@ -5717,6 +5816,17 @@ def page_confronto(cfg: dict) -> None:
     nomi = {f["path"]: f["name"] for f in files}
     if st.session_state.get("file_confronto") not in percorsi:
         st.session_state.pop("file_confronto", None)
+    # Streamlit butta lo stato di un widget che un giro non disegna: andando
+    # su un'altra scheda e tornando, la tendina ripartiva dal primo file e i
+    # risultati del confronto sembravano persi. Lo specchio `conf_file` la
+    # rimette dov'era; senza, si parte dal file del confronto in corso o
+    # dell'ultimo fatto.
+    if "file_confronto" not in st.session_state:
+        ricordato = st.session_state.get("conf_file")
+        if ricordato not in percorsi:
+            ricordato = (confronto.stato() or {}).get("file")
+        if ricordato in percorsi:
+            st.session_state["file_confronto"] = ricordato
     # Il file e i suoi tre numeri in un riquadro solo: cosa si prova, da che
     # risoluzione, a quale, e quanto costerebbe l'episodio intero.
     with st.container(key="fileCard", horizontal=True):
@@ -5727,6 +5837,7 @@ def page_confronto(cfg: dict) -> None:
                                      key="file_confronto",
                                      format_func=lambda pth: nomi[pth],
                                      label_visibility="collapsed")
+            st.session_state["conf_file"] = prescelto
         entry = next(f for f in files if f["path"] == prescelto)
         path = Path(entry["path"])
         posto_stat = st.empty()
@@ -8649,6 +8760,13 @@ def _applica_tema(scelta: str) -> None:
     """
     if scelta not in tema.SCELTE:
         scelta = tema.SISTEMA
+    # Cambiato il tema a sessione aperta, il ricaricamento che segue apre una
+    # sessione nuova: selezione e modelli scelti file per file sparivano.
+    # Si mettono da parte qui e la sessione nuova li riprende.
+    prima = st.session_state.get("tema_applicato")
+    st.session_state["tema_applicato"] = scelta
+    if prima is not None and prima != scelta:
+        _metti_da_parte_sessione()
     st.markdown(f"<style>{tema.css(scelta)}</style>", unsafe_allow_html=True)
     voluto = json.dumps(tema.streamlit(scelta))
     st.iframe(
@@ -8659,7 +8777,78 @@ def _applica_tema(scelta: str) -> None:
         "W.location.reload();}}catch(e){}</script>", height=1)
 
 
+# Le scelte della pagina che un ricaricamento non deve perdere.
+_DA_TENERE = ("coda", "modelli", "scelte_modello", "rifai_comunque", "conf_file",
+              "sezione")
+
+
+def _file_sessione() -> Path:
+    return PATHS.cache / "ui-session.json"
+
+
+def _metti_da_parte_sessione() -> None:
+    dati = {}
+    for chiave in _DA_TENERE:
+        if chiave in st.session_state:
+            v = st.session_state[chiave]
+            dati[chiave] = {"set": sorted(v)} if isinstance(v, set) else v
+    try:
+        _file_sessione().parent.mkdir(parents=True, exist_ok=True)
+        _file_sessione().write_text(json.dumps({"quando": time.time(), "dati": dati}))
+    except (OSError, TypeError, ValueError):
+        pass
+
+
+def _riprendi_sessione() -> None:
+    """Una sessione nuova, nata da un cambio di tema: riprende le scelte."""
+    if st.session_state.get("_sessione_ripresa"):
+        return
+    st.session_state["_sessione_ripresa"] = True
+    try:
+        salvata = json.loads(_file_sessione().read_text())
+        _file_sessione().unlink(missing_ok=True)
+    except (OSError, ValueError):
+        return
+    if not isinstance(salvata, dict) or time.time() - float(salvata.get("quando") or 0) > 60:
+        return
+    for chiave, v in (salvata.get("dati") or {}).items():
+        if chiave in _DA_TENERE and chiave not in st.session_state:
+            st.session_state[chiave] = set(v["set"]) if isinstance(v, dict) and "set" in v else v
+
+
+@st.fragment(run_every=4)
+def _sentinella() -> None:
+    """Ridisegna la pagina quando cambia qualcosa che nessuno sta guardando.
+
+    La pagina vuota promette che i video copiati nella cartella «compaiono
+    qui in pochi secondi», ma a pagina ferma niente la rieseguiva: i file
+    nuovi restavano invisibili e la barra dei passi bloccata. Lo stesso per
+    un confronto o una taratura finiti mentre si guardava un'altra scheda: la
+    sidebar restava bloccata finche' non si cliccava qualcosa. Qui si guarda
+    poco e spesso (un elenco della cartella, due file di stato); il giro
+    completo parte solo quando qualcosa cambia davvero.
+    """
+    from animeup.library import VIDEO_EXTENSIONS
+    try:
+        cartella = tuple(sorted(
+            (e.name, e.stat().st_size, e.stat().st_mtime_ns)
+            for e in os.scandir(PATHS.input)
+            if e.is_file() and Path(e.name).suffix.lower() in VIDEO_EXTENSIONS))
+    except OSError:
+        cartella = ()
+    firma = (cartella, confronto.in_corso(), taratura.in_corso(),
+             monitor.lancio_vivo())
+    prima = st.session_state.get("firma_sentinella")
+    st.session_state["firma_sentinella"] = firma
+    if prima is not None and firma != prima:
+        if prima[0] != cartella:
+            load_library.clear()
+        st.rerun(scope="app")
+
+
 def main() -> None:
+    st.session_state["_giro"] = st.session_state.get("_giro", 0) + 1
+    _riprendi_sessione()
     try:
         PATHS.ensure_dirs()
     except OSError:
@@ -8752,6 +8941,11 @@ def main() -> None:
         page_confronto(cfg)
     else:
         page_lavorazione(cfg)
+    # La taratura riaperta a ogni giro finche' non la si chiude (vedi
+    # `_modale_taratura`); mai insieme al resoconto: una modale alla volta.
+    if st.session_state.get("tar_aperta") and not st.session_state.get("fine_da_mostrare"):
+        _modale_taratura()
+    _sentinella()
 
 
 main()
