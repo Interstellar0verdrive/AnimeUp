@@ -3221,6 +3221,122 @@ STYLE = f"""
   .st-key-tornaClip button, .st-key-avantiLavorazione button {{ height: 40px; padding: 0 18px;
       white-space: nowrap; }}
 
+  /* ===================================================================
+     Redesign 1.6 — Lavorazione.
+     =================================================================== */
+  .au-sotto-lav {{ max-width: calc(100% - 260px); }}
+  /* «Stesso modello per tutti» sta sulla riga del titolo, a destra. */
+  .st-key-sceltaTutti {{ position: absolute; right: 0; margin-top: -58px;
+      width: 220px !important; z-index: 2; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-sceltaTutti),
+  [data-testid="stVerticalBlock"]:has(> [data-testid="stLayoutWrapper"] > .st-key-sceltaTutti) {{
+      position: relative; }}
+  .st-key-sceltaTutti [role="group"] {{ background: var(--surface);
+      border: 1px solid var(--borderStrong); border-radius: 8px; min-height: 38px; }}
+  .st-key-barra {{ left: 360px !important; padding: 14px 40px !important;
+      background: rgb(var(--bgRgb) / .96) !important; box-shadow: none !important;
+      border-top: 1px solid var(--borderColor) !important; }}
+  .st-key-barra::before {{ display: none; }}
+
+  /* La riga al lavoro: niente piu' "sollevata" (zoom), un bordo ciano
+     intero e un fondo appena velato; dentro, barra, tappe e dettaglio. */
+  [class*="st-key-jrow"]:has(.au-tag.au-busy) {{ transform: none !important;
+      box-shadow: none !important; border: 1px solid var(--primary) !important;
+      border-left-width: 3px !important; background: rgb(var(--primaryRgb) / .05) !important;
+      margin: 0 !important; }}
+  .au-riga-avanz {{ padding: 4px 0 0 48px; }}
+  .au-riga-testa {{ display: flex; align-items: center; gap: 14px; }}
+  .au-riga-testa .au-riga-barra {{ flex: 1; margin: 0; }}
+  .au-riga-testa b {{ font: 500 12.5px var(--mono); color: var(--primaryText); }}
+  .au-riga-tappe {{ display: flex; align-items: center; gap: 18px; margin-top: 10px;
+      font-size: 12.5px; color: var(--textSecondary); }}
+  .au-tappa {{ display: inline-flex; align-items: center; gap: 6px; }}
+  .au-tappa-fatta {{ color: var(--greenText); }}
+  .au-tappa-fatta i {{ font-style: normal; }}
+  .au-tappa-ora {{ color: var(--textPrimary); font-weight: 600; }}
+  .au-punto-ora {{ width: 7px; height: 7px; border-radius: 50%; background: var(--primary);
+      box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .2); }}
+  .au-tappa + .au-tappa::before {{ content: ""; width: 24px; height: 1px;
+      background: var(--borderStrong); margin-right: 12px; }}
+  .au-riga-misure {{ margin-left: auto; font: 400 12px var(--mono); color: var(--textCode); }}
+  .au-riga-dett {{ margin-top: 10px; padding: 8px 12px; border-radius: 6px;
+      background: var(--insetBackground); border: 1px solid var(--borderColor);
+      font: 400 11.5px var(--mono); color: var(--textCode); }}
+  [class*="st-key-log_"] {{ margin: -38px 12px 0 auto; width: auto !important;
+      position: relative; z-index: 2; }}
+  [class*="st-key-log_"] button {{ min-height: 0; padding: 0; text-decoration: underline;
+      color: var(--textSecondary) !important; font-size: 12px; }}
+
+  .au-riga-avanz {{ padding-right: 18px; box-sizing: border-box; }}
+  [class*="st-key-log_"] {{ margin-top: -34px; margin-right: 30px; }}
+  .st-key-barra [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:last-child
+      [data-testid="stHorizontalBlock"] {{ justify-content: flex-end; gap: 10px; }}
+  .st-key-barra button {{ min-height: 40px; height: 40px; padding: 0 18px;
+      white-space: nowrap; }}
+  .st-key-barra button p {{ font-size: 14px; font-weight: 600; }}
+  .st-key-pausa_tutto button, [class*="st-key-riprendi_tutto"] button {{
+      background: transparent !important; border: 1px solid var(--borderStrong) !important;
+      color: var(--textPrimary) !important; }}
+
+  /* Il resoconto di fine coda. */
+  .au-fine-testa {{ display: flex; align-items: center; gap: 14px; }}
+  .au-fine-testa b {{ display: block; font-size: 20px; font-weight: 600; }}
+  .au-fine-testa span {{ font-size: 13px; color: var(--textSecondary); }}
+  .au-fine-icona {{ width: 40px; height: 40px; flex: none; box-sizing: border-box;
+      border-radius: 50%; background: var(--greenBg); border: 1.5px solid var(--green);
+      color: var(--greenText); display: inline-flex; align-items: center;
+      justify-content: center; font-weight: 700; }}
+  .au-fine-icona.au-giallo {{ background: var(--yellowBg); border-color: var(--yellow);
+      color: var(--yellowText); }}
+  .au-fine-cifre {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px; margin-top: 18px; }}
+  .au-fine-cifre > div {{ padding: 10px 12px; border-radius: 8px;
+      background: var(--insetBackground); border: 1px solid var(--borderColor);
+      display: flex; flex-direction: column; gap: 6px; }}
+  .au-fine-cifre span {{ font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--textTertiary); }}
+  .au-fine-cifre b {{ font: 500 16px var(--mono); }}
+  .au-fine-sez {{ display: flex; align-items: center; gap: 8px; margin-top: 10px;
+      font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--textCode); }}
+  .au-fine-sez.au-giallo {{ color: var(--yellowText); }}
+  .au-fine-sez.au-giallo span {{ width: 6px; height: 6px; border-radius: 50%;
+      background: var(--yellow); }}
+  [class*="st-key-fineAvviso"], [class*="st-key-fineGuaio"] {{ flex-wrap: nowrap;
+      padding: 10px 12px !important; border-radius: 8px; gap: 12px !important; }}
+  [class*="st-key-fineAvviso"] {{ background: var(--yellowBg);
+      border: 1px solid rgb(var(--yellowRgb) / .35); }}
+  [class*="st-key-fineGuaio"] {{ background: var(--surface); border: 1px solid var(--borderColor); }}
+  [class*="st-key-fineAvviso"] > div:first-child, [class*="st-key-fineGuaio"] > div:first-child {{
+      flex: 1 1 auto; min-width: 0; }}
+  [class*="st-key-fineMostra"] {{ flex: none; width: auto !important; }}
+  [class*="st-key-fineMostra"] button {{ min-height: 28px; height: 28px; padding: 0 10px; }}
+  [class*="st-key-fineAvviso"] [class*="st-key-fineMostra"] button {{
+      border-color: rgb(var(--yellowRgb) / .45) !important; color: var(--yellowText) !important;
+      background: transparent !important; }}
+  .au-fine-voce b {{ display: flex; align-items: center; gap: 8px; font-size: 13.5px;
+      font-weight: 600; }}
+  .au-fine-voce span {{ display: block; font-size: 12.5px; line-height: 1.45;
+      color: var(--textSecondary); margin-top: 2px; }}
+  [class*="st-key-fineAvviso"] .au-fine-voce span {{ color: var(--yellowText); }}
+  .au-motivo {{ font: normal 400 11px var(--mono); padding: 1px 8px; border-radius: 999px;
+      border: 1px solid var(--borderStrong); color: var(--textSecondary);
+      background: var(--surfaceHover); }}
+  .au-motivo-fallito {{ color: var(--redText); background: var(--redBg);
+      border-color: rgb(var(--redRgb) / .3); }}
+  .au-fine-righe > div {{ display: flex; align-items: center; padding: 9px 0;
+      border-bottom: 1px solid var(--borderColor); font-size: 13.5px; }}
+  .au-fine-righe > div:last-child {{ border-bottom: 0; }}
+  .au-fine-righe code {{ margin-left: auto; font: 400 12px var(--mono) !important;
+      color: var(--textCode) !important; background: none !important; padding: 0 !important; }}
+  .st-key-cFineAzioni {{ flex-wrap: nowrap; gap: 10px !important; margin-top: 8px; }}
+  .st-key-cFineAzioni .st-key-fineLog {{ margin-right: auto; }}
+  .st-key-cFineAzioni [class*="st-key-fine"] {{ width: auto !important; flex: none; }}
+  .st-key-fineLog button {{ text-decoration: underline; color: var(--textSecondary) !important;
+      padding: 0; min-height: 0; }}
+  .st-key-fineChiudi button, .st-key-fineFinder button {{ height: 38px; padding: 0 16px;
+      white-space: nowrap; }}
+
 </style>
 """
 st.markdown(STYLE, unsafe_allow_html=True)
@@ -3926,44 +4042,37 @@ def _contenuto_fine_coda(lancio: dict) -> None:
 
     Compare una volta sola, alla prima apertura utile: se AnimeUp era chiuso
     quando la coda e' finita, si vede al ritorno. Chiudendola si svuota anche
-    la selezione — senza, la lista restava con tutto spuntato e per giunta
-    con l'avviso che quei file sono gia' stati lavorati, cioe' l'app che
-    rimprovera all'utente di aver fatto quello che gli aveva chiesto lei.
+    la selezione. Gli avvisi si dicono file per file (vengono dalla pagella
+    di ciascuno) e restano gialli; i file non completati si elencano col
+    motivo, e solo un fallimento vero e' rosso.
     """
     riusciti = list(lancio.get("riusciti") or [])
-    # "Non completati" sono TRE cose diverse che all'utente interessano allo
-    # stesso modo: falliti, non pianificabili, e fermati a mano col Ferma
-    # per-file. Questi ultimi sparivano da ogni conteggio, e la modale
-    # festeggiava una coda in cui un file era stato interrotto.
-    falliti = (list(lancio.get("falliti") or [])
-               + list(lancio.get("scartati") or [])
-               + list(lancio.get("interrotti") or []))
-    previsti = list(lancio.get("previsti") or []) or riusciti + falliti
+    # "Non completati" sono TRE cose diverse: falliti, non pianificabili, e
+    # fermati a mano col Ferma per-file.
+    falliti = [(n, "fallito") for n in lancio.get("falliti") or []]
+    falliti += [(n, "fermato") for n in lancio.get("interrotti") or []]
+    falliti += [(n, "scartato") for n in lancio.get("scartati") or []]
+    previsti = list(lancio.get("previsti") or []) or riusciti + [n for n, _m in falliti]
     n_ok, n_tot = len(riusciti), len(previsti)
     secondi = float(lancio.get("secondi") or 0)
     orologio = float(lancio.get("fine") or 0) - float(lancio.get("inizio") or 0)
+    # Gli avvisi di ciascun file, dalla sua pagella.
+    esiti = monitor.esiti()
+    con_avvisi = []
+    for nome in riusciti:
+        esito = esiti.get(monitor.chiave_nome(nome)) or {}
+        if esito.get("avvisi"):
+            con_avvisi.append((nome, list(esito["avvisi"])))
+    n_avvisi = sum(len(a) for _n, a in con_avvisi) or int(lancio.get("avvisi") or 0)
 
-    # `<b>` e non `**`: qui il markdown non passa, e gli asterischi si
-    # vedevano tali e quali.
-    st.markdown(
-        f"<div class='au-fine-testa'>"
-        f"{tn('lav.fine_completati', n_ok, totale=n_tot)}<br>"
-        f"{t('lav.fine_tempo', durata=stima_hm(secondi))}</div>",
-        unsafe_allow_html=True)
-
+    quando = ""
     if lancio.get("inizio") and lancio.get("fine"):
         da = time.localtime(lancio["inizio"])
         a = time.localtime(lancio["fine"])
-        # Una maratona che passa la mezzanotte diceva "dalle 19:39 alle
-        # 17:46", che si legge come un orario sbagliato. Il giorno compare
-        # solo quando serve a capire.
-        # «Dalle 04:34 alle 14:37» non dice di COSA siano quegli orari, e
-        # sotto una riga che parla di tempo di lavorazione si legge come un
-        # secondo conteggio invece che come il periodo in cui si e' lavorato
-        # (detto dall'utente il 12/08). I due verbi lo dicono e basta.
+        # Una maratona che passa la mezzanotte: il giorno compare solo quando
+        # serve a capire.
         if (da.tm_year, da.tm_yday) == (a.tm_year, a.tm_yday):
-            quando = t("lav.fine_stesso_giorno",
-                       inizio=time.strftime('%H:%M', da),
+            quando = t("lav.fine_orari", inizio=time.strftime('%H:%M', da),
                        fine=time.strftime('%H:%M', a))
         else:
             giorno = t("lav.fmt_giorno")
@@ -3972,68 +4081,85 @@ def _contenuto_fine_coda(lancio: dict) -> None:
                        inizio=time.strftime('%H:%M', da),
                        giorno_fine=time.strftime(giorno, a),
                        fine=time.strftime('%H:%M', a))
-        st.markdown(f"<div class='au-fine-quando'>{quando}</div>",
-                    unsafe_allow_html=True)
-
-    # Le cifre in colonna, una per riga: di fila su una riga sola erano un
-    # elenco da decifrare, incolonnate si leggono a colpo d'occhio.
+    sotto = (tn("lav.fine_sotto_avvisi", len(con_avvisi), n=n_ok, totale=n_tot, a=len(con_avvisi))
+             if con_avvisi else t("lav.fine_sotto", n=n_ok, totale=n_tot))
+    icona = (f"<span class='au-fine-icona au-giallo'>!</span>" if falliti else
+             f"<span class='au-fine-icona'>{_svg(_I_SPUNTA, 16, 2.4)}</span>")
     respiro = orologio - secondi
-    n_avvisi = int(lancio.get("avvisi") or 0)
-    voci: list[tuple[str, str]] = []
+    cifre = [(t("lav.fine_lavorazione"), stima_hm(secondi))]
     if n_ok > 1:
-        voci.append((t("lav.fine_medio"), stima_hm(secondi / n_ok)))
+        cifre.append((t("lav.fine_per_file"), stima_hm(secondi / n_ok)))
     if respiro > 90:
-        voci.append((t("lav.fine_pause"), stima_hm(respiro)))
-    # `is not None` e non la verita' del valore: una deduplica misurata allo
-    # ZERO — attiva, ma su questo materiale non ha trovato niente — e' un
-    # risultato, e sparendo dal resoconto diventava indistinguibile da
-    # «deduplica spenta», che scrive `null`. Sono due cose diverse e chi
-    # legge deve poterle distinguere.
-    if lancio.get("dedup_medio") is not None:
-        voci.append((t("lav.fine_dedup"),
-                     f"{float(lancio['dedup_medio']):.1%}".replace(
-                         ".", t("lav.fmt_decimale"))))
-    voci.append((t("lav.fine_avvisi"), str(n_avvisi)))
+        cifre.append((t("lav.fine_pause"), stima_hm(respiro)))
     st.markdown(
-        "<div class='au-fine-stat'>"
-        + "".join(f"<div><span>{esc(k)}</span><span>{esc(v)}</span></div>"
-                  for k, v in voci)
+        f"<div class='au-fine-testa'>{icona}<div><b>{t('lav.fine_titolo')}</b>"
+        f"<span>{sotto}{' · ' + quando if quando else ''}</span></div></div>"
+        "<div class='au-fine-cifre'>" + "".join(
+            f"<div><span>{esc(k)}</span><b>{esc(v)}</b></div>" for k, v in cifre)
         + "</div>", unsafe_allow_html=True)
 
-    if falliti:
+    def _mostra(nome: str) -> None:
+        st.session_state["scorri_riga"] = nome
+        st.session_state["sezione"] = SEZIONI[2]
+        _chiudi()
+
+    if con_avvisi:
+        quanti_file = len(con_avvisi)
         st.markdown(
-            f"<div class='au-fine-guai'>"
-            f"{tn('lav.fine_non_completati', len(falliti))}</div>"
-            + "".join(f"<div class='au-fine-nome'>{esc(n)}</div>"
-                      for n in falliti[:4])
-            + (f"<div class='au-fine-quando'>"
-               f"{t('lav.fine_e_altri', n=len(falliti) - 4)}</div>"
-               if len(falliti) > 4 else ""),
-            unsafe_allow_html=True)
+            "<div class='au-fine-sez au-giallo'><span></span>"
+            + (t("lav.fine_avvisi_su_uno", a=n_avvisi) if quanti_file == 1
+               else t("lav.fine_avvisi_su", a=n_avvisi, f=quanti_file))
+            + "</div>", unsafe_allow_html=True)
+        for i, (nome, avvisi) in enumerate(con_avvisi[:4]):
+            with st.container(key=f"fineAvviso{i}", horizontal=True):
+                st.markdown(f"<div class='au-fine-voce'><b>{esc(nome)}</b>"
+                            f"<span>{esc(' '.join(str(a) for a in avvisi))}</span></div>",
+                            unsafe_allow_html=True)
+                st.button(t("lav.fine_mostra"), key=f"fineMostraA{i}",
+                          on_click=_mostra, args=(nome,))
+    if falliti:
+        st.markdown(f"<div class='au-fine-sez'>{tn('lav.fine_non_completati', len(falliti))}</div>",
+                    unsafe_allow_html=True)
+        for i, (nome, motivo) in enumerate(falliti[:4]):
+            with st.container(key=f"fineGuaio{i}", horizontal=True):
+                st.markdown(
+                    f"<div class='au-fine-voce'><b><em class='au-motivo au-motivo-{motivo}'>"
+                    f"{t('lav.fine_motivo_' + motivo)}</em>{esc(nome)}</b>"
+                    f"<span>{t('lav.fine_testo_' + motivo)}</span></div>",
+                    unsafe_allow_html=True)
+                st.button(t("lav.fine_mostra"), key=f"fineMostraG{i}",
+                          on_click=_mostra, args=(nome,))
+        if len(falliti) > 4:
+            st.markdown(f"<div class='au-fine-quando'>{t('lav.fine_e_altri', n=len(falliti) - 4)}</div>",
+                        unsafe_allow_html=True)
+    righe = []
+    if lancio.get("dedup_medio") is not None:
+        righe.append((t("lav.fine_dedup"),
+                      f"{float(lancio['dedup_medio']):.1%}".replace(".", t("lav.fmt_decimale"))))
+    righe.append((t("lav.fine_salvati"), _breve(PATHS.output)))
+    st.markdown("<div class='au-fine-righe'>" + "".join(
+        f"<div><span>{esc(k)}</span><code>{esc(v)}</code></div>" for k, v in righe)
+        + "</div>", unsafe_allow_html=True)
 
     def _chiudi() -> None:
         # Il segno vive su disco per sopravvivere ai riavvii; il doppione in
-        # sessione (`fine_vista`) e' il paracadute per il caso in cui la
-        # cartella dei registri non sia scrivibile, che altrimenti farebbe
-        # riaprire questa finestra a ogni giro, per sempre.
+        # sessione (`fine_vista`) e' il paracadute se i registri non sono
+        # scrivibili.
         _segna_lancio_visto(lancio)
         st.session_state["fine_da_mostrare"] = None
 
-    with st.container(key="cFineAzioni"):
-        a, b = st.columns(2)
-        if a.button(t("lav.fine_apri"), type="primary",
-                    use_container_width=True):
+    with st.container(key="cFineAzioni", horizontal=True, vertical_alignment="center"):
+        if st.button(t("lav.fine_log"), key="fineLog", type="tertiary"):
+            subprocess.run(["open", str(PATHS.job_logs)], check=False)
+        if st.button(t("lav.chiudi"), key="fineChiudi"):
+            _chiudi()
+            st.rerun()
+        if st.button(t("lav.fine_apri"), key="fineFinder", type="primary"):
             subprocess.run(["open", str(PATHS.output)], check=False)
             _chiudi()
             st.rerun()
-        if b.button(t("lav.chiudi"), use_container_width=True):
-            _chiudi()
-            st.rerun()
 
-    # I palloncini SOLO quando e' andato tutto bene: dopo venti ore di
-    # maratona riuscita ci stanno, sopra un file fallito sarebbero una pacca
-    # sulla spalla fuori luogo. Una volta sola, o tornerebbero a ogni giro
-    # della pagina finche' la modale resta aperta.
+    # I palloncini SOLO quando e' andato tutto bene, una volta sola.
     if not falliti and n_ok and not st.session_state.get("fine_festeggiata"):
         st.session_state["fine_festeggiata"] = True
         st.balloons()
@@ -6095,6 +6221,14 @@ def page_lavorazione(cfg: dict) -> None:
     if not files:
         st.info(t("lav.vuoto"))
         return
+    # «Mostra» nel resoconto di fine coda porta alla riga di quel file.
+    if (nome := st.session_state.pop("scorri_riga", None)):
+        st.iframe(
+            "<script>setTimeout(()=>{const D=window.parent.document;"
+            f"const n={json.dumps(nome)};"
+            "for(const e of D.querySelectorAll('.au-name')){"
+            "if(e.textContent.trim()===n){e.scrollIntoView({behavior:'smooth',"
+            "block:'center'});break;}}},700);</script>", height=1)
     # Il corpo è un fragment: con un lavoro vivo si riaggiorna da solo ogni
     # 5 secondi, così le barre DENTRO le righe avanzano; da fermo niente
     # auto-refresh, che chiuderebbe le tendine mentre le usi. Un fragment
@@ -6386,12 +6520,52 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
         campioni, stati, [(lav.cartella.name, lav.fase, lav.fatti)],
         time.time())
     dett = _avanzamento_testo(lav, campioni, stati, turno)
+    quota = _riempimento(lav)
+    # Le tre tappe, con quella in corso evidenziata: estrazione, upscale (che
+    # si alterna con la codifica dei blocchi), codifica finale e montaggio.
+    corrente = {"estrazione": 1, "elaborazione": 2, "codifica blocco": 2,
+                "codifica finale": 3}.get(lav.fase, 2)
+    nomi = [t("lav.tappa1"),
+            t("lav.tappa2_cpu") if lav.fase == "codifica blocco" else t("lav.tappa2"),
+            t("lav.tappa3")]
+    tappe = []
+    for n, nome in enumerate(nomi, start=1):
+        stato = "fatta" if n < corrente else "ora" if n == corrente else "dopo"
+        segno = ("<i>✓</i>" if stato == "fatta" else "<i class='au-punto-ora'></i>"
+                 if stato == "ora" else "")
+        tappe.append(f"<span class='au-tappa au-tappa-{stato}'>{segno}{n} {esc(nome)}</span>")
+    misure = []
+    if lav.fase == "elaborazione" and lav.totale:
+        ritmo = monitor.andatura(campioni.get(lav.cartella.name, []))
+        resta = _resto_misurato(lav, campioni, stati, turno, ritmo=ritmo)
+        if ritmo and resta is not None:
+            misure += [f"~{ritmo:.1f} fps", t("lav.av_restano", resta=hms(resta))]
+    if monitor.trascorso(lav):
+        misure.append(t("lav.av_trascorsi", trascorso=monitor.trascorso(lav)))
+    # Il dettaglio sotto: fotogrammi e blocco (cioe' quanto manca al prossimo
+    # punto di salvataggio, il momento giusto per un Ferma indolore). Nelle
+    # fasi di codifica resta la frase completa, che dice cose sue.
+    if lav.fase == "elaborazione" and lav.totale:
+        pezzi = [t("lav.riga_fotogrammi", fatti=lav.fatti, totale=lav.totale)]
+        if lav.blocchi_totali:
+            pezzi += [t("lav.av_nel_blocco", fatti=lav.blocco_fatti,
+                        totale=lav.blocco_totale, n=lav.blocco_n,
+                        blocchi=lav.blocchi_totali), t("lav.sicuro")]
+        dettaglio = " · ".join(pezzi)
+    else:
+        dettaglio = dett
     st.markdown(
         f"<div class='au-riga-avanz'>"
-        f"<div class='au-riga-barra'>"
-        f"<span style='width:{_riempimento(lav) * 100:.1f}%'></span></div>"
-        f"<span class='au-meta'>{esc(dett)}</span></div>",
+        f"<div class='au-riga-testa'><div class='au-riga-barra'>"
+        f"<span style='width:{quota * 100:.1f}%'></span></div>"
+        f"<b>{quota:.0%}</b></div>"
+        f"<div class='au-riga-tappe'>{''.join(tappe)}"
+        f"<span class='au-riga-misure'>{esc(' · '.join(misure))}</span></div>"
+        f"<div class='au-riga-dett'>{esc(dettaglio)}</div></div>",
         unsafe_allow_html=True)
+    if lav.registro is not None:
+        if st.button(t("lav.mostra_log"), key=f"log_{cartella}", type="tertiary"):
+            subprocess.run(["open", "-R", str(lav.registro)], check=False)
 
 
 def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
@@ -6489,15 +6663,13 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
     # dall'utente durante la prima maratona).
     if gpu_occupata:
         st.markdown(
-            f"<div class='au-sezione'>{t('lavb.titolo_in_corso')}</div>"
-            "<div class='au-hint' style='margin-bottom:20px'>"
-            f"{t('lavb.hint_in_corso')}</div>",
+            f"<div class='au-titolo-pagina'>{t('lavb.titolo_in_corso')}</div>"
+            f"<div class='au-sotto-pagina au-sotto-lav'>{t('lavb.hint_in_corso')}</div>",
             unsafe_allow_html=True)
     else:
         st.markdown(
-            f"<div class='au-sezione'>{t('lavb.titolo')}</div>"
-            "<div class='au-hint' style='margin-bottom:20px'>"
-            f"{t('lavb.hint')}</div>",
+            f"<div class='au-titolo-pagina'>{t('lavb.titolo')}</div>"
+            f"<div class='au-sotto-pagina au-sotto-lav'>{t('lavb.hint')}</div>",
             unsafe_allow_html=True)
 
     coda = state("coda", set())
@@ -6606,8 +6778,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
     # di tutto il mondo (deciso dall'utente dopo troppi giri di
     # allineamento fra pulsanti e tendina). Qui resta solo la tendina.
     with st.container(key="sceltaTutti"):
-        m, _ = st.columns([1.8, 6.6])
-        m.selectbox(
+        st.selectbox(
             t("lavb.stesso_modello"), ["auto", *CATALOG],
             index=None, key="modello_tutti",
             on_change=_applica_modello_tutti,
