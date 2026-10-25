@@ -29,18 +29,18 @@ You don't need this page to use AnimeUp. It explains why the model list is what 
 
 ## The candidates
 
-| Model | Family | Licence | Runs in AnimeUp's upscalers? | Speed, 720p frame | Verdict |
-|---|---|---|---|---|---|
-| **animevideov3** *(in AnimeUp)* | Compact | BSD-3 | yes | 191 ms | Thick, clean black lines. Flattens texture; shadows slightly darker. Still the best at 360p. |
-| **Real-CUGAN no-denoise** *(in AnimeUp)* | CUGAN | MIT | yes | 253 ms | The sharpest, but with **light halos** along lines, more contrast, darker shadows. |
-| **AnimeJaNai HD V3 Compact** | Compact | CC BY-NC-SA 4.0 | yes | 183 ms | Very conservative: below 720p it's little more than a cleaned-up Lanczos and leaves compression blocks visible. The most faithful colours. Made for 1080p to 4K, not tested here. |
-| **HFA2kAVCCompact** | Compact | CC BY 4.0 | yes | 183 ms | A **checkerboard pattern** in saturated reds at 480p (hair). Ruled out. |
-| **Futsuu Anime** | Compact | WTFPL | yes | 183 ms | Dark, clean lines, holds up well. In practice a slightly less flattened animevideov3: no clear gain. |
-| **ModernSpanimation V1** | SPAN | MIT | no | 254 ms | Soft, "painterly", a **green cast in the shadows**. As slow as Real-CUGAN. Ruled out. |
-| **Fallin Soft** | CUGAN fast | **CC BY 4.0** | no | **104 ms** | Clean lines, no halos, hatching kept, shadows close to the source. Softer than Real-CUGAN, more faithful. |
-| **Adore** | CUGAN fast ("pro") | CC BY-NC-SA 4.0 | no | **107 ms** | The cleanest, a little sharper than Fallin, no halos, no average colour shift. |
+| Model | Runs today | 720p frame | Verdict |
+|---|---|---|---|
+| **animevideov3** *(in AnimeUp)*<br><small>Compact · BSD-3</small> | yes | 191 ms | Thick, clean black lines. Flattens texture; shadows slightly darker. Still the best at 360p. |
+| **Real-CUGAN no-denoise** *(in AnimeUp)*<br><small>CUGAN · MIT</small> | yes | 253 ms | The sharpest, but with **light halos** along lines, more contrast, darker shadows. |
+| **AnimeJaNai HD V3 Compact**<br><small>Compact · <span style="white-space: nowrap">CC BY-NC-SA 4.0</span></small> | yes | 183 ms | Very conservative: below 720p it's little more than a cleaned-up Lanczos and leaves compression blocks visible. The most faithful colours. Made for 1080p to 4K, not tested here. |
+| **HFA2kAVCCompact**<br><small>Compact · CC BY 4.0</small> | yes | 183 ms | A **checkerboard pattern** in saturated reds at 480p (hair). Ruled out. |
+| **Futsuu Anime**<br><small>Compact · WTFPL</small> | yes | 183 ms | Dark, clean lines, holds up well. In practice a slightly less flattened animevideov3: no clear gain. |
+| **ModernSpanimation V1**<br><small>SPAN · MIT</small> | no | 254 ms | Soft, "painterly", a **green cast in the shadows**. As slow as Real-CUGAN. Ruled out. |
+| **Fallin Soft**<br><small>CUGAN fast · CC BY 4.0</small> | no | **104 ms** | Clean lines, no halos, hatching kept, shadows close to the source. Softer than Real-CUGAN, more faithful. |
+| **Adore**<br><small>CUGAN fast ("pro") · <span style="white-space: nowrap">CC BY-NC-SA 4.0</span></small> | no | **107 ms** | The cleanest, a little sharper than Fallin, no halos, no average colour shift. |
 
-Speeds are for one 720p frame upscaled to 1440p, whole frame on the GPU, median of five runs. As a cross-check, AnimeUp's own upscalers on 48 real 720p frames took 257 ms for animevideov3 and 368 ms for Real-CUGAN: the ranking holds.
+**Runs today** means it runs in the upscalers AnimeUp ships (more on that below). Speeds are for one 720p frame upscaled to 1440p, whole frame on the GPU, median of five runs. As a cross-check, AnimeUp's own upscalers on 48 real 720p frames took 257 ms for animevideov3 and 368 ms for Real-CUGAN: the ranking holds.
 
 ## What the crops show
 
