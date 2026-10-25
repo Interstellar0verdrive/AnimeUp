@@ -206,6 +206,11 @@ st.set_page_config(page_title="AnimeUp", page_icon="▲", layout="wide",
 # contatore, così il numero è un elemento a se' e non tre caratteri dentro
 # una stringa che non si possono impaginare.
 SEZIONI = ["Sorgenti", "Confronto", "Lavorazione"]
+# «Inizio» sta prima dei tre passi ma non e' un passo del lavoro: cartelle,
+# questo Mac e come va un lotto (la vecchia pagina vuota dei Sorgenti,
+# promossa a pagina sua dall'utente). Fuori da SEZIONI, che il resto del
+# codice indicizza per posizione.
+INIZIO = "Inizio"
 
 # Dalla risoluzione più bassa alla più alta, nello stesso verso in cui sono
 # ordinati i modelli: chi legge segue una scala sola invece di saltare avanti
@@ -2829,7 +2834,7 @@ STYLE = f"""
       gap: 0 !important; border: 1px solid var(--borderColor);
       border-radius: 12px; background: var(--surface); }}
   .st-key-passi [class*="st-key-passo"] {{ width: auto !important; }}
-  .st-key-passi button {{ position: relative; width: 250px; height: 55px;
+  .st-key-passi button {{ position: relative; width: 230px; height: 55px;
       min-height: 55px; padding: 0 40px 0 51px !important;
       justify-content: flex-start; text-align: left; border-radius: 8px;
       border: 1px solid transparent !important; background: transparent !important;
@@ -2879,6 +2884,14 @@ STYLE = f"""
       align-items: center; justify-content: center;
       background: var(--primary); color: var(--onPrimary);
       font: 600 11px var(--mono); }}
+  /* Inizio: piu' stretto, senza numero ne' sottotitolo; al posto del
+     numero una casetta, nello stesso cerchio. */
+  .st-key-passi .st-key-passo0 button {{ width: auto; min-width: 0;
+      padding-right: 18px !important; }}
+  .st-key-passo0 button::before {{ content: ""; background: var(--textSecondary); border: 0;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='none' stroke='black' stroke-width='1'/%3E%3Cpath d='M7.5 12 12 8l4.5 4M9 11v5.2h6V11' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
+  .st-key-passo0 button[kind="primary"]::before {{ background: var(--primary);
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cpath d='M7.5 12 12 8l4.5 4M9 11v5.2h6V11' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/mask%3E%3C/defs%3E%3Ccircle cx='12' cy='12' r='12' fill='black' mask='url(%23m)'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
   .au-fasi-stato {{ margin-left: auto; display: flex; align-items: center;
       gap: 8px; font: 400 12px var(--mono); color: var(--textSecondary);
       white-space: nowrap; }}
@@ -2994,6 +3007,9 @@ STYLE = f"""
   /* Il cassetto sotto i 1360px (vedi `_cassetto_sidebar`). */
   #au-cassetto, #au-velo {{ display: none; }}
   @media (max-width: 1100px) {{ .au-fasi-stato {{ display: none; }} }}
+  /* Con Inizio la barra dei passi e' piu' lunga: accanto alla barra laterale
+     lo stato (che ripete il passo 3) ci sta solo da 1480 in su. */
+  @media (min-width: 1361px) and (max-width: 1480px) {{ .au-fasi-stato {{ display: none; }} }}
   @media (max-width: 1360px) {{
     [data-testid="stSidebar"] {{ position: fixed !important; top: 0; bottom: 0; left: 0;
         z-index: 1002; transform: translateX(-100%); transition: transform .2s ease;
@@ -4184,10 +4200,11 @@ def _regole_sottotitolo(classe: str, testo: str, chiusa: bool) -> list[str]:
     due = f'{sel} {{ content: "{"\\A ".join(pezzi)}"; }}'
     serve = _larghezza_sottotitolo(testo) + 2          # un filo di margine
     destra = 14 if chiusa else 40                      # spazio del contatore
-    # Ogni passo e' largo 250px a qualunque finestra: sopra i 1360 c'e' posto
-    # accanto alla barra laterale, sotto la barra diventa un cassetto e la
-    # pagina prende tutta la larghezza (vedi `_cassetto_sidebar`).
-    return [una] if serve <= 250 - 51 - destra else [due]
+    # Ogni passo e' largo 230px a qualunque finestra (250 prima di Inizio,
+    # che ha preso il suo posto): sopra i 1360 c'e' posto accanto alla barra
+    # laterale, sotto la barra diventa un cassetto e la pagina prende tutta
+    # la larghezza (vedi `_cassetto_sidebar`).
+    return [una] if serve <= 230 - 51 - destra else [due]
 
 
 def header() -> str:
@@ -4205,14 +4222,24 @@ def header() -> str:
     # la sessione muore ma l'indirizzo resta, e la pagina si riapre dov'era.
     dal_url = str(st.query_params.get("scheda") or "").capitalize()
     attiva = (st.session_state.get("sezione")
-              or (dal_url if dal_url in SEZIONI else SEZIONI[0]))
-    if stato["vuota"] and attiva != SEZIONI[0]:
+              or (dal_url if dal_url in SEZIONI + [INIZIO] else
+                  INIZIO if stato["vuota"] else SEZIONI[0]))
+    # Senza video i tre passi sono chiusi, Sorgenti compresa: si sta su
+    # Inizio. Arrivati i primi video si passa da soli ai Sorgenti, come
+    # faceva la pagina vuota che si riempiva sotto gli occhi.
+    if stato["vuota"]:
+        attiva = INIZIO
+    elif st.session_state.get("era_vuota") and attiva == INIZIO:
         attiva = SEZIONI[0]
+    st.session_state["era_vuota"] = stato["vuota"]
+    st.session_state["sezione"] = attiva
     regole = []
     with st.container(key="fasi", horizontal=True, vertical_alignment="center"):
         with st.container(key="passi", horizontal=True, gap=None):
+            st.button(t("tab.Inizio"), key="passo0", on_click=_vai, args=(INIZIO,),
+                      type="primary" if attiva == INIZIO else "secondary")
             for i, sezione in enumerate(SEZIONI, start=1):
-                chiusa = stato["vuota"] and i > 1
+                chiusa = stato["vuota"]
                 classe = f".st-key-passo{i} button"
                 st.button(t(f"tab.{sezione}"), key=f"passo{i}",
                           on_click=_vai, args=(sezione,), disabled=chiusa,
@@ -5897,17 +5924,22 @@ _I_INFO = "<circle cx='12' cy='12' r='9'/><path d='M12 7.5v5.5M12 16.3v.1'/>"
 _I_AVANTI = "<path d='M9 6l6 6-6 6'/>"
 
 
-def _sorgenti_vuota() -> None:
-    """La pagina Sorgenti senza video: da dove si parte, e cosa serve.
+def _pagina_inizio() -> None:
+    """Inizio: da dove si parte, e cosa serve.
 
     Due riquadri — le due cartelle, e questo Mac — e i quattro passi di un
-    lotto, col passo in cui si e'. Il drag and drop non c'e': i video si
-    copiano nella cartella col Finder, e qui compaiono da soli.
+    lotto. Il drag and drop non c'e': i video si copiano nella cartella col
+    Finder, e compaiono da soli. Era la pagina dei Sorgenti senza video;
+    ora e' sempre raggiungibile, anche a lotto pieno (deciso dall'utente).
     """
+    _sorgenti_vuota(vuota=not load_library())
+
+
+def _sorgenti_vuota(vuota: bool = True) -> None:
     app = os.environ.get("ANIMEUP_APP") == "1"
     voce_tar = taratura.carica()
     st.markdown(
-        f"<div class='au-titolo-pagina'>{t('src.vuoto_titolo')}</div>"
+        f"<div class='au-titolo-pagina'>{t('src.vuoto_titolo' if vuota else 'tab.Inizio')}</div>"
         f"<div class='au-sotto-pagina'>{t('src.vuoto_testo')}</div>",
         unsafe_allow_html=True)
     for nota in _note_cartelle_assenti():
@@ -6013,8 +6045,11 @@ def _sorgenti_vuota() -> None:
     st.markdown(
         f"<div class='au-occhio au-passi-titolo'>{t('src.passi')}</div>"
         f"<div class='au-passi'>{passo0}"
-        "<div class='au-passo au-passo-qui'><div class='au-passo-testa'>"
-        f"<code>1</code><b>{t('tab.Sorgenti')}</b><small>{t('src.qui')}</small></div>"
+        + ("<div class='au-passo au-passo-qui'><div class='au-passo-testa'>"
+           f"<code>1</code><b>{t('tab.Sorgenti')}</b><small>{t('src.qui')}</small></div>"
+           if vuota else
+           "<div class='au-passo'><div class='au-passo-testa'>"
+           f"<code>1</code><b>{t('tab.Sorgenti')}</b></div>") +
         f"<p>{t('src.passo1_testo')}</p></div>"
         "<div class='au-passo'><div class='au-passo-testa'>"
         f"<code>2</code><b>{t('tab.Confronto')}</b></div>"
@@ -9663,7 +9698,7 @@ def main() -> None:
     # Una cartella scelta su un disco non collegato all'avvio: si lavora sul
     # ripiego, e va detto su ogni scheda, non solo in un angolo della sidebar
     # (la pagina vuota dei Sorgenti lo dice gia' da se').
-    if not (sezione == SEZIONI[0] and not load_library()):
+    if sezione != INIZIO:
         for nota in _note_cartelle_assenti():
             st.warning(nota)
     # Cosa la migrazione alla 1.6 non ha potuto fare (una volta per codice).
@@ -9721,7 +9756,9 @@ def main() -> None:
             and st.session_state.get("sezione_prec") != SEZIONI[2]):
         st.session_state["scroll_al_lavoro"] = True
     st.session_state["sezione_prec"] = sezione
-    if sezione == SEZIONI[0]:
+    if sezione == INIZIO:
+        _pagina_inizio()
+    elif sezione == SEZIONI[0]:
         page_sorgenti(cfg)
     elif sezione == SEZIONI[1]:
         page_confronto(cfg)
