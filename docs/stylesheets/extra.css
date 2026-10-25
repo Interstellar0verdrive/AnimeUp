@@ -710,6 +710,17 @@
     width: 100%;
   }
 
+  .md-sidebar--primary .md-nav--primary > .md-nav__title,
+  .md-sidebar--primary .md-nav__item--section > .md-nav__link {
+    color: var(--animeup-text);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .md-sidebar--primary .md-nav__item--section > .md-nav__link {
+    padding-left: 0;
+  }
+
   .md-content {
     grid-column: 2;
     grid-row: 1;
@@ -864,6 +875,25 @@
     pointer-events: auto;
     visibility: visible;
     width: min(290px, calc(100vw - 560px));
+  }
+
+  .animeup-header__search.is-open {
+    gap: 0;
+  }
+
+  .animeup-header__search.is-open .animeup-search-input {
+    border-radius: 8px 0 0 8px;
+    border-right: 0;
+  }
+
+  .animeup-header__search.is-open .animeup-search-toggle {
+    border-left: 0;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .animeup-header__search.is-open:focus-within .animeup-search-input,
+  .animeup-header__search.is-open:focus-within .animeup-search-toggle {
+    border-color: var(--animeup-accent);
   }
 
   .md-main__inner.md-grid {
@@ -1042,7 +1072,7 @@
   color: var(--animeup-text);
   font: inherit;
   font-size: 13px;
-  height: 34px;
+  height: 2rem;
   outline: 0;
   padding: 0 11px;
   width: 100%;
@@ -1051,6 +1081,12 @@
 .animeup-search-input:focus-visible {
   border-color: var(--animeup-accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--animeup-accent) 25%, transparent);
+}
+
+@media screen and (min-width: 60em) {
+  .animeup-header__search.is-open .animeup-search-input:focus-visible {
+    box-shadow: none;
+  }
 }
 
 .animeup-search-input::placeholder {
