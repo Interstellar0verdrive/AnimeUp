@@ -162,6 +162,7 @@
   "sb.controlla_agg_nota": "Non si installa niente senza un tuo clic",
   "sb.taratura_mai_nota": "solo la prima volta, ≈10 min",
   "sb.taratura_ultima": "Ultima taratura {quando}",
+  "sb.taratura_vedi": "Vedi i risultati",
   "sb.preset": "Impegno dell'encoder · preset",
   "src.cartelle_titolo": "Cartelle di partenza e di arrivo",
   "src.cartelle_testo": "Copia gli episodi nella cartella in alto con il Finder: compaiono qui in pochi secondi. I video ingranditi finiscono in quella in basso. Restano scelte finché non le cambi, anche su dischi esterni.",

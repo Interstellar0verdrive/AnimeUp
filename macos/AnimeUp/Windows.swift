@@ -78,12 +78,27 @@ final class PreparingWindow: NSWindow {
 // MARK: - Main window
 
 /// The main window: a WKWebView on the local server.
+/// The page's way to ask the app for native things (`window.webkit.
+/// messageHandlers.animeup`). A separate object holding the controller
+/// weakly: WebKit retains its handlers.
+private final class PageBridge: NSObject, WKScriptMessageHandler {
+    weak var owner: MainWindowController?
+    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+        owner?.pageAsked(message.body)
+    }
+}
+
 final class MainWindowController: NSWindowController, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate {
     let webView: WKWebView
     private static let zoomKey = "pageZoom"
+    /// Where the chosen folder is handed to the server (`folder-choice.json`).
+    private let stateDir: URL?
+    private let bridge = PageBridge()
 
-    init() {
+    init(stateDir: URL?) {
+        self.stateDir = stateDir
         let config = WKWebViewConfiguration()
+        config.userContentController.add(bridge, name: "animeup")
         config.preferences.isElementFullscreenEnabled = true
         config.websiteDataStore = .default()   // Streamlit keeps a little state in localStorage
         webView = WKWebView(frame: .zero, configuration: config)
@@ -114,8 +129,36 @@ final class MainWindowController: NSWindowController, WKNavigationDelegate, WKUI
         window.setFrameAutosaveName("AnimeUpMainWindow")
 
         super.init(window: window)
+        bridge.owner = self
         webView.navigationDelegate = self
         webView.uiDelegate = self
+    }
+
+    /// "Change…" next to a folder: the native panel, as a sheet of this
+    /// window. The script-run picker the server used belonged to a background
+    /// process: it floated above every app and AnimeUp stayed active, so
+    /// Finder shortcuts like ⌘↑ didn't work.
+    func pageAsked(_ body: Any) {
+        guard let request = body as? [String: Any],
+              let which = request["pick"] as? String, ["input", "output"].contains(which),
+              let window, let stateDir else { return }
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.message = request["prompt"] as? String ?? ""
+        panel.prompt = tr("Choose", "Scegli")
+        if let start = request["start"] as? String, !start.isEmpty {
+            panel.directoryURL = URL(fileURLWithPath: start, isDirectory: true)
+        }
+        panel.beginSheetModal(for: window) { [weak self] response in
+            guard response == .OK, let url = panel.url, let self else { return }
+            let choice = ["which": which, "path": url.path]
+            guard let data = try? JSONSerialization.data(withJSONObject: choice) else { return }
+            try? data.write(to: stateDir.appendingPathComponent("folder-choice.json"), options: .atomic)
+            self.webView.evaluateJavaScript("window.auCartellaScelta && window.auCartellaScelta()")
+        }
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }

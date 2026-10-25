@@ -84,7 +84,7 @@ def _bolla(testo: str) -> str:
             f"{esc(testo)}</span></span>")
 
 
-def _icona_aiuto(testo: str, predefinito: str = "") -> str:
+def _icona_aiuto(testo: str, predefinito: str = "", ripristina: str | None = None) -> str:
     """Il "?" con il fumetto NOSTRO, da mettere accanto a un'etichetta.
 
     Prende il posto degli `help=` di Streamlit, che sono disegnati da BaseWeb
@@ -97,10 +97,18 @@ def _icona_aiuto(testo: str, predefinito: str = "") -> str:
     `predefinito` va in coda, in grigio: e' un dato di servizio, non parte
     della spiegazione, e distinguerlo col colore evita di doverlo introdurre
     con una frase.
+
+    Con `ripristina` (la chiave dell'impostazione, solo se e' stata cambiata)
+    il valore di fabbrica diventa un link che lo rimette: chiesto
+    dall'utente. Il clic lo raccoglie lo script della pagina madre (vedi
+    `_cassetto_sidebar`) e lo gira al pulsante nascosto `ripr_<chiave>`.
     """
-    coda = (f"<span class='au-bolla-nota'>"
-            f"{esc(t('comune.predefinito', valore=predefinito))}</span>"
-            if predefinito else "")
+    nota = esc(t('comune.predefinito', valore=predefinito))
+    if predefinito and ripristina:
+        coda = (f"<a class='au-bolla-nota au-ripristina' role='button' "
+                f"data-ripristina='{esc(ripristina)}'>{nota}</a>")
+    else:
+        coda = f"<span class='au-bolla-nota'>{nota}</span>" if predefinito else ""
     return ("<span class='au-info' tabindex='0'>"
             "<svg width='14' height='14' viewBox='0 0 24 24' fill='none' "
             "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
@@ -114,7 +122,7 @@ def _icona_aiuto(testo: str, predefinito: str = "") -> str:
 
 
 def _etichetta_sb(testo: str, aiuto: str, valore: str = "",
-                  predefinito: str = "", dove=None) -> None:
+                  predefinito: str = "", dove=None, ripristina: str | None = None) -> None:
     """L'etichetta di un controllo della sidebar, disegnata da noi.
 
     Con l'etichetta nativa il valore andava messo in un `content` di CSS
@@ -127,11 +135,11 @@ def _etichetta_sb(testo: str, aiuto: str, valore: str = "",
     val = f"<span class='au-sb-val'>{esc(valore)}</span>" if valore else ""
     (dove or st.sidebar).markdown(
         f"<div class='au-sb-eti'>{esc(testo)}"
-        f"{_icona_aiuto(aiuto, predefinito)}{val}</div>",
+        f"{_icona_aiuto(aiuto, predefinito, ripristina)}{val}</div>",
         unsafe_allow_html=True)
 
 
-def _aiuto_a_destra(testo: str, predefinito: str = "") -> None:
+def _aiuto_a_destra(testo: str, predefinito: str = "", ripristina: str | None = None) -> None:
     """L'aiuto di un interruttore, in fondo alla sua riga.
 
     L'etichetta di un `toggle` vive DENTRO il componente, insieme
@@ -142,7 +150,7 @@ def _aiuto_a_destra(testo: str, predefinito: str = "") -> None:
     misurata 193px su 256 disponibili). Il click sull'icona non arriva
     all'interruttore perche' l'icona sta sopra.
     """
-    st.markdown(f"<div class='au-sb-aiuto'>{_icona_aiuto(testo, predefinito)}</div>",
+    st.markdown(f"<div class='au-sb-aiuto'>{_icona_aiuto(testo, predefinito, ripristina)}</div>",
                 unsafe_allow_html=True)
 
 
@@ -543,9 +551,7 @@ STYLE = f"""
      verticale riporta la sua baseline su quella di "Taratura" e della
      data: misurato, il centraggio geometrico lo lasciava 3px sotto. */
   :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button p {{ font-size: 11.5px; }}
-  :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button[kind="secondary"]:hover {{
-      background: var(--sidebar2) !important; border: 1px solid var(--borderHover) !important;
-      color: {TESTO} !important; }}
+  
   [data-testid="stElementContainer"]:has(.au-sb-sezione)
       + [data-testid="stElementContainer"] .au-sgruppo {{
       margin-top: 26px; }}
@@ -835,6 +841,27 @@ STYLE = f"""
   /* La frase che spiega il PERCHÉ sta staccata dalle cifre: è prosa, non
      una voce dell'elenco, e incollata si legge come una quarta riga. */
   .au-bolla-nota {{ color: {TESTO_3}; margin-top: 6px; }}
+  /* Il predefinito che rimette il valore (vedi `_icona_aiuto`): un link
+     d'accento, e il fumetto che lo porta deve restare aperto mentre ci si
+     va sopra — si puo' toccare, e un ponte invisibile copre gli 8px fra
+     icona e fumetto, cosi' il passaggio non lo chiude. */
+  a.au-ripristina {{ color: var(--primaryText) !important; text-decoration: underline;
+      text-underline-offset: 2px; align-self: flex-start; }}
+  a.au-ripristina:hover {{ color: var(--primaryHover) !important; }}
+  .au-info:is(:hover, :focus-within) .au-bolla:has(.au-ripristina) {{ pointer-events: auto; }}
+  .au-bolla:has(.au-ripristina)::after {{ content: ""; position: absolute; left: 0; right: 0;
+      top: 100%; height: 12px; }}
+  .st-key-ripristiniNascosti, .st-key-premiNascosti,
+  :is([data-testid="stLayoutWrapper"], [data-testid="stElementContainer"]):has(
+      > :is(.st-key-ripristiniNascosti, .st-key-premiNascosti)) {{ display: none !important; }}
+  /* La data dell'ultima taratura porta ai risultati: un link con la sua
+     freccia, sottolineato al passaggio. */
+  a.au-tar-vedi {{ display: flex; width: fit-content; align-items: center; gap: 4px;
+      text-decoration: none; color: var(--greenText) !important; }}
+  .au-tar-fatta a.au-tar-vedi {{ align-self: flex-start; }}
+  a.au-tar-vedi svg {{ flex: none; opacity: .8; }}
+  a.au-tar-vedi:hover {{ text-decoration: underline; text-underline-offset: 2px; }}
+  a.au-tar-vedi:hover svg {{ opacity: 1; }}
   .au-bolla::before {{
       content: ""; position: absolute; left: 50%; bottom: -5px;
       width: 10px; height: 10px; background: var(--surfaceHover);
@@ -2345,9 +2372,31 @@ STYLE = f"""
   .stButton button[kind="primary"]:disabled:hover {{
       background: var(--idleEdge) !important;
       border-color: var(--idleEdge) !important;
-      cursor: not-allowed; transform: none; }}
+      transform: none; }}
   .stButton button[kind="primary"]:disabled p {{
       color: {TESTO_3} !important; }}
+  /* IL CURSORE DI UN'APP, NON DI UNA PAGINA WEB (chiesto dall'utente):
+     freccia sul testo — la barretta di selezione tradiva il browser — e
+     manina su tutto cio' che si clicca. `cursor` si eredita, quindi basta
+     dirlo sul contenitore e sugli elementi cliccabili; lo spento torna
+     freccia, come in macOS (niente divieto). */
+  .stApp, [role="dialog"], [data-testid="stSidebar"] {{ cursor: default; }}
+  /* Niente velatura «in aggiornamento» sugli elementi mentre il server
+     lavora: arrivava in ritardo e senza dire niente (al «Cambia…», detto
+     dall'utente: inutile e laggoso). */
+  [data-testid="stElementContainer"][data-stale="true"] {{ opacity: 1 !important;
+      transition: none !important; }}
+  :is(button:not(:disabled), a[href], summary, [role="slider"], [role="option"],
+      [data-baseweb="slider"], [data-baseweb="select"], [data-testid="stCheckbox"] label,
+      .au-info, [data-ripristina], [data-preme], #au-cassetto, #au-velo),
+  :is(button:not(:disabled), a[href], summary, [data-baseweb="select"],
+      [data-testid="stCheckbox"] label, [data-ripristina], [data-preme]) * {{ cursor: pointer; }}
+  :is(button:disabled, [data-testid="stCheckbox"] label:has(input:disabled),
+      [data-baseweb="select"]:has(input:disabled)),
+  :is(button:disabled, [data-testid="stCheckbox"] label:has(input:disabled),
+      [data-baseweb="select"]:has(input:disabled)) * {{ cursor: default !important; }}
+  :is(input[type="text"], input[type="number"], input:not([type]), textarea):not(
+      :disabled):not([readonly]):not([role="combobox"]) {{ cursor: text; }}
   /* Le icone dentro i pulsanti: erano alla dimensione del testo, cioè
      illeggibili. `au-icona` le porta a una misura da icona vera. */
   .au-icona {{ font-size: 1.15rem; line-height: 1; vertical-align: -.08em; }}
@@ -2545,13 +2594,22 @@ STYLE = f"""
      fuori: hanno il loro carattere. */
   [data-testid="stElementContainer"]:not([class*="st-key-ferma"]):not(
       [class*="st-key-scarta"]):not([class*="st-key-det"]):not(
-      [class*="st-key-finder"]) .stButton button[kind="secondary"]:hover {{
+      [class*="st-key-finder"]) .stButton button[kind="secondary"]:hover:not(:disabled) {{
       background: var(--sidebar2) !important;
       border-color: var(--borderHover) !important; }}
   [data-testid="stElementContainer"]:not([class*="st-key-ferma"]):not(
       [class*="st-key-scarta"]):not([class*="st-key-det"]):not(
       [class*="st-key-finder"]) .stButton
-      button[kind="secondary"]:hover p {{ color: {TESTO} !important; }}
+      button[kind="secondary"]:hover:not(:disabled) p {{ color: {TESTO} !important; }}
+  /* Nella sidebar il fondo dell'hover generale e' quasi quello delle schede
+     delle Preferenze (due grigi a quattro punti di distanza): l'hover c'era ma non si vedeva
+     (segnalato dall'utente). Qui e' una velatura sul fondo che c'e', con lo
+     stesso stacco che ha nella pagina. I :not(.a)... servono a vincere sulla
+     regola generale, che ha un selettore lungo. */
+  [data-testid="stSidebar"] [data-testid="stElementContainer"]:not(.st-key-esci) .stButton
+      button[kind="secondary"]:hover:not(:disabled):not(.a):not(.b) {{
+      background: rgb(var(--overlayRgb) / .07) !important;
+      border-color: var(--borderHover) !important; }}
   .stButton button:active {{ transform: scale(.97); }}
 
   @media (prefers-reduced-motion: reduce) {{
@@ -2660,6 +2718,12 @@ STYLE = f"""
   .st-key-prefCard > div + div {{ border-top: 1px solid var(--borderFaint); }}
   .au-pref-eti {{ display: flex; align-items: center; gap: 6px;
       font-size: 13.5px; font-weight: 500; color: var(--textPrimary); }}
+  /* Il «?» a 6px dall'etichetta come nelle Impostazioni in alto (qui il gap
+     e il margine dell'icona si sommavano: 12px), e senza il rialzo di 1px
+     pensato per il maiuscoletto: su un'etichetta normale la portava in alto
+     (segnalato dall'utente). */
+  .au-pref-eti .au-perche {{ margin-left: 0; }}
+  .au-pref-eti .au-perche svg {{ transform: none; }}
   .au-percorso {{ display: block; overflow: hidden; text-overflow: ellipsis;
       white-space: nowrap; font: 400 12px var(--mono) !important;
       color: var(--textCode) !important; background: none !important;
@@ -2683,8 +2747,18 @@ STYLE = f"""
   :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button {{
       min-height: 28px !important; height: 28px; padding: 0 10px !important;
       border-radius: 6px; white-space: nowrap; text-decoration: none;
-      border: 1px solid var(--borderStrong) !important;
+      border: 1px solid var(--borderStrong) !important; }}
+  /* Il colore pieno solo da attivi: forzato anche da spenti, «Cambia…» a
+     sidebar bloccata sembrava cliccabile (segnalato dall'utente). */
+  :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button:not(:disabled) {{
       color: var(--textCode) !important; }}
+  /* Spenti come nella pagina (testo al 40%, bordo tenue): la regola del
+     vecchio travestimento da link forzava il testo pieno anche qui. */
+  [data-testid="stSidebar"] :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"])
+      button:disabled {{ color: rgb(var(--overlayRgb) / .4) !important;
+      border-color: var(--borderColor) !important; }}
+  [data-testid="stSidebar"] :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"])
+      button:disabled p {{ color: inherit !important; }}
   :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button p {{
       font-size: 12.5px; font-weight: 500; }}
   .st-key-apriTaratura button[kind="primary"] {{
@@ -3003,6 +3077,9 @@ STYLE = f"""
   [data-testid="stElementContainer"]:has(+ [data-testid="stLayoutWrapper"] >
       :is(.st-key-cAltezza, .st-key-cCrf, .st-key-cPreset)) .au-bolla::before {{
       bottom: auto; top: -5px; transform: translateX(-50%) rotate(45deg); }}
+  [data-testid="stElementContainer"]:has(+ [data-testid="stLayoutWrapper"] >
+      :is(.st-key-cAltezza, .st-key-cCrf, .st-key-cPreset)) .au-bolla::after {{
+      top: auto; bottom: 100%; }}
   /* Il fumetto dell'icona «controlla adesso»: lo stesso dei «?», con la
      punta (quello nativo di Streamlit non ce l'ha). */
   .au-ver {{ position: relative; }}
@@ -3015,7 +3092,9 @@ STYLE = f"""
   /* La risposta del controllo aggiornamenti, al centro (vedi `_modale_esito_agg`). */
   [role="dialog"]:has(.au-esito-agg) > h2 {{ position: absolute; width: 1px; height: 1px;
       overflow: hidden; clip-path: inset(50%); }}
-  .au-esito-agg {{ display: flex; gap: 14px; align-items: flex-start; }}
+  /* Il titolo nativo e' nascosto e lascia 12px sopra contro i 21 ai lati:
+     icona e titolo sembravano attaccati al bordo (segnalato dall'utente). */
+  .au-esito-agg {{ display: flex; gap: 14px; align-items: flex-start; margin-top: 9px; }}
   .au-esito-agg b {{ display: block; font-size: 17px; font-weight: 600; margin-bottom: 4px; }}
   .au-esito-agg span:not(.au-esito-icona) {{ font-size: 13.5px; line-height: 1.5;
       color: var(--textSecondary); }}
@@ -3030,6 +3109,9 @@ STYLE = f"""
   .st-key-esitoAggAzioni {{ justify-content: flex-end; gap: 10px !important; margin-top: 8px; }}
   .st-key-esitoAggAzioni [class*="st-key-esito"] {{ width: auto !important; flex: none; }}
   .st-key-esitoAggAzioni button {{ height: 38px; padding: 0 18px; white-space: nowrap; }}
+  /* 1.5px giu': centrata sul testo della versione, che e' monospazio
+     (misurato: l'icona stava 1.5px sopra). */
+  .st-key-controllaAgg {{ transform: translateY(1.5px); }}
   .st-key-controllaAgg button {{ min-height: 0 !important; height: 18px; width: 18px;
       padding: 0 !important; color: var(--textSecondary) !important; }}
   .st-key-controllaAgg button:hover {{ color: var(--primaryText) !important; }}
@@ -3079,7 +3161,11 @@ STYLE = f"""
       border-radius: 50%; background: var(--surfaceHover);
       border: 1px solid var(--borderStrong); display: inline-flex;
       align-items: center; justify-content: center; color: var(--textSecondary); }}
-  .au-freccia em {{ font: normal 400 11px var(--mono); color: var(--textSecondary); }}
+  /* Geometricamente e' gia' al centro, ma il minuscolo monospazio ha il
+     suo peso sotto la meta' del riquadro: 1px su lo rimette sull'asse di
+     icona e linea (segnalato dall'utente). */
+  .au-freccia em {{ font: normal 400 11px var(--mono); color: var(--textSecondary);
+      position: relative; top: -1px; }}
   .au-freccia i {{ flex: 1; height: 1px; background: var(--borderColor); }}
   .au-card-nota {{ font-size: 12px; color: var(--textSecondary); }}
   .au-tre {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3626,7 +3712,10 @@ STYLE = f"""
   [role="dialog"]:has(.au-tar-passo) h2::after {{ font: 400 11.5px var(--mono);
       color: var(--textSecondary); margin-left: 10px; white-space: nowrap; }}
   .st-key-tarAzioni {{ align-items: center; margin-top: 4px; }}
-  .st-key-tarCorsaAzioni {{ justify-content: flex-end; gap: 10px !important; margin-top: 6px; }}
+  .st-key-tarCorsaAzioni {{ justify-content: flex-end; align-items: center;
+      gap: 10px !important; margin-top: 6px; }}
+  /* Il margine di quando era da solo lo abbassava di 6px accanto a «Ferma». */
+  .st-key-tarCorsaAzioni .st-key-tarChiudiContinua {{ margin-top: 0; }}
   .st-key-tarCorsaAzioni [class*="st-key-tar"] {{ width: auto !important; flex: none; }}
   .st-key-tarFerma button {{ height: 38px; padding: 0 16px; white-space: nowrap;
       border-color: rgb(var(--redRgb) / .45) !important; color: var(--redText) !important;
@@ -4684,6 +4773,12 @@ def _contenuto_taratura() -> None:
     """
     s = taratura.stato_fondo()
     stato = (s or {}).get("state")
+    if st.session_state.get("tar_vedi") and stato != taratura.IN_CORSO:
+        ultimi = _ultimi_risultati()
+        if ultimi:
+            _taratura_esito(ultimi)
+            return
+    st.session_state.pop("tar_vedi", None)
     if stato == taratura.IN_CORSO:
         st.markdown("<span class='au-tar-passo au-tar-p2'></span>", unsafe_allow_html=True)
         _taratura_viva()
@@ -4887,6 +4982,35 @@ def _taratura_fallita(s: dict) -> None:
 # Come per la fine coda: il titolo si traduce all'apertura, non all'avvio.
 def _chiudi_taratura() -> None:
     st.session_state.pop("tar_aperta", None)
+    st.session_state.pop("tar_vedi", None)
+    # Chiusa sui risultati appena arrivati (anche con la X): visti. Senza,
+    # la finestra si riaprirebbe da sola a ogni giro (vedi `main`).
+    s = taratura.stato_fondo()
+    if s and s.get("state") in (taratura.FINITA, taratura.FALLITA) and not s.get("seen"):
+        _taratura_vista()
+
+
+def _vedi_taratura() -> None:
+    """Il link accanto alla data dell'ultima taratura: riapre i risultati."""
+    st.session_state["tar_aperta"] = True
+    st.session_state["tar_vedi"] = True
+
+
+def _ultimi_risultati() -> dict | None:
+    """I risultati dell'ultima taratura, come li mostra il passo 3.
+
+    Il file di stato tiene anche la taratura di prima, per la colonna
+    «Precedente»; se pero' l'ultima voce salvata non e' quella (fatta da
+    Terminale, o prima della 1.6) si mostra la voce da sola.
+    """
+    voce = taratura.carica()
+    if not voce:
+        return None
+    s = taratura.stato_fondo() or {}
+    nuova = s.get("new") or {}
+    if s.get("state") == taratura.FINITA and nuova.get("quando") == voce.get("quando"):
+        return s
+    return {"new": voce, "previous": None}
 
 
 def _modale_taratura() -> None:
@@ -4962,7 +5086,7 @@ def _scegli_cartella(quale: str) -> None:
     """Il selettore di cartelle di macOS, aperto dal server (che gira su
     questo stesso Mac). Annullare non cambia niente. Scelta una cartella,
     l'app riavvia il server su quella e la pagina si ricarica da sola."""
-    file, _, testo = _CARTELLE[quale]
+    testo = _CARTELLE[quale][2]
     # Il pulsante e' gia' spento quando qualcosa gira; questa e' la cintura:
     # cambiata OUTPUT, il server nuovo non vede piu' lavori, code e taratura
     # di quella vecchia e lascerebbe partire un secondo giro accanto al primo.
@@ -4980,9 +5104,44 @@ def _scegli_cartella(quale: str) -> None:
          f'POSIX path of (choose folder with prompt '
          f'"{_testo_applescript(t(testo + "_prompt"))}"{partenza})'],
         capture_output=True, text=True, check=False)
-    scelta = esito.stdout.strip()
+    if esito.returncode != 0:
+        return
+    _applica_cartella(quale, esito.stdout.strip())
+
+
+def _cartella_dal_mac() -> None:
+    """La cartella scelta nel pannello nativo dell'app.
+
+    Nell'app «Cambia…» non passa da qui: lo script della pagina gira il clic
+    all'app per macOS, che apre il suo pannello come foglio della finestra
+    (di AnimeUp, con ⌘↑ e tutto; quello di `osascript` restava di un
+    processo in sottofondo, sopra a ogni altra app, con AnimeUp ancora
+    attiva — segnalato dall'utente). Scelta la cartella, l'app la scrive qui
+    accanto e preme il pulsante nascosto che chiama questa funzione.
+    """
     stato = os.environ.get("ANIMEUP_STATO")
-    if esito.returncode != 0 or not scelta or not stato:
+    if not stato:
+        return
+    f = Path(stato) / "folder-choice.json"
+    try:
+        dati = json.loads(f.read_text())
+        f.unlink(missing_ok=True)
+    except (OSError, ValueError):
+        return
+    quale = dati.get("which") if isinstance(dati, dict) else None
+    if quale not in ("input", "output") or not dati.get("path"):
+        return
+    if _motivo_blocco() is not None:
+        _avviso_mac(t("sb.cambio_no_titolo"), t("sb.cambio_occupato"))
+        return
+    _applica_cartella(quale, str(dati["path"]))
+
+
+def _applica_cartella(quale: str, scelta: str) -> None:
+    """Controlla la cartella scelta e, se va, la fa usare all'app."""
+    file = _CARTELLE[quale][0]
+    stato = os.environ.get("ANIMEUP_STATO")
+    if not scelta or not stato:
         return
     nuova = Path(scelta).resolve()
     altra = _cartella_attuale("output" if quale == "input" else "input")
@@ -5177,6 +5336,10 @@ def _cambiata(dove, chiave: str, fabbrica: dict) -> None:
             "</div>", unsafe_allow_html=True)
 
 
+def _ripristina_una(chiave: str, valore) -> None:
+    st.session_state[f"w_{chiave}"] = valore
+
+
 def _ripristina_avanzate(fabbrica: dict) -> None:
     for chiave in _AVANZATE:
         st.session_state[f"w_{chiave}"] = fabbrica[chiave]
@@ -5286,12 +5449,26 @@ def sidebar() -> dict:
         st.sidebar.markdown(f"<div class='au-lock-nota'>{t(nota)}</div>",
                             unsafe_allow_html=True)
 
+    # Il «Predefinito: …» dei fumetti diventa un link quando il valore e'
+    # stato cambiato: lo raccoglie lo script della pagina madre e preme qui
+    # il pulsante nascosto della stessa impostazione. A sidebar bloccata
+    # niente link: il fumetto resta com'era, grigio.
+    def rip(chiave: str) -> str | None:
+        if congelata or st.session_state.get(f"w_{chiave}") == fabbrica[chiave]:
+            return None
+        return chiave
+    if not congelata:
+        with st.sidebar.container(key="ripristiniNascosti"):
+            for chiave in ("altezza", "crf", "preset") + _AVANZATE:
+                st.button(chiave, key=f"ripr_{chiave}", on_click=_ripristina_una,
+                          args=(chiave, fabbrica[chiave]))
+
     st.sidebar.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.uscita')}</div>",
                         unsafe_allow_html=True)
     _etichetta_sb(
         t("sb.altezza"), t("sb.altezza_aiuto"),
         f"{st.session_state.get('w_altezza', 1080)} px",
-        predefinito="1080 px")
+        predefinito="1080 px", ripristina=rip("altezza"))
     with st.sidebar.container(key="cAltezza"):
         altezza = st.select_slider(
             "Altezza finale", options=[720, 1080, 1440, 2160],
@@ -5299,7 +5476,8 @@ def sidebar() -> dict:
             label_visibility="collapsed")
     _etichetta_sb(
         t("sb.crf"),
-        t("sb.crf_aiuto"), str(st.session_state.get("w_crf", 18)), predefinito="18")
+        t("sb.crf_aiuto"), str(st.session_state.get("w_crf", 18)), predefinito="18",
+        ripristina=rip("crf"))
     with st.sidebar.container(key="cCrf"):
         crf = st.slider(
             "CRF (x265)", 14, 24, key="w_crf", disabled=congelata,
@@ -5307,7 +5485,7 @@ def sidebar() -> dict:
     _etichetta_sb(
         t("sb.preset"), t("sb.preset_aiuto"),
         str(st.session_state.get("w_preset", "slower")),
-        predefinito="slower")
+        predefinito="slower", ripristina=rip("preset"))
     with st.sidebar.container(key="cPreset"):
         preset = st.select_slider(
             "Preset x265", options=["medium", "slow", "slower", "veryslow"],
@@ -5335,20 +5513,20 @@ def sidebar() -> dict:
                     unsafe_allow_html=True)
         with st.container(key="swDedup"):
             dedup = st.toggle(t("sb.dedup"), key="w_dedup", disabled=congelata)
-            _aiuto_a_destra(t("sb.dedup_aiuto"), t("sb.abilitato"))
+            _aiuto_a_destra(t("sb.dedup_aiuto"), t("sb.abilitato"), rip("dedup"))
         _cambiata(adv, "dedup", fabbrica)
         with st.container(key="swDenoise"):
             denoise = st.toggle(t("sb.denoise"), key="w_denoise", disabled=congelata)
-            _aiuto_a_destra(t("sb.denoise_aiuto"), t("sb.disabilitato"))
+            _aiuto_a_destra(t("sb.denoise_aiuto"), t("sb.disabilitato"), rip("denoise"))
         _cambiata(adv, "denoise", fabbrica)
         with st.container(key="swForza"):
             forza = st.toggle(t("sb.forza"), key="w_forza", disabled=congelata)
-            _aiuto_a_destra(t("sb.forza_aiuto"), t("sb.disabilitato"))
+            _aiuto_a_destra(t("sb.forza_aiuto"), t("sb.disabilitato"), rip("forza"))
         _cambiata(adv, "forza", fabbrica)
         with st.container(key="swApprof"):
             approfondita = st.toggle(t("sb.approf"), key="w_approfondita",
                                      disabled=congelata)
-            _aiuto_a_destra(t("sb.approf_aiuto"), t("sb.abilitato"))
+            _aiuto_a_destra(t("sb.approf_aiuto"), t("sb.abilitato"), rip("approfondita"))
         _cambiata(adv, "approfondita", fabbrica)
 
         st.markdown(f"<div class='au-eyebrow au-sgruppo'>{t('sb.risorse')}</div>",
@@ -5368,7 +5546,8 @@ def sidebar() -> dict:
             _disco_ora = _tetto_max
         _etichetta_sb(t("sb.disco"), t("sb.disco_aiuto"), f"{_disco_ora} GB",
                       predefinito=t("sb.disco_predefinito", tetto=_tetto_max,
-                                    libero=_libero_gb), dove=adv)
+                                    libero=_libero_gb), dove=adv,
+                      ripristina=rip("disco"))
         _cambiata(adv, "disco", fabbrica)
         with st.container(key="cDisco"):
             disco = st.slider(t("sb.disco"), MINIMO_SPAZIO_GB, _tetto_max,
@@ -5384,7 +5563,7 @@ def sidebar() -> dict:
         _etichetta_sb(
             t("sb.pausa"), t("sb.pausa_aiuto"),
             t("sb.pausa_nessuna") if _pausa_ora == 0 else f"{_pausa_ora} min",
-            predefinito="5 min", dove=adv)
+            predefinito="5 min", dove=adv, ripristina=rip("pausa"))
         _cambiata(adv, "pausa", fabbrica)
         with st.container(key="cPausa"):
             # Default 5 e non 0 (scelta dell'utente): nelle maratone la pausa
@@ -5498,7 +5677,9 @@ def _riga_taratura(congelata: bool) -> None:
     elif voce_tar:
         import datetime as _dt
         quando = _dt.datetime.fromtimestamp(voce_tar["quando"]).strftime(t("fmt.data_ora"))
-        stato = f"<span class='au-tar-ok'>{t('sb.taratura_ultima', quando=quando)}</span>"
+        stato = (f"<a class='au-tar-ok au-tar-vedi' data-preme='vediTaratura' role='button' "
+                 f"title='{t('sb.taratura_vedi')}'>{t('sb.taratura_ultima', quando=quando)}"
+                 f"{_svg(_I_AVANTI, 11, 2.2)}</a>")
         azione, tipo = t("sb.taratura_ripeti"), "secondary"
     else:
         stato = (f"<span class='au-tar-mai'>{t('sb.taratura_mai')} · "
@@ -5519,6 +5700,11 @@ def _riga_taratura(congelata: bool) -> None:
                 st.session_state.pop("tar_fase", None)
                 _modale_taratura()
         st.markdown(stato, unsafe_allow_html=True)
+    # I pulsanti che premono i link «risultati» e l'app, a cartella scelta
+    # (vedi `_cassetto_sidebar` e `_cartella_dal_mac`).
+    with st.container(key="premiNascosti"):
+        st.button("results", key="vediTaratura", on_click=_vedi_taratura)
+        st.button("folder", key="applicaCartella", on_click=_cartella_dal_mac)
 
 
 def _controlla_aggiornamenti_ora() -> None:
@@ -5569,8 +5755,10 @@ def _modale_esito_agg() -> None:
     if st.session_state.get("esito_agg_giro") == giro:
         return
     st.session_state["esito_agg_giro"] = giro
+    # Senza X (chiesto dall'utente): la si chiude con il suo pulsante, che
+    # e' anche l'unico gesto che toglie davvero l'esito dalla sessione.
     st.dialog(t("sb.esito_finestra"), width="small",
-              on_dismiss=_chiudi_esito_agg)(_contenuto_esito_agg)()
+              dismissible=False)(_contenuto_esito_agg)()
 
 
 def _piede_sidebar(app: bool, congelata: bool) -> None:
@@ -5629,6 +5817,7 @@ _I_GIU = "<path d='M12 5v14M6 13l6 6 6-6'/>"
 _I_SPUNTA = "<path d='M4.5 12.5 9.5 17.5 19.5 7'/>"
 _I_ATTENZIONE = "<path d='M12 4 2.5 20h19z'/><path d='M12 10v4.5M12 17.2v.1'/>"
 _I_INFO = "<circle cx='12' cy='12' r='9'/><path d='M12 7.5v5.5M12 16.3v.1'/>"
+_I_AVANTI = "<path d='M9 6l6 6-6 6'/>"
 
 
 def _sorgenti_vuota() -> None:
@@ -5785,7 +5974,9 @@ def _blocco_taratura(voce_tar) -> None:
             st.markdown(
                 f"<div class='au-tar-fatta'><span class='au-spunta'>{_svg(_I_SPUNTA, 12, 2.4)}</span>"
                 f"<span><b>{t('src.tar_fatta')}</b>"
-                f"<code>{quando}</code></span></div>",
+                f"<a class='au-tar-vedi' data-preme='vediTaratura' role='button' "
+                f"title='{t('sb.taratura_vedi')}'><code>{quando}</code>"
+                f"{_svg(_I_AVANTI, 10, 2.2)}</a></span></div>",
                 unsafe_allow_html=True)
             if taratura.in_corso():
                 if st.button(t("sb.taratura_mostra"), key="ricalibraMac"):
@@ -9192,6 +9383,8 @@ def _cassetto_sidebar() -> None:
     crea questo script una volta sola), lo stato e' una classe sul body.
     """
     etichetta = json.dumps(t("sb.cassetto"))
+    cartelle = {q: {"prompt": t(_CARTELLE[q][2] + "_prompt"), "start": str(_cartella_attuale(q))}
+                for q in ("input", "output")}
     st.iframe(
         "<script>try{const D=window.parent.document;"
         "if(!D.getElementById('au-cassetto')){"
@@ -9214,6 +9407,26 @@ def _cassetto_sidebar() -> None:
         "D.getElementById('au-cassetto').style.top=Math.round(r.top+r.height/2-18)+'px';}};"
         "if(!W.auPosAscolto){W.auPosAscolto=1;W.addEventListener('resize',()=>W.auPosCassetto());}"
         "W.auPosCassetto();setTimeout(W.auPosCassetto,300);setTimeout(W.auPosCassetto,1200);"
+        # Il «Predefinito» cliccabile dei fumetti: preme il pulsante nascosto
+        # della stessa impostazione (vedi `_icona_aiuto`).
+        "if(!W.auRipristino){W.auRipristino=1;D.addEventListener('click',e=>{"
+        "const a=e.target.closest&&e.target.closest('[data-ripristina],[data-preme]');if(!a)return;"
+        "e.preventDefault();e.stopPropagation();"
+        "const k=a.dataset.ripristina?'ripr_'+a.dataset.ripristina:a.dataset.preme;"
+        "const b=D.querySelector('.st-key-'+k+' button');"
+        "if(b)b.click();},true);}"
+        # Nell'app «Cambia…» apre il pannello nativo (vedi `_cartella_dal_mac`):
+        # il clic va all'app e non al server. Nel browser non c'e' il ponte, e
+        # il pulsante fa quello di sempre.
+        f"W.auCartelle={json.dumps(cartelle)};"
+        "W.auCartellaScelta=()=>{const x=D.querySelector('.st-key-applicaCartella button');if(x)x.click();};"
+        "if(!W.auPannello){W.auPannello=1;D.addEventListener('click',e=>{"
+        "const h=W.webkit&&W.webkit.messageHandlers&&W.webkit.messageHandlers.animeup;if(!h)return;"
+        "const b=e.target.closest&&e.target.closest('[class*=\"st-key-apriCartella_\"] button,"
+        ".st-key-cambiaInput button,.st-key-cambiaOutput button');if(!b||b.disabled)return;"
+        "e.preventDefault();e.stopPropagation();"
+        "const q=/_input|Input/.test(b.closest('[class*=\"st-key-\"]').className)?'input':'output';"
+        "h.postMessage(Object.assign({pick:q},W.auCartelle[q]));},true);}"
         "}catch(e){}</script>", height=1)
 
 
@@ -9418,6 +9631,13 @@ def main() -> None:
         page_confronto(cfg)
     else:
         page_lavorazione(cfg)
+    # Finita (o fallita) a finestra chiusa: si riapre da sola sui risultati,
+    # o non lo si saprebbe mai (segnalato dall'utente). Chiuderla la segna
+    # come vista (vedi `_chiudi_taratura`).
+    _s_tar = taratura.stato_fondo()
+    if (_s_tar and _s_tar.get("state") in (taratura.FINITA, taratura.FALLITA)
+            and not _s_tar.get("seen")):
+        st.session_state["tar_aperta"] = True
     # La taratura riaperta a ogni giro finche' non la si chiude (vedi
     # `_modale_taratura`); mai insieme al resoconto: una modale alla volta.
     if st.session_state.get("tar_aperta") and not st.session_state.get("fine_da_mostrare"):

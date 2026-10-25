@@ -53,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             alert.informativeText = describe(error)
             alert.addButton(withTitle: tr("Quit", "Esci"))
             alert.runModal()
+            quitConfirmed = true          // already chosen in this alert
             NSApp.terminate(nil)
             return
         }
@@ -156,7 +157,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             mainWindow.reloadPage(nil)
             mainWindow.showWindow(nil)
         } else {
-            let controller = MainWindowController()
+            let controller = MainWindowController(stateDir: paths?.state)
             mainWindow = controller
             controller.showWindow(nil)
             controller.load()
@@ -399,6 +400,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
                 startServer()
                 return
             default:
+                quitConfirmed = true      // already chosen in this alert
                 NSApp.terminate(nil)
                 return
             }
@@ -425,6 +427,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             case .alertSecondButtonReturn:
                 openLog(nil)
             default:
+                quitConfirmed = true      // already chosen in this alert
                 NSApp.terminate(nil)
                 return
             }
@@ -459,12 +462,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         return true
     }
 
-    /// Quitting stops the jobs too, so with one running it asks first.
+    /// True when macOS itself is quitting the app (shut down, restart, log
+    /// out): then nothing waits on a dialog.
+    private func systemIsQuitting() -> Bool {
+        guard let event = NSAppleEventManager.shared().currentAppleEvent,
+              let reason = event.attributeDescriptor(forKeyword: kAEQuitReason)?.typeCodeValue
+        else { return false }
+        return [kAEShutDown, kAERestart, kAELogOut, kAEReallyLogOut].map { OSType($0) }.contains(reason)
+    }
+
+    /// Quitting always asks first (as in the design): with something
+    /// running it says what stops, with nothing running it's a plain confirm.
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard !quitConfirmed, let paths else { return .terminateNow }
         let running = RunningJobs.pids(output: paths.output)
         let background = RunningJobs.background(state: paths.state)
-        guard !running.isEmpty || !background.isEmpty else { return .terminateNow }
+        if running.isEmpty && background.isEmpty {
+            if systemIsQuitting() { return .terminateNow }
+            NSApp.activate(ignoringOtherApps: true)
+            let alert = NSAlert()
+            alert.messageText = tr("Quit AnimeUp?", "Uscire da AnimeUp?")
+            alert.informativeText = tr("Nothing is running. Settings and analyses are kept for next time.",
+                                       "Non c'è niente in corso. Impostazioni e analisi restano per la prossima volta.")
+            alert.addButton(withTitle: tr("Quit", "Esci"))
+            alert.addButton(withTitle: tr("Cancel", "Annulla"))
+            guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+            quitConfirmed = true
+            return .terminateNow
+        }
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.alertStyle = .warning
