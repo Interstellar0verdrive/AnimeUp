@@ -392,12 +392,9 @@ def pausa(paths: Paths | None = None) -> tuple[float, int] | None:
         return None
     if fino < time.time():
         return None
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
+    from .processi import di_animeup
+    if not di_animeup(pid):
         return None
-    except PermissionError:
-        pass                    # esiste, di un altro utente: vale come vivo
     return (fino, pid)
 
 
@@ -429,12 +426,9 @@ def catena(paths: Paths | None = None) -> dict | None:
         dati["scritto"] = marcatore.stat().st_mtime
     except OSError:
         pass
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
+    from .processi import di_animeup
+    if not di_animeup(pid):
         return None
-    except PermissionError:
-        pass
     return dati
 
 

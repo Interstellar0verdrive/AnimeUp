@@ -209,15 +209,8 @@ def in_corso(paths: Paths | None = None) -> bool:
         pid = int(marcatore.read_text().strip())
     except (OSError, ValueError):
         return False
-    if pid <= 0:
-        return False
-    try:
-        os.kill(pid, 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        pass
-    return True
+    from .processi import di_animeup
+    return pid != os.getpid() and di_animeup(pid)
 
 
 def _file(p: Paths) -> Path:
@@ -749,15 +742,16 @@ def stato_fondo(p: Paths | None = None) -> dict | None:
     if not isinstance(dati, dict):
         return None
     if dati.get("state") == IN_CORSO:
+        from .processi import di_animeup
         try:
             pid = int(dati.get("pid") or 0)
-            if pid <= 0:
-                raise ValueError(pid)
-            os.kill(pid, 0)
-        except (ProcessLookupError, ValueError, TypeError):
+        except (ValueError, TypeError):
+            pid = 0
+        # Il pid 0 e' l'attimo fra la scrittura dello stato e il lancio: lo
+        # si lascia in corso solo per pochi secondi.
+        appena = pid == 0 and time.time() - float(dati.get("started") or 0) < 15
+        if not appena and not di_animeup(pid):
             dati["state"] = INTERROTTA
-        except OSError:
-            pass
     return dati
 
 

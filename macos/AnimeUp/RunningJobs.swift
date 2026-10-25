@@ -64,6 +64,8 @@ enum RunningJobs {
         do { try ps.run() } catch { return false }
         ps.waitUntilExit()
         let command = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        return command.contains("animeup") || command.contains("python")
+        // "python" alone matched any Python program on the Mac: after a
+        // crash a reused PID could have Quit stop someone else's work.
+        return command.lowercased().contains("animeup")
     }
 }
