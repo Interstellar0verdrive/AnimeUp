@@ -2720,7 +2720,8 @@ STYLE = f"""
       align-items: flex-start; font-size: 14px; font-weight: 600;
       line-height: 19px; color: var(--textPrimary); white-space: nowrap; }}
   .st-key-passi button p::after {{ font-size: 12.5px; font-weight: 400;
-      line-height: 18px; color: var(--textSecondary); }}
+      line-height: 18px; color: var(--textSecondary); max-width: 159px;
+      overflow: hidden; text-overflow: ellipsis; }}
   .st-key-passi button::before {{ position: absolute; left: 14px; top: 50%;
       transform: translateY(-50%); width: 24px; height: 24px;
       box-sizing: border-box; border-radius: 50%;
@@ -2800,6 +2801,36 @@ STYLE = f"""
   .au-agg-nota {{ margin-left: 40px; }}
   .st-key-cTaratura {{ gap: 2px !important; }}
 
+  /* Ritmo verticale misurato sulla tavola "Main" (passata pixel perfect). */
+  [data-testid="stSidebar"] .au-eyebrow.au-sgruppo {{ margin: 30px 0 11px; }}
+  :is(.st-key-cAltezza, .st-key-cCrf, .st-key-cPreset) {{ margin: -2px 0 4px; }}
+  .st-key-adv {{ margin-top: 6px; }}
+  .st-key-adv summary p {{ line-height: 16px; }}
+  .st-key-adv summary [data-testid="stMarkdownContainer"]::after {{ margin-top: 1px; }}
+  .au-sb-pref {{ margin: 19px 0 16px; padding-top: 21px; }}
+  /* Lingua quanto resta, tema largo quanto i suoi tre pulsanti. */
+  [data-testid="stLayoutWrapper"]:has(> .st-key-cLingua) {{ flex: 1 1 auto !important;
+      min-width: 0; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-cTema) {{ flex: 0 0 auto !important;
+      width: auto !important; }}
+  /* Le righe del riquadro: 77px le cartelle, come nel design. */
+  .st-key-prefCard [class*="st-key-cCartellaRiga"], .st-key-cTarRiga {{ margin: 0 !important; }}
+  .st-key-prefCard [class*="st-key-cCartellaRiga"] {{ gap: 4px !important; }}
+  .st-key-prefCard .au-pref-eti {{ line-height: 19px; }}
+  [class*="st-key-cCartellaPerc"] {{ min-height: 28px; height: 28px; align-items: center; }}
+  /* La nota sotto «Controlla gli aggiornamenti» restava fuori dal riquadro:
+     il -1rem di Streamlit in fondo al markdown la faceva sbordare. */
+  .st-key-swAggiorn [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .st-key-swAggiorn .au-agg-nota {{ margin-top: -8px; line-height: 15px; }}
+  /* Il binario dei cursori va da bordo a bordo, come nel design: Streamlit
+     lo rientrava di 5px per lato. */
+  [data-testid="stSidebar"] [data-testid="stSlider"] > div:last-child {{
+      padding-left: 0 !important; padding-right: 0 !important; }}
+  .st-key-cTaratura {{ gap: 0 !important; }}
+  .st-key-cTaratura .au-tar-mai, .st-key-cTaratura .au-tar-ok {{ margin-top: 0; }}
+  .au-sb-pref {{ margin-bottom: 14px; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-prefCard) {{ margin-top: 2px; }}
+
   /* ===================================================================
      Redesign 1.6 — Sorgenti senza video.
      =================================================================== */
@@ -2838,18 +2869,18 @@ STYLE = f"""
       color: var(--primaryText); }}
   .au-osserva span {{ width: 6px; height: 6px; border-radius: 50%;
       background: var(--primary); box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .18); }}
-  .st-key-rigaInput, .st-key-rigaOutput {{ flex-wrap: nowrap; gap: 10px !important; }}
-  .st-key-rigaInput > div:first-child, .st-key-rigaOutput > div:first-child {{
+  .st-key-percInput, .st-key-percOutput {{ flex-wrap: nowrap; gap: 10px !important; }}
+  .st-key-percInput > div:first-child, .st-key-percOutput > div:first-child {{
       flex: 1 1 auto; min-width: 0; }}
-  .st-key-rigaInput [class*="st-key-"], .st-key-rigaOutput [class*="st-key-"] {{
+  .st-key-percInput [class*="st-key-"], .st-key-percOutput [class*="st-key-"] {{
       flex: 0 0 auto; width: auto !important; }}
   .au-percorso-grande {{ display: block; overflow: hidden; white-space: nowrap;
       text-overflow: ellipsis; font: 400 13px var(--mono) !important;
       color: var(--textPrimary) !important; background: none !important;
       padding: 0 !important; }}
-  .st-key-rigaInput button, .st-key-rigaOutput button {{ height: 34px;
+  .st-key-percInput button, .st-key-percOutput button {{ height: 34px;
       min-height: 34px; white-space: nowrap; }}
-  .st-key-rigaOutput button {{ height: 30px; min-height: 30px; }}
+  .st-key-percOutput button {{ height: 30px; min-height: 30px; }}
   .au-freccia {{ display: flex; align-items: center; gap: 10px;
       margin: 4px 0 2px; }}
   .au-freccia span {{ width: 22px; height: 22px; flex: none; box-sizing: border-box;
@@ -2949,6 +2980,16 @@ STYLE = f"""
   .st-key-tarDaFare {{ padding: 14px !important; }}
   .st-key-questoMac {{ padding: 20px !important; }}
   .st-key-cartelleCard {{ padding: 24px 24px 0 !important; }}
+  /* Il -1rem di Streamlit sotto ogni markdown accorciava i riquadri: il
+     contenuto sbordava sul blocco dopo e le distanze del design sparivano. */
+  :is(.st-key-cartelleCard, .st-key-questoMac) [data-testid="stMarkdownContainer"] {{
+      margin-bottom: 0 !important; }}
+  .st-key-cartelleBox .au-occhio {{ line-height: 13px; }}
+  .st-key-cartelleBox .au-freccia {{ margin: 5px 0 8px; }}
+  .st-key-cartelleCard .au-tre {{ margin-top: 8px; }}
+  .st-key-vuotoGriglia {{ margin-top: 27px; }}
+  .au-titolo-pagina {{ margin-top: 14px; }}
+  .au-passi-titolo {{ margin: 12px 0 5px; }}
 
   /* ===================================================================
      Redesign 1.6 — Sorgenti con i file, e la barra d'azione in fondo.
@@ -3327,8 +3368,14 @@ STYLE = f"""
   .au-fine-righe > div {{ display: flex; align-items: center; padding: 9px 0;
       border-bottom: 1px solid var(--borderColor); font-size: 13.5px; }}
   .au-fine-righe > div:last-child {{ border-bottom: 0; }}
+  .au-fine-righe span {{ flex: none; white-space: nowrap; }}
   .au-fine-righe code {{ margin-left: auto; font: 400 12px var(--mono) !important;
-      color: var(--textCode) !important; background: none !important; padding: 0 !important; }}
+      color: var(--textCode) !important; background: none !important; padding: 0 0 0 24px !important;
+      min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+  /* Il titolo e' gia' nel resoconto, accanto all'icona: quello della modale
+     resta solo per chi legge con lo screen reader. */
+  [role="dialog"]:has(.au-fine-testa) > h2 {{ position: absolute; width: 1px; height: 1px;
+      overflow: hidden; clip-path: inset(50%); }}
   .st-key-cFineAzioni {{ flex-wrap: nowrap; gap: 10px !important; margin-top: 8px; }}
   .st-key-cFineAzioni .st-key-fineLog {{ margin-right: auto; }}
   .st-key-cFineAzioni [class*="st-key-fine"] {{ width: auto !important; flex: none; }}
@@ -3357,6 +3404,19 @@ STYLE = f"""
   .st-key-tarAzioni [class*="st-key-tar"] {{ width: auto !important; flex: none; }}
   .st-key-tarAzioni .st-key-tarLog {{ margin-right: auto; }}
   .st-key-tarAzioni button {{ height: 38px; padding: 0 16px; white-space: nowrap; }}
+  /* La taratura nella misura del design: 640px, il passo in piccolo e in
+     grigio accanto al titolo, i pulsanti sulla stessa linea. */
+  div:has(> [role="dialog"] .au-tar-passo) {{ width: 640px !important; }}
+  [data-testid="stElementContainer"]:has(> [data-testid="stMarkdown"] .au-tar-passo) {{ display: none; }}
+  [role="dialog"]:has(.au-tar-passo) h2 {{ align-items: baseline; }}
+  [role="dialog"]:has(.au-tar-passo) h2::after {{ font: 400 11.5px var(--mono);
+      color: var(--textSecondary); margin-left: 10px; white-space: nowrap; }}
+  .st-key-tarAzioni {{ align-items: center; margin-top: 4px; }}
+  .st-key-tarAzioni [data-testid="stElementContainer"] {{ margin: 0 !important; }}
+  [role="dialog"]:has(.au-tar-p1) [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  [role="dialog"]:has(.au-tar-p1) [data-testid="stVerticalBlock"] {{ gap: 14px !important; }}
+  .au-box-icona {{ display: flex; gap: 9px; align-items: flex-start; }}
+  .au-box-icona svg {{ flex: none; margin-top: 2px; }}
   .au-tar-corsa-testa {{ display: flex; align-items: center; gap: 10px; }}
   .au-tar-corsa-testa > span {{ width: 8px; height: 8px; border-radius: 50%;
       background: var(--primary); box-shadow: 0 0 0 4px rgb(var(--primaryRgb) / .2); }}
@@ -4180,16 +4240,19 @@ def _contenuto_fine_coda(lancio: dict) -> None:
         a = time.localtime(lancio["fine"])
         # Una maratona che passa la mezzanotte: il giorno compare solo quando
         # serve a capire.
+        # Una notte di cambio d'ora fa finire "prima" di cominciare: allora
+        # gli orari portano il fuso.
+        ora = '%H:%M %Z' if da.tm_isdst != a.tm_isdst else '%H:%M'
         if (da.tm_year, da.tm_yday) == (a.tm_year, a.tm_yday):
-            quando = t("lav.fine_orari", inizio=time.strftime('%H:%M', da),
-                       fine=time.strftime('%H:%M', a))
+            quando = t("lav.fine_orari", inizio=time.strftime(ora, da),
+                       fine=time.strftime(ora, a))
         else:
             giorno = t("lav.fmt_giorno")
             quando = t("lav.fine_giorni_diversi",
                        giorno_inizio=time.strftime(giorno, da),
-                       inizio=time.strftime('%H:%M', da),
+                       inizio=time.strftime(ora, da),
                        giorno_fine=time.strftime(giorno, a),
-                       fine=time.strftime('%H:%M', a))
+                       fine=time.strftime(ora, a))
     sotto = (tn("lav.fine_sotto_avvisi", len(con_avvisi), n=n_ok, totale=n_tot, a=len(con_avvisi))
              if con_avvisi else t("lav.fine_sotto", n=n_ok, totale=n_tot))
     icona = (f"<span class='au-fine-icona au-giallo'>!</span>" if falliti else
@@ -4245,9 +4308,11 @@ def _contenuto_fine_coda(lancio: dict) -> None:
     if lancio.get("dedup_medio") is not None:
         righe.append((t("lav.fine_dedup"),
                       f"{float(lancio['dedup_medio']):.1%}".replace(".", t("lav.fmt_decimale"))))
-    righe.append((t("lav.fine_salvati"), _breve(PATHS.output)))
+    uscita = Path(lancio.get("output") or PATHS.output)
+    righe.append((t("lav.fine_salvati"), _breve(uscita)))
     st.markdown("<div class='au-fine-righe'>" + "".join(
-        f"<div><span>{esc(k)}</span><code>{esc(v)}</code></div>" for k, v in righe)
+        f"<div><span>{esc(k)}</span><code title='{esc(v)}'>{esc(v)}</code></div>"
+        for k, v in righe)
         + "</div>", unsafe_allow_html=True)
 
     def _chiudi() -> None:
@@ -4259,12 +4324,12 @@ def _contenuto_fine_coda(lancio: dict) -> None:
 
     with st.container(key="cFineAzioni", horizontal=True, vertical_alignment="center"):
         if st.button(t("lav.fine_log"), key="fineLog", type="tertiary"):
-            subprocess.run(["open", str(PATHS.job_logs)], check=False)
+            subprocess.run(["open", str(uscita / "logs")], check=False)
         if st.button(t("lav.chiudi"), key="fineChiudi"):
             _chiudi()
             st.rerun()
         if st.button(t("lav.fine_apri"), key="fineFinder", type="primary"):
-            subprocess.run(["open", str(PATHS.output)], check=False)
+            subprocess.run(["open", str(uscita)], check=False)
             _chiudi()
             st.rerun()
 
@@ -4338,10 +4403,12 @@ def _taratura_intro() -> None:
     occupata = (any(l.vivo for l in monitor.lavori()) or monitor.catena() is not None
                 or monitor.pausa() is not None or confronto.in_corso())
     if occupata:
-        st.markdown(f"<div class='au-box-rosso'>{t('lav.tar_occupata')}</div>",
+        st.markdown(f"<div class='au-box-rosso au-box-icona'>{_svg(_I_INFO, 15, 2)}"
+                    f"<span>{t('lav.tar_occupata')}</span></div>",
                     unsafe_allow_html=True)
     else:
-        st.markdown(f"<div class='au-box-giallo'>{t('lav.tar_prima')}</div>",
+        st.markdown(f"<div class='au-box-giallo au-box-icona'>{_svg(_I_ATTENZIONE, 15, 2)}"
+                    f"<span>{t('lav.tar_prima')}</span></div>",
                     unsafe_allow_html=True)
     with st.container(key="tarAzioni", horizontal=True):
         if st.button(t("lav.chiudi") if occupata else t("lav.tar_non_ora"), key="tarNonOra"):
@@ -4464,7 +4531,7 @@ def _modale_taratura() -> None:
         f'[role="dialog"]:has(.au-tar-p{n}) h2::after '
         f'{{ content: "{t("lav.tar_passo", n=n, totale=3)}"; }}'
         for n in (1, 2, 3)) + "</style>", unsafe_allow_html=True)
-    st.dialog(t("lav.tar_titolo"), width="large")(_contenuto_taratura)()
+    st.dialog(t("lav.tar_titolo"), width="medium")(_contenuto_taratura)()
 
 
 def _chiedi_aggiornamento() -> None:
@@ -4987,6 +5054,8 @@ _I_CARTELLA = "<path d='M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2
 _I_MAC = "<rect x='4' y='5' width='16' height='11' rx='1.5'/><path d='M2 19h20'/>"
 _I_GIU = "<path d='M12 5v14M6 13l6 6 6-6'/>"
 _I_SPUNTA = "<path d='M4.5 12.5 9.5 17.5 19.5 7'/>"
+_I_ATTENZIONE = "<path d='M12 4 2.5 20h19z'/><path d='M12 10v4.5M12 17.2v.1'/>"
+_I_INFO = "<circle cx='12' cy='12' r='9'/><path d='M12 7.5v5.5M12 16.3v.1'/>"
 
 
 def _sorgenti_vuota() -> None:
@@ -5018,7 +5087,7 @@ def _sorgenti_vuota() -> None:
                     f"<div class='au-occhio'>{t('src.eti_input')}"
                     f"<span class='au-osserva'><span></span>{t('src.osserva')}</span></div>",
                     unsafe_allow_html=True)
-                with st.container(key="rigaInput", horizontal=True,
+                with st.container(key="percInput", horizontal=True,
                                   vertical_alignment="center"):
                     st.markdown(f"<code class='au-percorso-grande'>"
                                 f"{esc(_breve(PATHS.input))}</code>",
@@ -5036,7 +5105,7 @@ def _sorgenti_vuota() -> None:
                     f"<em>{t('src.freccia')}</em><i></i></div>"
                     f"<div class='au-occhio'>{t('src.eti_output')}</div>",
                     unsafe_allow_html=True)
-                with st.container(key="rigaOutput", horizontal=True,
+                with st.container(key="percOutput", horizontal=True,
                                   vertical_alignment="center"):
                     st.markdown(f"<code class='au-percorso-grande'>"
                                 f"{esc(_breve(PATHS.output))}</code>",

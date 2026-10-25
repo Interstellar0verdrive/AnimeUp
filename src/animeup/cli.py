@@ -934,6 +934,9 @@ def _scrivi_lancio(*, inizio: float, fine: float, previsti: list[str],
                 "falliti": falliti, "scartati": scartati,
                 "interrotti": interrotti,
                 "lancio": str(lancio),
+                # Dove sono finiti: la cartella si puo' cambiare dopo, e il
+                # resoconto deve indicare quella di allora.
+                "output": str(PATHS.output),
                 "catena_inizio": int(catena_inizio),
                 "catena_totale": int(catena_totale),
                 "numero_finale": int(numero_finale),
