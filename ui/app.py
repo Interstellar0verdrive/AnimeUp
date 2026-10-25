@@ -989,7 +989,12 @@ STYLE = f"""
       flex: 1 1 auto; width: 100%; align-items: center; }}
   [class*="st-key-clip"] [data-testid="stWidgetLabel"]::after {{
       margin-left: auto; font-family: var(--mono); font-size: 11px;
-      color: {TESTO_2}; font-variant-numeric: tabular-nums; }}
+      color: {TESTO_2}; font-variant-numeric: tabular-nums; white-space: nowrap; }}
+  /* Nome della clip e orario interi: se insieme non ci stanno, l'orario va
+     sotto (prima «Moviment/o» e «00:23 - / 00:33»). */
+  [class*="st-key-clip"] [data-testid="stWidgetLabel"] {{ flex-wrap: wrap; column-gap: 8px; }}
+  [class*="st-key-clip"] [data-testid="stWidgetLabel"] p {{ white-space: nowrap;
+      overflow-wrap: normal; word-break: normal; }}
   [class*="st-key-clip"] [data-testid="stCheckbox"] {{ margin-bottom: 5px; }}
   /* Il solito `margin-bottom: -14px` di Streamlit su `stMarkdownContainer`:
      qui tirava su la scatola lasciando il testo fuori, e la descrizione
@@ -1203,9 +1208,7 @@ STYLE = f"""
   .au-riga-barra {{ height: 4px; border-radius: 2px; margin-bottom: 4px;
                    overflow: hidden; background: var(--idleEdge); }}
   .au-riga-avanz .au-meta {{ display: block; text-align: left;
-                            font-size: 11px; color: {TESTO_3};
-                            white-space: nowrap; overflow: hidden;
-                            text-overflow: ellipsis; }}
+                            font-size: 11px; color: {TESTO_3}; }}
   .au-riga-barra > span {{ display: block; height: 100%;
                           background: var(--primary);
                           transition: width .6s ease; }}
@@ -1778,8 +1781,10 @@ STYLE = f"""
   .au-etichetta {{ font-size: 10px; font-weight: 500; letter-spacing: .08em;
                   text-transform: uppercase; color: {TESTO_3}; }}
   .au-valore {{ font-family: var(--mono); font-size: 12.5px; color: {TESTO};
-               font-variant-numeric: tabular-nums; line-height: 1.45;
-               overflow-wrap: anywhere; }}
+               font-variant-numeric: tabular-nums; line-height: 1.45; }}
+  .au-ind > span {{ white-space: nowrap; }}
+  .au-nomis {{ white-space: nowrap; margin-top: 8px; }}
+  [data-testid="stColumn"]:has(.au-nomis) {{ flex: 0 0 auto !important; width: auto !important; }}
   /* I valori che cambieranno il risultato si distinguono dagli altri: chi
      apre i dettagli cerca proprio quelli. */
   .au-valore.au-attenzione {{ color: {GIALLO}; }}
@@ -2503,15 +2508,15 @@ STYLE = f"""
   /* "Rianalizza" ora vive dentro il pannello ed è un secondario vero, con la
      sua parola: fuori era un simbolo accanto alla chevron, e due icone
      affiancate si contendevano l'attenzione. */
-  [class*="st-key-ric"] button {{
+  [class*="st-key-rianalizzaFile"] button {{
       border: 1px solid {BORDO_VIVO} !important;
       background: none !important; box-shadow: none !important;
       padding: 8px 18px !important; }}
   /* L'icona nativa di Streamlit e non il carattere "⟳": quello a 12px è un
      ghirigoro illeggibile, questa è un'icona disegnata per essere piccola. */
-  [class*="st-key-ric"] button [data-testid="stIconMaterial"] {{
+  [class*="st-key-rianalizzaFile"] button [data-testid="stIconMaterial"] {{
       font-size: 16px; color: var(--textSecondary); }}
-  [class*="st-key-ric"] button p {{
+  [class*="st-key-rianalizzaFile"] button p {{
       font-size: 12.5px; font-weight: 500;
       color: var(--codeTextColor, var(--textCode)); transition: color .12s ease; }}
   /* L'HOVER STANDARD delle CTA secondarie: identico ovunque (chiesto
@@ -2556,7 +2561,9 @@ STYLE = f"""
       border: 1px solid rgb(var(--primaryRgb) / .30);
       color: var(--textPrimary); font: 400 11px var(--mono);
       white-space: nowrap; }}
-  .au-lock-nota {{ padding: 10px 12px; border-radius: 8px;
+  /* Il margine compensa il -1rem di Streamlit sotto il sottotitolo, che
+     faceva salire la nota sopra l'ultima riga del testo. */
+  .au-lock-nota {{ margin-top: 17px; padding: 10px 12px; border-radius: 8px;
       background: var(--sidebar2); border: 1px solid var(--borderStrong);
       font-size: 12.5px; line-height: 1.45; color: var(--textCode); }}
   [data-testid="stSidebar"] .au-eyebrow.au-sgruppo {{ margin: 14px 0 2px;
@@ -2719,9 +2726,18 @@ STYLE = f"""
   .st-key-passi button p {{ display: flex; flex-direction: column;
       align-items: flex-start; font-size: 14px; font-weight: 600;
       line-height: 19px; color: var(--textPrimary); white-space: nowrap; }}
+  /* Il sottotitolo non si taglia mai: se non sta, va su due righe (e tutti
+     e tre i passi crescono insieme). */
+  .st-key-passi button > div, .st-key-passi button p {{ width: 100%; min-width: 0; }}
   .st-key-passi button p::after {{ font-size: 12.5px; font-weight: 400;
-      line-height: 18px; color: var(--textSecondary); max-width: 159px;
-      overflow: hidden; text-overflow: ellipsis; }}
+      line-height: 18px; color: var(--textSecondary); white-space: normal;
+      max-width: 100%; }}
+  .st-key-passi {{ align-items: stretch !important; }}
+  .st-key-passi > [class*="st-key-passo"] {{ align-self: stretch; display: flex;
+      height: auto !important; }}
+  .st-key-passi > [class*="st-key-passo"] > .stButton {{ display: flex; flex: 1; }}
+  .st-key-passi button {{ height: auto !important; min-height: 55px !important;
+      padding-top: 6px !important; padding-bottom: 6px !important; }}
   .st-key-passi button::before {{ position: absolute; left: 14px; top: 50%;
       transform: translateY(-50%); width: 24px; height: 24px;
       box-sizing: border-box; border-radius: 50%;
@@ -2806,17 +2822,64 @@ STYLE = f"""
      righe i numeri non vanno a capo a meta' e i nomi lunghi si fermano a due
      righe. A 1440 non cambia niente. */
   @media (max-width: 1360px) {{
-    .st-key-passi button {{ width: clamp(176px, calc((100vw - 476px) / 3), 250px);
-        padding-right: 30px !important; }}
-    .st-key-passi button p, .st-key-passi button p::after {{ max-width: 100%;
-        overflow: hidden; text-overflow: ellipsis; }}
+    .st-key-passi button {{ width: clamp(176px, calc((100vw - 476px) / 3), 250px); }}
     .au-fasi-stato {{ display: none; }}
-    .au-cell, .au-eyebrow {{ white-space: nowrap; overflow: hidden;
-        text-overflow: ellipsis; }}
+    /* Un passo chiuso non ha mai il contatore a destra: il suo spazio va al
+       sottotitolo. */
+    .st-key-passi button:disabled {{ padding-right: 14px !important; }}
+    /* Sorgenti vuota: le due schede una sopra l'altra, invece di schiacciare
+       quella delle cartelle accanto ai 340px fissi di «Questo Mac». */
+    .st-key-vuotoGriglia {{ flex-wrap: wrap !important; }}
+    .st-key-vuotoGriglia > [data-testid="stLayoutWrapper"]:has(> .st-key-cartelleCard),
+    .st-key-vuotoGriglia > [data-testid="stLayoutWrapper"]:has(> .st-key-questoMac) {{
+        flex: 1 1 100% !important; width: 100% !important; }}
+    .st-key-vuotoGriglia .st-key-questoMac {{ width: 100% !important; }}
+    .st-key-vuotoGriglia :is(.st-key-cartelleCard, .st-key-questoMac) {{ height: auto !important; }}
+    /* I quattro passi di un lotto su due colonne: a quattro le chip «fatto»
+       e «sei qui» uscivano dalla scheda. */
+    .au-passi {{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }}
+    /* Le schede di dettaglio (Sorgenti, Lavorazione) su due colonne: a
+       quattro i valori andavano a capo a meta'. */
+    .au-griglia {{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }}
+    /* Confronto: il file da provare prende tutta la riga, i tre numeri
+       vanno sotto. Stretto accanto a loro, la tendina mostrava «Long C». */
+    .st-key-fileCard {{ flex-wrap: wrap !important; row-gap: 16px !important; }}
+    [data-testid="stLayoutWrapper"]:has(> .st-key-campoFile) {{ flex: 1 1 100% !important;
+        width: 100% !important; }}
+    .st-key-campoFile {{ width: 100% !important; padding-right: 0; }}
+    .st-key-fileCard > div:last-child {{ flex: 1 1 100% !important; margin-top: 14px; }}
+    .au-stat-file > div:first-child {{ border-left: 0; padding-left: 0; }}
+    /* Le fasi di una riga possono andare a capo: senza i trattini, una riga
+     nuova non comincia con un trattino appeso. */
+    .au-tappa + .au-tappa::before {{ display: none; }}
+    /* Numeri, intestazioni e chip interi: mai tagliati. Solo i nomi dei
+       file, che sono dati, si fermano a due righe. */
+    .au-cell, .au-eyebrow, .au-tag {{ white-space: nowrap; }}
+    /* «Rianalizza» nel dettaglio di un file: il pulsante si tiene la sua
+       larghezza invece di andare a capo. */
+    [data-testid="stColumn"]:has([class*="st-key-rianalizzaFile"]) {{
+        flex: 0 0 auto !important; width: auto !important; min-width: max-content !important; }}
+    [class*="st-key-rianalizzaFile"] button {{ white-space: nowrap; }}
+    /* La fascia dei Sorgenti va a capo fra un pezzo e l'altro, mai dentro
+       «6 file» o «00:07:02 di video». */
+    div.au-fascia-sorgenti {{ flex-wrap: wrap; row-gap: 6px; height: auto;
+        min-height: 46px; padding-top: 8px; padding-bottom: 8px; }}
+    div.au-fascia-sorgenti > * {{ white-space: nowrap; }}
     .au-name {{ display: -webkit-box; -webkit-line-clamp: 2;
         -webkit-box-orient: vertical; overflow: hidden; }}
-    .au-tag {{ max-width: 100%; overflow: hidden; text-overflow: ellipsis;
-        white-space: nowrap; display: inline-block; vertical-align: middle; }}
+    /* La tabella dei Sorgenti (cinque colonne): stessa regola. */
+    :is(.st-key-intest, [class*="st-key-riga"]) [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(5):last-child) {{
+        flex-wrap: nowrap !important; gap: 10px !important; }}
+    :is(.st-key-intest, [class*="st-key-riga"]) [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(5):last-child)
+        > [data-testid="stColumn"]:nth-child(1) {{ flex: 1.3 1 0 !important; min-width: 0 !important; }}
+    :is(.st-key-intest, [class*="st-key-riga"]) [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(5):last-child)
+        > [data-testid="stColumn"]:nth-child(2) {{ flex: 0 0 84px !important; min-width: 0 !important; }}
+    :is(.st-key-intest, [class*="st-key-riga"]) [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(5):last-child)
+        > [data-testid="stColumn"]:nth-child(3) {{ flex: 0 0 66px !important; min-width: 0 !important; }}
+    :is(.st-key-intest, [class*="st-key-riga"]) [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(5):last-child)
+        > [data-testid="stColumn"]:nth-child(4) {{ flex: 1 1 0 !important; min-width: 0 !important; }}
+    :is(.st-key-intest, [class*="st-key-riga"]) [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(5):last-child)
+        > [data-testid="stColumn"]:nth-child(5) {{ flex: 0 0 24px !important; min-width: 0 !important; }}
     /* La tabella di Lavorazione (otto colonne): i numeri hanno la loro
        larghezza, il nome prende quello che resta. */
     [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child) {{
@@ -2826,7 +2889,7 @@ STYLE = f"""
     [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
         > [data-testid="stColumn"]:nth-child(3) {{ flex: 0 0 84px !important; min-width: 0 !important; }}
     [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
-        > [data-testid="stColumn"]:nth-child(4) {{ flex: 0 0 48px !important; min-width: 0 !important; }}
+        > [data-testid="stColumn"]:nth-child(4) {{ flex: 0 0 66px !important; min-width: 0 !important; }}
     [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
         > [data-testid="stColumn"]:nth-child(5) {{ flex: 0 0 150px !important; min-width: 0 !important; }}
     [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
@@ -2841,6 +2904,9 @@ STYLE = f"""
   /* Alla larghezza minima della finestra il nome non ci starebbe:
      risoluzione e durata, che i Sorgenti mostrano gia', lasciano il posto. */
   @media (max-width: 1120px) {{
+    /* Risultati del confronto: tempi e indicatori uno sotto l'altro. */
+    .au-res-due {{ grid-template-columns: minmax(0, 1fr) !important; }}
+    .au-cnf th {{ white-space: nowrap; }}
     [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
         > [data-testid="stColumn"]:is(:nth-child(3), :nth-child(4)) {{ display: none !important; }}
     [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(8):last-child)
@@ -2963,6 +3029,8 @@ STYLE = f"""
   .au-tar-testo {{ margin: 0; font-size: 12.5px; line-height: 1.5;
       color: var(--textSecondary); }}
   .st-key-calibraMac button {{ height: 38px; font-weight: 600; white-space: nowrap; }}
+  .st-key-tarFatta > div:first-child {{ flex: 1 1 auto; min-width: 0; }}
+  .st-key-tarFatta [class*="st-key-ricalibraMac"] {{ margin-left: auto; width: auto !important; }}
   .st-key-tarFatta {{ padding: 12px 14px; border-radius: 10px; flex-wrap: nowrap;
       background: var(--insetBackground); border: 1px solid var(--borderColor); }}
   .au-tar-fatta {{ display: flex; align-items: center; gap: 12px; }}
@@ -3124,14 +3192,14 @@ STYLE = f"""
       height: 100%; }}
   .au-stat-file > div {{ padding: 0 16px; border-left: 1px solid var(--borderColor);
       display: flex; flex-direction: column; gap: 10px; }}
-  .au-stat-file dt {{ display: flex; align-items: center; gap: 6px;
+  .au-stat-file dt {{ display: flex; align-items: center; gap: 6px; white-space: nowrap;
       font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
       text-transform: uppercase; color: var(--textTertiary); }}
   .au-stat-file dd {{ margin: 0; font: 400 18px var(--mono); color: var(--textPrimary); }}
   .au-stat-file dd small {{ font-size: 12px; color: var(--textSecondary); }}
   .au-sez-riga {{ display: flex; align-items: baseline; gap: 12px; margin-top: 20px; }}
   .au-sez-titolo {{ font-size: 18px; font-weight: 600; letter-spacing: -.01em;
-      color: var(--textPrimary); }}
+      color: var(--textPrimary); white-space: nowrap; }}
   .au-sez-nota {{ font-size: 13px; color: var(--textSecondary); }}
   [class*="st-key-verdetto"] {{ background: var(--surface); border: 1px solid var(--borderColor);
       border-radius: 12px; padding: 14px 16px 6px !important; gap: 8px !important; }}
@@ -3276,7 +3344,7 @@ STYLE = f"""
   .au-cnf-nota {{ font-size: 12.5px; line-height: 1.5; color: var(--textSecondary);
       margin-top: 10px; }}
   .au-ind-modello {{ font-size: 13.5px; font-weight: 600; margin: 8px 0 6px; }}
-  .au-ind {{ display: grid; grid-template-columns: 130px minmax(0, 1fr) 48px;
+  .au-ind {{ display: grid; grid-template-columns: minmax(130px, max-content) minmax(0, 1fr) 48px;
       align-items: center; gap: 10px; margin: 4px 0; font-size: 12.5px;
       color: var(--textSecondary); }}
   .au-ind i {{ position: relative; height: 6px; border-radius: 3px;
@@ -3337,7 +3405,11 @@ STYLE = f"""
   .au-riga-testa b {{ font: 500 12.5px var(--mono); color: var(--primaryText); }}
   .au-riga-tappe {{ display: flex; align-items: center; gap: 18px; margin-top: 10px;
       font-size: 12.5px; color: var(--textSecondary); }}
-  .au-tappa {{ display: inline-flex; align-items: center; gap: 6px; }}
+  .au-tappa {{ display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }}
+  /* Nelle finestre strette le fasi vanno a capo fra l'una e l'altra, mai
+     dentro «2 Codifica blocco · CPU». */
+  .au-riga-tappe {{ flex-wrap: wrap; row-gap: 6px; }}
+  .au-riga-misure {{ white-space: nowrap; }}
   .au-tappa-fatta {{ color: var(--greenText); }}
   .au-tappa-fatta i {{ font-style: normal; }}
   .au-tappa-ora {{ color: var(--textPrimary); font-weight: 600; }}
@@ -3458,6 +3530,8 @@ STYLE = f"""
   [role="dialog"]:has(.au-tar-passo) h2::after {{ font: 400 11.5px var(--mono);
       color: var(--textSecondary); margin-left: 10px; white-space: nowrap; }}
   .st-key-tarAzioni {{ align-items: center; margin-top: 4px; }}
+  .st-key-tarChiudiContinua {{ align-self: flex-end; width: auto !important; margin-top: 6px; }}
+  .st-key-tarChiudiContinua button {{ height: 38px; padding: 0 16px; white-space: nowrap; }}
   .st-key-tarAzioni [data-testid="stElementContainer"] {{ margin: 0 !important; }}
   [role="dialog"]:has(.au-tar-p1) [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
   [role="dialog"]:has(.au-tar-p1) [data-testid="stVerticalBlock"] {{ gap: 14px !important; }}
@@ -3543,8 +3617,7 @@ STYLE = f"""
   .au-fatta {{ background: var(--greenBg) !important; border-color: rgb(var(--greenRgb) / .3) !important;
       color: var(--greenText) !important; }}
   .au-finito, [class*="st-key-jrow"]:has(.au-fatta) .au-stima-riga {{ color: var(--greenText); }}
-  .au-riga-dett {{ padding-right: 110px; white-space: nowrap; overflow: hidden;
-      text-overflow: ellipsis; }}
+  .au-riga-dett {{ padding-right: 110px; }}
   .st-key-pausa_tutto button p, [class*="st-key-riprendi_tutto"] button p {{
       color: var(--textPrimary) !important; }}
   .st-key-ferma_tutto button {{ background: transparent !important;
@@ -3888,7 +3961,12 @@ def header() -> str:
                 st.button(t(f"tab.{sezione}"), key=f"passo{i}",
                           on_click=_vai, args=(sezione,), disabled=chiusa,
                           type="primary" if sezione == attiva else "secondary")
-                regole.append(f'{classe} p::after {{ content: "{stato[sezione]}"; }}')
+                # Su due righe si va a capo prima del «·», mai fra «·» e il
+                # numero: "File 1 di 2 ·" / "55%" si leggeva male.
+                # (`\\0000a0`: sei cifre, o il «55%» dopo verrebbe letto come
+                # parte del codice.)
+                sotto = stato[sezione].replace(" · ", " ·\\0000a0")
+                regole.append(f'{classe} p::after {{ content: "{sotto}"; }}')
                 if chiusa:
                     regole.append(f'{classe}::before {{ content: ""; }}')
                 elif i == 1 and stato.get("fatta") and sezione != attiva:
@@ -4535,6 +4613,15 @@ def _taratura_viva() -> None:
         st.rerun()
         return
     tappe = s.get("steps") or []
+    try:
+        nomi = taratura.nomi_tappe()
+    except Exception:                                  # noqa: BLE001
+        nomi = []
+    if len(nomi) == len(tappe):
+        tappe = [[nome, costo] for nome, (_vecchio, costo) in zip(nomi, tappe)]
+    indice_ora = int(s.get("index") or 0)
+    etichetta = (tappe[indice_ora - 1][0] if 1 <= indice_ora <= len(tappe)
+                 else s.get("label") or t("lav.tar_preparazione"))
     indice = int(s.get("index") or 0)
     totale = int(s.get("total") or len(tappe) or 1)
     quota = float(s.get("fraction") or 0)
@@ -4555,7 +4642,7 @@ def _taratura_viva() -> None:
         f"<div class='au-tar-corsa-testa'><span></span><b>{t('lav.tar_in_corso')}</b>"
         f"<code>{quota:.0%}{manca}</code></div>"
         f"<div class='au-tar-tappe'>{''.join(segmenti)}</div>"
-        f"<div class='au-tar-stato'>{esc(s.get('label') or t('lav.tar_preparazione'))}"
+        f"<div class='au-tar-stato'>{esc(etichetta)}"
         f"{f' ({indice}/{totale})' if indice else ''}</div>"
         f"<div class='au-tar-lista'>{''.join(voci)}</div>"
         f"<p class='au-tar-p'>{t('lav.tar_chiudibile')}</p></div>",
@@ -4760,6 +4847,23 @@ def _icona_perche(testo: str) -> str:
             "<path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path>"
             "<line x1='12' y1='17' x2='12.01' y2='17'></line></svg>"
             f"{_bolla(testo)}</span>")
+
+
+def _unito(testo: str) -> str:
+    """Un valore che puo' andare a capo solo fra un pezzo e l'altro.
+
+    Un numero resta attaccato alla sua unita' e a cio' che lo precede
+    («8 bit 4:2:0», «riduzione 2.00:1», «≈ 2m»): si va a capo dopo un «·» o
+    prima di una «→», mai a meta' di una misura. Spazi normali altrove.
+    """
+    import re
+
+    def pezzo(p: str) -> str:
+        return re.sub(r"(?<=\d) (?=\S)|(?<=\S) (?=[\d≈~×])|(?<=[≈~]) ", "\u00a0", p)
+    # Prima i separatori, poi i numeri dentro ogni pezzo: al contrario lo
+    # spazio dopo «·» si attaccava al numero e si andava a capo PRIMA del «·».
+    return "\u00a0· ".join(" →\u00a0".join(pezzo(q) for q in parte.split(" → "))
+                            for parte in testo.split(" · "))
 
 
 def _breve(percorso: str | Path) -> str:
@@ -5371,7 +5475,7 @@ def _blocco_taratura(voce_tar) -> None:
             st.markdown(
                 f"<div class='au-tar-fatta'><span class='au-spunta'>{_svg(_I_SPUNTA, 12, 2.4)}</span>"
                 f"<span><b>{t('src.tar_fatta')}</b>"
-                f"<code>{t('sb.taratura_ultima', quando=quando)}</code></span></div>",
+                f"<code>{quando}</code></span></div>",
                 unsafe_allow_html=True)
             if st.button(t("sb.taratura_ripeti"), key="ricalibraMac",
                          disabled=_motivo_blocco() is not None):
@@ -5582,7 +5686,7 @@ def page_sorgenti(cfg: dict) -> None:
                     sintesi.append(", ".join(tracce))
 
                 avvisi = rep.warnings()
-                blocco = f"<div class='au-meta'>{esc(' · '.join(sintesi))}</div>"
+                blocco = f"<div class='au-meta'>{esc(_unito(' · '.join(sintesi)))}</div>"
                 chip_riga = []
                 if avvisi:
                     chip_riga.append(f"<span class='au-tag au-warn au-chip-riga au-punto'>"
@@ -5666,9 +5770,11 @@ def page_sorgenti(cfg: dict) -> None:
                                 f"{t('src.misura_in_corso')}</div>",
                                 unsafe_allow_html=True)
                         elif sempre:
+                            # Una chip come nel design, intera: come testo
+                            # andava a capo nella colonna stretta.
                             fondo.markdown(
-                                "<div class='au-hint' style='margin-top:8px'>"
-                                f"{t('src.dedup_non_misurabile')}</div>",
+                                "<span class='au-tag au-dim au-nomis'>"
+                                f"{t('src.dedup_non_misurabile')}</span>",
                                 unsafe_allow_html=True)
                         elif fondo.button(
                                 t("src.approfondita"),
@@ -5684,7 +5790,7 @@ def page_sorgenti(cfg: dict) -> None:
                         # l'etichetta: lì resta la parola "refresh" in Inter,
                         # perché il font delle icone non viene applicato.
                         if azione.button(t("src.rianalizza"), icon=":material/refresh:",
-                                         key=f"ric{i}",
+                                         key=f"rianalizzaFile{i}",
                                          help=t("src.rianalizza_aiuto")):
                             lavoro.accoda([path], rifai=True)
                             st.rerun()
@@ -5781,7 +5887,7 @@ def _dettagli(rep) -> None:
         celle = "".join(
             f"<div class='au-voce'><span class='au-etichetta'>{esc(k)}</span>"
             f"<span class='au-valore{' au-attenzione' if occhio else ''}'>"
-            f"{esc(v)}</span></div>"
+            f"{esc(_unito(str(v)))}</span></div>"
             for k, v, occhio in voci
         )
         pezzi.append(f"<div class='au-blocco'><div class='au-gtitolo'>{titolo}</div>"
@@ -5983,15 +6089,17 @@ def _schede_modelli(plan, path: Path, praticabili: dict[str, str]) -> list[str]:
                 meta = (t("conf.velocita", fps=f"{velocita:.1f}",
                           durata=stima_hm(plan.frames / velocita)) if velocita else "")
             with st.container(key=f"mod_{k}"):
+                # Trattini che non spezzano: «Real-CUGAN no-denoise» va a capo
+                # solo fra le parole, mai dopo «no-».
                 acceso = st.checkbox(
-                    modello.label, value=(k in voluti) and not morta,
+                    modello.label.replace("-", "\u2011"), value=(k in voluti) and not morta,
                     key=f"prova_{k}_{path}", disabled=morta,
                     help=praticabili.get(k) or None,
                     on_change=_tocca_modelli, args=(str(path),))
                 st.markdown(
                     (f"<span class='au-tag {classe}'>{esc(testo)}</span>" if testo else "")
                     + f"<div class='au-m-desc'>{esc(modello.description[:1].upper() + modello.description[1:])}</div>"
-                    f"<div class='au-m-vel'>{esc(meta)}</div>",
+                    f"<div class='au-m-vel'>{esc(_unito(meta))}</div>",
                     unsafe_allow_html=True)
             if acceso and not morta:
                 chiavi.append(k)
@@ -8271,7 +8379,7 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
     for titolo, voci in gruppi:
         celle = "".join(
             f"<div class='au-voce'><span class='au-etichetta'>{esc(k)}</span>"
-            f"<span class='au-valore'>{esc(v)}</span></div>" for k, v in voci)
+            f"<span class='au-valore'>{esc(_unito(str(v)))}</span></div>" for k, v in voci)
         pezzi.append(f"<div class='au-blocco'><div class='au-gtitolo'>{titolo}"
                      f"</div><div class='au-griglia'>{celle}</div></div>")
     pezzi.append(
