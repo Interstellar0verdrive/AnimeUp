@@ -22,9 +22,9 @@
   <g transform="translate(0 16)">
     <rect class="flow-card" x="20" y="0" width="400" height="112" rx="12" />
     <text class="flow-title" x="40" y="36">Install</text>
-    <text class="flow-caption" x="40" y="61">Unzip; open Avvia AnimeUp.command</text>
-    <text class="flow-caption" x="40" y="79">Allow in Privacy &amp; Security</text>
-    <text class="flow-duration" x="40" y="99">A FEW MINUTES · ONCE</text>
+    <text class="flow-caption" x="40" y="56">Unzip; open Avvia AnimeUp.command</text>
+    <text class="flow-caption" x="40" y="73">Allow in Privacy &amp; Security</text>
+    <text class="flow-duration" x="40" y="91">A FEW MINUTES · ONCE</text>
   </g>
   <path class="flow-link" d="M220 133v17m-5-6 5 6 5-6" />
 
@@ -33,9 +33,9 @@
     <rect class="flow-tag" x="315" y="14" width="88" height="22" rx="11" />
     <text class="flow-tag-text" x="359" y="29">OPTIONAL</text>
     <text class="flow-title" x="40" y="36">Calibrate</text>
-    <text class="flow-caption" x="40" y="61">Select Run now beside Calibration</text>
-    <text class="flow-caption" x="40" y="79">in the sidebar</text>
-    <text class="flow-duration" x="40" y="99">ABOUT 10 MINUTES · ONCE PER MAC</text>
+    <text class="flow-caption" x="40" y="56">Select Run now beside Calibration</text>
+    <text class="flow-caption" x="40" y="73">in the sidebar</text>
+    <text class="flow-duration" x="40" y="91">ABOUT 10 MINUTES · ONCE PER MAC</text>
   </g>
 
   <g transform="translate(0 296)">
@@ -43,9 +43,9 @@
     <circle class="flow-number" cx="55" cy="40" r="18" />
     <text class="flow-number-text" x="55" y="44">01</text>
     <text class="flow-title" x="88" y="36">Sources</text>
-    <text class="flow-caption" x="88" y="61">Copy episodes into INPUT/</text>
-    <text class="flow-caption" x="88" y="79">Read their analysis</text>
-    <text class="flow-duration" x="88" y="99">SECONDS PER FILE</text>
+    <text class="flow-caption" x="88" y="56">Copy episodes into INPUT/</text>
+    <text class="flow-caption" x="88" y="73">Read their analysis</text>
+    <text class="flow-duration" x="88" y="91">SECONDS PER FILE</text>
   </g>
   <path class="flow-link" d="M220 413v17m-5-6 5 6 5-6" />
 
@@ -54,9 +54,9 @@
     <circle class="flow-number" cx="55" cy="40" r="18" />
     <text class="flow-number-text" x="55" y="44">02</text>
     <text class="flow-title" x="88" y="36">Compare</text>
-    <text class="flow-caption" x="88" y="61">Test models on difficult clips</text>
-    <text class="flow-caption" x="88" y="79">Choose one by eye</text>
-    <text class="flow-duration" x="88" y="99">A FEW MINUTES PER SERIES</text>
+    <text class="flow-caption" x="88" y="56">Test models on difficult clips</text>
+    <text class="flow-caption" x="88" y="73">Choose one by eye</text>
+    <text class="flow-duration" x="88" y="91">A FEW MINUTES PER SERIES</text>
   </g>
   <path class="flow-link" d="M220 553v17m-5-6 5 6 5-6" />
 
@@ -65,9 +65,9 @@
     <circle class="flow-number" cx="55" cy="40" r="18" />
     <text class="flow-number-text" x="55" y="44">03</text>
     <text class="flow-title" x="88" y="36">Processing</text>
-    <text class="flow-caption" x="88" y="61">Tick files; check the model</text>
-    <text class="flow-caption" x="88" y="79">Select Start processing</text>
-    <text class="flow-duration" x="88" y="99">MINUTES TO HOURS PER EPISODE</text>
+    <text class="flow-caption" x="88" y="56">Tick files; check the model</text>
+    <text class="flow-caption" x="88" y="73">Select Start processing</text>
+    <text class="flow-duration" x="88" y="91">MINUTES TO HOURS PER EPISODE</text>
   </g>
   <path class="flow-link" d="M220 693v17m-5-6 5 6 5-6" />
 
@@ -76,8 +76,8 @@
     <circle class="flow-number" cx="55" cy="40" r="18" />
     <text class="flow-number-text" x="55" y="44">04</text>
     <text class="flow-title" x="88" y="36">Output</text>
-    <text class="flow-caption" x="88" y="61">Collect finished files from OUTPUT/</text>
-    <text class="flow-caption" x="88" y="79">Audio, subtitles and chapters kept</text>
-    <text class="flow-duration" x="88" y="99">WHEN THE JOB FINISHES</text>
+    <text class="flow-caption" x="88" y="56">Collect finished files from OUTPUT/</text>
+    <text class="flow-caption" x="88" y="73">Audio, subtitles and chapters kept</text>
+    <text class="flow-duration" x="88" y="91">WHEN THE JOB FINISHES</text>
   </g>
 </svg>
