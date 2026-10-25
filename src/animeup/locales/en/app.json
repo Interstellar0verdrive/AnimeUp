@@ -2,7 +2,7 @@
   "sb.aggiornamento": "AnimeUp {versione} is available.",
   "sb.aggiornamento_link": "Download it",
   "sb.controlla_agg": "Check for updates",
-  "sb.controlla_agg_aiuto": "Once a day AnimeUp asks GitHub for the latest release and, if there's a newer one, shows a note at the top of the sidebar with a link to it. Nothing is downloaded or installed automatically. It's the only connection AnimeUp makes by itself after the first launch.",
+  "sb.controlla_agg_aiuto": "Every time it starts, AnimeUp asks GitHub for the latest release and, if there's a newer one, shows a note at the top of the sidebar with a link to it. Nothing is downloaded or installed automatically. It's the only connection AnimeUp makes by itself after the first launch.",
   "sb.cartella_in": "Videos to process folder",
   "sb.cartella_in_aiuto": "Where you copy the episodes to upscale. AnimeUp watches it and analyses new files by itself. It can be on an external drive, and it stays chosen until you change it. If it isn't available at launch (a disconnected drive), AnimeUp uses ~/Movies/AnimeUp/INPUT and tells you.",
   "sb.cartella_in_prompt": "Choose the folder of videos to process",

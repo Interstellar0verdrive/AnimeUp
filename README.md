@@ -168,8 +168,8 @@ via GitHub Actions.
 Closing the window doesn't quit AnimeUp: running jobs keep going in the
 background, and clicking the Dock icon brings the window back. **⌘Q** quits;
 if a job is running it asks first, then stops it (you can resume it later,
-losing at most the chunk in progress). AnimeUp checks once a day for a new release (you
-can turn this off); when there is one, click **Install update** in the
+losing at most the chunk in progress). AnimeUp checks for a new release every time it
+starts (you can turn this off); when there is one, click **Install update** in the
 sidebar: the app downloads it from GitHub, verifies it against the checksum
 published with the release, replaces itself and restarts, with no need to
 approve it again in Privacy & Security. Your data and settings are untouched.

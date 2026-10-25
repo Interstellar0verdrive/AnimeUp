@@ -4978,8 +4978,19 @@ def _() -> None:
         cache = Path(tmp) / "aggiornamenti.json"
         vero = agg._file
         agg._file = lambda: cache
+        vera_rete = agg._chiedi_a_github
+        chieste = []
+        agg._chiedi_a_github = lambda: chieste.append(1)
+        agg._avvio_controllato = False
         try:
             adesso = _time.time()
+            cache.write_text(_json.dumps({"controllato": adesso, "ultima": "v0.0.1"}))
+            # A ogni avvio si chiede comunque, anche con un controllo fresco;
+            # poi, nella stessa sessione, si legge la cache.
+            agg.disponibile(adesso=adesso)
+            agg.disponibile(adesso=adesso)
+            _time.sleep(0.2)
+            assert len(chieste) == 1, chieste
             # Controllo recente: si legge la cache, nessun thread di rete.
             cache.write_text(_json.dumps({"controllato": adesso, "ultima": "v999.0.0",
                                           "url": "https://example.invalid/r"}))
@@ -4995,6 +5006,7 @@ def _() -> None:
             assert agg.disponibile(adesso=adesso) is None
         finally:
             agg._file = vero
+            agg._chiedi_a_github = vera_rete
 
 
 @caso("con ANIMEUP_STATO i binari scaricati stanno fuori dal programma")

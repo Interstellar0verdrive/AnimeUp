@@ -1,13 +1,15 @@
-"""Avviso di nuove versioni: al massimo un controllo al giorno, mai bloccante.
+"""Avviso di nuove versioni: un controllo a ogni avvio, mai bloccante.
 
 Si chiede a GitHub qual è l'ultima release pubblicata e la si confronta con la
 versione in uso. Niente aggiornamento automatico: si mostra una nota con il
 link alla pagina della release, e l'utente decide. Il controllo è l'unica
 connessione che AnimeUp fa da solo dopo il primo avvio, ed è spegnibile.
 
-Il risultato vive in `records/update-check.json`, così un riavvio non ripete
-la richiesta e l'interfaccia legge un file invece di aspettare la rete: la
-richiesta vera gira in un thread, e la nota compare al giro successivo.
+Si chiede a ogni avvio (deciso dall'utente: con un controllo al giorno una
+release uscita da poche ore restava invisibile fino al giorno dopo), e di
+nuovo ogni 24 ore se AnimeUp resta aperto a lungo. Il risultato vive in
+`records/update-check.json`: l'interfaccia legge un file invece di aspettare
+la rete, la richiesta vera gira in un thread e la nota compare al giro dopo.
 """
 
 from __future__ import annotations
@@ -28,6 +30,9 @@ PAGINA_RELEASE = f"https://github.com/{REPO}/releases/latest"
 OGNI_SECONDI = 24 * 3600
 
 _in_volo = threading.Lock()
+# Il processo del server nasce a ogni avvio dell'app: il primo giro di questo
+# processo chiede comunque a GitHub, qualunque eta' abbia il controllo salvato.
+_avvio_controllato = False
 
 
 def _file() -> Path:
@@ -83,14 +88,18 @@ def _chiedi_a_github() -> None:
 def disponibile(*, attivo: bool = True, adesso: float | None = None) -> dict | None:
     """La versione più nuova da segnalare, se c'è: {"versione", "url"}.
 
-    Non aspetta mai la rete. Se l'ultimo controllo ha più di un giorno ne
-    avvia uno in sottofondo e intanto risponde con quanto già saputo.
+    Non aspetta mai la rete. Al primo giro dopo l'avvio, o se l'ultimo
+    controllo ha più di un giorno, ne avvia uno in sottofondo e intanto
+    risponde con quanto già saputo.
     """
+    global _avvio_controllato
     if not attivo:
         return None
     adesso = time.time() if adesso is None else adesso
     salvato = _leggi()
-    if adesso - float(salvato.get("controllato") or 0) > OGNI_SECONDI:
+    if (not _avvio_controllato
+            or adesso - float(salvato.get("controllato") or 0) > OGNI_SECONDI):
+        _avvio_controllato = True
         threading.Thread(target=_chiedi_a_github, daemon=True).start()
     ultima, attuale = versione(salvato.get("ultima", "")), versione(__version__)
     if ultima and attuale and ultima > attuale:
