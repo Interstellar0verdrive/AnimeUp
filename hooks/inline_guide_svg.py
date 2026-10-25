@@ -1,12 +1,12 @@
 """Inline the guide's SVG so its colors follow the selected site theme.
 
-The Markdown image remains usable when the source file is read on GitHub.
+The image tag remains usable when the source file is read on GitHub.
 """
 
 from pathlib import Path
 
 
-_IMAGE = "![Flow from the source file through analysis, planning, checks, extraction, deduplication, chunk processing, assembly and verification to the finished MKV](../img/job-flow.svg)"
+_IMAGE = '<img src="../img/job-flow.svg" width="440" height="1144" alt="Flow from the source file through analysis, planning, checks, extraction, deduplication, chunk processing, assembly and verification to the finished MKV">'
 
 
 def on_page_markdown(markdown, page, config, files):

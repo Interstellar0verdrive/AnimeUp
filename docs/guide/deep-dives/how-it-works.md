@@ -13,7 +13,7 @@ You don't need this page to use AnimeUp. It's for when you want to understand a 
 
 ## The whole path at a glance
 
-![Flow from the source file through analysis, planning, checks, extraction, deduplication, chunk processing, assembly and verification to the finished MKV](../img/job-flow.svg)
+<img src="../img/job-flow.svg" width="440" height="1144" alt="Flow from the source file through analysis, planning, checks, extraction, deduplication, chunk processing, assembly and verification to the finished MKV">
 
 The phase labels match the Processing row: **1/3** extracts the frames, **2/3** upscales and encodes chunks, and **3/3** encodes the last chunk and assembles the file. Deduplication happens between extraction and the chunk loop; verification follows assembly.
 
