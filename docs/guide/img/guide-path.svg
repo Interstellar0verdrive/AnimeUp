@@ -21,10 +21,10 @@
 
   <g transform="translate(20 16)">
     <rect class="flow-card" width="376" height="152" rx="12" />
-    <text class="flow-title" x="20" y="48">Install</text>
-    <text class="flow-caption" x="20" y="80">Unzip; open Avvia AnimeUp.command</text>
-    <text class="flow-caption" x="20" y="102">Allow in Privacy &amp; Security</text>
-    <text class="flow-duration" x="20" y="140">A FEW MINUTES · ONCE</text>
+    <text class="flow-title" x="20" y="43">Install</text>
+    <text class="flow-caption" x="20" y="74">Unzip; open Avvia AnimeUp.command</text>
+    <text class="flow-caption" x="20" y="96">Allow in Privacy &amp; Security</text>
+    <text class="flow-duration" x="20" y="133">A FEW MINUTES · ONCE</text>
   </g>
   <path class="flow-link" d="M402 92h16m-6-6 6 6-6 6" />
 
@@ -32,54 +32,54 @@
     <rect class="flow-card flow-card--optional" width="376" height="152" rx="12" />
     <rect class="flow-tag" x="233" y="14" width="126" height="22" rx="11" />
     <text class="flow-tag-text" x="296" y="29">OPTIONAL · FIRST USE</text>
-    <text class="flow-title" x="20" y="48">Calibrate</text>
-    <text class="flow-caption" x="20" y="80">Select Run now beside Calibration</text>
-    <text class="flow-caption" x="20" y="102">in the sidebar</text>
-    <text class="flow-duration" x="20" y="140">ABOUT 10 MINUTES · ONCE PER MAC</text>
+    <text class="flow-title" x="20" y="43">Calibrate</text>
+    <text class="flow-caption" x="20" y="74">Select Run now beside Calibration</text>
+    <text class="flow-caption" x="20" y="96">in the sidebar</text>
+    <text class="flow-duration" x="20" y="133">ABOUT 10 MINUTES · ONCE PER MAC</text>
   </g>
   <g transform="translate(20 204)">
     <rect class="flow-card" width="176" height="152" rx="12" />
-    <circle class="flow-number" cx="32" cy="42" r="17" />
-    <text class="flow-number-text" x="32" y="46">01</text>
-    <text class="flow-title" x="58" y="48">Sources</text>
-    <text class="flow-caption" x="14" y="80">Copy episodes</text>
-    <text class="flow-caption" x="14" y="100">into INPUT/</text>
-    <text class="flow-caption" x="14" y="120">Read their analysis</text>
-    <text class="flow-duration" x="14" y="142">SECONDS PER FILE</text>
+    <circle class="flow-number" cx="32" cy="37" r="17" />
+    <text class="flow-number-text" x="32" y="41">01</text>
+    <text class="flow-title" x="58" y="43">Sources</text>
+    <text class="flow-caption" x="14" y="74">Copy episodes</text>
+    <text class="flow-caption" x="14" y="93">into INPUT/</text>
+    <text class="flow-caption" x="14" y="112">Read their analysis</text>
+    <text class="flow-duration" x="14" y="133">SECONDS PER FILE</text>
   </g>
   <path class="flow-link" d="M202 280h14m-6-6 6 6-6 6" />
 
   <g transform="translate(221 204)">
     <rect class="flow-card" width="176" height="152" rx="12" />
-    <circle class="flow-number" cx="32" cy="42" r="17" />
-    <text class="flow-number-text" x="32" y="46">02</text>
-    <text class="flow-title" x="58" y="48">Compare</text>
-    <text class="flow-caption" x="14" y="80">Test models on</text>
-    <text class="flow-caption" x="14" y="100">difficult clips</text>
-    <text class="flow-caption" x="14" y="120">Choose by eye</text>
-    <text class="flow-duration" x="14" y="142">MINUTES PER SERIES</text>
+    <circle class="flow-number" cx="32" cy="37" r="17" />
+    <text class="flow-number-text" x="32" y="41">02</text>
+    <text class="flow-title" x="58" y="43">Compare</text>
+    <text class="flow-caption" x="14" y="74">Test models on</text>
+    <text class="flow-caption" x="14" y="93">difficult clips</text>
+    <text class="flow-caption" x="14" y="112">Choose by eye</text>
+    <text class="flow-duration" x="14" y="133">MINUTES PER SERIES</text>
   </g>
   <path class="flow-link" d="M403 280h14m-6-6 6 6-6 6" />
 
   <g transform="translate(422 204)">
     <rect class="flow-card flow-card--highlight" width="176" height="152" rx="12" />
-    <circle class="flow-number" cx="32" cy="42" r="17" />
-    <text class="flow-number-text" x="32" y="46">03</text>
-    <text class="flow-title" x="58" y="48">Processing</text>
-    <text class="flow-caption" x="14" y="80">Tick files; check</text>
-    <text class="flow-caption" x="14" y="100">the model</text>
-    <text class="flow-caption" x="14" y="120">Start processing</text>
-    <text class="flow-duration" x="14" y="142">MINUTES–HOURS / EPISODE</text>
+    <circle class="flow-number" cx="32" cy="37" r="17" />
+    <text class="flow-number-text" x="32" y="41">03</text>
+    <text class="flow-title" x="58" y="43">Processing</text>
+    <text class="flow-caption" x="14" y="74">Tick files; check</text>
+    <text class="flow-caption" x="14" y="93">the model</text>
+    <text class="flow-caption" x="14" y="112">Start processing</text>
+    <text class="flow-duration" x="14" y="133">MINUTES–HOURS / EPISODE</text>
   </g>
   <path class="flow-link" d="M604 280h14m-6-6 6 6-6 6" />
 
   <g transform="translate(623 204)">
     <rect class="flow-card flow-card--highlight" width="176" height="152" rx="12" />
-    <circle class="flow-number" cx="32" cy="42" r="17" />
-    <text class="flow-number-text" x="32" y="46">04</text>
-    <text class="flow-title" x="58" y="48">Output</text>
-    <text class="flow-caption" x="14" y="80">Collect finished</text>
-    <text class="flow-caption" x="14" y="100">files from OUTPUT/</text>
-    <text class="flow-duration" x="14" y="142">WHEN JOB FINISHES</text>
+    <circle class="flow-number" cx="32" cy="37" r="17" />
+    <text class="flow-number-text" x="32" y="41">04</text>
+    <text class="flow-title" x="58" y="43">Output</text>
+    <text class="flow-caption" x="14" y="74">Collect finished</text>
+    <text class="flow-caption" x="14" y="93">files from OUTPUT/</text>
+    <text class="flow-duration" x="14" y="133">WHEN JOB FINISHES</text>
   </g>
 </svg>
