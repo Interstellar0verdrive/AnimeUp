@@ -227,6 +227,15 @@ def run_cmd(
         help=t("cli.run.lancio"))] = "",
 ) -> None:
     """Esegue la lavorazione completa."""
+    from . import taratura as taratura_
+    from .processi import tieni_sveglio
+    # La pagina non avvia durante una taratura, ma un gruppo successivo di
+    # una catena partita prima sì: si dividerebbero la GPU e la taratura
+    # salverebbe numeri falsi.
+    if taratura_.in_corso():
+        dire(t("lav.avvia_taratura"), "yellow")
+        raise typer.Exit(1)
+    tieni_sveglio()
     from rich.progress import BarColumn, Progress as RichProgress, TextColumn, TimeRemainingColumn
 
     from .plan import PlanError, build_plan
@@ -323,7 +332,8 @@ def run_cmd(
                        interrotti=[], secondi=0.0, pausa_minuti=pausa,
                        avvisi=0, dedup=[], catena_inizio=catena_inizio,
                        catena_totale=catena_totale, numero_finale=0,
-                       lancio=etichetta)
+                       lancio=etichetta,
+                       presenti=[p.source.path.name for p in plans])
         raise typer.Exit(0)
     console.print("\n[bold]" + tn("cli.run.annuncio", len(da_fare), quanto=quanto)
                   + f"{riposo}{nota_saltati}[/bold]\n")
@@ -415,7 +425,11 @@ def run_cmd(
                     chunk=lambda i, n, done, tot: bar.update(task, completed=done, total=tot),
                 )
                 try:
-                    result = job.run(progress)
+                    _FILE_IN_CORSO[0] = True
+                    try:
+                        result = job.run(progress)
+                    finally:
+                        _FILE_IN_CORSO[0] = False
                 except _SaltaFile:
                     # Il "Ferma" per-file dell'interfaccia: SIGUSR1. Questo
                     # file si interrompe (riprendibile: il lucchetto è già
@@ -519,7 +533,8 @@ def run_cmd(
             # queste tre voci il resoconto descriveva l'ultimo spezzone e lo
             # spacciava per l'intera maratona.
             catena_inizio=catena_inizio, catena_totale=totale_catena,
-            numero_finale=numero, lancio=etichetta)
+            numero_finale=numero, lancio=etichetta,
+            presenti=[p.source.path.name for p in plans if p not in da_fare])
 
     # Uscita diversa da zero se qualcosa è andato storto: con `exit 0` uno
     # script chiamante vedeva successo anche con dodici episodi falliti su
@@ -709,6 +724,8 @@ def compare() -> None:
     un clic o un ricaricamento non lo interrompono piu'.
     """
     from . import confronto
+    from .processi import tieni_sveglio
+    tieni_sveglio()
     raise typer.Exit(confronto.esegui())
 
 
@@ -730,10 +747,13 @@ def taratura(
     GPU libera: con una lavorazione in corso si rifiuta di partire.
     """
     from . import monitor, taratura as modulo
+    from .processi import tieni_sveglio
+    tieni_sveglio()
 
     # Con la GPU occupata i numeri uscirebbero sballati (e si darebbe
     # fastidio alla lavorazione vera): meglio un no chiaro subito.
-    occupata = any(l.vivo for l in monitor.lavori()) or monitor.catena()
+    occupata = (any(l.vivo for l in monitor.lavori()) or monitor.catena()
+                or monitor.lancio_vivo())
     if fondo:
         # Lanciata dalla pagina: niente barra nel terminale, l'avanzamento
         # va nel file di stato che la pagina rilegge.
@@ -915,7 +935,7 @@ def _scrivi_lancio(*, inizio: float, fine: float, previsti: list[str],
                    secondi: float, pausa_minuti: int, avvisi: int,
                    dedup: list[float], catena_inizio: int = 0,
                    catena_totale: int = 0, numero_finale: int = 0,
-                   lancio: str = "") -> None:
+                   lancio: str = "", presenti: list[str] | None = None) -> None:
     """Com'e' andato QUESTO lancio, una riga per volta.
 
     Sta nel `finally` del giro: si scrive anche se la coda e' stata fermata
@@ -934,6 +954,9 @@ def _scrivi_lancio(*, inizio: float, fine: float, previsti: list[str],
                 "previsti": previsti, "riusciti": riusciti,
                 "falliti": falliti, "scartati": scartati,
                 "interrotti": interrotti,
+                # Gia' finiti prima di questo lancio: non sono «da fare», e
+                # senza dirlo il resoconto li contava come non avviati.
+                "presenti": list(presenti or []),
                 "lancio": str(lancio),
                 # Dove sono finiti: la cartella si puo' cambiare dopo, e il
                 # resoconto deve indicare quella di allora.
@@ -1052,20 +1075,32 @@ def _pausa_respiro(minuti: int) -> None:
     try:
         time_.sleep(minuti * 60)
     finally:
-        marker.unlink(missing_ok=True)
+        # Solo se e' ancora nostro: con due code insieme si toglieva quello
+        # dell'altra.
+        try:
+            if su_disco.loads(marker.read_text()).get("pid") == os.getpid():
+                marker.unlink(missing_ok=True)
+        except (OSError, ValueError, AttributeError):
+            pass
 
 
 class _SaltaFile(Exception):
     """Richiesta dell'utente: interrompi il file in corso, prosegui col resto."""
 
 
+# Vero solo mentre un file lavora davvero (dentro `job.run`).
+_FILE_IN_CORSO = [False]
+
+
 def _salta_file(_segnale: int, _frame: object) -> None:
     # SIGUSR1 = il "Ferma" per-file dell'interfaccia. Si abbatte l'upscaler
     # (in sessione propria, il segnale da solo non lo tocca) e si solleva
     # l'eccezione che il giro dei file cattura per passare al successivo.
-    # Se il segnale arriva nell'attimo fra un file e l'altro, l'eccezione
-    # esce dal giro e la CLI muore: degrada nel comportamento di SIGTERM,
-    # che è comunque uno stato sicuro (tutto riprendibile).
+    # Fra un file e l'altro (pausa, preparazione) non c'e' niente da fermare:
+    # l'eccezione usciva dal giro e uccideva la CLI, ma non la catena, che
+    # passava al gruppo di modelli dopo come se niente fosse. Si ignora.
+    if not _FILE_IN_CORSO[0]:
+        return
     from . import backend
     backend.abbatti_gruppi_attivi()
     raise _SaltaFile

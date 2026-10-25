@@ -122,6 +122,31 @@ SOSPESO = ".suspended"
 PAUSE_TOTALI = ".paused_seconds"
 
 
+def _chiudi_pausa_aperta(work: Path) -> None:
+    """Fermata da sospesa: la pausa finisce adesso, non alla ripresa.
+
+    Il marcatore aperto si cancella alla ripresa (vedi `_esegui`) senza
+    contare niente, e le ore passate in pausa prima del Ferma finivano nella
+    durata del file come lavoro. Si chiudono qui, nel totale delle pause.
+    """
+    try:
+        da = float(su_disco.leggi(work / SOSPESO).get("da") or 0)
+    except (OSError, ValueError, AttributeError):
+        return
+    if da <= 0:
+        return
+    totale = 0.0
+    try:
+        totale = max(0.0, float((work / PAUSE_TOTALI).read_text().strip() or 0))
+    except (OSError, ValueError):
+        pass
+    try:
+        (work / PAUSE_TOTALI).write_text(f"{totale + max(0.0, time.time() - da):.1f}")
+        (work / SOSPESO).unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def sospensione(work: Path) -> float:
     """Secondi di pausa da scontare, compresa quella in corso.
 
@@ -590,7 +615,7 @@ class Job:
         appeso dopo un errore bloccherebbe ogni ripresa successiva, che è
         esattamente il momento in cui serve poter ripartire.
         """
-        partita = time.monotonic()
+        partita = time.time()
         completato = False
         try:
             esito = self._esegui(progress)
@@ -598,11 +623,13 @@ class Job:
             return esito
         finally:
             if not completato:
+                if self._lucchetto_mio:
+                    _chiudi_pausa_aperta(self.work)
                 # Interrotto o fallito: i minuti spesi non devono sparire
                 # dalla contabilità. "Finito in 02h 26m" su un file lavorato
                 # in due riprese contava solo l'ultima (visto dall'utente):
                 # il totale si accumula qui e si somma al completamento.
-                self._segna_tempo_speso(time.monotonic() - partita)
+                self._segna_tempo_speso(max(0.0, time.time() - partita))
             # SOLO se il lucchetto è nostro. Cancellandolo comunque, il
             # processo che si era appena rifiutato di partire perché un altro
             # stava lavorando distruggeva la mutua esclusione che aveva appena
@@ -622,7 +649,7 @@ class Job:
 
     def _esegui(self, progress: Progress | None = None) -> JobResult:
         p = progress or Progress()
-        started = time.monotonic()
+        started = time.time()
         plan = self.plan
         # La stessa lista che i blocchi usano per far risalire gli avvisi:
         # `p.say` finisce in una barra di avanzamento troncata, non è un
@@ -919,9 +946,16 @@ class Job:
         _registra()
 
         p.say(t("mot.pipe.fase_assemblaggio"), t("mot.pipe.assemblaggio"))
-        enc.concat_and_mux(plan, prodotti, self.work, paths=self.paths)
+        # Il file resta col nome provvisorio finche' non e' verificato: un
+        # Ferma fra la rinomina e i controlli lasciava in OUTPUT un file col
+        # nome buono mai controllato, che il rilancio saltava come «gia'
+        # fatto» (niente pagella, cartella di lavoro orfana, difetti mai
+        # segnalati). Cosi' un'interruzione qui rifa' solo l'assemblaggio.
+        provvisorio = enc.concat_and_mux(plan, prodotti, self.work, paths=self.paths,
+                                         rinomina=False)
 
-        written, geometry = enc.verify_output(plan, total_frames, paths=self.paths)
+        written, geometry = enc.verify_output(plan, total_frames, paths=self.paths,
+                                              file=provvisorio)
         atteso = f"{plan.target_width}x{plan.target_height}"
         # Questi sono DIFETTI del file, non note: un video più corto del
         # sorgente o di geometria sbagliata non è un risultato con una
@@ -935,8 +969,9 @@ class Job:
         if geometry != atteso:
             difetti.append(t("mot.pipe.geometria_diversa", geometria=geometry,
                              attesa=atteso))
-        if not enc.audio_risponde_al_seek(plan, paths=self.paths):
+        if not enc.audio_risponde_al_seek(plan, paths=self.paths, file=provvisorio):
             difetti.append(t("mot.pipe.audio_seek"))
+        os.replace(provvisorio, plan.output)
 
         return JobResult(
             output=plan.output,
@@ -953,8 +988,11 @@ class Job:
             # risulterebbe durato tre ore di più, e quel numero finisce nella
             # pagella — cioè proprio nei dati da cui l'app impara a stimare.
             # Un'ora di pausa avvelenerebbe le stime di tutti i file dopo.
-            seconds=(float(self.state.get("secondi_spesi") or 0)
-                     + time.monotonic() - started - sospensione(self.work)),
+            # Tutto sull'orologio di parete, come la sospensione: il
+            # monotonic si ferma mentre il Mac dorme, e mescolarli dava
+            # durate sbagliate, perfino negative.
+            seconds=max(0.0, float(self.state.get("secondi_spesi") or 0)
+                        + time.time() - started - sospensione(self.work)),
             riprese=int(self.state.get("interruzioni") or 0) + 1,
             dedup_saving=dmap.saving if dmap else 0.0,
             audit_violations=self.state.get("audit_violations", 0),
