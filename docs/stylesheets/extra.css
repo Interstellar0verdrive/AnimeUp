@@ -962,6 +962,31 @@
     top: 58px;
   }
 
+  .md-sidebar--primary {
+    left: 0;
+    position: fixed;
+    top: 58px !important;
+    width: clamp(250px, 21vw, 274px);
+    z-index: 2;
+  }
+
+  .md-sidebar--primary .md-sidebar__scrollwrap {
+    height: 100% !important;
+  }
+
+  .md-sidebar--secondary {
+    left: auto;
+    position: fixed;
+    right: 0;
+    top: 58px !important;
+    width: clamp(260px, 20vw, 320px);
+    z-index: 2;
+  }
+
+  .md-sidebar--secondary .md-sidebar__scrollwrap {
+    height: 100% !important;
+  }
+
   .md-sidebar--primary .md-nav__link,
   .md-sidebar--secondary .md-nav__link {
     font-size: 12px;
