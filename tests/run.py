@@ -731,7 +731,12 @@ def _() -> None:
     un utente inglese se le trovava nell'aiuto. Ora sono solo inglesi."""
     aiuto = subprocess.run([str(ROOT / "animeup"), "run", "--help"],
                            capture_output=True, text=True, timeout=120,
-                           env={**os.environ, "COLUMNS": "200"}).stdout
+                           env={**os.environ, "COLUMNS": "200", "NO_COLOR": "1",
+                                "TERM": "dumb"}).stdout
+    # Sul runner di GitHub l'aiuto esce a colori e i codici spezzano «--yes»
+    # in «-» e «-yes»: si tolgono comunque, qualunque terminale sia.
+    import re
+    aiuto = re.sub(r"\x1b\[[0-9;]*m", "", aiuto)
     assert "--yes" in aiuto and "--height" in aiuto and "--force" in aiuto, aiuto[-600:]
     for vecchio in ("--si ", "--altezza", "--forza", "--disco", "--modello", "--pausa"):
         assert vecchio not in aiuto, f"{vecchio} ancora nell'aiuto"
