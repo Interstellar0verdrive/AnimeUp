@@ -699,3 +699,74 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
     provvisorio.replace(_file(p))
 
     return voce
+
+
+# --- la taratura in un processo suo --------------------------------------
+# Come il confronto: girava dentro la pagina, e un ricaricamento (o la
+# sessione del browser che si chiude) poteva fermarla a meta'. Ora la pagina
+# lancia `animeup taratura --fondo` staccato dalla sessione e legge a che
+# punto e' da `cache/calibration-status.json`.
+
+IN_CORSO, FINITA, FALLITA, INTERROTTA = "running", "done", "failed", "interrupted"
+
+
+def file_stato(p: Paths | None = None) -> Path:
+    return (p or PATHS).cache / "calibration-status.json"
+
+
+def scrivi_stato(dati: dict, p: Paths | None = None) -> None:
+    f = file_stato(p)
+    f.parent.mkdir(parents=True, exist_ok=True)
+    provvisorio = f.with_name(f.name + f".{os.getpid()}.tmp")
+    provvisorio.write_text(json.dumps(dati, ensure_ascii=False, indent=1))
+    provvisorio.replace(f)
+
+
+def stato_fondo(p: Paths | None = None) -> dict | None:
+    """L'ultima taratura lanciata dalla pagina: in corso, finita o fallita.
+
+    Una che risulta in corso ma il cui processo non c'e' piu' (Mac spento,
+    processo ucciso) e' `interrupted`: non ha salvato niente.
+    """
+    try:
+        dati = json.loads(file_stato(p).read_text())
+    except (OSError, ValueError):
+        return None
+    if not isinstance(dati, dict):
+        return None
+    if dati.get("state") == IN_CORSO:
+        try:
+            os.kill(int(dati.get("pid") or 0), 0)
+        except (ProcessLookupError, ValueError):
+            dati["state"] = INTERROTTA
+        except OSError:
+            pass
+    return dati
+
+
+def avvia_fondo(p: Paths | None = None) -> bool:
+    """Lancia `animeup taratura --fondo`. False se una gira gia'."""
+    from .paths import code_root
+
+    p = p or PATHS
+    s = stato_fondo(p)
+    if in_corso(p) or (s and s.get("state") == IN_CORSO):
+        return False
+    try:
+        tappe = [[nome, costo] for nome, costo in preventivo(p)]
+    except (OSError, ValueError, subprocess.CalledProcessError):
+        tappe = []
+    scrivi_stato({"state": IN_CORSO, "pid": 0, "started": time.time(),
+                  "steps": tappe, "index": 0, "total": len(tappe),
+                  "fraction": 0.0, "left": None, "label": "",
+                  "previous": carica(p), "new": None, "error": ""}, p)
+    log = p.cache / "calibration.log"
+    with log.open("w") as fh:
+        proc = subprocess.Popen([str(code_root() / "animeup"), "taratura", "--fondo"],
+                                stdout=fh, stderr=fh, stdin=subprocess.DEVNULL,
+                                start_new_session=True)
+    s = stato_fondo(p) or {}
+    if not s.get("pid"):
+        s["pid"] = proc.pid
+        scrivi_stato(s, p)
+    return True

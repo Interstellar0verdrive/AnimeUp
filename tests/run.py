@@ -3174,10 +3174,10 @@ def _scheda_modello_dice_solo_upscale():
     i = testo.index("plan.frames / velocita")
     # La frase sta nel catalogo: qui si lega la formula alla sua chiave.
     intorno = testo[i - 200:i + 200]
-    assert "t('conf.velocita'" in intorno, (
+    assert 't("conf.velocita"' in intorno, (
         "la scheda del modello non usa piu' la frase del solo upscale")
     frase = i18n.catalogo("it")["conf.velocita"]
-    assert "(solo fasi di upscale)" in frase, (
+    assert "solo upscale" in frase and "upscale only" in i18n.catalogo("en")["conf.velocita"], (
         "la scheda del modello e' tornata a dire qualcosa d'altro: quel "
         "numero e' il solo upscale e deve dirlo")
     assert "per l'intero file" not in frase, (
@@ -3904,6 +3904,7 @@ def _interruttori_ricordati():
         "MINIMO_SPAZIO_GB": 50,
         "_tetto_spazio": lambda: (500, 600),
         "i18n": i18n,
+        "tema": __import__("animeup.tema", fromlist=["tema"]),
     }
     exec(compile(_ast.Module(body=[fn], type_ignores=[]), "app", "exec"),
          ambiente)
@@ -4035,7 +4036,8 @@ def _tabella_indicatori_disegna():
             uscita.append(html)
 
     ambiente = {"st": _St, "esc": lambda s: str(s),
-                "stima_hm": lambda s: f"{s:.0f}s", "t": i18n.t}
+                "stima_hm": lambda s: f"{s:.0f}s", "t": i18n.t,
+                "_icona_perche": lambda testo: f"<span title='{testo}'></span>"}
     exec(compile(_ast.Module(body=pezzi, type_ignores=[]), "app", "exec"),
          ambiente)
     tabella = ambiente["_tabella_confronto"]
@@ -4096,7 +4098,8 @@ def _tabella_indicatori_disegna():
               "metriche": (1.8, 2.6)},
              {"nome": "secondo", "secondi": 14.0, "intero": 140.0,
               "metriche": None}], None)
-    corpo = "".join(uscita).split("<tbody>")[-1].split("</tbody>")[0]
+    # Gli indicatori vengono dopo la tabella dei tempi, come barre.
+    corpo = "".join(uscita).split("</table>")[-1]
     assert "secondo" in corpo, (
         "il modello senza misure sparisce dagli indicatori: la tabella esce "
         "piu' corta di quella dei tempi e nessuno dice perche'")
@@ -4434,7 +4437,7 @@ def _spezzoni_sparsi():
     app = (ROOT / "ui" / "app.py").read_text()
     assert "escludi=gia_visti" in app, (
         "il secondo lotto non esclude le posizioni gia' mostrate")
-    assert 't("conf.trova_altri") if gia_visti' in app, (
+    assert 't("conf.trova_altri"), key="trovaAltri"' in app, (
         "il pulsante non dice piu' che cerchera' spezzoni DIVERSI")
     assert i18n.catalogo("it")["conf.trova_altri"] == "Trova altri 8 spezzoni", (
         "il pulsante non dice piu' che cerchera' spezzoni DIVERSI")
@@ -4784,6 +4787,41 @@ def _() -> None:
         assert not (radice / "LAVORAZIONI").exists()
         assert (p.work / "episodio 2026-08-10 abcd1234").is_dir()
         assert p.work == (radice / "OUTPUT" / "JOBS").resolve(), p.work
+
+
+@caso("i colori stanno solo in tema.py: nell'interfaccia nessun colore scritto a mano")
+def _() -> None:
+    """Prima erano 117 colori sparsi nel CSS: cambiarne uno voleva dire
+    cercarlo in venti posti, e un tema chiaro era impensabile. Ora il CSS usa
+    solo variabili, e le variabili nascono da `tema.py`."""
+    import re as _re
+    app = (ROOT / "ui" / "app.py").read_text()
+    # Le entita' HTML (&#9888;) non sono colori.
+    trovati = [m.group(0) for m in _re.finditer(
+        r"(?<!&)#[0-9A-Fa-f]{6}\b|(?<!&)#[0-9A-Fa-f]{3}\b|rgba?\(\s*\d+\s*,", app)]
+    assert not trovati, f"colori scritti a mano nell'interfaccia: {trovati[:5]}"
+
+
+@caso("Streamlit e il CSS usano gli stessi colori, in tutti e due i temi")
+def _() -> None:
+    import tomllib
+    from animeup import tema
+    cfg = tomllib.loads((ROOT / ".streamlit" / "config.toml").read_text())
+    for i, nome in enumerate(("dark", "light")):
+        sezione = cfg["theme"][nome]
+        attesi = {"primaryColor": "primaryStrong", "backgroundColor": "bg",
+                  "secondaryBackgroundColor": "surface", "textColor": "textPrimary",
+                  "borderColor": "borderColor", "linkColor": "primaryText",
+                  "greenColor": "green", "yellowColor": "yellow", "redColor": "red"}
+        for chiave, token in attesi.items():
+            assert sezione[chiave].upper() == tema.TOKEN[token][i].upper(), (
+                f"{nome}.{chiave} = {sezione[chiave]}, ma {token} vale "
+                f"{tema.TOKEN[token][i]}")
+        laterale = sezione["sidebar"]
+        assert laterale["backgroundColor"].upper() == tema.TOKEN["sidebar"][i].upper()
+    assert "prefers-color-scheme: light" in tema.css(tema.SISTEMA)
+    assert "prefers-color-scheme" not in tema.css(tema.SCURO)
+    assert tema.streamlit(tema.CHIARO) == "Light" and tema.streamlit("boh") == "System"
 
 
 @caso("il confronto in un processo suo: uno alla volta, e chi muore risulta interrotto")
