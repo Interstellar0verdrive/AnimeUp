@@ -108,4 +108,4 @@ The full story is in [02. Calibrate your Mac](../02-calibration.md).
 - Look at the end of the relevant `.log` in `registri/`.
 - The reasoning behind every threshold mentioned here is in the [tuning notes](../../TUNING.md).
 
-[Back to the guide home →](../index.md)
+[Next: How a job works inside →](../deep-dives/how-it-works.md)

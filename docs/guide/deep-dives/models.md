@@ -142,4 +142,4 @@ Newer community models (AnimeJaNai, Fallin Soft, Adore and others) were also tes
     - [ ] You know why light denoise may show *can't reach* at 1080p
     - [ ] You know the scale in the file name is chosen to get close to a 2:1 reduction
 
-[Back to the guide home →](../index.md)
+[Next: How much texture each model keeps →](texture-study.md)

@@ -1168,4 +1168,4 @@ The second needs `realesrgan-ncnn-vulkan` rebuilt against a complete, current nc
 
 The test frames come from [*Morevna*](https://morevnaproject.org/) by the Morevna Project, licensed CC BY-SA; the images on this page are derived from it and carry the same licence. Models tested: AnimeJaNai HD V3 (the-database), Fallin Soft and Adore (renarchi), HFA2kAVCCompact (Phhofm), Futsuu Anime, ModernSpanimation V1 (TNTwise), found through [OpenModelDB](https://openmodeldb.info/).
 
-[Back to the models →](models.md) · [Back to the guide home →](../index.md)
+[Next: Tuning notes →](../../TUNING.md)

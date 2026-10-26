@@ -1270,4 +1270,4 @@ The brown paper card again, encoded at CRF 32: the encoder has already smeared p
 
 *Morevna* episode 3 © [Morevna Project](https://morevnaproject.org/), licensed CC BY-SA 3.0; the frames and crops on this page are derived from it and shared under the same licence. Paper textures Paper006 and Paper003 from [ambientCG](https://ambientcg.com/), CC0; the chapter cards were drawn for this test. Models: Real-ESRGAN animevideov3 (BSD-3-Clause) and Real-CUGAN (MIT), run with their ncnn-vulkan builds as AnimeUp does.
 
-[Back to the models →](models.md) · [Newer anime models, compared →](model-study.md) · [Back to the guide home →](../index.md)
+[Next: Newer anime models, compared →](model-study.md)

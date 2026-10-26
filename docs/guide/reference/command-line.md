@@ -216,4 +216,4 @@ Runs the regression tests in `tests/run.py`. Without the maintainer's sample vid
 
 The language of the messages is the one chosen in the interface, saved in `registri/impostazioni.json`; English when there's none.
 
-[Back to the guide home →](../index.md)
+[Next: Troubleshooting →](troubleshooting.md)
