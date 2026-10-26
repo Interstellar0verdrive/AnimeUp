@@ -3001,8 +3001,13 @@ STYLE = f"""
       padding-right: 18px !important; }}
   .st-key-passo0 button::before {{ content: ""; background: var(--textSecondary); border: 0;
       -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='none' stroke='black' stroke-width='1'/%3E%3Cpath d='M7.5 12 12 8l4.5 4M9 11v5.2h6V11' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
+  /* Attiva: cerchio pieno con la casetta scavata. Due maschere semplici
+     sottratte l'una all'altra, non una maschera SVG interna: WebKit quella
+     la disegna a bassa risoluzione, e la casetta usciva sgranata mentre il
+     cerchio restava nitido (visto nella finestra dell'app). */
   .st-key-passo0 button[kind="primary"]::before {{ background: var(--primary);
-      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cpath d='M7.5 12 12 8l4.5 4M9 11v5.2h6V11' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/mask%3E%3C/defs%3E%3Ccircle cx='12' cy='12' r='12' fill='black' mask='url(%23m)'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24'%3E%3Cpath d='M7.5 12 12 8l4.5 4M9 11v5.2h6V11' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") center / 24px 24px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='black'/%3E%3C/svg%3E") center / 24px 24px no-repeat;
+      -webkit-mask-composite: xor; mask-composite: exclude; }}
   .au-fasi-stato {{ margin-left: auto; display: flex; align-items: center;
       gap: 8px; font: 400 12px var(--mono); color: var(--textSecondary);
       white-space: nowrap; }}
@@ -4896,7 +4901,7 @@ def header() -> str:
                     regole.append(f'{classe}::before {{ content: ""; }}')
                 elif i == 1 and stato.get("fatta") and sezione != attiva:
                     regole.append(f'{classe}::before {{ content: "✓"; '
-                                  'color: var(--greenText); '
+                                  'color: var(--green); '
                                   'border-color: var(--green); }')
                 elif i == 1 and stato.get("fatta"):
                     # Aperta resta la spunta, nei colori della scheda attiva:
