@@ -3821,7 +3821,7 @@ STYLE = f"""
   /* 4px e non 2: con larghezze frazionarie lo stacco da 2px veniva
      disegnato a volte pieno e a volte quasi chiuso (visto dall'utente), e
      si confondeva con le lineette dei blocchi. */
-  .au-barra-file {{ flex: 1; display: flex; gap: 4px; height: 6px; }}
+  .au-barra-file {{ flex: 1; min-width: 0; overflow: hidden; display: flex; gap: 4px; height: 6px; }}
   .au-seg {{ position: relative; min-width: 14px; height: 100%; border-radius: 3px;
       overflow: hidden; background: rgb(var(--primaryRgb) / .15); }}
   .au-seg > i {{ display: block; height: 100%; background: var(--primary); }}
@@ -8036,9 +8036,11 @@ def _barra_file(lav) -> str:
         pieno = max(0.0, min(1.0, (quota - da) / (a - da)))
         tacche = ""
         if i == 2 and lav.blocco_dim and lav.totale > lav.blocco_dim:
-            tacche = "".join(f"<b style='left:{x / lav.totale * 100:.3f}%'></b>"
+            tacche = "".join(f"<b data-x='{x / lav.totale:.5f}' "
+                             f"style='left:{x / lav.totale * 100:.3f}%'></b>"
                              for x in range(lav.blocco_dim, lav.totale, lav.blocco_dim))
-        pezzi.append(f"<span class='au-seg' style='flex:{(a - da) * 100:g} 0 0'>"
+        pezzi.append(f"<span class='au-seg' data-peso='{(a - da) * 100:g}' "
+                     f"style='flex:{(a - da) * 100:g} 0 0'>"
                      f"<i style='width:{pieno * 100:.1f}%'></i>{tacche}</span>")
     return f"<span class='au-barra-file' aria-hidden='true'>{''.join(pezzi)}</span>"
 
@@ -8128,9 +8130,10 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
             elif lav.blocchi_totali:
                 dettaglio = (t("lav.d_upscale", fatti=_num(lav.blocco_fatti),
                                totale=_num(lav.blocco_totale), **blocchi)
-                             + " · " + (tn("lav.sicuro", lav.blocco_fatti,
-                                           num=_num(lav.blocco_fatti))
-                                        if lav.blocco_fatti else t("lav.sicuro_niente")))
+                             + " · " + (t("lav.sicuro_niente") if not lav.blocco_fatti
+                                        else t("lav.sicuro.uno") if lav.blocco_fatti == 1
+                                        else t("lav.sicuro.altri",
+                                               num=_num(lav.blocco_fatti))))
             else:
                 dettaglio = t("lav.d_upscale_tutto", fatti=_num(lav.fatti),
                               totale=_num(lav.totale))
@@ -10119,7 +10122,15 @@ def _cassetto_sidebar() -> None:
         # Le tappe della riga in lavorazione: se non ci stanno, via prima i
         # numeri e le fette, poi il tempo trascorso. Si ricontrolla a ogni
         # ridisegno della riga (ogni due secondi) e a ogni ridimensionamento.
+        # E la barra del file a larghezze INTERE: con le fette frazionarie lo
+        # stacco fra una tappa e l'altra veniva disegnato ora pieno ora quasi
+        # chiuso (visto dall'utente). L'ultima fetta prende il resto.
         "if(!W.auTappe){W.auTappe=1;let att=0;const adatta=()=>{att=0;"
+        "D.querySelectorAll('.au-barra-file').forEach(f=>{const s=[...f.children];if(!s.length)return;"
+        "const g=parseFloat(getComputedStyle(f).columnGap)||0;const tot=Math.floor(f.getBoundingClientRect().width)-g*(s.length-1);"
+        "const pesi=s.map(x=>parseFloat(x.dataset.peso)||1),somma=pesi.reduce((a,b)=>a+b,0);let usato=0;"
+        "s.forEach((x,i)=>{const w=i===s.length-1?tot-usato:Math.max(14,Math.round(tot*pesi[i]/somma));usato+=w;"
+        "x.style.flex='0 0 '+w+'px';x.querySelectorAll('b[data-x]').forEach(k=>{k.style.left=Math.round(w*parseFloat(k.dataset.x))+'px';});});});"
         "D.querySelectorAll('.au-riga-tappe').forEach(r=>{r.classList.remove('au-s1','au-s2');"
         "if(r.scrollWidth>r.clientWidth+1){r.classList.add('au-s1');"
         "if(r.scrollWidth>r.clientWidth+1)r.classList.add('au-s2');}});};"
