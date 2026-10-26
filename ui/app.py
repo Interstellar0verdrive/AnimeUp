@@ -2985,7 +2985,7 @@ STYLE = f"""
   .st-key-passi button:disabled p {{ color: var(--textSecondary); }}
   .st-key-passi button:disabled::before {{
       background: var(--textTertiary); border: 0;
-      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='8' y='11' width='8' height='6' rx='1.2' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M9.6 11V9.2a2.4 2.4 0 0 1 4.8 0V11' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='none' stroke='black' stroke-width='1'/%3E%3Crect x='8' y='11' width='8' height='6' rx='1.2' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M9.6 11V9.2a2.4 2.4 0 0 1 4.8 0V11' fill='none' stroke='black' stroke-width='1.6'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
   .st-key-passi button::after {{ display: none; position: absolute; right: 14px;
       top: 50%; transform: translateY(-50%); min-width: 20px; height: 20px;
       padding: 0 5px; box-sizing: border-box; border-radius: 999px;
@@ -2997,9 +2997,9 @@ STYLE = f"""
   .st-key-passi .st-key-passo0 button {{ width: auto; min-width: 0;
       padding-right: 18px !important; }}
   .st-key-passo0 button::before {{ content: ""; background: var(--textSecondary); border: 0;
-      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='none' stroke='black' stroke-width='1'/%3E%3Cpath d='M7.5 12 12 8l4.5 4M9 11v5.2h6V11' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11.5' fill='none' stroke='black' stroke-width='1'/%3E%3Cpath d='M7.5 12 12 8l4.5 4M9 11v5.2h6V11' fill='none' stroke='black' stroke-width='1.6' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
   .st-key-passo0 button[kind="primary"]::before {{ background: var(--primary);
-      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cpath d='M7.5 12 12 8l4.5 4M9 11v5.2h6V11' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/mask%3E%3C/defs%3E%3Ccircle cx='12' cy='12' r='12' fill='black' mask='url(%23m)'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 24 24'%3E%3Cdefs%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Cpath d='M7.5 12 12 8l4.5 4M9 11v5.2h6V11' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/mask%3E%3C/defs%3E%3Ccircle cx='12' cy='12' r='12' fill='black' mask='url(%23m)'/%3E%3C/svg%3E") center / 24px 24px no-repeat; }}
   .au-fasi-stato {{ margin-left: auto; display: flex; align-items: center;
       gap: 8px; font: 400 12px var(--mono); color: var(--textSecondary);
       white-space: nowrap; }}
@@ -4895,6 +4895,10 @@ def header() -> str:
                     regole.append(f'{classe}::before {{ content: "✓"; '
                                   'color: var(--greenText); '
                                   'border-color: var(--green); }')
+                elif i == 1 and stato.get("fatta"):
+                    # Aperta resta la spunta, nei colori della scheda attiva:
+                    # tornava il numero «1» e sembrava un altro stato (utente).
+                    regole.append(f'{classe}::before {{ content: "✓"; }}')
                 else:
                     regole.append(f'{classe}::before {{ content: "{i}"; }}')
                 if (n := stato["badge"].get(sezione)):
