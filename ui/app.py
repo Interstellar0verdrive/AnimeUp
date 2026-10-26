@@ -839,6 +839,14 @@ STYLE = f"""
   /* .45 e non .3: il fumetto finisce di sparire a .3 + .12; scendendo
      prima, le icone vicine gli passavano sopra durante la dissolvenza. */
   .au-info, .au-perche {{ transition: z-index 0s .45s; }}
+  /* Nella sidebar l'icona non sale di livello: sale solo il suo fumetto
+     (z-index 220 in tutta la barra). Salendo l'icona, un'altra «?» passata
+     dal mouse mentre un fumetto svaniva saliva al pari e, venendo dopo,
+     gli si disegnava sopra (visto dall'utente). Nelle righe invece l'icona
+     deve stare sopra la lastra cliccabile, e la regola resta. */
+  [data-testid="stSidebar"] :is(.au-info, .au-perche),
+  [data-testid="stSidebar"] :is(.au-info, .au-perche):is(:hover, :focus-within, :focus-visible) {{
+      z-index: auto !important; transition: none !important; }}
   .au-info:hover, .au-info:focus-within, .au-info:focus-visible,
   .au-perche:hover, .au-perche:focus-within, .au-perche:focus-visible {{
       z-index: 240; transition: z-index 0s 0s; }}
@@ -1966,13 +1974,18 @@ STYLE = f"""
       background: var(--sidebar); border-top: 1px solid var(--borderStrong);
       padding-top: 0; }}
   [data-testid="stLayoutWrapper"]:has(> .st-key-piede)::before {{
-      content: ""; position: absolute; left: 0; right: 0; top: -29px; height: 28px;
+      content: ""; position: absolute; left: 0; right: 0; top: -21px; height: 20px;
       pointer-events: none;
       background: linear-gradient(to bottom, rgb(var(--sidebarRgb) / 0), var(--sidebar)); }}
   /* 16px dalla linea alla CTA e 16px dalla CTA al fondo: la CTA stava a
      6px dal bordo finestra, "molto attaccata" (utente). Stesso passo della
      barra di Lavorazione. */
   .st-key-piede {{ padding: 14px 0 16px; }}
+  /* In fondo alla barra scorsa: 20px fra l'ultima scheda e la linea, come
+     ai lati (9 di passo della colonna + 11), e la sfumatura (20px) sta tutta
+     in quel vuoto. Prima era alta 28 su 17 di spazio e copriva il bordo
+     dell'ultima scheda (utente). */
+  [data-testid="stLayoutWrapper"]:has(> .st-key-prefCard) {{ margin-bottom: 11px !important; }}
 
   /* Le tre schede restano APPICCICATE in alto e il contenuto ci scorre
      sotto: senza, per cambiare scheda da fondo pagina si risaliva tutto
@@ -3049,7 +3062,10 @@ STYLE = f"""
         border: 1px solid var(--borderStrong); background: var(--surface);
         color: var(--textCode); }}
     #au-cassetto:hover {{ color: var(--primaryText); border-color: var(--borderHover); }}
-    body.au-sb-aperta #au-cassetto {{ left: 376px; }}
+    /* Aperto il cassetto, il pulsante sparisce: si chiude toccando fuori
+       (il velo) o con Esc. Spostato accanto alla barra non serviva e
+       stonava (chiesto dall'utente). */
+    body.au-sb-aperta #au-cassetto {{ display: none; }}
     .block-container {{ padding-left: 68px !important; }}
     [data-testid="stLayoutWrapper"]:has(> .st-key-fasi) {{ margin-left: -68px !important;
         padding-left: 68px !important; min-width: calc(100% + 108px) !important; }}
@@ -3891,6 +3907,60 @@ STYLE = f"""
   .st-key-ferma_tutto button p {{ color: var(--redText) !important; }}
   .au-sb-titolo {{ flex-wrap: nowrap; white-space: nowrap; }}
 
+  /* ===================================================================
+     TAB VERE (1.6.6, studio «W · Study: true tabs» in Claude Design).
+     Quattro tab larghe uguali appoggiate sulla linea della testata; quella
+     aperta ha il bordo su tre lati, niente bordo sotto (si apre nella
+     pagina) e dove i lati toccano la linea curva verso l'esterno.
+     Il contorno lo disegna il contenitore del pulsante (::before), fermo
+     10px sopra la linea; le due curve le disegna il guscio `.stButton`
+     (::before e ::after). Il pulsante stesso tiene il cerchio (::before) e
+     il contatore (::after). Lo stato a destra non c'e' piu': con quattro
+     tab uguali non ha posto, e ripeteva Lavorazione.
+     =================================================================== */
+  [data-testid="stLayoutWrapper"]:has(> .st-key-fasi) {{ padding-bottom: 0 !important; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-fasi)::after {{ bottom: 0 !important;
+      background: var(--borderStrong) !important; }}
+  .st-key-fasi [data-testid="stElementContainer"]:has(.au-fasi-stato) {{ display: none !important; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-passi) {{ flex: 1 1 auto !important;
+      width: auto !important; min-width: 0; }}
+  .st-key-passi {{ width: 100% !important; padding: 0 10px !important; border: 0 !important;
+      border-radius: 0 !important; background: none !important; gap: 0 !important;
+      align-items: stretch !important; }}
+  .st-key-passi > [class*="st-key-passo"] {{ flex: 1 1 0 !important; width: auto !important;
+      min-width: 0; position: relative; }}
+  .st-key-passi > [class*="st-key-passo"] > .stButton {{ position: relative; }}
+  .st-key-passi [class*="st-key-passo"] button,
+  .st-key-passi .st-key-passo0 button {{ width: 100% !important; min-height: 58px !important;
+      border: 0 !important; border-radius: 10px 10px 0 0 !important;
+      padding-right: 40px !important; }}
+  .st-key-passi button:disabled {{ padding-right: 14px !important; }}
+  /* Al passaggio, anche se chiusa: e' una scheda, deve sembrarlo (chiesto
+     dall'utente). Chiusa resta il divieto come puntatore. */
+  .st-key-passi button[kind="secondary"]:hover {{
+      background-color: var(--surfaceHover) !important; }}
+  /* La scheda aperta: il fondo della pagina, sopra la linea. */
+  .st-key-passi button[kind="primary"] {{ background-color: var(--bg) !important;
+      position: relative; z-index: 2; }}
+  .st-key-passi button[kind="primary"]:hover {{ background-color: var(--bg) !important; }}
+  .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"])::before {{
+      content: ""; position: absolute; left: 0; right: 0; top: 0; bottom: 10px; z-index: 3;
+      border: 1px solid var(--borderStrong); border-bottom: 0;
+      border-radius: 10px 10px 0 0; pointer-events: none; }}
+  .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) > .stButton::before,
+  .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) > .stButton::after {{
+      content: ""; position: absolute; bottom: 0; width: 10px; height: 11px; z-index: 3;
+      box-sizing: border-box; background: var(--bg); pointer-events: none;
+      border-bottom: 1px solid var(--borderStrong); }}
+  .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) > .stButton::before {{
+      left: -9px; border-right: 1px solid var(--borderStrong);
+      border-bottom-right-radius: 10px; }}
+  .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) > .stButton::after {{
+      right: -9px; border-left: 1px solid var(--borderStrong);
+      border-bottom-left-radius: 10px; }}
+  /* Il fondo della scheda aperta copre la linea fra le due curve. */
+  .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) {{ z-index: 2; }}
+
 </style>
 """
 st.markdown(STYLE, unsafe_allow_html=True)
@@ -4217,27 +4287,6 @@ def _larghezza_sottotitolo(testo: str) -> float:
     return sum(float(_LARGHEZZE_PASSI.get(c, 7.5)) for c in testo)
 
 
-def _larghezza_passi(stato: dict) -> int:
-    """La larghezza comune dei tre passi, dai loro testi.
-
-    Larghi 230 fissi, con un sottotitolo corto («No videos yet») restava
-    mezzo passo vuoto a destra: i tre sembravano lontani fra loro e Start,
-    stretto, incollato ai Sorgenti (visto dall'utente). Ora sono larghi
-    quanto il piu' lungo dei loro testi, fra 180 e 230: uguali fra loro,
-    col ritmo giusto.
-    """
-    serve = 0.0
-    for sez in SEZIONI:
-        sotto = max((_larghezza_sottotitolo(p) for p in str(stato[sez]).split(" · ")),
-                    default=0.0) if len(str(stato[sez])) else 0.0
-        intero = _larghezza_sottotitolo(str(stato[sez]))
-        titolo = _larghezza_sottotitolo(t(f"tab.{sez}")) * 1.2   # 14px semibold
-        serve = max(serve, titolo, intero if intero <= 230 - 51 - 40 else sotto)
-    # A destra: 40px per il contatore sui passi aperti (il loro padding ce li
-    # tiene sempre), 14 su quelli chiusi, che non ne hanno mai.
-    return int(min(230, max(180, serve + 2 + 51 + (14 if stato["vuota"] else 40))))
-
-
 def _regole_sottotitolo(classe: str, testo: str, chiusa: bool,
                         larghezza: int = 230) -> list[str]:
     """Il sottotitolo di un passo: su una riga se ci sta, altrimenti a capo
@@ -4288,9 +4337,11 @@ def header() -> str:
         attiva = SEZIONI[0]
     st.session_state["era_vuota"] = stato["vuota"]
     st.session_state["sezione"] = attiva
-    larghezza = _larghezza_passi(stato)
-    regole = [f'.st-key-passi [class*="st-key-passo"]:not(.st-key-passo0) button '
-              f'{{ width: {larghezza}px; }}']
+    # Le quattro schede si dividono la larghezza in parti uguali: per decidere
+    # se un sottotitolo va a capo si conta sulla piu' stretta che capita, una
+    # finestra da 1000px (892 di contenuto, 218 a scheda).
+    larghezza = 218
+    regole = _regole_sottotitolo(".st-key-passo0 button", t("fasi.inizio"), False, larghezza)
     with st.container(key="fasi", horizontal=True, vertical_alignment="center"):
         with st.container(key="passi", horizontal=True, gap=None):
             st.button(t("tab.Inizio"), key="passo0", on_click=_vai, args=(INIZIO,),
@@ -5496,16 +5547,29 @@ def _puntini_scatti(chiave: str, n: int) -> str:
     lato, cosi' il centro di ogni puntino cade esattamente dove si ferma il
     centro del pomello (0 … 100%).
     """
-    punti = ", ".join("radial-gradient(circle, var(--textSecondary) 0 2px, transparent 2.5px)"
-                      for _ in range(n))
+    def punti(colore: str, anello: str = "") -> str:
+        # Sul ciano il puntino chiaro ha un anello ciano: piu' largo del
+        # binario, senza anello si confondeva col fondo chiaro.
+        stop = (f"{colore} 0 1.6px, {anello} 1.6px 2.6px, transparent 3px" if anello
+                else f"{colore} 0 2px, transparent 2.5px")
+        return ", ".join(f"radial-gradient(circle, {stop})" for _ in range(n))
     posizioni = ", ".join(f"{i * 100 / (n - 1):.4f}% 50%" for i in range(n))
     base = f'.st-key-{chiave} [data-testid="stSlider"] [role="group"] > div'
-    return (f'{base}::after {{ content: ""; position: absolute; left: -3px; right: -3px; '
-            f'top: 50%; height: 6px; transform: translateY(-50%); pointer-events: none; '
-            f'background-image: {punti}; background-size: 6px 6px; background-repeat: no-repeat; '
-            f'background-position: {posizioni}; opacity: 0; transition: opacity .15s ease; }}'
-            f'.st-key-{chiave}:is(:hover, :active) [data-testid="stSlider"] [role="group"] > div::after '
-            f'{{ opacity: 1; }}'
+    # Due strati: chiari sulla parte gia' colorata (a sinistra del pomello,
+    # dove i grigi non si vedevano), grigi sul resto. Il confine e' `--au-p`
+    # (0…1): lo scrive il giro a ogni valore e, mentre si trascina, lo script
+    # della pagina (vedi `_cassetto_sidebar`).
+    comune = ('content: ""; position: absolute; left: -3px; right: -3px; top: 50%; '
+              'height: 6px; transform: translateY(-50%); pointer-events: none; '
+              'background-size: 6px 6px; background-repeat: no-repeat; '
+              f'background-position: {posizioni}; opacity: 0; transition: opacity .15s ease;')
+    return (f'{base}::before {{ {comune} background-image: {punti("var(--dotOnFill)", "var(--primaryStrong)")}; '
+            'clip-path: inset(0 calc((100% - 6px) * (1 - var(--au-p, 0)) + 3px) 0 0); }'
+            f'{base}::after {{ {comune} background-image: {punti("var(--textSecondary)")}; '
+            'clip-path: inset(0 0 0 calc((100% - 6px) * var(--au-p, 0) + 3px)); }'
+            f'.st-key-{chiave}:is(:hover, :active) [data-testid="stSlider"] [role="group"] > div::before,'
+            f'.st-key-{chiave}:is(:hover, :active) [data-testid="stSlider"] [role="group"] > div::after'
+            f' {{ opacity: 1; }}'
             f'{base} > div[style*="position: absolute"] {{ z-index: 1; }}')
 
 
@@ -5676,9 +5740,12 @@ def sidebar() -> dict:
     with st.sidebar.container(key="cPreset"):
         preset = _cursore_a_scatti("preset", "Preset x265", _SCELTE_PRESET, congelata)
     if not congelata:
-        regole += [_puntini_scatti("cAltezza", len(_SCELTE_ALTEZZA)),
-                   _puntini_scatti("cCrf", len(_SCELTE_CRF)),
-                   _puntini_scatti("cPreset", len(_SCELTE_PRESET))]
+        for chiave_c, scelte_c, valore_c in (("cAltezza", _SCELTE_ALTEZZA, altezza),
+                                             ("cCrf", _SCELTE_CRF, crf),
+                                             ("cPreset", _SCELTE_PRESET, preset)):
+            regole.append(_puntini_scatti(chiave_c, len(scelte_c)))
+            regole.append(f'.st-key-{chiave_c} {{ --au-p: '
+                          f'{scelte_c.index(valore_c) / (len(scelte_c) - 1):.4f}; }}')
 
     # --- Avanzate: un riquadro che si apre --------------------------------
     # L'intestazione dice se c'e' qualcosa di cambiato: un interruttore
@@ -9676,10 +9743,11 @@ def _cassetto_sidebar() -> None:
         "const w=c.closest('[data-testid=\"stLayoutWrapper\"]')||c;"
         "let p=w.previousElementSibling;while(p&&!p.querySelector('.au-sb-val'))p=p.previousElementSibling;"
         "const eti=p&&p.querySelector('.au-sb-val');if(!eti)return;let su=false;"
-        "const fine=()=>{su=true;};W.addEventListener('pointerup',fine,{once:true});"
+        "const fine=()=>{su=true;setTimeout(()=>c.style.removeProperty('--au-p'),1500);};W.addEventListener('pointerup',fine,{once:true});"
         "const giro=()=>{if(su)return;const v=c.querySelector('[data-testid=\"stSliderThumbValue\"]');"
         "if(v){const x=parseFloat(v.textContent);if(!isNaN(x)){"
-        "if(W.auScatti[n]){const l=W.auScatti[n];eti.textContent=l[Math.min(l.length-1,Math.max(0,Math.round(x)))];}"
+        "if(W.auScatti[n]){const l=W.auScatti[n];eti.textContent=l[Math.min(l.length-1,Math.max(0,Math.round(x)))];"
+        "c.style.setProperty('--au-p',Math.min(1,Math.max(0,x/(l.length-1))));}"
         "else if(W.auFormati[n]){const f=W.auFormati[n];eti.textContent=(x===0&&f.zero)?f.zero:f.testo.replace('{}',Math.round(x));}}}"
         "requestAnimationFrame(giro);};requestAnimationFrame(giro);},true);}"
         # Nell'app «Cambia…» apre il pannello nativo (vedi `_cartella_dal_mac`):

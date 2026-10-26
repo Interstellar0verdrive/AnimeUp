@@ -3,9 +3,15 @@
 import AppKit
 import WebKit
 
-/// AnimeUp's page background (#101113, `.streamlit/config.toml`): used behind
-/// the web view so there's no white flash while the page loads.
-let pageBackground = NSColor(srgbRed: 0x10 / 255.0, green: 0x11 / 255.0, blue: 0x13 / 255.0, alpha: 1)
+/// AnimeUp's page background (#101113 dark, #F6F7F9 light): used behind the
+/// web view so there's no flash of the wrong colour while the page loads. It
+/// follows the window's appearance, which follows the theme chosen in the
+/// interface (System, Dark, Light).
+let pageBackground = NSColor(name: "AnimeUpPage") { appearance in
+    appearance.bestMatch(from: [.darkAqua, .aqua]) == .aqua
+        ? NSColor(srgbRed: 0xF6 / 255.0, green: 0xF7 / 255.0, blue: 0xF9 / 255.0, alpha: 1)
+        : NSColor(srgbRed: 0x10 / 255.0, green: 0x11 / 255.0, blue: 0x13 / 255.0, alpha: 1)
+}
 
 // MARK: - Preparing window
 
@@ -114,7 +120,10 @@ final class MainWindowController: NSWindowController, WKNavigationDelegate, WKUI
         window.title = "AnimeUp"
         window.minSize = NSSize(width: 1000, height: 700)
         window.backgroundColor = pageBackground
-        window.appearance = NSAppearance(named: .darkAqua)
+        // No fixed appearance here: the window follows the app's, which
+        // `applyTheme` sets from the interface's choice. Forced to dark, the
+        // page always saw a dark system and "System" never followed macOS
+        // (reported by the user).
         window.tabbingMode = .disallowed
         window.isReleasedWhenClosed = false
         window.contentView = webView

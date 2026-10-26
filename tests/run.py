@@ -5173,7 +5173,7 @@ def _() -> None:
     assert ambiente["_avvia"]([], {}) is False, "Avvia e' partito durante la taratura"
     assert ambiente["_riprendi"](None, None, {}) is False, \
         "Riprendi e' partito durante la taratura"
-    assert errori and all("taratura" in e for e in errori), errori
+    assert errori and all("calibrazione" in e for e in errori), errori
     stato["tarando"] = False
     try:
         ambiente["_avvia"]([], {})

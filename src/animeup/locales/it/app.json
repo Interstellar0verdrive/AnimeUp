@@ -30,7 +30,7 @@
   "pa.ffmpeg_testo": "Legge, analizza e codifica il video. Si scarica invece di essere incluso per via della sua licenza (GPLv3).",
   "pa.ncnn_titolo": "Real-ESRGAN e Real-CUGAN",
   "pa.ncnn_testo": "I motori di upscale, con i loro modelli.",
-  "sb.cambio_occupato": "Le cartelle non si cambiano mentre qualcosa è in corso (una lavorazione, un confronto o una taratura). Riprova quando ha finito.",
+  "sb.cambio_occupato": "Le cartelle non si cambiano mentre qualcosa è in corso (una lavorazione, un confronto o una calibrazione). Riprova quando ha finito.",
   "sb.cambio_uguale": "È già l'altra cartella. Video da elaborare e video finiti vogliono due cartelle diverse: altrimenti ogni video finito verrebbe ripreso come nuovo da elaborare.",
   "sb.cambio_lavori.uno": "1 lavorazione interrotta resta in {cartella}. Per riprenderla sposta la sua cartella JOBS in quella nuova, o torna indietro.",
   "sb.cambio_lavori.altri": "{n} lavorazioni interrotte restano in {cartella}. Per riprenderle sposta la sua cartella JOBS in quella nuova, o torna indietro.",
@@ -52,7 +52,7 @@
   "sb.esito_titolo_aggiornato": "Hai l'ultima versione",
   "sb.esito_testo_aggiornato": "AnimeUp {versione} è la release più recente. AnimeUp controlla anche da solo a ogni avvio.",
   "sb.esito_titolo_nuova": "È disponibile AnimeUp {versione}",
-  "sb.esito_testo_nuova": "Installala adesso, o più tardi dalla nota in cima alla barra laterale. File, impostazioni e taratura restano come sono.",
+  "sb.esito_testo_nuova": "Installala adesso, o più tardi dalla nota in cima alla barra laterale. File, impostazioni e calibrazione restano come sono.",
   "sb.esito_titolo_errore": "Non è stato possibile controllare",
   "sb.esito_testo_errore": "GitHub non ha risposto. Controlla la connessione a internet e riprova.",
   "sb.esito_dopo": "Più tardi"

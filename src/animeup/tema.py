@@ -75,6 +75,8 @@ TOKEN: dict[str, tuple[str, str]] = {
     "yellowHover":     ("#F5C66A", "#D68C00"),
     "yellowActive":    ("#DDA43A", "#B06F00"),
     "onYellow":        ("#2A1D05", "#1F1500"),
+    # i puntini dei cursori sulla parte gia' colorata di ciano
+    "dotOnFill":       ("#F2FDFF", "#FFFFFF"),
     "red":             ("#F26D6D", "#D9402E"),
     "redBg":           ("#2A1414", "#FDECEC"),
     "redText":         ("#F59B9B", "#B42323"),

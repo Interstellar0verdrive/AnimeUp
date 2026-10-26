@@ -43,7 +43,7 @@
   "lavb.scarta_residuo_aiuto": "Elimina la cartella di lavoro che questo file ha lasciato in JOBS (fotogrammi estratti, blocchi codificati, stato) e libera i GB. L'uscita finita resta in OUTPUT, e il file sorgente non si tocca.",
   "lavb.residuo_scartato": "Cartella di lavoro eliminata: l'uscita in OUTPUT non è stata toccata.",
   "lavb.concluso_residuo": "concluso · uscita in OUTPUT; la sua cartella di lavoro è rimasta in JOBS, Scarta libera lo spazio",
-  "lavb.taratura_blocca": "C'è una taratura in corso: Avvia la lavorazione e Riprendi restano bloccati finché non finisce, così le due non si dividono la GPU.",
+  "lavb.taratura_blocca": "C'è una calibrazione in corso: Avvia la lavorazione e Riprendi restano bloccati finché non finisce, così le due non si dividono la GPU.",
   "lavb.riprese_aiuto": "Elaborazione completata in {riprese} riprese; il tempo totale include i blocchi in corso rifatti dall'inizio dopo ogni interruzione (fino a ~{minuti} minuti ogni volta).",
   "lavb.finito_in": "Finito in {durata}",
   "lavb.durata_stimata": "Durata stimata",

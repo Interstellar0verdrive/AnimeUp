@@ -289,11 +289,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         let busy = paths.map { RunningJobs.pids(output: $0.output) + RunningJobs.background(state: $0.state) } ?? []
         var text = tr(
             "AnimeUp downloads the new version from GitHub (about \(mb) MB), checks it against the checksum published with the release, replaces itself and restarts. Your files, settings and calibration stay as they are.",
-            "AnimeUp scarica la nuova versione da GitHub (circa \(mb) MB), la verifica con il checksum pubblicato nella release, si sostituisce e si riavvia. File, impostazioni e taratura restano come sono.")
+            "AnimeUp scarica la nuova versione da GitHub (circa \(mb) MB), la verifica con il checksum pubblicato nella release, si sostituisce e si riavvia. File, impostazioni e calibrazione restano come sono.")
         if !busy.isEmpty {
             text += "\n\n" + tr(
                 "Something is running (a job, a comparison or a calibration): AnimeUp stops it before updating. A job resumes later from its last saved chunk; a calibration has to start again.",
-                "C'è qualcosa in corso (una lavorazione, un confronto o una taratura): AnimeUp lo ferma prima di aggiornarsi. Una lavorazione si riprende poi dall'ultimo blocco salvato; una taratura va rifatta.")
+                "C'è qualcosa in corso (una lavorazione, un confronto o una calibrazione): AnimeUp lo ferma prima di aggiornarsi. Una lavorazione si riprende poi dall'ultimo blocco salvato; una calibrazione va rifatta.")
         }
         ask.informativeText = text
         ask.addButton(withTitle: busy.isEmpty ? tr("Install and Restart", "Installa e riavvia")
@@ -497,7 +497,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             alert.messageText = tr("Quit AnimeUp and stop what's running?", "Uscire da AnimeUp e fermare quello che è in corso?")
             alert.informativeText = tr(
                 "A calibration or a model comparison is running. Quitting stops it: a calibration saves nothing until it finishes, a comparison keeps the clips already made.\n\nTo let it finish, close the window instead.",
-                "È in corso una taratura o un confronto dei modelli. Uscendo si ferma: la taratura non salva niente finché non finisce, il confronto tiene le clip già fatte.\n\nPer lasciarlo finire chiudi invece la finestra.")
+                "È in corso una calibrazione o un confronto dei modelli. Uscendo si ferma: la calibrazione non salva niente finché non finisce, il confronto tiene le clip già fatte.\n\nPer lasciarlo finire chiudi invece la finestra.")
             alert.addButton(withTitle: tr("Stop and Quit", "Ferma e esci"))
             alert.addButton(withTitle: tr("Cancel", "Annulla"))
             guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
