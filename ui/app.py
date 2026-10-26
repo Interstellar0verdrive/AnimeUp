@@ -3950,7 +3950,7 @@ STYLE = f"""
   .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) > .stButton::before,
   .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) > .stButton::after {{
       content: ""; position: absolute; bottom: 0; width: 10px; height: 11px; z-index: 3;
-      box-sizing: border-box; background: var(--bg); pointer-events: none;
+      box-sizing: border-box; background: transparent; pointer-events: none;
       border-bottom: 1px solid var(--borderStrong); }}
   .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) > .stButton::before {{
       left: -9px; border-right: 1px solid var(--borderStrong);
@@ -3958,8 +3958,20 @@ STYLE = f"""
   .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) > .stButton::after {{
       right: -9px; border-left: 1px solid var(--borderStrong);
       border-bottom-left-radius: 10px; }}
-  /* Il fondo della scheda aperta copre la linea fra le due curve. */
+  /* La linea sotto la scheda aperta E sotto i suoi piedi la copre una
+     striscia di 1px del colore della pagina: la linea riparte esattamente
+     dove finisce ogni curva. Prima la coprivano i piedi col loro fondo, ma il
+     fondo segue l'arrotondamento: fuori dalla curva restava un mozzicone di
+     linea (in WebKit si vedeva come una seconda riga) e sull'hover della
+     scheda accanto il fondo compariva come un quadratino nero (utente). */
   .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"]) {{ z-index: 2; }}
+  .st-key-passi > [class*="st-key-passo"]:has(button[kind="primary"])::after {{
+      content: ""; position: absolute; left: -9px; right: -9px; bottom: 0; height: 1px;
+      background: var(--bg); z-index: 2; pointer-events: none; }}
+  /* Al passaggio l'ultima riga della scheda resta del colore della pagina
+     (ci passa la linea): la striscia sotto i piedi non fa scalino. */
+  .st-key-passi button[kind="secondary"]:hover {{
+      box-shadow: inset 0 -1px 0 var(--bg) !important; }}
 
 </style>
 """
