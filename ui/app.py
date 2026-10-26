@@ -3911,7 +3911,8 @@ STYLE = f"""
   .au-fine-sez.au-giallo span {{ width: 6px; height: 6px; border-radius: 50%;
       background: var(--yellow); }}
   [class*="st-key-fineAvviso"], [class*="st-key-fineGuaio"] {{ flex-wrap: nowrap;
-      padding: 10px 12px !important; border-radius: 8px; gap: 12px !important; }}
+      padding: 12px 14px !important; border-radius: 8px; gap: 14px !important;
+      align-items: center !important; }}
   [class*="st-key-fineAvviso"] {{ background: var(--yellowBg);
       border: 1px solid rgb(var(--yellowRgb) / .35); }}
   [class*="st-key-fineGuaio"] {{ background: var(--surface); border: 1px solid var(--borderColor); }}
@@ -3927,6 +3928,11 @@ STYLE = f"""
   .au-fine-voce span {{ display: block; font-size: 12.5px; line-height: 1.45;
       color: var(--textSecondary); margin-top: 2px; }}
   [class*="st-key-fineAvviso"] .au-fine-voce span {{ color: var(--yellowText); }}
+  .au-fine-voce em.au-motivo {{ flex: none; white-space: nowrap; }}
+  .au-tar-nota {{ margin-top: 6px; font-size: 12px; line-height: 1.45;
+      color: var(--yellowText); }}
+  :is([class*="st-key-fineAvviso"], [class*="st-key-fineGuaio"]) [data-testid="stMarkdownContainer"] {{
+      margin-bottom: 0 !important; }}
   .au-motivo {{ font: normal 400 11px var(--mono); padding: 1px 8px; border-radius: 999px;
       border: 1px solid var(--borderStrong); color: var(--textSecondary);
       background: var(--surfaceHover); }}
@@ -5066,10 +5072,22 @@ def _contenuto_fine_coda(lancio: dict) -> None:
             f"<div><span>{esc(k)}</span><b>{esc(v)}</b></div>" for k, v in cifre)
         + "</div>", unsafe_allow_html=True)
 
+    def _chiudi() -> None:
+        # Il segno vive su disco per sopravvivere ai riavvii; il doppione in
+        # sessione (`fine_vista`) e' il paracadute se i registri non sono
+        # scrivibili.
+        _segna_lancio_visto(lancio)
+        st.session_state["fine_da_mostrare"] = None
+
     def _mostra(nome: str) -> None:
+        # Un pulsante dentro la modale ridisegna SOLO la modale (e' un
+        # fragment): con `on_click` il clic registrava la riga da mostrare
+        # ma la pagina non si ridisegnava mai, e «Mostra» sembrava non fare
+        # niente (segnalato dall'utente). Il giro intero si chiede qui.
         st.session_state["scorri_riga"] = nome
         st.session_state["sezione"] = SEZIONI[2]
         _chiudi()
+        st.rerun()
 
     if con_avvisi:
         quanti_file = len(con_avvisi)
@@ -5083,22 +5101,26 @@ def _contenuto_fine_coda(lancio: dict) -> None:
                 st.markdown(f"<div class='au-fine-voce'><b>{esc(nome)}</b>"
                             f"<span>{esc(' '.join(str(a) for a in avvisi))}</span></div>",
                             unsafe_allow_html=True)
-                st.button(t("lav.fine_mostra"), key=f"fineMostraA{i}",
-                          on_click=_mostra, args=(nome,))
+                if st.button(t("lav.fine_mostra"), key=f"fineMostraA{i}"):
+                    _mostra(nome)
     if falliti:
         st.markdown(f"<div class='au-fine-sez'>{tn('lav.fine_non_completati', len(falliti))}</div>",
                     unsafe_allow_html=True)
-        for i, (nome, motivo) in enumerate(falliti[:4]):
+        # Cinque si mostrano tutti: «e altri 1» al posto dell'ultima voce non
+        # risparmiava niente.
+        mostrati = falliti if len(falliti) <= 5 else falliti[:4]
+        for i, (nome, motivo) in enumerate(mostrati):
             with st.container(key=f"fineGuaio{i}", horizontal=True):
                 st.markdown(
                     f"<div class='au-fine-voce'><b><em class='au-motivo au-motivo-{motivo}'>"
                     f"{t('lav.fine_motivo_' + motivo)}</em>{esc(nome)}</b>"
                     f"<span>{t('lav.fine_testo_' + motivo)}</span></div>",
                     unsafe_allow_html=True)
-                st.button(t("lav.fine_mostra"), key=f"fineMostraG{i}",
-                          on_click=_mostra, args=(nome,))
-        if len(falliti) > 4:
-            st.markdown(f"<div class='au-fine-quando'>{t('lav.fine_e_altri', n=len(falliti) - 4)}</div>",
+                if st.button(t("lav.fine_mostra"), key=f"fineMostraG{i}"):
+                    _mostra(nome)
+        if len(falliti) > len(mostrati):
+            st.markdown(f"<div class='au-fine-quando'>"
+                        f"{tn('lavb.e_altri', len(falliti) - len(mostrati))}</div>",
                         unsafe_allow_html=True)
     righe = []
     if lancio.get("dedup_medio") is not None:
@@ -5110,13 +5132,6 @@ def _contenuto_fine_coda(lancio: dict) -> None:
         f"<div><span>{esc(k)}</span><code title='{esc(v)}'>{esc(v)}</code></div>"
         for k, v in righe)
         + "</div>", unsafe_allow_html=True)
-
-    def _chiudi() -> None:
-        # Il segno vive su disco per sopravvivere ai riavvii; il doppione in
-        # sessione (`fine_vista`) e' il paracadute se i registri non sono
-        # scrivibili.
-        _segna_lancio_visto(lancio)
-        st.session_state["fine_da_mostrare"] = None
 
     with st.container(key="cFineAzioni", horizontal=True, vertical_alignment="center"):
         if st.button(t("lav.fine_log"), key="fineLog", type="tertiary"):
@@ -5140,7 +5155,10 @@ def _contenuto_fine_coda(lancio: dict) -> None:
 # frammento della modale resta lo stesso (Streamlit lo riconosce dal nome
 # della funzione del contenuto), quindi i rerun interni non cambiano.
 def _modale_fine_coda(lancio: dict) -> None:
-    st.dialog(t("lav.fine_titolo"))(_contenuto_fine_coda)(lancio)
+    # «medium» (750px) e non la predefinita da 500: i nomi dei file di una
+    # serie sono lunghi, e a 500px ogni voce andava su tre righe con la
+    # chip spezzata in due (segnalato dall'utente).
+    st.dialog(t("lav.fine_titolo"), width="medium")(_contenuto_fine_coda)(lancio)
 
 
 def _contenuto_taratura() -> None:
@@ -6185,7 +6203,7 @@ def _riga_taratura(congelata: bool) -> None:
         if voce_tar.get("vecchia"):
             # Fatta prima dell'1.6.8: senza la misura a 1080p, e le stime dei
             # file grandi escono lunghe. Si dice, e Ricalibra torna pieno.
-            stato += f"<div class='au-tar-mai'>{t('sb.taratura_vecchia')}</div>"
+            stato += f"<div class='au-tar-nota'>{t('sb.taratura_vecchia')}</div>"
             tipo = "primary"
     else:
         altro = taratura.di_altro_mac()
