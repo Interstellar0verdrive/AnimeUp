@@ -160,7 +160,7 @@
   "cli.version.aiuto": "Mostra la versione.",
   "cli.tar.aiuto": "Misura la velocità di QUESTA macchina e calibra le stime.",
   "cli.tar.occupata": "C'è una lavorazione in corso: ferma tutto dall'interfaccia (o aspetta la fine) e rilancia la calibrazione.",
-  "cli.tar.inizio": "Calibrazione su {chip} — ci vorranno ~11 minuti.",
+  "cli.tar.inizio": "Calibrazione su {chip} — ci vorranno ~10 minuti.",
   "cli.tar.manca.uno": "circa un minuto al termine",
   "cli.tar.manca.altri": "circa {n} minuti al termine",
   "cli.tar.fatto_barra": "fatto",
