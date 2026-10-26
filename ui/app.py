@@ -53,7 +53,7 @@ from animeup import __version__, su_disco, tema  # noqa: E402
 from animeup import (  # noqa: E402
     aggiornamenti, confronto, i18n, library, monitor, preview, primo_avvio,
     taratura)
-from animeup.i18n import t, tn  # noqa: E402
+from animeup.i18n import attiva as lingua_attiva, t, tn  # noqa: E402
 from animeup.models import (  # noqa: E402
     ALTEZZA_INCERTA, CATALOG, CLEAN_SOURCE_MIN_HEIGHT, altezza_minima,
     recommend)
@@ -3811,6 +3811,57 @@ STYLE = f"""
   .au-tappa + .au-tappa::before {{ content: ""; width: 24px; height: 1px;
       background: var(--borderStrong); margin-right: 12px; }}
   .au-riga-misure {{ margin-left: auto; font: 400 12px var(--mono); color: var(--textCode); }}
+  /* ===== La barra del file a quattro tappe (tavola «Z» in Claude Design).
+     La barra e' il file intero divisa nelle fette delle tappe; nella fetta
+     dell'upscale una lineetta per confine di blocco. Sotto, le tappe con la
+     loro fetta e, a destra, le misure della tappa in corso: tutto sulla
+     stessa linea di base e della stessa misura, le fette un filo piu'
+     piccole. Se la riga non ci sta, la pagina toglie prima numeri e fette
+     (`au-s1`), poi il tempo trascorso (`au-s2`). */
+  /* 4px e non 2: con larghezze frazionarie lo stacco da 2px veniva
+     disegnato a volte pieno e a volte quasi chiuso (visto dall'utente), e
+     si confondeva con le lineette dei blocchi. */
+  .au-barra-file {{ flex: 1; display: flex; gap: 4px; height: 6px; }}
+  .au-seg {{ position: relative; min-width: 14px; height: 100%; border-radius: 3px;
+      overflow: hidden; background: rgb(var(--primaryRgb) / .15); }}
+  .au-seg > i {{ display: block; height: 100%; background: var(--primary); }}
+  .au-seg > b {{ position: absolute; top: 0; bottom: 0; width: 1px;
+      background: rgb(var(--bgRgb) / .7); }}
+  .au-ferma .au-seg {{ background: var(--sidebar2); }}
+  .au-ferma .au-seg > i {{ background: var(--yellow); }}
+  .au-ferma .au-riga-testa b {{ color: var(--yellowText); }}
+  .au-riga-tappe {{ align-items: baseline !important; flex-wrap: nowrap !important;
+      gap: 8px !important; font-size: 12.5px; line-height: 18px; overflow: hidden;
+      white-space: nowrap; }}
+  .au-tp {{ display: inline-flex; align-items: baseline; gap: 6px; white-space: nowrap; }}
+  .au-tp-fatta {{ color: var(--greenText); }}
+  .au-tp-ora {{ color: var(--primaryText); font-weight: 600; }}
+  .au-ferma .au-tp-ora {{ color: var(--yellowText); }}
+  .au-tp-dopo {{ color: var(--textPrimary); }}
+  .au-tp-segno {{ display: inline-flex; align-self: center; }}
+  .au-fetta {{ font: 400 11px var(--mono); color: var(--textTertiary); }}
+  .au-freccia-passo {{ flex: none; align-self: center; margin: 0 2px;
+      color: var(--textTertiary); }}
+  .au-punto-vivo {{ align-self: center; flex: none; width: 7px; height: 7px;
+      border-radius: 50%; background: var(--primary);
+      animation: au-respiro 1.8s ease-out infinite; }}
+  .au-ferma .au-punto-vivo {{ background: var(--yellow); animation: none;
+      box-shadow: 0 0 0 3px rgb(var(--yellowRgb) / .3); }}
+  @keyframes au-respiro {{
+      0% {{ box-shadow: 0 0 0 0 rgb(var(--primaryRgb) / .55); }}
+      70% {{ box-shadow: 0 0 0 7px rgb(var(--primaryRgb) / 0); }}
+      100% {{ box-shadow: 0 0 0 0 rgb(var(--primaryRgb) / 0); }} }}
+  @media (prefers-reduced-motion: reduce) {{
+      .au-punto-vivo {{ animation: none; box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .2); }} }}
+  /* Almeno 24px fra l'ultima tappa e le misure: a filo si leggevano come
+     un'unica riga («96–100% restano…»), e la riga va considerata piena. */
+  .au-riga-tappe .au-riga-misure {{ font-size: 12.5px; white-space: nowrap;
+      padding-left: 16px; }}
+  .au-mis + .au-mis::before {{ content: " · "; }}
+  .au-s1 .au-tp-n, .au-s1 .au-fetta {{ display: none; }}
+  .au-s2 .au-m-trascorso {{ display: none; }}
+  .au-riga-dett {{ font-size: 12px !important; color: var(--textSecondary) !important; }}
+  .au-riga-dett b {{ font-weight: 400; color: var(--textPrimary); }}
   .au-riga-dett {{ margin-top: 10px; padding: 8px 12px; border-radius: 6px;
       background: var(--insetBackground); border: 1px solid var(--borderColor);
       font: 400 11.5px var(--mono); color: var(--textCode); }}
@@ -7949,6 +8000,69 @@ def _controlla_firma() -> None:
         st.rerun(scope="app")
 
 
+# Le quattro tappe di un file e la fetta della barra di ciascuna, in
+# proporzione a quanto durano davvero (vedi `_riempimento`).
+_TAPPE_FILE = (("lav.passo1", 0.0, 0.04), ("lav.passo2", 0.04, 0.06),
+               ("lav.passo3", 0.06, 0.96), ("lav.passo4", 0.96, 1.0))
+_TAPPA_DI_FASE = {"estrazione": 0, "deduplica": 1, "elaborazione": 2,
+                  "codifica blocco": 2, "codifica finale": 3}
+_FRECCIA_TAPPA = ("<svg class='au-freccia-passo' aria-hidden='true' width='18' height='8' "
+                  "viewBox='0 0 18 8' fill='none' stroke='currentColor' stroke-width='1' "
+                  "stroke-linecap='round' stroke-linejoin='round'>"
+                  "<path d='M1 4h15M13 1.5 16 4l-3 2.5'></path></svg>")
+
+
+def _num(n: int) -> str:
+    """Un conteggio coi separatori delle migliaia della lingua attiva:
+    «30210» si leggeva come un numero solo accanto a «2392»."""
+    testo = f"{int(n):,}"
+    return testo.replace(",", ".") if lingua_attiva() == "it" else testo
+
+
+def _grassetti(testo: str) -> str:
+    """`**...**` del catalogo in grassetto: l'azione e i numeri in chiaro,
+    le parole attorno in grigio (vedi `.au-riga-dett`)."""
+    pezzi = esc(testo).split("**")
+    return "".join(f"<b>{p}</b>" if i % 2 else p for i, p in enumerate(pezzi))
+
+
+def _barra_file(lav) -> str:
+    """La barra del file intero divisa nelle quattro tappe, e la fetta
+    dell'upscale segnata da una lineetta a ogni confine di blocco, in
+    proporzione (l'ultimo blocco di solito e' piu' corto)."""
+    quota = _riempimento(lav)
+    pezzi = []
+    for i, (_c, da, a) in enumerate(_TAPPE_FILE):
+        pieno = max(0.0, min(1.0, (quota - da) / (a - da)))
+        tacche = ""
+        if i == 2 and lav.blocco_dim and lav.totale > lav.blocco_dim:
+            tacche = "".join(f"<b style='left:{x / lav.totale * 100:.3f}%'></b>"
+                             for x in range(lav.blocco_dim, lav.totale, lav.blocco_dim))
+        pezzi.append(f"<span class='au-seg' style='flex:{(a - da) * 100:g} 0 0'>"
+                     f"<i style='width:{pieno * 100:.1f}%'></i>{tacche}</span>")
+    return f"<span class='au-barra-file' aria-hidden='true'>{''.join(pezzi)}</span>"
+
+
+def _tappe_file(lav) -> str:
+    """Le quattro tappe: fatte in verde con la spunta, quella in corso nel
+    colore della barra col pallino che respira, le prossime in bianco. Dopo
+    il nome la fetta del file, che la pagina toglie per prima se la riga non
+    ci sta (vedi lo script `au-s1`/`au-s2`)."""
+    ora = _TAPPA_DI_FASE.get(lav.fase, 2)
+    tappe = []
+    for i, (chiave, da, a) in enumerate(_TAPPE_FILE):
+        stato = "fatta" if i < ora else "ora" if i == ora else "dopo"
+        segno = (f"<span class='au-tp-segno'>{_svg(_I_SPUNTA, 12, 2.2)}</span>"
+                 if stato == "fatta" else "<span class='au-punto-vivo'></span>"
+                 if stato == "ora" else "")
+        tappe.append(
+            (_FRECCIA_TAPPA if i else "")
+            + f"<span class='au-tp au-tp-{stato}'>{segno}"
+            f"<span><span class='au-tp-n'>{i + 1} </span>{esc(t(chiave))}</span>"
+            f"<span class='au-fetta'>{da * 100:.0f}–{a * 100:.0f}%</span></span>")
+    return "".join(tappe)
+
+
 def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
     """La barra di UNA riga al lavoro, che si aggiorna da sola.
 
@@ -7975,77 +8089,85 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
         return
     campioni = st.session_state.setdefault("mon_campioni", {})
     stati = st.session_state.setdefault("mon_stati", {})
-    if monitor.sospeso(lav) is not None:
+    chiave_log = "log_" + hashlib.sha1(str(cartella).encode()).hexdigest()[:10]
+    log = (f"<a class='au-log' data-preme='{chiave_log}' role='button'>"
+           f"{t('lav.mostra_log')}</a>" if lav.registro is not None else "")
+    in_pausa = monitor.sospeso(lav) is not None
+    quota = _riempimento(lav)
+    perc = f"{quota:.0%}"
+    blocchi = dict(n=lav.blocco_n, blocchi=lav.blocchi_totali)
+    misure: list[tuple[str, str]] = []
+    if in_pausa:
         # In pausa NON si campiona. I fotogrammi non avanzano perche' nessuno
         # sta lavorando, e infilare quei punti nella finestra farebbe crollare
         # il ritmo verso lo zero e sparare il «restano» all'infinito — una
         # bugia costruita su misure vere. La finestra si azzera alla ripresa.
-        st.markdown(
-            f"<div class='au-riga-avanz'>"
-            f"<div class='au-riga-barra au-riga-ferma'>"
-            f"<span style='width:{_riempimento(lav) * 100:.1f}%'></span></div>"
-            f"<span class='au-meta'>"
-            + t("lav.av_in_pausa", perc=f"{_riempimento(lav):.0%}",
-                fatti=lav.fatti, totale=lav.totale)
-            + "</span>"
-            f"</div>", unsafe_allow_html=True)
-        return
-    monitor.aggiorna_campioni(
-        campioni, stati, [(lav.cartella.name, lav.fase, lav.fatti)],
-        time.time())
-    dett = _avanzamento_testo(lav, campioni, stati, turno)
-    quota = _riempimento(lav)
-    # Le tre tappe, con quella in corso evidenziata: estrazione, upscale (che
-    # si alterna con la codifica dei blocchi), codifica finale e montaggio.
-    corrente = {"estrazione": 1, "deduplica": 1, "elaborazione": 2,
-                "codifica blocco": 2, "codifica finale": 3}.get(lav.fase, 2)
-    nomi = [t("lav.tappa1_dedup") if lav.fase == "deduplica" else t("lav.tappa1"),
-            t("lav.tappa2_cpu") if lav.fase == "codifica blocco" else t("lav.tappa2"),
-            t("lav.tappa3")]
-    tappe = []
-    for n, nome in enumerate(nomi, start=1):
-        stato = "fatta" if n < corrente else "ora" if n == corrente else "dopo"
-        segno = ("<i>✓</i>" if stato == "fatta" else "<i class='au-punto-ora'></i>"
-                 if stato == "ora" else "")
-        tappe.append(f"<span class='au-tappa au-tappa-{stato}'>{segno}{n} {esc(nome)}</span>")
-    misure = []
-    if lav.fase == "elaborazione" and lav.totale:
-        ritmo = monitor.andatura(campioni.get(lav.cartella.name, []))
-        resta = _resto_misurato(lav, campioni, stati, turno, ritmo=ritmo)
-        if ritmo and resta is not None:
-            misure += [f"~{ritmo:.1f} fps", t("lav.av_restano", resta=hms(resta))]
-    if monitor.trascorso(lav):
-        misure.append(t("lav.av_trascorsi", trascorso=monitor.trascorso(lav)))
-    # Il dettaglio sotto: fotogrammi e blocco (cioe' quanto manca al prossimo
-    # punto di salvataggio, il momento giusto per un Ferma indolore). Nelle
-    # fasi di codifica resta la frase completa, che dice cose sue.
-    if lav.fase == "elaborazione" and lav.totale:
-        pezzi = [t("lav.riga_fotogrammi", fatti=lav.fatti, totale=lav.totale)]
-        if lav.blocchi_totali:
-            pezzi += [t("lav.av_nel_blocco", fatti=lav.blocco_fatti,
-                        totale=lav.blocco_totale, n=lav.blocco_n,
-                        blocchi=lav.blocchi_totali),
-                      # Quanto si perde fermando ADESSO, in numeri: «si puo'
-                      # fermare dopo questo blocco senza perdere niente»
-                      # suonava come «da qui in poi, sempre», mentre il
-                      # lavoro salvato e' solo quello dei blocchi finiti
-                      # (segnalato dall'utente).
-                      tn("lav.sicuro", lav.blocco_fatti) if lav.blocco_fatti
-                      else t("lav.sicuro_niente")]
-        dettaglio = " · ".join(pezzi)
+        if lav.fase in monitor.UNITA_UPSCALE and lav.blocchi_totali:
+            dettaglio = t("lav.d_pausa_blocco", perc=perc, fatti=_num(lav.blocco_fatti),
+                          totale=_num(lav.blocco_totale), **blocchi)
+        else:
+            dettaglio = t("lav.d_pausa", perc=perc)
     else:
-        dettaglio = dett
-    chiave_log = "log_" + hashlib.sha1(str(cartella).encode()).hexdigest()[:10]
-    log = (f"<a class='au-log' data-preme='{chiave_log}' role='button'>"
-           f"{t('lav.mostra_log')}</a>" if lav.registro is not None else "")
+        monitor.aggiorna_campioni(
+            campioni, stati, [(lav.cartella.name, lav.fase, lav.fatti)],
+            time.time())
+        ritmo = monitor.andatura(campioni.get(lav.cartella.name, []))
+        resta = None
+        if lav.fase in ("estrazione", "deduplica"):
+            if ritmo and lav.totale:
+                resta = max(0, lav.totale - lav.fatti) / ritmo
+            chiave = "lav.d_estrazione" if lav.fase == "estrazione" else "lav.d_deduplica"
+            dettaglio = t(chiave, fatti=_num(lav.fatti), totale=_num(lav.totale))
+        elif lav.fase == "elaborazione":
+            resta = _resto_misurato(lav, campioni, stati, turno, ritmo=ritmo) if ritmo else None
+            if not lav.fatti:
+                # Fra la ricerca dei ripetuti e il primo fotogramma ingrandito
+                # (il modello si carica, il blocco si prepara): «0 di 2.958»
+                # sembrava un upscale fermo.
+                dettaglio = t("lav.d_preparo")
+            elif lav.blocchi_totali:
+                dettaglio = (t("lav.d_upscale", fatti=_num(lav.blocco_fatti),
+                               totale=_num(lav.blocco_totale), **blocchi)
+                             + " · " + (tn("lav.sicuro", lav.blocco_fatti,
+                                           num=_num(lav.blocco_fatti))
+                                        if lav.blocco_fatti else t("lav.sicuro_niente")))
+            else:
+                dettaglio = t("lav.d_upscale_tutto", fatti=_num(lav.fatti),
+                              totale=_num(lav.totale))
+        else:
+            # Codifica: niente fps (la GPU e' ferma) e il ritmo dei pacchetti
+            # va a raffiche — il «restano» viene dalla durata del turno
+            # (misurata, o dalla taratura), non dalle raffiche: scende liscio.
+            ritmo = None
+            frazione = max(0.0, min(1.0, lav.codifica_frazione))
+            fatto = (" · " + t("lav.d_codificato", perc=f"{frazione:.0%}")) if frazione else ""
+            durata = monitor.turno_misurato(stati, lav.cartella.name) or turno
+            if lav.fase == "codifica blocco":
+                dettaglio = t("lav.d_codifica_blocco", **blocchi) + fatto
+                if durata:
+                    resta = durata * (1 - frazione)
+            elif lav.sottopasso == "montaggio":
+                dettaglio = t("lav.d_montaggio") + (
+                    (" · " + t("lav.d_scritto", perc=f"{frazione:.0%}")) if frazione else "")
+            else:
+                dettaglio = t("lav.d_ultimo_blocco") + fatto
+                if durata and lav.blocco_dim and lav.totale:
+                    ultimo = (lav.totale % lav.blocco_dim) or lav.blocco_dim
+                    resta = durata * ultimo / lav.blocco_dim * (1 - frazione)
+        if ritmo:
+            misure.append(("au-m-fps", f"~{ritmo:.1f} fps"))
+        if resta is not None:
+            misure.append(("au-m-resta", t("lav.av_restano", resta=hms(resta))))
+    if monitor.trascorso(lav):
+        misure.append(("au-m-trascorso",
+                       t("lav.av_trascorsi", trascorso=monitor.trascorso(lav))))
+    misure_html = "".join(f"<span class='au-mis {c}'>{esc(v)}</span>" for c, v in misure)
     st.markdown(
-        f"<div class='au-riga-avanz'>"
-        f"<div class='au-riga-testa'><div class='au-riga-barra'>"
-        f"<span style='width:{_riempimento(lav) * 100:.1f}%'></span></div>"
-        f"<b>{quota:.0%}</b></div>"
-        f"<div class='au-riga-tappe'>{''.join(tappe)}"
-        f"<span class='au-riga-misure'>{_pezzi(' · '.join(misure))}</span></div>"
-        f"<div class='au-riga-dett'><span>{_pezzi(dettaglio)}</span>{log}</div></div>",
+        f"<div class='au-riga-avanz{' au-ferma' if in_pausa else ''}'>"
+        f"<div class='au-riga-testa'>{_barra_file(lav)}<b>{perc}</b></div>"
+        f"<div class='au-riga-tappe'>{_tappe_file(lav)}"
+        f"<span class='au-riga-misure'>{misure_html}</span></div>"
+        f"<div class='au-riga-dett'><span>{_grassetti(dettaglio)}</span>{log}</div></div>",
         unsafe_allow_html=True)
     if lav.registro is not None:
         # Il pulsante vero resta nascosto e lo preme il link dentro il
@@ -9994,6 +10116,16 @@ def _cassetto_sidebar() -> None:
         "const r=i.getBoundingClientRect(),m=r.left+r.width/2,w=b.offsetWidth;"
         "if(m+w/2>W.innerWidth-12)i.classList.add('au-a-destra');"
         "else if(m-w/2<12)i.classList.add('au-a-sinistra');},true);}"
+        # Le tappe della riga in lavorazione: se non ci stanno, via prima i
+        # numeri e le fette, poi il tempo trascorso. Si ricontrolla a ogni
+        # ridisegno della riga (ogni due secondi) e a ogni ridimensionamento.
+        "if(!W.auTappe){W.auTappe=1;let att=0;const adatta=()=>{att=0;"
+        "D.querySelectorAll('.au-riga-tappe').forEach(r=>{r.classList.remove('au-s1','au-s2');"
+        "if(r.scrollWidth>r.clientWidth+1){r.classList.add('au-s1');"
+        "if(r.scrollWidth>r.clientWidth+1)r.classList.add('au-s2');}});};"
+        "const presto=()=>{if(!att){att=1;W.requestAnimationFrame(adatta);}};"
+        "new W.MutationObserver(presto).observe(D.body,{childList:true,subtree:true});"
+        "W.addEventListener('resize',presto);}"
         "if(!W.auTronco){W.auTronco=1;D.addEventListener('pointerover',e=>{"
         "const w=e.target.closest&&e.target.closest('.au-perc');if(!w)return;"
         "const c=w.querySelector('code');w.classList.toggle('au-tronco',!!c&&c.scrollWidth>c.clientWidth+1);},true);}"

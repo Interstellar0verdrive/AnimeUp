@@ -82,6 +82,9 @@ class StatoLavoro:
     blocco_totale: int = 0
     blocco_n: int = 0
     blocchi_totali: int = 0
+    # I fotogrammi di un blocco intero (l'ultimo di solito e' piu' corto):
+    # servono alla barra per segnare i confini dei blocchi in proporzione.
+    blocco_dim: int = 0
     # Quanto è avanti la CODIFICA del blocco corrente (0..1): misurata
     # contando i pacchetti del segmento in scrittura, non stimata dal tempo.
     codifica_frazione: float = 0.0
@@ -312,7 +315,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
                        totale=totale, modello=modello, avviato=avviato,
                        registro=registro,
                        blocco_fatti=b_fatti, blocco_totale=b_tot,
-                       blocco_n=b_n, blocchi_totali=b_tutti,
+                       blocco_n=b_n, blocchi_totali=b_tutti, blocco_dim=blocco,
                        codifica_frazione=codifica,
                        sottopasso=sottopasso)
 
