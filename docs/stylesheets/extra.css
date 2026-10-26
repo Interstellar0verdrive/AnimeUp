@@ -1397,3 +1397,143 @@
     position: fixed;
   }
 }
+
+/* Model study: context frame, 3-column crop grid, wipe comparison */
+.md-typeset .ms-case {
+  margin: 1em 0 0.4em;
+}
+
+.md-typeset .ms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 1em 0 1.4em;
+}
+
+.md-typeset .ms-case figure,
+.md-typeset .ms-grid figure {
+  margin: 0;
+  max-width: none;
+}
+
+.md-typeset .ms-case img,
+.md-typeset .ms-grid img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--animeup-border);
+  border-radius: 4px;
+  image-rendering: auto;
+}
+
+.md-typeset .ms-grid figure:first-child img {
+  image-rendering: pixelated;
+}
+
+.md-typeset .ms-case figcaption,
+.md-typeset .ms-grid figcaption {
+  margin: 0.3em 0 0;
+  max-width: none;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  text-align: left;
+  color: var(--animeup-muted);
+}
+
+.md-typeset .ms-grid figcaption strong {
+  display: block;
+  color: var(--animeup-text);
+  font-weight: 600;
+}
+
+.md-typeset .ms-tag {
+  display: inline-block;
+  margin-right: 0.35em;
+  padding: 0 0.4em;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.58rem;
+  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.md-typeset .ms-tag--ref { color: var(--animeup-muted); }
+.md-typeset .ms-tag--app { color: var(--animeup-accent); }
+.md-typeset .ms-tag--new { color: var(--animeup-success); }
+.md-typeset .ms-tag--out { color: var(--animeup-danger); }
+
+.md-typeset .ms-wipe {
+  margin: 1em 0 1.6em;
+}
+
+.md-typeset .ms-wipe__pick {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 1rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--animeup-muted);
+}
+
+.md-typeset .ms-wipe__pick select {
+  margin-left: 0.3em;
+  padding: 0.15em 0.3em;
+  border: 1px solid var(--animeup-border);
+  border-radius: 4px;
+  background: var(--animeup-surface);
+  color: var(--animeup-text);
+  font: inherit;
+}
+
+.md-typeset .ms-wipe__view {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--animeup-border);
+  border-radius: 4px;
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+
+.md-typeset .ms-wipe__view img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  border: 0;
+}
+
+.md-typeset .ms-wipe__a {
+  clip-path: inset(0 calc(100% - var(--x)) 0 0);
+}
+
+.md-typeset .ms-wipe__handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--x);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--animeup-accent);
+  pointer-events: none;
+}
+
+.md-typeset .ms-wipe input[type="range"] {
+  width: 100%;
+  margin: 0.5rem 0 0;
+  accent-color: var(--animeup-accent);
+}
+
+@media screen and (max-width: 44em) {
+  .md-typeset .ms-grid {
+    gap: 0.4rem;
+  }
+
+  .md-typeset .ms-grid figcaption {
+    font-size: 0.6rem;
+  }
+}

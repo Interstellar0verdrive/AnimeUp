@@ -79,7 +79,7 @@ markdown_extensions:
       custom_checkbox: true
 
 extra_css:
-  - stylesheets/extra.css?v=20261025-guide-path-two-rows
+  - stylesheets/extra.css?v=20261026-model-study
 
 hooks:
   - hooks/hide_markdown_nav.py
@@ -89,6 +89,7 @@ extra_javascript:
   - javascripts/theme-select.js
   - javascripts/search-expand.js
   - javascripts/toc-current.js
+  - javascripts/model-wipe.js
 
 extra:
   generator: false
