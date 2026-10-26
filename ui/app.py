@@ -1618,13 +1618,6 @@ STYLE = f"""
       align-items: flex-end; flex-direction: column; width: 100%; }}
   [class*="st-key-fasciaSorgenti"] [data-testid="stColumn"]:has(.stButton)
       .stButton > button {{ flex: 0 0 auto; width: auto; }}
-  [class*="st-key-rianTutti"] button {{
-      border: 1px solid {BORDO_VIVO} !important; background: none !important;
-      box-shadow: none !important; padding: 6px 14px !important; }}
-  [class*="st-key-rianTutti"] button p {{ font-size: 12.5px;
-      font-weight: 500; color: var(--codeTextColor, var(--textCode)); }}
-  [class*="st-key-rianTutti"] button [data-testid="stIconMaterial"] {{
-      font-size: 15px; color: var(--textSecondary); }}
 
   /* La fascia di riepilogo: una riga sola, allineata alla lista che segue. */
   .au-fascia {{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
