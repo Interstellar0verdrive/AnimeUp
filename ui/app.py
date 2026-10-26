@@ -3432,6 +3432,25 @@ STYLE = f"""
   .st-key-barraSorgenti button p {{ font-size: 14px; font-weight: 600; }}
   .au-barra-testo {{ font-size: 13.5px; color: var(--textCode); }}
   .block-container:has(.st-key-barraSorgenti) {{ padding-bottom: 7rem !important; }}
+  /* Le spaziature della testa dei Sorgenti, dichiarate una per una. Il
+     -14px di Streamlit sotto ogni markdown annullava il passo di 14px fra
+     un blocco e l'altro: il sottotitolo usciva dal suo contenitore (i
+     pulsanti si allineavano al titolo, non a lui) e testa, fascia, nota e
+     tabella finivano incollate. Ora: testa, 20px, fascia dei file, 10px,
+     nota dell'analisi, 28px, intestazione della tabella, 10px, righe. */
+  :is(.st-key-testaSorgenti, .st-key-barraSorgenti, .st-key-fasciaAnalisi)
+      [data-testid="stMarkdownContainer"],
+  [data-testid="stMarkdownContainer"]:has(> .au-fascia-sorgenti) {{
+      margin-bottom: 0 !important; }}
+  .st-key-barraSorgenti p {{ margin: 0 !important; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-testaSorgenti) {{ margin-bottom: 6px; }}
+  .st-key-fasciaAnalisi .au-fascia-ciano {{ margin-top: 0; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-fasciaAnalisi) {{ margin-top: -4px; }}
+  /* Vuota (nessuna analisi in corso) non deve lasciare il suo passo. */
+  [data-testid="stLayoutWrapper"]:has(> .st-key-fasciaAnalisi:not(:has(.au-fascia-ciano, .au-avviso))) {{
+      display: none; }}
+  [data-testid="stLayoutWrapper"]:has(> .st-key-intest) {{ margin-top: 14px; }}
+  .st-key-intest {{ margin-bottom: -4px !important; }}
 
   .au-analisi-corso {{ display: flex; align-items: center; gap: 8px;
       font: 400 12px var(--mono); color: var(--primaryText); }}
