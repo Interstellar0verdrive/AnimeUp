@@ -3511,7 +3511,15 @@ STYLE = f"""
       color: var(--textPrimary); white-space: nowrap; }}
   .au-sez-nota {{ font-size: 13px; color: var(--textSecondary); }}
   [class*="st-key-verdetto"] {{ background: var(--surface); border: 1px solid var(--borderColor);
-      border-radius: 12px; padding: 14px 16px 6px !important; gap: 8px !important; }}
+      border-radius: 12px; padding: 16px 18px 10px !important; gap: 12px !important; }}
+  /* Il -14px di Streamlit sotto i markdown incollava il titolo di sezione
+     alla sua scheda, e nella scheda di «Trova gli spezzoni» il testo usciva
+     dal padding in basso (7px invece di 20) mentre il pulsante restava
+     centrato sul riquadro accorciato (segnalato dall'utente). Senza, il
+     passo di 14px fra un blocco e l'altro torna quello vero. */
+  [data-testid="stMarkdownContainer"]:has(> .au-sez-riga),
+  :is([class*="st-key-verdetto"], .st-key-trovaCard, .st-key-testaClip)
+      [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
   .st-key-verdettoDubbio {{ background: var(--yellowBg);
       border-color: rgb(var(--yellowRgb) / .35); }}
   .au-verdetto {{ display: flex; gap: 14px; align-items: flex-start; }}
