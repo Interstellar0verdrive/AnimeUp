@@ -160,7 +160,7 @@
   "cli.version.aiuto": "Show the version.",
   "cli.tar.aiuto": "Measure the speed of THIS machine and calibrate the estimates.",
   "cli.tar.occupata": "A job is running: stop everything from the interface (or wait for it to finish) and run the calibration again.",
-  "cli.tar.inizio": "Calibrating on {chip} — this will take ~10 minutes.",
+  "cli.tar.inizio": "Calibrating on {chip} — this will take ~11 minutes.",
   "cli.tar.manca.uno": "about a minute left",
   "cli.tar.manca.altri": "about {n} minutes left",
   "cli.tar.fatto_barra": "done",

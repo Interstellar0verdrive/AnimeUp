@@ -951,7 +951,9 @@ def build_plan(
     src_mpx = src_w * src_h / 1_000_000
     # La taratura di questa macchina, se esiste, vince sui numeri di
     # fabbrica del catalogo (che sono misure di UN Mac specifico).
-    misurato = taratura.throughput(chosen, scale, paths=p)
+    # Alla dimensione di QUESTO sorgente: fra la misura sul clip 480p e
+    # quella a 1080p (vedi `taratura.throughput`).
+    misurato = taratura.throughput(chosen, scale, paths=p, mpx=src_mpx)
     throughput = misurato or model.throughput.get(
         scale, min(model.throughput.values()))
     voce_taratura = taratura.carica(p)

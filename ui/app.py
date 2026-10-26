@@ -4468,7 +4468,12 @@ def _stato_fasi() -> dict:
         pct = round(100 * _riempimento(vivo)) if vivo and vivo.totale else 0
         stato["Lavorazione"] = t("fasi.lav_corso", numero=numero,
                                  totale=totale, pct=pct)
-        stato["linea"]["Lavorazione"] = pct / 100
+        # La barretta della scheda e' la CODA, non il file in corso: «File 1
+        # di 6 · 99%» con la barra quasi piena sembrava un lavoro quasi
+        # finito, mentre ne mancavano cinque (segnalato dall'utente). Il
+        # numero accanto resta quello del file.
+        stato["linea"]["Lavorazione"] = min(1.0, (max(0, numero - 1) + pct / 100)
+                                            / max(1, totale))
         stato["badge"]["Lavorazione"] = max(0, totale - numero) + 1
         stato["voce"] = t("fasi.stato_lavoro", numero=numero, totale=totale)
         stato["attivo"] = True
@@ -5302,6 +5307,16 @@ def _taratura_esito(s: dict, passo: bool = True) -> None:
             righe.append((f"{modello.short} x{scala}", f"{fab:.2f}" if fab else "—",
                           f"{pre:.2f}" if pre else "—", f"{nuo:.2f}" if nuo else "—",
                           _scarto(nuo, pre or fab)))
+    # La seconda misura, sui fotogrammi 1080p: nessun valore di fabbrica.
+    for chiave, modello in CATALOG.items():
+        if 2 not in modello.scales:
+            continue
+        pre = (prima.get("mpxs_grande") or {}).get(chiave, {}).get("2")
+        nuo = (nuova.get("mpxs_grande") or {}).get(chiave, {}).get("2")
+        if pre or nuo:
+            righe.append((f"{modello.short} x2 · 1080p", "—",
+                          f"{pre:.2f}" if pre else "—", f"{nuo:.2f}" if nuo else "—",
+                          _scarto(nuo, pre)))
     pre_e, pre_c = prima.get("estrazione_fps"), prima.get("codifica_fps")
     righe.append((t("lav.tar_estrazione"), "60 f/s", f"{pre_e:.0f} f/s" if pre_e else "—",
                   f"{nuova.get('estrazione_fps', 0):.0f} f/s",
@@ -6167,9 +6182,17 @@ def _riga_taratura(congelata: bool) -> None:
                  f"title='{t('sb.taratura_vedi')}'>{t('sb.taratura_ultima', quando=quando)}"
                  f"{_svg(_I_AVANTI, 11, 2.2)}</a>")
         azione, tipo = t("sb.taratura_ripeti"), "secondary"
+        if voce_tar.get("vecchia"):
+            # Fatta prima dell'1.6.8: senza la misura a 1080p, e le stime dei
+            # file grandi escono lunghe. Si dice, e Ricalibra torna pieno.
+            stato += f"<div class='au-tar-mai'>{t('sb.taratura_vecchia')}</div>"
+            tipo = "primary"
     else:
-        stato = (f"<span class='au-tar-mai'>{t('sb.taratura_mai')} · "
-                 f"{t('sb.taratura_mai_nota')}</span>")
+        altro = taratura.di_altro_mac()
+        stato = (f"<span class='au-tar-mai'>"
+                 + (t("sb.taratura_altro_mac", chip=esc(altro)) if altro
+                    else f"{t('sb.taratura_mai')} · {t('sb.taratura_mai_nota')}")
+                 + "</span>")
         azione, tipo = t("sb.taratura_esegui"), "primary"
     with st.container(key="cTaratura"):
         with st.container(key="cTarRiga", horizontal=True,

@@ -113,5 +113,6 @@
   "mot.taratura.clip_mancante": "sample clip missing: {percorso}. samples/{clip} is required (see samples/README.md).",
   "mot.taratura.gia_in_corso": "a calibration is already running on this machine: wait for it to finish (it carries on even with the window closed).",
   "mot.taratura.estrazione_fallita": "extraction failed: no frames produced",
-  "mot.taratura.upscale_incompleto": "{modello} x{scala}: produced {fatti} of {attesi} frames — measurement unreliable, calibration stopped"
+  "mot.taratura.upscale_incompleto": "{modello} x{scala}: produced {fatti} of {attesi} frames — measurement unreliable, calibration stopped",
+  "mot.taratura.tappa_upscale_grande": "upscale 1080p {modello} x{scala}"
 }

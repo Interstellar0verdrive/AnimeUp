@@ -12,9 +12,17 @@ prodotto, così il caricamento del modello resta fuori dal conto (era già
 successo: un campione breve aveva fatto misurare 0.57 Mpx/s a un modello
 che in produzione ne fa 0.85, vedi models.py).
 
-Il risultato vive in records/calibration.json, chiavato sul CHIP: una copia
-della cartella portata su un altro Mac non sporca le stime di nessuno,
+Il risultato vive in records/calibration.json, chiavato sull'IMPRONTA di
+questo Mac (vedi `macchina_id`): una copia della cartella portata su un altro
+Mac non sporca le stime di nessuno, nemmeno su un Mac con lo stesso chip,
 perché ogni macchina legge solo la propria voce.
+
+I modelli si cronometrano a DUE dimensioni: sul clip 480p e su fotogrammi
+1080p. Misurati sul 480p soltanto e portati al 1080p in proporzione ai
+pixel, i Mpx/s sbagliavano di quasi il doppio: CUGAN 0,71 f/s previsti su
+un episodio 1080p, 1,19-1,29 veri (la GPU rende di piu' sui fotogrammi
+grandi, dove pesano meno i costi fissi per fotogramma). La prima stima di
+quel file diceva 8 ore per un lavoro da 6 (segnalato dall'utente).
 """
 
 from __future__ import annotations
@@ -36,6 +44,11 @@ CLIP = "bbb-480p.mkv"
 # da diluire il rumore di misura, pochi abbastanza da chiudere l'intero giro
 # in ~10 minuti sul Mac di riferimento.
 FOTOGRAMMI_MISURA = 180
+# I fotogrammi 1080p della seconda misura: lo stesso campione ingrandito a
+# 1920x1080 (alla GPU interessano i pixel, non il contenuto). Pochi, perche'
+# ognuno costa quattro volte uno del clip: circa un minuto in tutto.
+FOTOGRAMMI_GRANDI = 24
+LATO_GRANDE = (1920, 1080)
 
 # I thread di SALVATAGGIO da provare (il terzo numero di `-j` di ncnn). Il
 # tetto dei ~20 Mpx/s in uscita misurato su due Mac diversi non era la GPU:
@@ -106,6 +119,38 @@ def candidati_salvataggio() -> list[int]:
                   | {salvataggio_predefinito(), core()})
 
 
+_ID_MACCHINA: str | None = None
+
+
+def macchina_id() -> str:
+    """Un'impronta di QUESTO Mac: l'UUID dell'hardware, passato per sha256.
+
+    Il nome del chip non basta: due Mac con lo stesso «Apple M4 Pro» possono
+    andare diversamente (raffreddamento, core, memoria), e una cartella
+    portata dall'uno all'altro si portava dietro stime non sue (chiesto
+    dall'utente). L'impronta e non l'UUID: il file della calibrazione puo'
+    finire in una cartella condivisa, e un identificativo del computer non
+    ha motivo di girare in chiaro. Senza UUID (fuori da macOS) resta il chip.
+    """
+    global _ID_MACCHINA
+    if _ID_MACCHINA is None:
+        uuid = ""
+        try:
+            esito = subprocess.run(
+                ["ioreg", "-rd1", "-c", "IOPlatformExpertDevice"],
+                capture_output=True, text=True, timeout=5)
+            for riga in esito.stdout.splitlines():
+                if "IOPlatformUUID" in riga:
+                    uuid = riga.split("=")[-1].strip().strip('"')
+                    break
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+        import hashlib
+        _ID_MACCHINA = ("mac-" + hashlib.sha256(uuid.encode()).hexdigest()[:16]
+                        if uuid else chip())
+    return _ID_MACCHINA
+
+
 def chip() -> str:
     """Il nome del chip, l'identità della macchina ai fini della velocità."""
     try:
@@ -126,6 +171,14 @@ def _combinazioni() -> list[tuple]:
     return [(chiave, modello, scala)
             for chiave, modello in CATALOG.items()
             for scala in modello.scales]
+
+
+def _combinazioni_grandi() -> list[tuple]:
+    """Le combinazioni da cronometrare anche a 1080p: la scala 2, l'unica
+    che un sorgente grande usa davvero (un 720p o un 1080p si ingrandisce
+    di due e, se serve, si riduce dopo)."""
+    return [(chiave, modello, 2) for chiave, modello in CATALOG.items()
+            if 2 in modello.scales]
 
 
 def _misura_clip(p: Paths, sorgente: Path) -> tuple[int, int, int]:
@@ -152,6 +205,8 @@ def nomi_tappe() -> list[str]:
     nomi = [t("mot.taratura.tappa_estrazione"), t("mot.taratura.tappa_salvataggio")]
     nomi += [t("mot.taratura.tappa_upscale", modello=modello.short, scala=scala)
              for _k, modello, scala in _combinazioni()]
+    nomi += [t("mot.taratura.tappa_upscale_grande", modello=modello.short, scala=scala)
+             for _k, modello, scala in _combinazioni_grandi()]
     return nomi + [t("mot.taratura.tappa_codifica"), t("mot.taratura.tappa_scansione")]
 
 
@@ -190,6 +245,15 @@ def preventivo(paths: Paths | None = None, *,
         tappe.append((t("mot.taratura.tappa_upscale", modello=modello.short,
                         scala=scala),
                       n_previsto * src_mpx / float(ritmo)))
+    mpx_grande = LATO_GRANDE[0] * LATO_GRANDE[1] / 1_000_000
+    for chiave, modello, scala in _combinazioni_grandi():
+        ritmo = (nota.get("mpxs_grande", {}).get(chiave, {}).get(str(scala))
+                 or nota.get("mpxs", {}).get(chiave, {}).get(str(scala))
+                 or modello.throughput.get(
+                     scala, min(modello.throughput.values())))
+        tappe.append((t("mot.taratura.tappa_upscale_grande", modello=modello.short,
+                        scala=scala),
+                      min(FOTOGRAMMI_GRANDI, n_previsto) * mpx_grande / float(ritmo)))
     tappe.append((t("mot.taratura.tappa_codifica"),
                   n_previsto / float(nota.get("codifica_fps") or 8.0)))
     tappe.append((t("mot.taratura.tappa_scansione"),
@@ -230,31 +294,83 @@ def _file(p: Paths) -> Path:
     return p.taratura
 
 
-def carica(paths: Paths | None = None, *, macchina: str | None = None) -> dict | None:
-    """La voce di taratura di QUESTA macchina, o None se non è mai stata fatta."""
-    p = paths or PATHS
+def _macchine(p: Paths) -> dict:
     try:
         dati = su_disco.leggi(_file(p))
     except (OSError, ValueError):
-        return None
+        return {}
     macchine = dati.get("macchine") if isinstance(dati, dict) else None
-    if not isinstance(macchine, dict):
-        return None              # un file scritto a mano, di forma strana
-    voce = macchine.get(macchina or chip())
-    return voce if isinstance(voce, dict) else None
+    return macchine if isinstance(macchine, dict) else {}
+
+
+def carica(paths: Paths | None = None, *, macchina: str | None = None) -> dict | None:
+    """La voce di taratura di QUESTO Mac, o None se qui non e' mai stata fatta.
+
+    Si cerca per impronta (`macchina_id`). Le voci scritte prima dell'1.6.8
+    erano chiavate sul solo nome del chip e non portano l'impronta: valgono
+    ancora sul chip che le ha scritte, finche' una calibrazione nuova non le
+    sostituisce, e la pagina chiede di rifarla (`vecchia`).
+    """
+    p = paths or PATHS
+    macchine = _macchine(p)
+    if macchina is not None:
+        voce = macchine.get(macchina)
+        return voce if isinstance(voce, dict) else None
+    voce = macchine.get(macchina_id())
+    if isinstance(voce, dict):
+        return voce
+    vecchia = macchine.get(chip())
+    if isinstance(vecchia, dict) and not vecchia.get("id"):
+        return {**vecchia, "vecchia": True}
+    return None
+
+
+def di_altro_mac(paths: Paths | None = None) -> str | None:
+    """Il chip di una calibrazione fatta su un ALTRO Mac, se il file ne ha
+    solo di altri: la pagina lo dice invece di fingere che non ci sia nulla
+    («calibrata su un altro Mac, rifalla qui»)."""
+    if carica(paths) is not None:
+        return None
+    for voce in _macchine(paths or PATHS).values():
+        if isinstance(voce, dict):
+            return str(voce.get("chip") or "?")
+    return None
 
 
 def throughput(model_key: str, scale: int,
-               paths: Paths | None = None) -> float | None:
-    """Mpx/s misurati per modello+scala su questa macchina, se esistono."""
+               paths: Paths | None = None, *,
+               mpx: float | None = None) -> float | None:
+    """Mpx/s misurati per modello+scala su questo Mac, se esistono.
+
+    Con `mpx` (i megapixel del sorgente) e la misura a 1080p, il ritmo si
+    legge fra le due misure in proporzione alla dimensione del sorgente:
+    un 720p sta a meta' strada fra il clip e il 1080p, un 1080p prende la
+    misura grande. Fuori dall'intervallo vale la misura piu' vicina.
+    """
     voce = carica(paths)
     if not voce:
         return None
-    valore = voce.get("mpxs", {}).get(model_key, {}).get(str(scale))
+
+    def _valore(chiave: str) -> float | None:
+        try:
+            v = voce.get(chiave, {}).get(model_key, {}).get(str(scale))
+            return float(v) if v else None
+        except (TypeError, ValueError, AttributeError):
+            return None
+
+    piccolo = _valore("mpxs")
+    grande = _valore("mpxs_grande")
+    if mpx is None or grande is None or piccolo is None:
+        return piccolo
     try:
-        return float(valore) if valore else None
+        m_piccolo = float(voce.get("mpx_misura") or 0)
+        m_grande = float(voce.get("mpx_grande") or 0)
     except (TypeError, ValueError):
-        return None
+        return piccolo
+    if m_grande <= m_piccolo:
+        return piccolo
+    quota = max(0.0, min(1.0, (mpx - m_piccolo) / (m_grande - m_piccolo)))
+    return piccolo + (grande - piccolo) * quota
 
 
 def frase_salvataggio(voce: dict | None) -> str:
@@ -667,6 +783,39 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
         else:
             shutil.rmtree(dst, ignore_errors=True)
 
+    # --- 3b. upscale a 1080p: la scala 2 sui fotogrammi grandi -------------
+    # Lo stesso campione portato a 1920x1080: la GPU rende di piu' sui
+    # fotogrammi grandi, e proporzionare la misura del 480p sbagliava di
+    # quasi il doppio sui sorgenti 1080p (vedi l'intestazione).
+    grandi = lavoro / "grandi"
+    grandi.mkdir()
+    subprocess.run(
+        [str(p.ffmpeg.path), "-hide_banner", "-v", "error", "-nostdin", "-y",
+         "-framerate", "30", "-i", str(campione / "%08d.png"),
+         "-frames:v", str(FOTOGRAMMI_GRANDI),
+         "-vf", f"scale={LATO_GRANDE[0]}:{LATO_GRANDE[1]}:flags=lanczos",
+         "-pix_fmt", "rgb24", "-c:v", "png", "-pred", "mixed",
+         str(grandi / "%08d.png")],
+        check=True, capture_output=True,
+    )
+    n_grandi = sum(1 for _ in grandi.glob("*.png"))
+    mpx_grande = LATO_GRANDE[0] * LATO_GRANDE[1] / 1_000_000
+    mpxs_grande: dict[str, dict[str, float]] = {}
+    for chiave, modello, scala in _combinazioni_grandi():
+        _di(t("mot.taratura.tappa_upscale_grande", modello=modello.short, scala=scala))
+        if not n_grandi:
+            continue
+        dst = lavoro / f"grande-{chiave}-x{scala}"
+        inizio = time.monotonic()
+        upscale_dir(grandi, dst, scale=scala, model=modello, paths=p,
+                    jobs=f"2:2:{salvataggio}")
+        durata = time.monotonic() - inizio
+        if sum(1 for _ in dst.glob("*.png")) >= n_grandi:
+            ritmo = _ritmo_da_mtime(dst, durata)
+            mpxs_grande.setdefault(chiave, {})[str(scala)] = round(ritmo * mpx_grande, 3)
+        shutil.rmtree(dst, ignore_errors=True)
+    shutil.rmtree(grandi, ignore_errors=True)
+
     # --- 4. codifica: x265 coi parametri di produzione, uscita 1080p --------
     _di(t("mot.taratura.tappa_codifica"))
     fps_codifica = 0.0
@@ -717,6 +866,12 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
         "codifica_fps": round(fps_codifica, 2),
         "scansione_fps": round(fps_scansione, 1),
         "mpxs": mpxs,
+        # La seconda misura, sui fotogrammi 1080p (vedi `throughput`).
+        "mpx_grande": round(mpx_grande, 4),
+        "mpxs_grande": mpxs_grande,
+        # Di chi e' questa voce: l'impronta del Mac e, per chi legge, il chip.
+        "id": macchina_id(),
+        "chip": chip(),
         # Quanti thread di salvataggio vuole questa macchina, e le misure da
         # cui esce: chi rilegge il file deve poter rifare il ragionamento.
         "jobs_salvataggio": salvataggio,
@@ -728,7 +883,12 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
     except (OSError, ValueError):
         dati = {}
     dati.setdefault("versione", 1)
-    dati.setdefault("macchine", {})[chip()] = voce
+    macchine = dati.setdefault("macchine", {})
+    # La voce vecchia di questo chip, senza impronta, la sostituisce questa.
+    vecchia = macchine.get(chip())
+    if isinstance(vecchia, dict) and not vecchia.get("id"):
+        macchine.pop(chip(), None)
+    macchine[macchina_id()] = voce
     p.logs.mkdir(parents=True, exist_ok=True)
     provvisorio = _file(p).with_suffix(".json.tmp")
     provvisorio.write_text(su_disco.dumps(dati, indent=2))

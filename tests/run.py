@@ -1570,6 +1570,67 @@ def _() -> None:
             "scala mai misurata: deve ricadere sulla fabbrica"
 
 
+@caso("la taratura di un altro Mac con lo stesso chip non vale qui")
+def _() -> None:
+    """Dall'1.6.8 la voce porta l'impronta del Mac: una cartella portata su
+    un altro Mac, anche con lo stesso chip, non si porta dietro stime non
+    sue. Le voci di prima (senza impronta) valgono ancora sul loro chip,
+    marcate `vecchia` perche' la pagina chieda di rifarle."""
+    import json
+
+    from animeup import taratura
+    from animeup.paths import Paths
+
+    with tempfile.TemporaryDirectory() as t_:
+        paths = Paths(Path(t_))
+        paths.logs.mkdir(parents=True)
+        voce = {"quando": 0, "mpxs": {"cugan": {"2": 1.5}}, "mpx_misura": 0.41,
+                "id": "mac-di-qualcun-altro", "chip": taratura.chip()}
+        paths.taratura.write_text(json.dumps({"versione": 1, "macchine": {
+            "mac-di-qualcun-altro": voce}}))
+        assert taratura.carica(paths) is None, "presa la voce di un altro Mac"
+        assert taratura.di_altro_mac(paths) == taratura.chip()
+
+        # La stessa voce col nome del chip e senza impronta: e' di prima.
+        vecchia = {k: v for k, v in voce.items() if k not in ("id", "chip")}
+        paths.taratura.write_text(json.dumps({"versione": 1, "macchine": {
+            taratura.chip(): vecchia}}))
+        trovata = taratura.carica(paths)
+        assert trovata is not None and trovata.get("vecchia"), trovata
+
+        # E la voce con l'impronta di QUESTO Mac vince.
+        mia = dict(voce, id=taratura.macchina_id())
+        paths.taratura.write_text(json.dumps({"versione": 1, "macchine": {
+            taratura.macchina_id(): mia, taratura.chip(): vecchia}}))
+        trovata = taratura.carica(paths)
+        assert trovata is not None and not trovata.get("vecchia"), trovata
+
+
+@caso("il ritmo di un modello si legge fra la misura 480p e quella 1080p")
+def _() -> None:
+    """La GPU rende di piu' sui fotogrammi grandi: un 1080p prende la misura
+    grande, un 720p sta in mezzo, un 480p la piccola, e fuori dall'intervallo
+    vale la piu' vicina. Senza la misura grande si resta alla piccola."""
+    import json
+
+    from animeup import taratura
+    from animeup.paths import Paths
+
+    with tempfile.TemporaryDirectory() as t_:
+        paths = Paths(Path(t_))
+        paths.logs.mkdir(parents=True)
+        voce = {"quando": 0, "id": taratura.macchina_id(),
+                "mpx_misura": 0.4, "mpxs": {"cugan": {"2": 1.5}},
+                "mpx_grande": 2.0, "mpxs_grande": {"cugan": {"2": 2.5}}}
+        paths.taratura.write_text(json.dumps({"versione": 1, "macchine": {
+            taratura.macchina_id(): voce}}))
+        r = lambda mpx: taratura.throughput("cugan", 2, paths, mpx=mpx)  # noqa: E731
+        assert r(2.0736) == 2.5 and r(0.2) == 1.5, (r(2.0736), r(0.2))
+        assert abs(r(1.2) - 2.0) < 1e-9, r(1.2)
+        assert taratura.throughput("cugan", 2, paths) == 1.5, "senza mpx: la piccola"
+        assert taratura.throughput("cugan", 3, paths, mpx=2.0) is None
+
+
 @caso("il ritmo della taratura ignora il caricamento del modello")
 def _() -> None:
     """Il cronometro parte dal PRIMO PNG scritto, non dal lancio del

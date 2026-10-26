@@ -113,5 +113,6 @@
   "mot.taratura.clip_mancante": "clip campione mancante: {percorso}. Serve samples/{clip} (vedi samples/README.md).",
   "mot.taratura.gia_in_corso": "una calibrazione è già in corso su questa macchina: aspetta che finisca (prosegue anche a finestra chiusa).",
   "mot.taratura.estrazione_fallita": "estrazione fallita: nessun fotogramma prodotto",
-  "mot.taratura.upscale_incompleto": "{modello} x{scala}: prodotti {fatti} fotogrammi su {attesi} — misura non attendibile, calibrazione interrotta"
+  "mot.taratura.upscale_incompleto": "{modello} x{scala}: prodotti {fatti} fotogrammi su {attesi} — misura non attendibile, calibrazione interrotta",
+  "mot.taratura.tappa_upscale_grande": "upscale 1080p {modello} x{scala}"
 }

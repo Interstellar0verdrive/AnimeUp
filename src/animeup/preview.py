@@ -537,7 +537,7 @@ def estimate_seconds(plan: Plan, candidates: list[Candidate], variants: list[Var
             continue
         model = CATALOG[v.key]
         scala = scale_for(v.key, plan)
-        throughput = (taratura.throughput(v.key, scala)
+        throughput = (taratura.throughput(v.key, scala, mpx=src_mpx)
                       or model.throughput.get(
                           scala, min(model.throughput.values())))
         total += frames * src_mpx / throughput
