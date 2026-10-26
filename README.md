@@ -260,8 +260,8 @@ makes it **GPLv3**. Redistributing it would mean shipping its complete
 corresponding source code as well. AnimeUp therefore downloads it on first
 launch from [Martin Riedl's macOS builds](https://ffmpeg.martin-riedl.de),
 straight into `bin/`. AnimeUp only runs `ffmpeg`/`ffprobe` as separate
-programs and doesn't link to them, so its own code stays under the MIT
-licence.
+programs and doesn't link to them, so the two are separate works that only
+talk through the command line.
 
 The Real-ESRGAN and Real-CUGAN binaries, their models and uv are under
 permissive licences. They are included in the release zip, with their
@@ -269,7 +269,23 @@ licence texts in [`LICENSES/`](LICENSES).
 
 ## License
 
-AnimeUp is released under the [MIT License](LICENSE).
+Copyright (C) 2026 Interstellar0verdrive.
+
+AnimeUp is free software: you can redistribute it and/or modify it under the
+terms of the [GNU General Public License](LICENSE) as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version. It is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+details.
+
+In plain words: you may use, study, change and share AnimeUp, and anything you
+build from it and distribute must stay open under the same licence, with its
+source code.
+
+Releases up to and including 1.6.7 were published under the MIT License, and
+copies of those releases keep it. From 1.6.8 on, AnimeUp is GPL-3.0-or-later.
+
 Third-party components keep their own licences (see below). The images in
 `docs/images/` contain frames from Morevna Episode 3 and are licensed
 CC BY-SA 3.0, like the footage.

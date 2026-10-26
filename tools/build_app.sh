@@ -134,7 +134,7 @@ $( [[ -n "$ICON_NAME" ]] && echo "  <key>CFBundleIconName</key>              <st
   <key>NSPrincipalClass</key>              <string>NSApplication</string>
   <key>NSSupportsAutomaticTermination</key> <false/>
   <key>NSSupportsSuddenTermination</key>   <false/>
-  <key>NSHumanReadableCopyright</key>      <string>MIT License</string>
+  <key>NSHumanReadableCopyright</key>      <string>© 2026 Interstellar0verdrive · GNU GPL v3 or later</string>
   <key>NSAppTransportSecurity</key>
   <dict>
     <key>NSAllowsLocalNetworking</key>     <true/>

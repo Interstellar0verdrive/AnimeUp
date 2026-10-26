@@ -110,7 +110,7 @@ The conversions themselves are sound: with a complete ncnn, SPAN, Fallin and Ado
 
 ## Licences
 
-AnimeUp is MIT-licensed, and its zips bundle the models they use. A model can join them only if its licence fits.
+AnimeUp is licensed GPL-3.0-or-later (MIT up to 1.6.7), and its zips bundle the models they use. A model can join them only if its licence fits.
 
 | Model | Licence | Could ship inside AnimeUp | As an optional download |
 |---|---|---|---|
@@ -121,7 +121,7 @@ AnimeUp is MIT-licensed, and its zips bundle the models they use. A model can jo
 | Adore | CC BY-NC-SA 4.0 | Not advisable | **Yes**, as a separate file with its licence shown before download, like FFmpeg |
 | AnimeJaNai HD V3 | CC BY-NC-SA 4.0 | Not advisable | Yes, but AnimeUp would have to host its own converted files |
 
-The NC-SA models are allowed in a free program: Adore's author states that free open-source integrations are fine. Bundling them would still muddy the licence of the package, though. Anyone may sell a fork of an MIT project, but not those weights. Keeping them as a separate download, like FFmpeg, keeps that clear.
+The NC-SA models are allowed in a free program: Adore's author states that free open-source integrations are fine. Bundling them would still muddy the licence of the package, though. The GPL lets anyone sell a copy of AnimeUp as long as the source goes with it; those weights forbid any commercial use at all. Keeping them as a separate download, like FFmpeg, keeps that clear.
 
 ## What it would take
 

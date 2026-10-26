@@ -100,4 +100,6 @@ Calibration is optional but recommended on first use: without it AnimeUp still w
 Project, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/))
 and [Big Buck Bunny](https://peach.blender.org) (© 2008 Blender Foundation,
 [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)); the images are
-CC BY-SA 3.0.</small>
+CC BY-SA 3.0. AnimeUp itself is free software under the
+[GNU GPL v3 or later](https://github.com/Interstellar0verdrive/AnimeUp/blob/main/LICENSE)
+(MIT up to 1.6.7).</small>
