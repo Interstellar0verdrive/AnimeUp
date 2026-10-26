@@ -3948,8 +3948,11 @@ STYLE = f"""
       color: var(--textSecondary); margin-top: 2px; }}
   [class*="st-key-fineAvviso"] .au-fine-voce span {{ color: var(--yellowText); }}
   .au-fine-voce em.au-motivo {{ flex: none; white-space: nowrap; }}
-  .au-tar-nota {{ margin-top: 6px; font-size: 12px; line-height: 1.45;
-      color: var(--yellowText); }}
+  /* Un riquadro giallo e non solo testo: da solo il colore del testo non
+     bastava a farla notare (segnalato dall'utente). */
+  .au-tar-nota {{ margin-top: 8px; padding: 7px 10px; border-radius: 8px;
+      font-size: 12px; line-height: 1.45; color: var(--yellowText);
+      background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .45); }}
   :is([class*="st-key-fineAvviso"], [class*="st-key-fineGuaio"]) [data-testid="stMarkdownContainer"] {{
       margin-bottom: 0 !important; }}
   .au-motivo {{ font: normal 400 11px var(--mono); padding: 1px 8px; border-radius: 999px;
