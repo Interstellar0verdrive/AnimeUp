@@ -2453,8 +2453,8 @@ STYLE = f"""
       background: rgb(var(--redRgb) / .08) !important; }}
   [class*="st-key-fermasi"] button,
   [class*="st-key-scartasi"] button {{
-      background: var(--red) !important;
-      border-color: var(--red) !important; }}
+      background: var(--redFill) !important;
+      border-color: var(--redFill) !important; }}
   [class*="st-key-fermasi"] button p,
   [class*="st-key-scartasi"] button p {{
       color: var(--onRed) !important; font-weight: 600; }}

@@ -80,9 +80,11 @@ TOKEN: dict[str, tuple[str, str]] = {
     "red":             ("#F26D6D", "#D9402E"),
     "redBg":           ("#2A1414", "#FDECEC"),
     "redText":         ("#F59B9B", "#B42323"),
-    "redFill":         ("#F26D6D", "#C62F25"),
-    "redHover":        ("#F58585", "#B02A21"),
-    "onRed":           ("#2A0F0F", "#FFFFFF"),
+    # CTA rosse piene: in scuro un rosso un po' piu' cupo con testo bianco
+    # (il nero sul rosso chiaro si leggeva poco, detto dall'utente). 4,8:1.
+    "redFill":         ("#CC4141", "#C62F25"),
+    "redHover":        ("#D94848", "#B02A21"),
+    "onRed":           ("#FFFFFF", "#FFFFFF"),
     "blue":            ("#4DA3FF", "#1F6FD1"),
     "blueBg":          ("#101C2B", "#E8F1FC"),
     "blueText":        ("#8CC2FF", "#1A5BB0"),
