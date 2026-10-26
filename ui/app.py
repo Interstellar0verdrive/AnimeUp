@@ -2280,7 +2280,7 @@ STYLE = f"""
      titolo del pannello intero. */
   .au-pan-titolo {{ font-size: 12px; font-weight: 600;
                    letter-spacing: .1em; text-transform: uppercase;
-                   color: {TESTO_2}; padding-top: 6px; }}
+                   color: {TESTO_2}; }}
   [class*="st-key-dett"] {{
       /* La colonna va dichiarata quanto le righe. Con le sole righe la
          colonna implicita è `auto`, quindi si dimensiona sul contenuto: il
@@ -2315,7 +2315,15 @@ STYLE = f"""
       /* 26/30 e non 18/22: il contenuto stava troppo appiccicato ai bordi
          del pannello. Cambia solo il respiro ESTERNO — le distanze fra le
          voci dentro restano quelle. */
-      padding: 26px 24px 30px 21px; border-top-color: {BORDO}; }}
+      padding: 20px 24px 30px 21px; border-top-color: {BORDO}; }}
+  /* La testata del pannello (titolo, stato della misura, Rianalizza) e'
+     una riga sola, alta quanto il pulsante: le righe le davano 10px di
+     padding e 10px di margine a ogni colonna, e la prima fascia risultava
+     alta il doppio del necessario (segnalato dall'utente). */
+  [class*="st-key-riga"] [class*="st-key-dett"] [data-testid="stHorizontalBlock"]:has(.au-pan-titolo) {{
+      padding: 0 !important; margin-bottom: 4px; }}
+  [class*="st-key-riga"] [class*="st-key-dett"] [data-testid="stHorizontalBlock"]:has(.au-pan-titolo)
+      > [data-testid="stColumn"] {{ margin: 0 !important; }}
   /* Il pannello NON prende il gradiente: la velatura colorata resta alla
      fascia del titolo, che e' quella che deve dire lo stato a colpo
      d'occhio. Ripeterla anche nel dettaglio la sbiadiva. */
@@ -4428,13 +4436,18 @@ def header() -> str:
                 if (q := stato["linea"].get(sezione)) is not None:
                     # La barretta sotto il sottotitolo: piena fin dove si e'
                     # arrivati, su un binario velato dello stesso colore.
+                    # Tre classi davanti: `background: ... !important` in
+                    # forma breve (quella delle schede vere, e quella di
+                    # ogni pulsante primario) azzera anche l'immagine, e
+                    # a pari forza vinceva chi veniva dopo — la barretta non
+                    # si vedeva piu' (segnalato dall'utente).
                     regole.append(
-                        f'{classe} {{ background-image: linear-gradient(var(--primary), '
+                        f'.st-key-fasi .st-key-passi {classe} {{ background-image: linear-gradient(var(--primary), '
                         'var(--primary)), linear-gradient(rgb(var(--primaryRgb) / .2), '
                         'rgb(var(--primaryRgb) / .2)) !important; background-size: '
                         f'calc((100% - 91px) * {q:.3f}) 2px, calc(100% - 91px) 2px '
                         '!important; background-position: 51px calc(100% - 6px) '
-                        '!important; }')
+                        '!important; background-repeat: no-repeat !important; }')
         st.markdown(f"<div class='au-fasi-stato{' au-vivo' if stato['attivo'] else ''}'>"
                     f"<span></span>{esc(stato['voce'])}</div>",
                     unsafe_allow_html=True)
@@ -6589,8 +6602,8 @@ def page_sorgenti(cfg: dict) -> None:
                     chip_riga.append(f"<span class='au-tag au-warn au-chip-riga au-punto'>"
                                      f"{tn('src.avvisi', len(avvisi))}</span>")
                 if getattr(rep, "dedup_campione", None) is not None:
-                    chip_riga.append(f"<span class='au-tag au-ok au-chip-riga'>dedup "
-                                     f"{rep.dedup_campione:.0%}</span>")
+                    chip_riga.append(f"<span class='au-tag au-ok au-chip-riga'>"
+                                     f"{t('src.chip_dedup', quota=f'{rep.dedup_campione:.0%}')}</span>")
                 if chip_riga:
                     blocco += f"<div class='au-chip-righe'>{''.join(chip_riga)}</div>"
                 c[3].markdown(blocco, unsafe_allow_html=True)
@@ -6631,7 +6644,11 @@ def page_sorgenti(cfg: dict) -> None:
                     # pannello ne avrebbe sette (una per gruppo) — si apriva
                     # solo il primo e il resto compariva di scatto.
                     with st.container():
-                        testa, fondo, azione = st.columns([3, 1.35, 1])
+                        # Centrate in verticale: titolo, stato della misura e
+                        # Rianalizza stanno su UNA linea (la chip a meta'
+                        # altezza non era allineata a niente, vista dall'utente).
+                        testa, fondo, azione = st.columns([3, 1.35, 1],
+                                                          vertical_alignment="center")
                         testa.markdown(
                             "<div class='au-pan-titolo'>"
                             f"{t('src.dettagli')}</div>", unsafe_allow_html=True)
@@ -6647,13 +6664,11 @@ def page_sorgenti(cfg: dict) -> None:
                         # l'analisi: un pulsante per chiederla sarebbe un
                         # comando che non fa niente.
                         sempre = cfg.get("approfondita", True)
+                        # Misurata, non si ripete qui: la chip «deduplica» sta
+                        # gia' nella riga, subito sopra (tolta su richiesta
+                        # dell'utente).
                         if gia_misurata is not None:
-                            fondo.markdown(
-                                f"<div class='au-tag au-ok' "
-                                f"style='margin-top:6px'>"
-                                f"{t('src.dedup_misurata', quota=f'{gia_misurata:.0%}')}"
-                                "</div>",
-                                unsafe_allow_html=True)
+                            pass
                         # «In corso» solo se lo e' DAVVERO. Su un file troppo
                         # corto la misura non riesce, la coda lo scarta e non
                         # riprova: la prima versione avrebbe lasciato «misura
@@ -6663,7 +6678,7 @@ def page_sorgenti(cfg: dict) -> None:
                         elif sempre and (str(path) == lavoro.in_corso
                                          or str(path) in lavoro.in_coda):
                             fondo.markdown(
-                                "<div class='au-hint' style='margin-top:8px'>"
+                                "<div class='au-hint'>"
                                 f"{t('src.misura_in_corso')}</div>",
                                 unsafe_allow_html=True)
                         elif sempre:

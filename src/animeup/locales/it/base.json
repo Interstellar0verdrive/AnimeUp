@@ -220,5 +220,6 @@
   "src.banner_mancano.uno": "manca 1 file",
   "src.banner_mancano.altri": "mancano {n} file",
   "src.mac_chip": "Hardware",
-  "src.mac_chip_testo": "Calibrazione e stime valgono per questa macchina: un altro Mac ha le sue."
+  "src.mac_chip_testo": "Calibrazione e stime valgono per questa macchina: un altro Mac ha le sue.",
+  "src.chip_dedup": "deduplica {quota}"
 }
