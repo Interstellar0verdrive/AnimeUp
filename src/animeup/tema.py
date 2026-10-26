@@ -78,12 +78,12 @@ TOKEN: dict[str, tuple[str, str]] = {
     # verde pieno con testo bianco: i passi gia' fatti del Confronto
     "greenSolid":      ("#17784A", "#12804A"),
     "onGreen":         ("#FFFFFF", "#FFFFFF"),
-    "yellow":          ("#F2B84B", "#C78100"),
+    "yellow":          ("#F2B84B", "#F5B400"),
     "yellowBg":        ("#2A2110", "#FFF5DF"),
     "yellowText":      ("#F5CB78", "#7F5300"),
     # la CTA gialla piena (l'avviso di aggiornamento): testo scuro su tutti e due
-    "yellowHover":     ("#F5C66A", "#D68C00"),
-    "yellowActive":    ("#DDA43A", "#B06F00"),
+    "yellowHover":     ("#F5C66A", "#E8A800"),
+    "yellowActive":    ("#DDA43A", "#D29A00"),
     "onYellow":        ("#2A1D05", "#1F1500"),
     # i puntini dei cursori sulla parte gia' colorata di ciano
     "dotOnFill":       ("#F2FDFF", "#FFFFFF"),
@@ -106,7 +106,7 @@ TOKEN: dict[str, tuple[str, str]] = {
 TERNE: dict[str, tuple[str, str]] = {
     "primaryRgb":  ("42 201 222", "16 175 203"),
     "greenRgb":    ("69 212 131", "18 161 80"),
-    "yellowRgb":   ("242 184 75", "199 129 0"),
+    "yellowRgb":   ("242 184 75", "245 180 0"),
     "redRgb":      ("242 109 109", "217 64 46"),
     "blueRgb":     ("77 163 255", "31 111 209"),
     "grayRgb":     ("138 144 153", "107 113 121"),

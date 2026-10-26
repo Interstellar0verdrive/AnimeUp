@@ -4155,8 +4155,10 @@ STYLE = f"""
   [data-testid="stLayoutWrapper"]:has(> .st-key-passi) {{ flex: 1 1 auto !important;
       width: auto !important; min-width: 0; }}
   .st-key-passi {{ width: 100% !important; padding: 0 10px !important; border: 0 !important;
-      border-radius: 0 !important; background: none !important; gap: 0 !important;
+      border-radius: 0 !important; background: none !important; gap: 4px !important;
       align-items: stretch !important; }}
+  /* 4px fra una scheda e l'altra: attaccate, al passaggio non si capiva dove
+     finiva l'una e cominciava l'altra (segnalato dall'utente). */
   .st-key-passi > [class*="st-key-passo"] {{ flex: 1 1 0 !important; width: auto !important;
       min-width: 0; position: relative; }}
   .st-key-passi > [class*="st-key-passo"] > .stButton {{ position: relative; }}
@@ -4867,9 +4869,12 @@ def header() -> str:
     # del cassetto. Non si porta l'utente su Inizio a forza (deciso con
     # l'utente): chi non vuole tarare non deve ritrovarcisi a ogni avvio.
     if not stato["vuota"] and _taratura_da_rifare():
+        # Sull'icona della casetta, in alto a destra, come quello del
+        # cassetto: in fondo alla scheda non si capiva di quale fosse (utente).
         regole.append('.st-key-passo0 button::after { content: ""; display: inline-flex; '
-                      'min-width: 0; width: 9px; height: 9px; padding: 0; right: 12px; '
-                      'background: var(--yellow); }')
+                      'min-width: 0; width: 9px; height: 9px; padding: 0; right: auto; '
+                      'left: 31px; top: calc(50% - 14px); transform: none; '
+                      'background: var(--yellow); box-shadow: 0 0 0 2px var(--bg); }')
     with st.container(key="fasi", horizontal=True, vertical_alignment="center"):
         with st.container(key="passi", horizontal=True, gap=None):
             st.button(t("tab.Inizio"), key="passo0", on_click=_vai, args=(INIZIO,),
@@ -6515,10 +6520,14 @@ def _riga_taratura(congelata: bool) -> None:
             tipo = "primary"
     else:
         altro = taratura.di_altro_mac()
+        # Mai fatta: anche qui la nota gialla, come per quella vecchia. Il
+        # pallino sul cassetto e su Inizio deve portare a una scritta che lo
+        # spiega (segnalato dall'utente: pallino acceso e niente in giallo).
         stato = (f"<span class='au-tar-mai'>"
                  + (t("sb.taratura_altro_mac", chip=esc(altro)) if altro
                     else f"{t('sb.taratura_mai')} · {t('sb.taratura_mai_nota')}")
-                 + "</span>")
+                 + "</span>"
+                 + ("" if altro else f"<div class='au-tar-nota'>{t('sb.taratura_mai_avviso')}</div>"))
         azione, tipo = t("sb.taratura_esegui"), "primary"
     with st.container(key="cTaratura"):
         with st.container(key="cTarRiga", horizontal=True,
@@ -6892,7 +6901,7 @@ def _blocco_taratura(voce_tar) -> None:
             f"<b>{t('src.tar_titolo')}</b><small>{t('src.tar_prima')}</small></div>"
             f"<p class='au-tar-testo'>{t('src.tar_testo')}</p>"
             + (f"<div class='au-tar-nota'>{t('sb.taratura_altro_mac', chip=esc(altro))}</div>"
-               if altro else ""),
+               if altro else f"<div class='au-tar-nota'>{t('sb.taratura_mai_avviso')}</div>"),
             unsafe_allow_html=True)
         # In corso in sottofondo (finestra chiusa): «Mostra», attivo, come
         # nella barra laterale, invece di «Calibra ora» spento.

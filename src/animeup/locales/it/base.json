@@ -223,5 +223,6 @@
   "src.mac_chip_testo": "Calibrazione e stime valgono per questa macchina: un altro Mac ha le sue.",
   "src.chip_dedup": "deduplica {quota}",
   "sb.taratura_vecchia": "Fatta con una versione precedente: ricalibra per stime giuste sui file 720p e 1080p.",
-  "sb.taratura_altro_mac": "Quella salvata è di un altro Mac ({chip}): calibra questo."
+  "sb.taratura_altro_mac": "Quella salvata è di un altro Mac ({chip}): calibra questo.",
+  "sb.taratura_mai_avviso": "Non ancora calibrato su questo Mac: le stime dei tempi usano velocità generiche."
 }
