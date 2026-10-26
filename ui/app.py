@@ -4222,6 +4222,11 @@ STYLE = f"""
   .au-passo-testo b {{ color: var(--textPrimary); font-weight: 600; }}
   .st-key-trovaAltriRiga {{ margin-top: 4px; }}
   .st-key-trovaAltriRiga .st-key-trovaAltri {{ width: auto !important; flex: none; }}
+  /* La ricerca in corso al posto del pulsante, e dopo, sopra il pulsante,
+     il perche' di un lotto piu' piccolo del promesso. */
+  .au-avviso-posto {{ margin-top: 4px; }}
+  .au-nota-cerca {{ font-size: 12.5px; line-height: 1.5; color: {TESTO_2};
+      text-align: center; max-width: 620px; margin: 4px auto 6px; }}
   /* La fascia in basso: due righe vicine, centrate sull'icona e sui
      pulsanti (prima il -14px del markdown le allontanava). */
   .au-barra-due {{ display: flex; align-items: center; gap: 14px; }}
@@ -7587,14 +7592,26 @@ def _cerca_spezzoni(plan, path: Path, area) -> None:
         nuovi = preview.solo_nuovi(avuti, nuovi or [])
         if not nuovi:
             if avuti:
-                area.warning(t("conf.nessun_altro"), icon="ℹ️")
-                return
+                st.session_state[f"nota_cerca_{path}"] = t("conf.nessun_altro")
+                # Rifarla darebbe lo stesso nulla: il pulsante sparisce.
+                st.session_state[f"esauriti_{path}"] = True
+                st.rerun()
             # Nessuno spezzone: si ridisegna, e la pagina lo dice invece di
             # restare sulla riga della scansione.
             st.session_state[chiave] = []
             st.rerun()
         tutti = avuti + nuovi
         st.session_state[chiave] = tutti
+        # Meno degli 8 promessi dal pulsante: si dice perche', o sembra un
+        # guasto (utente: «me ne ha trovato uno solo»). Su un file corto la
+        # ragione e' la durata: gli spezzoni nuovi non possono ripetere le
+        # scene di quelli sopra, e lo spazio finisce presto.
+        if avuti and len(nuovi) < 8:
+            durata = float(getattr(plan.source, "duration", 0) or 0)
+            st.session_state[f"nota_cerca_{path}"] = (
+                tn("conf.pochi_altri_corto", len(nuovi),
+                   durata=f"{int(durata // 60)}:{int(durata % 60):02d}")
+                if 0 < durata < 600 else tn("conf.pochi_altri", len(nuovi)))
         st.session_state[f"visti_{path}"] = gia_visti + tuple(c.start_frame for c in nuovi)
         st.session_state.setdefault(f"thumbs_{path}", {})
         # L'elenco completo va su disco: e' cio' che la pagina ritrova dopo
@@ -7604,6 +7621,11 @@ def _cerca_spezzoni(plan, path: Path, area) -> None:
         area.error(t("conf.errore_analisi", errore=exc), icon="⚠️")
         return
     st.rerun()
+
+
+def _chiedi_altri(path: str) -> None:
+    st.session_state[f"cerca_{path}"] = True
+    st.session_state.pop(f"nota_cerca_{path}", None)
 
 
 def _scelta_iniziale(candidati) -> set:
@@ -7655,7 +7677,11 @@ def _passo_spezzoni(plan, path: Path) -> None:
     # la differenza fra una scena ferma e una in movimento. Costano poco e
     # restano su disco, quindi si pagano una volta.
     mancanti = [c for c in candidati if c.slug not in thumbs]
-    if mancanti:
+    # Il primo lotto si prepara in cima, dove la pagina e' ancora vuota; i
+    # successivi in fondo, al posto del pulsante (sotto, `posto`), come
+    # una pagina che carica altro scorrendo: chi ha chiesto altri spezzoni
+    # sta guardando li', non sopra i primi (utente).
+    if mancanti and not thumbs:
         area.markdown(f"<div class='au-avviso' style='margin-top:8px'>"
                       f"<span class='au-rotella'></span>"
                       f"{esc(tn('conf.estraggo', len(mancanti)))}</div>",
@@ -7670,9 +7696,10 @@ def _passo_spezzoni(plan, path: Path) -> None:
             thumbs[cand.slug] = clip or preview.thumbnail(plan, cand, base.with_suffix(".jpg"))
         st.rerun()
 
+    pronti = [c for c in candidati if c.slug in thumbs]
     regole_clip: list[str] = []
-    for inizio in range(0, len(candidati), 4):
-        for j, (col, cand) in enumerate(zip(st.columns(4), candidati[inizio:inizio + 4])):
+    for inizio in range(0, len(pronti), 4):
+        for j, (col, cand) in enumerate(zip(st.columns(4), pronti[inizio:inizio + 4])):
             with col:
                 # La chiave sta sul contenitore perché il CSS possa accendere
                 # la card intera quando la casella dentro è spuntata.
@@ -7701,9 +7728,32 @@ def _passo_spezzoni(plan, path: Path) -> None:
     st.session_state[f"scelti_{path}"] = scelti
 
     # Sotto l'ultima riga: man mano che gli spezzoni crescono, scende con loro.
-    with st.container(key="trovaAltriRiga", horizontal=True, horizontal_alignment="center"):
-        if st.button(t("conf.trova_altri"), key="trovaAltri"):
-            _cerca_spezzoni(plan, path, area)
+    # Mentre cerca o prepara le anteprime, la riga d'avanzamento prende il
+    # posto del pulsante.
+    posto = st.empty()
+    if st.session_state.pop(f"cerca_{path}", False):
+        _cerca_spezzoni(plan, path, posto)
+    elif mancanti:
+        posto.markdown(f"<div class='au-avviso au-avviso-posto'><span class='au-rotella'></span>"
+                       f"{esc(tn('conf.estraggo', len(mancanti)))}</div>",
+                       unsafe_allow_html=True)
+        for cand in mancanti:
+            secondi = int(round(cand.frames / cand.fps))
+            base = PATHS.previews / "clips" / f"{path.stem}_{cand.slug}_{secondi}s"
+            clip = preview.animation(plan, cand, base.with_suffix(".mp4"))
+            thumbs[cand.slug] = clip or preview.thumbnail(plan, cand, base.with_suffix(".jpg"))
+        st.rerun()
+    else:
+        with posto.container():
+            nota = st.session_state.get(f"nota_cerca_{path}")
+            if nota:
+                st.markdown(f"<div class='au-nota-cerca'>{esc(nota)}</div>",
+                            unsafe_allow_html=True)
+            if not st.session_state.get(f"esauriti_{path}"):
+                with st.container(key="trovaAltriRiga", horizontal=True,
+                                  horizontal_alignment="center"):
+                    st.button(t("conf.trova_altri"), key="trovaAltri",
+                              on_click=_chiedi_altri, args=(str(path),))
     prescelti = [c for c in candidati if c.slug in scelti]
     _barra_spezzoni(path, prescelti, candidati)
 
