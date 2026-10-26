@@ -48,6 +48,7 @@
   "sb.controllo_aggiornato": "Hai l'ultima versione ({versione}).",
   "sb.controllo_errore": "GitHub non risponde. Controlla la connessione e riprova.",
   "sb.cassetto": "Impostazioni",
+  "sb.cassetto_agg": "Impostazioni · AnimeUp {versione} è disponibile",
   "sb.esito_finestra": "Aggiornamenti",
   "sb.esito_titolo_aggiornato": "Hai l'ultima versione",
   "sb.esito_testo_aggiornato": "AnimeUp {versione} è la release più recente. AnimeUp controlla anche da solo a ogni avvio.",

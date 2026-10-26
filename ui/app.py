@@ -3062,6 +3062,10 @@ STYLE = f"""
         border: 1px solid var(--borderStrong); background: var(--surface);
         color: var(--textCode); }}
     #au-cassetto:hover {{ color: var(--primaryText); border-color: var(--borderHover); }}
+    /* Il pallino dell'aggiornamento: giallo come l'avviso, in alto a destra. */
+    #au-cassetto.au-agg::after {{ content: ""; position: absolute; top: -4px; right: -4px;
+        width: 10px; height: 10px; border-radius: 50%; background: var(--yellow);
+        box-shadow: 0 0 0 2px var(--bg); }}
     /* Aperto il cassetto, il pulsante sparisce: si chiude toccando fuori
        (il velo) o con Esc. Spostato accanto alla barra non serviva e
        stonava (chiesto dall'utente). */
@@ -9709,7 +9713,16 @@ def _cassetto_sidebar() -> None:
     con lo stesso pulsante. Pulsante e velo vivono nella pagina madre (li
     crea questo script una volta sola), lo stato e' una classe sul body.
     """
-    etichetta = json.dumps(t("sb.cassetto"))
+    # Una versione nuova: un pallino giallo sul pulsante, e la prima volta che
+    # quella versione compare il cassetto si apre da solo sull'avviso. Con la
+    # barra chiusa l'avviso, che sta in cima alla barra, non lo vedeva
+    # nessuno (chiesto dall'utente). La versione gia' mostrata la ricorda il
+    # browser: riaperto, il cassetto non si spalanca a ogni avvio.
+    nuova = aggiornamenti.disponibile(
+        attivo=_impostazioni_carica().get("aggiornamenti", True))
+    versione_nuova = json.dumps(nuova["versione"] if nuova else "")
+    etichetta = json.dumps(t("sb.cassetto_agg", versione=nuova["versione"]) if nuova
+                           else t("sb.cassetto"))
     cartelle = {q: {"prompt": t(_CARTELLE[q][2] + "_prompt"), "start": str(_cartella_attuale(q))}
                 for q in ("input", "output")}
     formati = {"cDisco": {"testo": "{} GB"},
@@ -9729,6 +9742,10 @@ def _cassetto_sidebar() -> None:
         "D.body.appendChild(v);D.body.appendChild(b);}"
         f"const b=D.getElementById('au-cassetto');b.title={etichetta};"
         f"b.setAttribute('aria-label',{etichetta});"
+        f"const V={versione_nuova};b.classList.toggle('au-agg',!!V);"
+        "if(V&&window.parent.matchMedia('(max-width: 1360px)').matches){try{const L=window.parent.localStorage;"
+        "if(L.getItem('auCassettoAgg')!==V){L.setItem('auCassettoAgg',V);"
+        "D.body.classList.add('au-sb-aperta');}}catch(e){}}"
         # Al centro verticale della barra dei passi, che con i sottotitoli su
         # due righe e' piu' alta: si rimisura a ogni giro e a ogni resize.
         "const W=window.parent;W.auPosCassetto=()=>{const p=D.querySelector('.st-key-passi');"

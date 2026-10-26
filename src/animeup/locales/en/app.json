@@ -48,6 +48,7 @@
   "sb.controllo_aggiornato": "You have the latest version ({versione}).",
   "sb.controllo_errore": "Couldn't reach GitHub. Check the connection and try again.",
   "sb.cassetto": "Settings",
+  "sb.cassetto_agg": "Settings · AnimeUp {versione} is available",
   "sb.esito_finestra": "Updates",
   "sb.esito_titolo_aggiornato": "You have the latest version",
   "sb.esito_testo_aggiornato": "AnimeUp {versione} is the newest release. AnimeUp also checks by itself every time it starts.",
