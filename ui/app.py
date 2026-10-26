@@ -4067,6 +4067,15 @@ STYLE = f"""
   [data-testid="stLayoutWrapper"]:has(> .st-key-fasi)::after {{ bottom: 0 !important;
       background: var(--borderStrong) !important; }}
   .st-key-fasi [data-testid="stElementContainer"]:has(.au-fasi-stato) {{ display: none !important; }}
+  /* Sotto la linea delle tab, una sfumatura del colore della pagina: il
+     contenuto che scorre ci passa sotto e svanisce, invece di essere
+     tagliato di netto sulla linea — un taglio brutto quando sotto c'e' una
+     scheda di un altro colore (segnalato dall'utente). A pagina ferma in
+     cima la sfumatura sta sul fondo pagina e non si vede. */
+  [data-testid="stLayoutWrapper"]:has(> .st-key-fasi)::before {{ content: "";
+      position: absolute; left: 0; right: 0; top: 100%; height: 28px;
+      background: linear-gradient(rgb(var(--bgRgb) / .96), rgb(var(--bgRgb) / 0));
+      pointer-events: none; }}
   [data-testid="stLayoutWrapper"]:has(> .st-key-passi) {{ flex: 1 1 auto !important;
       width: auto !important; min-width: 0; }}
   .st-key-passi {{ width: 100% !important; padding: 0 10px !important; border: 0 !important;
