@@ -123,6 +123,9 @@ TERNE: dict[str, tuple[str, str]] = {
     "openRowBg":   ("rgb(255 255 255 / .03)", "#FFFFFF"),
     # ...e il pannello dei dettagli che si apre sotto (Sorgenti e Lavorazione).
     "openPanelBg": ("var(--insetBackground)", "#FFFFFF"),
+    # La tinta ciano tenue degli stati attivi (etichetta «in corso»):
+    # usata dal CSS da tempo ma mai definita, quindi restava trasparente.
+    "primaryBg":   ("rgb(var(--primaryRgb) / .12)", "rgb(var(--primaryRgb) / .12)"),
 }
 
 
