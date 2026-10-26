@@ -836,6 +836,11 @@ def taratura(
                 f"{fabbrica:.2f} Mpx/s" if fabbrica else "—",
                 f"{misurato:.2f} Mpx/s" if misurato else "—",
             )
+    # La seconda misura, sui fotogrammi 1080p: senza valore di fabbrica.
+    for chiave, modello in CATALOG.items():
+        grande = (voce.get("mpxs_grande") or {}).get(chiave, {}).get("2")
+        if grande:
+            tabella.add_row(modello.short, "x2 · 1080p", "—", f"{grande:.2f} Mpx/s")
     tabella.add_row(t("cli.tar.estrazione"), "", "60 f/s",
                     f"{voce['estrazione_fps']:.0f} f/s")
     tabella.add_row(t("cli.tar.codifica"), "", "8.0 f/s",
