@@ -3942,7 +3942,7 @@ STYLE = f"""
   /* Al passaggio, anche se chiusa: e' una scheda, deve sembrarlo (chiesto
      dall'utente). Chiusa resta il divieto come puntatore. */
   .st-key-passi button[kind="secondary"]:hover {{
-      background-color: var(--surfaceHover) !important; }}
+      background-color: var(--tabHover) !important; }}
   /* La scheda aperta: il fondo della pagina, sopra la linea. */
   .st-key-passi button[kind="primary"] {{ background-color: var(--bg) !important;
       position: relative; z-index: 2; }}

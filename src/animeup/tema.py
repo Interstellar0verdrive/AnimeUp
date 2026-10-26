@@ -25,6 +25,9 @@ TOKEN: dict[str, tuple[str, str]] = {
     "surface":         ("#17191C", "#FFFFFF"),
     "insetBackground": ("#131518", "#F1F3F5"),
     "surfaceHover":    ("#1C1F23", "#EEF0F2"),
+    # Scheda non aperta sotto il puntatore: in chiaro surfaceHover si
+    # confondeva col fondo della pagina (#F6F7F9), quasi invisibile.
+    "tabHover":        ("#1C1F23", "#E6E9ED"),
     "rowBg":           ("#191F22", "#FFFFFF"),
     "rowBgHover":      ("#1F262A", "#F7F9FA"),
     "sidebar":         ("#1A1D21", "#ECEEF1"),
