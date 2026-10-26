@@ -345,52 +345,6 @@ STYLE = f"""
   .au-sub {{ color: {TESTO_3}; font-size: 12px; margin-left: 2px;
             padding-left: 13px; border-left: 1px solid {BORDO}; }}
 
-  /* Lo stepper: il numero nel cerchio è un contatore CSS, non testo
-     dell'etichetta. Streamlit non accetta markup dentro l'etichetta di un
-     controllo, ma un `::before` con `counter()` non è markup — è la stessa
-     numerazione che si otterrebbe a mano, senza toccare il valore che poi
-     torna indietro come stato. */
-  /* `[data-testid="stButtonGroup"]` e non `[data-baseweb="button-group"]`:
-     quest'ultimo in 1.61 non esiste più e il selettore non agganciava nulla
-     (verificato nel DOM: il contenitore è stButtonGroup, i figli hanno
-     `role="radio"` e `aria-checked`). */
-  .st-key-fasi [data-testid="stButtonGroup"] {{ counter-reset: fase; gap: 8px; }}
-  .st-key-fasi [data-testid="stButtonGroup"] > div {{ display: flex; gap: 8px; }}
-  .st-key-fasi [data-testid="stButtonGroup"] button {{
-      counter-increment: fase;
-      display: inline-flex; align-items: center; gap: 10px;
-      background: var(--surface) !important;
-      border: 1px solid {BORDO} !important;
-      border-radius: 8px !important;
-      /* `height: auto` o la spaziatura non ha effetto: Streamlit fissa
-         `height` e `min-height` a 28px, quindi i 12px sopra e sotto non
-         allargavano niente e le schede restavano schiacciate. */
-      height: auto !important; min-height: 0 !important;
-      padding: 12px 22px !important; }}
-  .st-key-fasi [data-testid="stButtonGroup"] button p {{
-      font-size: 14px; color: {TESTO_2}; }}
-  .st-key-fasi [data-testid="stButtonGroup"] button:hover p {{ color: {TESTO}; }}
-  .st-key-fasi [data-testid="stButtonGroup"] button::before {{
-      content: counter(fase);
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 22px; height: 22px; border-radius: 50%;
-      /* Cifra e bordo un gradino sopra il terziario: il numero nel cerchio
-         era quasi invisibile da spento (visto dall'utente). */
-      border: 1px solid var(--borderHover);
-      font-family: var(--mono); font-size: 11px; color: {TESTO_2};
-      flex: 0 0 auto; }}
-  .st-key-fasi [data-testid="stButtonGroup"] button:hover {{
-      border-color: {BORDO_VIVO} !important; }}
-  /* La scheda attiva: fondo ciano tenue, cerchio pieno con la cifra scura.
-     `aria-checked` e non una classe di Streamlit, che cambia a ogni versione. */
-  .st-key-fasi [data-testid="stButtonGroup"] button[aria-checked="true"] {{
-      background: var(--primaryBg) !important;
-      border-color: var(--primaryEdge) !important; }}
-  .st-key-fasi [data-testid="stButtonGroup"] button[aria-checked="true"]::before {{
-      background: var(--primary); border-color: var(--primary);
-      color: var(--onPrimary); font-weight: 600; }}
-  .st-key-fasi [data-testid="stButtonGroup"] button[aria-checked="true"] p {{
-      color: {TESTO}; font-weight: 600; }}
   /* Il nome NON si tronca mai: l'informazione che serve puo' stare nelle
      ultime lettere (hash, tag del rilascio) e i puntini la mangiavano.
      Se serve, la riga cresce di una riga di testo: il ritmo dell'elenco
@@ -514,16 +468,6 @@ STYLE = f"""
   .au-tar-avviso svg {{ color: {GIALLO}; flex: 0 0 auto; margin-top: 3px; }}
   [class*="st-key-cTarValori"] table {{ width: 100%; }}
   [class*="st-key-cTarValori"] thead th {{ background: {FONDO_2}; }}
-  /* Confronto finale: le colonne stavano addosso l'una all'altra. */
-  [class*="st-key-cTarConfronto"] table {{ width: 100%; }}
-  [class*="st-key-cTarConfronto"] th,
-  [class*="st-key-cTarConfronto"] td {{ padding: 7px 16px; }}
-  [class*="st-key-cTarConfronto"] thead th {{ background: {FONDO_2}; }}
-  /* La colonna "nuova" e' il nuovo riferimento, le altre sono solo il
-     paragone: la tinta di casa lo dice senza bisogno di una legenda. */
-  [class*="st-key-cTarConfronto"] tr > *:nth-child(4) {{
-      background: var(--primaryBg) !important; color: {TESTO};
-      font-weight: 500; }}
   /* Il primario staccato dall'avviso che lo precede: attaccato sembrava
      parte del testo invece che il passo successivo. */
   [class*="st-key-tarAvvia"] {{ margin-top: 18px; }}
@@ -1039,8 +983,8 @@ STYLE = f"""
   [class*="st-key-clip"] {{ cursor: pointer; }}
   [class*="st-key-clip"]:has(input:checked) {{
       border-color: rgb(var(--primaryRgb) / .55);
-      /* `--primaryBg` non esiste: la card scelta restava trasparente.
-         La tinta del design (8%). */
+      /* La tinta del design per lo spezzone scelto: 8%, un filo meno
+         del `--primaryBg` (12%) degli stati attivi. */
       background: rgb(var(--primaryRgb) / .08); }}
   /* «scelto» sull'anteprima, in alto a sinistra, come nel design. */
   [class*="st-key-clip"] {{ position: relative; }}
@@ -1139,28 +1083,6 @@ STYLE = f"""
   .st-key-lancio [data-testid="stCheckbox"] p {{ font-size: 12.5px;
       color: {TESTO_2}; }}
 
-  /* I tag del multiselect. Il selettore precedente era
-     `[data-baseweb="tag"]` e non agganciava NIENTE: Streamlit 1.61 non usa
-     più BaseWeb qui ma react-aria, e la pillola è il primo `span` dentro il
-     tag. Verificato nel DOM prima di scrivere questa regola. */
-  [data-testid="stMultiSelectTagsContainer"] > span > span {{
-      background: var(--primaryBg) !important;
-      border: 1px solid rgb(var(--primaryRgb) / .3);
-      color: var(--primaryHover) !important;
-      border-radius: 5px !important;
-      padding: 3px 6px 3px 10px !important;
-      font-size: 12px !important; }}
-  /* La regola sopra vale per ogni tag e non solo per il primo: mirando a
-     `:first-child` il secondo modello aggiunto restava col ciano pieno di
-     Streamlit e il testo bianco. Il `span` di testo interno viene poi
-     ripulito, o si vedrebbe una pillola dentro la pillola. */
-  [data-testid="stMultiSelectTagsContainer"] > span > span > span {{
-      background: none !important; border: 0 !important; padding: 0 !important;
-      color: var(--primaryHover) !important; }}
-  [data-testid="stMultiSelectTagsContainer"] > span button svg {{
-      color: var(--primaryHover) !important; opacity: .7; }}
-  [data-testid="stMultiSelectTagsContainer"] > span button:hover svg {{
-      opacity: 1; }}
   /* Il campo attorno, con i valori di `.mselect` nel mockup. */
   [data-testid="stMultiSelect"] [class*="react-aria-ComboBox"] > div {{
       background: var(--surface) !important;
