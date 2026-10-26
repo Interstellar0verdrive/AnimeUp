@@ -3126,11 +3126,18 @@ STYLE = f"""
   /* Con Inizio la barra dei passi e' piu' lunga: accanto alla barra laterale
      lo stato (che ripete il passo 3) ci sta solo da 1480 in su. */
   @media (min-width: 1361px) and (max-width: 1480px) {{ .au-fasi-stato {{ display: none; }} }}
+  /* La barra laterale la governa solo AnimeUp, mai lo stato «chiusa» di
+     Streamlit: Streamlit la chiude da solo quando la finestra si stringe, e
+     poi non la riapriva — a finestra larga restava il suo spazio con una
+     striscia di contenuto tagliato (visto nella finestra dell'app). */
+  @media (min-width: 1361px) {{
+    [data-testid="stSidebar"] {{ transform: none !important; }}
+  }}
   @media (max-width: 1360px) {{
     [data-testid="stSidebar"] {{ position: fixed !important; top: 0; bottom: 0; left: 0;
-        z-index: 1002; transform: translateX(-100%); transition: transform .2s ease;
+        z-index: 1002; transform: translateX(-100%) !important; transition: transform .2s ease;
         box-shadow: none; }}
-    body.au-sb-aperta [data-testid="stSidebar"] {{ transform: none;
+    body.au-sb-aperta [data-testid="stSidebar"] {{ transform: none !important;
         box-shadow: 0 0 32px rgb(var(--shadowRgb) / .35); }}
     #au-velo {{ display: block; position: fixed; inset: 0; z-index: 1001;
         background: rgb(var(--shadowRgb) / .35); opacity: 0; pointer-events: none;
