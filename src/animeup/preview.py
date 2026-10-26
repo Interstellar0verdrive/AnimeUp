@@ -940,7 +940,12 @@ def crop_sheet(
 
 def comparison_tool() -> Path | None:
     """video-compare, se installato. Non è una dipendenza della pipeline."""
-    found = shutil.which("video-compare")
+    # Anche nelle cartelle di Homebrew: l'app lancia il server con il PATH
+    # minimo di macOS (/usr/bin:/bin...), dove `which` da solo non lo trova
+    # e il confronto ripiegava su IINA dicendo «non installato» a chi
+    # l'aveva in /opt/homebrew/bin (segnalato dall'utente).
+    found = shutil.which("video-compare") or shutil.which(
+        "video-compare", path="/opt/homebrew/bin:/usr/local/bin")
     return Path(found) if found else None
 
 

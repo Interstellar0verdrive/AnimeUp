@@ -1643,12 +1643,15 @@ STYLE = f"""
      "acceso" e "spento" si distinguevano solo dalla posizione del pomello.
      Il selettore mira ai due div dentro l'etichetta della casella: sono
      generati da BaseWeb e non hanno un `data-testid` proprio. */
-  [data-testid="stSidebar"] [data-testid="stCheckbox"] label > div:not([data-testid]) {{
+  /* Anche «Includi l'originale» nella barra del Confronto: con lo stile
+     di BaseWeb il pomello stava fuori centro in verticale (visto
+     dall'utente). Una toggle sola in tutta l'app, disegnata una volta. */
+  :is([data-testid="stSidebar"], [class*="st-key-tog_"]) [data-testid="stCheckbox"] label > div:not([data-testid]) {{
       width: 30px !important; height: 17px !important;
       border-radius: 999px !important; flex: none;
       background: var(--toggleOff) !important;
       transition: background .15s ease; }}
-  [data-testid="stSidebar"] [data-testid="stCheckbox"] label > div:not([data-testid]) > div {{
+  :is([data-testid="stSidebar"], [class*="st-key-tog_"]) [data-testid="stCheckbox"] label > div:not([data-testid]) > div {{
       width: 13px !important; height: 13px !important;
       /* Niente margini orizzontali e posizioni ESPLICITE per i due stati
          (qui sotto): BaseWeb aggiunge un translateX suo anche da spenta,
@@ -1662,9 +1665,9 @@ STYLE = f"""
       box-shadow: none !important; transition: background .15s ease; }}
   /* Acceso: la traccia prende il ciano e il pomello si fa scuro, così lo
      stato si legge dal colore prima che dalla posizione. */
-  [data-testid="stSidebar"] [data-testid="stCheckbox"] label:has(input:checked)
+  :is([data-testid="stSidebar"], [class*="st-key-tog_"]) [data-testid="stCheckbox"] label:has(input:checked)
       > div:not([data-testid]) {{ background: var(--primary) !important; }}
-  [data-testid="stSidebar"] [data-testid="stCheckbox"] label:has(input:checked)
+  :is([data-testid="stSidebar"], [class*="st-key-tog_"]) [data-testid="stCheckbox"] label:has(input:checked)
       > div:not([data-testid]) > div {{ background: var(--knobOn) !important;
       /* BaseWeb sposta il pomello con un translateX calcolato sulla SUA
          geometria (traccia 28, pomello 11): sulla nostra 30/13 lo portava
@@ -1675,7 +1678,7 @@ STYLE = f"""
          sembrava non arrivare in fondo alla corsa (detto dall'utente). */
       transform: translateX(14px) !important; }}
   /* Spenta, anche l'etichetta si attenua: è un'opzione non attiva. */
-  [data-testid="stSidebar"] [data-testid="stCheckbox"] label:not(:has(input:checked))
+  :is([data-testid="stSidebar"], [class*="st-key-tog_"]) [data-testid="stCheckbox"] label:not(:has(input:checked))
       [data-testid="stWidgetLabel"] p {{ color: {TESTO_2}; }}
   [data-testid="stSidebar"] [data-testid="stCheckbox"] label {{ gap: 10px; }}
   [data-testid="stSidebar"] [data-testid="stCheckbox"] p {{ font-size: 12.5px; }}
@@ -3596,6 +3599,11 @@ STYLE = f"""
   .st-key-barraConfronto [class*="st-key-tog_"], .st-key-barraConfronto .st-key-elaboraClip {{
       flex: none; width: auto !important; }}
   .st-key-elaboraClip button {{ height: 40px; padding: 0 20px; white-space: nowrap; }}
+  .st-key-barraConfronto > div:has(> .stMarkdown .au-tog-aiuto) {{ flex: none; width: auto !important;
+      margin-left: -10px; }}
+  .st-key-barraConfronto [data-testid="stMarkdownContainer"]:has(.au-tog-aiuto) {{
+      margin-bottom: 0 !important; }}
+  .au-tog-aiuto {{ display: flex; align-items: center; color: var(--textTertiary); }}
   .st-key-elaboraClip button p {{ font-size: 14px; font-weight: 600; }}
   .st-key-barraConfronto .au-barra-testo b {{ display: block; font-size: 14px;
       font-weight: 600; color: var(--textPrimary); }}
@@ -3625,6 +3633,17 @@ STYLE = f"""
   .au-prova-barra span {{ display: block; height: 100%; background: var(--primary); }}
   .au-prova-nota {{ font-size: 12.5px; line-height: 1.45; color: var(--textSecondary);
       margin-top: 8px; }}
+  /* La barra del Confronto in corso: il -14px di Streamlit sotto ogni
+     markdown la accorciava, e la nota finiva sul bordo della finestra senza
+     margine sotto (segnalato dall'utente); Ferma stava piu' in alto della
+     riga accanto. Ora: titolo e Ferma centrati, 12px fino alla barra, la
+     nota, e il padding della fascia per intero. */
+  .st-key-barraConfronto [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .st-key-barraConfronto [data-testid="stFragment"] [data-testid="stVerticalBlock"] {{
+      gap: 0 !important; }}
+  .st-key-provaTesta {{ align-items: center !important; }}
+  .st-key-provaTesta .au-prova-testa {{ min-height: 32px; }}
+  .st-key-barraConfronto .au-prova-barra {{ margin-top: 12px; }}
   .au-errore {{ padding: 12px 16px; border-radius: 10px; background: var(--redBg);
       border: 1px solid rgb(var(--redRgb) / .35); color: var(--redText);
       font-size: 13px; line-height: 1.5; margin-top: 12px; }}
@@ -3641,6 +3660,11 @@ STYLE = f"""
   /* Risultati del confronto. */
   .st-key-testaRisultati {{ flex-wrap: nowrap; margin-top: 24px; }}
   .st-key-testaRisultati > div:first-child {{ flex: 1 1 auto; }}
+  /* Titolo e sottotitolo dei risultati staccati fra loro e dalla prima
+     clip: il -14px sotto il markdown incollava la riga alla scheda. */
+  .st-key-testaRisultati [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .st-key-testaRisultati .au-sez-nota {{ display: block; margin-top: 6px; }}
+  .st-key-risultati {{ gap: 16px !important; }}
   .st-key-finderRisultati {{ flex: none; width: auto !important; }}
   .au-sez-titolo.au-grande {{ font-size: 22px; }}
   .st-key-risultati [data-testid="stExpander"] details {{ background: var(--surface);
@@ -3685,6 +3709,22 @@ STYLE = f"""
   [class*="st-key-piedeClip_"] [data-testid="stExpander"] details {{ border: 0 !important;
       background: transparent !important; }}
   [class*="st-key-piedeClip_"] summary {{ padding: 4px 0 !important; }}
+  /* «N file · mostra i percorsi» e' un link discreto, non un accordion:
+     niente riquadro scuro al passaggio ne' sotto il titolo una volta
+     aperto (visti dall'utente), testo secondario che si accende al
+     passaggio, e i percorsi allineati al titolo. Il pulsante della
+     cartella resta sulla riga del titolo, non a meta' dei percorsi. */
+  [class*="st-key-piedeClip_"] summary,
+  [class*="st-key-piedeClip_"] summary:hover,
+  [class*="st-key-piedeClip_"] details[open] > summary {{
+      background: transparent !important; box-shadow: none !important;
+      border: 0 !important; }}
+  [class*="st-key-piedeClip_"] summary p {{ font-size: 12.5px !important; font-weight: 500;
+      color: var(--textSecondary); transition: color .12s; }}
+  [class*="st-key-piedeClip_"] summary:hover p {{ color: var(--textPrimary); }}
+  [class*="st-key-piedeClip_"] [data-testid="stExpanderDetails"] {{
+      padding: 6px 0 2px 24px !important; background: transparent !important; }}
+  [class*="st-key-piedeClip_"] {{ align-items: flex-start !important; }}
   .au-barra-pronto {{ display: flex; align-items: center; gap: 14px; }}
   .au-barra-pronto b {{ display: block; font-size: 14px; font-weight: 600; }}
   .au-barra-pronto span:not(.au-spunta) {{ font-size: 12.5px; color: var(--textSecondary); }}
@@ -4313,9 +4353,7 @@ def _stato_fasi() -> dict:
     stato["attivo"] = False
     conf = confronto.stato()
     if conf and conf.get("state") == confronto.IN_CORSO:
-        totale = max(int(conf.get("total") or 0), 1)
-        pct = int(100 * min((int(conf.get("done") or 0)
-                             + float(conf.get("fraction") or 0)) / totale, 1))
+        pct = int(100 * confronto.quota(conf))
         stato["Confronto"] = t("fasi.conf_corso", pct=pct)
         stato["linea"]["Confronto"] = pct / 100
         stato["voce"] = t("fasi.stato_confronto", pct=pct)
@@ -7121,6 +7159,18 @@ def _spezzoni(plan, path: Path, cfg: dict,
                         f"<p>{t('conf.trova_spiega')}</p></div>",
                         unsafe_allow_html=True)
             premuto = st.button(t("conf.trova"), key="trovaClip", type="primary")
+    # Il posto della riga d'avviso (scansione, estrazione delle anteprime)
+    # esiste SEMPRE, qui, vuoto quando non serve. Creato solo al bisogno,
+    # entrava al posto della prima riga di spezzoni: Streamlit sostituisce
+    # per posizione, e durante «Trova altri 8» i primi quattro sparivano per
+    # tornare a ricerca finita (segnalato dall'utente).
+    area = st.empty()
+
+    def _passo(testo: str) -> None:
+        area.markdown(f"<div class='au-avviso' style='margin-top:8px'>"
+                      f"<span class='au-rotella'></span>{esc(testo)}"
+                      f"</div>", unsafe_allow_html=True)
+
     if premuto:
         # La durata annunciata era "circa tre minuti": misurata, sta fra 28s
         # (360p) e 51s (720p) su episodi interi. Sovrastimare per prudenza fa
@@ -7129,20 +7179,12 @@ def _spezzoni(plan, path: Path, cfg: dict,
         # il nulla — l'utente lo apre e resta deluso (successo). Una riga di
         # avviso con la rotella dice le stesse cose senza fingersi altro, e a
         # cose fatte sparisce col rerun.
-        area = st.empty()
-
-        def _passo(testo: str) -> None:
-            area.markdown(f"<div class='au-avviso' style='margin-top:8px'>"
-                          f"<span class='au-rotella'></span>{esc(testo)}"
-                          f"</div>", unsafe_allow_html=True)
-
         _passo(t("conf.scansione"))
         try:
             nuovi = preview.find_candidates(
                 plan, per_kind=2, on_step=_passo, escludi=gia_visti)
             if not nuovi:
-                area.empty()
-                st.warning(t("conf.nessun_altro"), icon="ℹ️")
+                area.warning(t("conf.nessun_altro"), icon="ℹ️")
                 return
             # I nuovi si AGGIUNGONO: chi ha chiesto altri spezzoni vuole
             # scegliere fra piu' scene, non ricominciare da capo. Ma solo i
@@ -7151,8 +7193,7 @@ def _spezzoni(plan, path: Path, cfg: dict,
             avuti = list(st.session_state.get(chiave) or [])
             nuovi = preview.solo_nuovi(avuti, nuovi)
             if not nuovi:
-                area.empty()
-                st.warning(t("conf.nessun_altro"), icon="ℹ️")
+                area.warning(t("conf.nessun_altro"), icon="ℹ️")
                 return
             tutti = avuti + nuovi
             st.session_state[chiave] = tutti
@@ -7164,8 +7205,7 @@ def _spezzoni(plan, path: Path, cfg: dict,
             preview.scrivi_deposito(plan, tutti, 2, preview.DEFAULT_SECONDS,
                                     PATHS)
         except Exception as exc:                   # noqa: BLE001
-            area.empty()
-            st.error(t("conf.errore_analisi", errore=exc), icon="⚠️")
+            area.error(t("conf.errore_analisi", errore=exc), icon="⚠️")
             return
         st.rerun()
 
@@ -7189,13 +7229,6 @@ def _spezzoni(plan, path: Path, cfg: dict,
     if mancanti:
         # Stessa riga-avviso della scansione, per lo stesso motivo: niente
         # finti accordion.
-        area = st.empty()
-
-        def _passo(testo: str) -> None:
-            area.markdown(f"<div class='au-avviso' style='margin-top:8px'>"
-                          f"<span class='au-rotella'></span>{esc(testo)}"
-                          f"</div>", unsafe_allow_html=True)
-
         _passo(tn("conf.estraggo", len(mancanti)))
         for cand in mancanti:
             # La durata sta nel nome: cambiarla senza cambiare il nome
@@ -7273,6 +7306,12 @@ def _barra_confronto(plan, path: Path, cfg: dict, prescelti: list,
     if st.session_state.pop("scorri_clip", False):
         st.iframe("<script>window.parent.document.querySelector('.st-key-testaClip')"
                   "?.scrollIntoView({behavior:'smooth',block:'start'});</script>", height=1)
+    elif st.session_state.pop("scorri_risultati", False):
+        # Dopo un attimo: la pagina si sta ancora allungando sotto.
+        st.iframe("<script>setTimeout(()=>window.parent.document"
+                  ".querySelector('.st-key-testaRisultati')"
+                  "?.scrollIntoView({behavior:'smooth',block:'start'}),400);</script>",
+                  height=1)
     with st.container(key="barraConfronto", horizontal=True,
                       vertical_alignment="center"):
         if confronto.in_corso():
@@ -7316,8 +7355,13 @@ def _barra_confronto(plan, path: Path, cfg: dict, prescelti: list,
                      t("conf.tempi_riga_senza", clip=hms(solo_modelli), tot=hms(totale)))
             st.markdown(f"<div class='au-barra-testo'><b>{riga}</b>"
                         f"<code>{tempi}</code></div>", unsafe_allow_html=True)
+        # Il «?» col fumetto nostro e non `help=`: quello nativo e' un
+        # rettangolo senza punta, diverso da tutti gli altri suggerimenti
+        # (visto dall'utente).
         nuovo = st.toggle(t("conf.includi_originale"), value=riferimento,
-                          key=f"tog_originale_{path}", help=t("conf.includi_aiuto"))
+                          key=f"tog_originale_{path}")
+        st.markdown(f"<div class='au-tog-aiuto'>{_icona_perche(t('conf.includi_aiuto'))}</div>",
+                    unsafe_allow_html=True)
         if nuovo != riferimento:
             st.session_state[f"originale_{path}"] = nuovo
             st.rerun()
@@ -7394,12 +7438,16 @@ def _avanzamento_confronto(path: str) -> None:
     s = confronto.stato()
     if not s or s.get("state") != confronto.IN_CORSO:
         if st.session_state.pop("conf_seguito", None):
+            # Finito sotto gli occhi: i risultati arrivano in fondo alla
+            # pagina, sotto la piega, e chi non sa che ci sono non li vede
+            # (segnalato dall'utente). Al prossimo disegno ci si porta li'.
+            st.session_state["scorri_risultati"] = True
             st.rerun()
         return
     st.session_state["conf_seguito"] = True
     totale = max(int(s.get("total") or 0), 1)
     fatte = int(s.get("done") or 0)
-    quota = min((fatte + float(s.get("fraction") or 0)) / totale, 1.0)
+    quota = confronto.quota(s)
     testo = s.get("text") or t("conf.avvio")
     altro = ("<div class='au-prova-nota'>"
              f"{t('conf.altro_file', nome=esc(Path(s['file']).name))}</div>"
@@ -7927,7 +7975,14 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
         if lav.blocchi_totali:
             pezzi += [t("lav.av_nel_blocco", fatti=lav.blocco_fatti,
                         totale=lav.blocco_totale, n=lav.blocco_n,
-                        blocchi=lav.blocchi_totali), t("lav.sicuro")]
+                        blocchi=lav.blocchi_totali),
+                      # Quanto si perde fermando ADESSO, in numeri: «si puo'
+                      # fermare dopo questo blocco senza perdere niente»
+                      # suonava come «da qui in poi, sempre», mentre il
+                      # lavoro salvato e' solo quello dei blocchi finiti
+                      # (segnalato dall'utente).
+                      tn("lav.sicuro", lav.blocco_fatti) if lav.blocco_fatti
+                      else t("lav.sicuro_niente")]
         dettaglio = " · ".join(pezzi)
     else:
         dettaglio = dett
@@ -9866,6 +9921,26 @@ def _cassetto_sidebar() -> None:
         "if(!W.auTronco){W.auTronco=1;D.addEventListener('pointerover',e=>{"
         "const w=e.target.closest&&e.target.closest('.au-perc');if(!w)return;"
         "const c=w.querySelector('code');w.classList.toggle('au-tronco',!!c&&c.scrollWidth>c.clientWidth+1);},true);}"
+        # Le tendine si allargano quanto il nome piu' lungo fra quelli in
+        # vista: la lista e' a righe fisse (virtualizzata), quindi andare a
+        # capo non si puo', e tagliare i nomi dei file a meta' rendeva
+        # indistinguibili gli episodi di una serie (segnalato dall'utente).
+        # Dal CSS non si puo': le righe sono posizionate in assoluto e non
+        # danno larghezza al contenitore. Mai oltre il bordo della finestra.
+        "if(!W.auTendine){W.auTendine=1;const larga=d=>{"
+        "const testi=[...d.querySelectorAll('[role=\"option\"] div')];if(!testi.length)return;"
+        "const serve=Math.max(...testi.map(x=>x.scrollWidth))+40;const r=d.getBoundingClientRect();"
+        "const w=Math.min(Math.max(serve,r.width),W.innerWidth-r.left-16);"
+        "if(w>r.width+1){const su=[];for(let x=d.parentElement;x&&x!==D.body;x=x.parentElement){su.push(x);"
+        "if(x.getAttribute('data-baseweb')==='popover')break;}"
+        "[...su,d,...d.querySelectorAll('[role=\"listbox\"],[role=\"listbox\"] > div')]"
+        ".forEach(x=>{x.style.setProperty('width',w+'px','important');"
+        "x.style.setProperty('max-width','none','important');});}};"
+        "new W.MutationObserver(()=>D.querySelectorAll('[data-testid=\"stSelectboxVirtualDropdown\"]')"
+        # Anche sugli attributi `style`: la lista virtuale riscrive la sua
+        # larghezza a ogni disegno (passaggio del mouse compreso).
+        ".forEach(larga)).observe(D.body,{childList:true,subtree:true,"
+        "attributes:true,attributeFilter:['style']});}"
         "if(!W.auPannello){W.auPannello=1;D.addEventListener('click',e=>{"
         "const h=W.webkit&&W.webkit.messageHandlers&&W.webkit.messageHandlers.animeup;if(!h)return;"
         "const b=e.target.closest&&e.target.closest('[class*=\"st-key-apriCartella_\"] button,"

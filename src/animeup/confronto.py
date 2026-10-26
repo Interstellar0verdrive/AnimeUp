@@ -163,11 +163,22 @@ def esegui(p: Paths | None = None) -> int:
         varianti = preview.variants_for(*richiesta["models"],
                                         reference=richiesta["reference"])
         s["total"] = len(candidati) * len(varianti)
+        # L'avanzamento in TEMPO, non in versioni: l'originale ingrandito e'
+        # una codifica di dieci secondi, un modello sono minuti di GPU. A
+        # versioni contate, un modello solo piu' l'originale stava al 50%
+        # per quattro minuti e poi saltava al 100% in un istante (segnalato
+        # dall'utente). Pesi misurati a spanne sullo stesso spezzone 1080p:
+        # l'originale costa circa un decimo di un modello.
+        pesi = [0.1 if v.is_reference else 1.0 for v in varianti]
+        s["peso_totale"] = len(candidati) * sum(pesi)
+        s["peso_fatto"] = 0.0
+        s["peso_ora"] = pesi[0] if pesi else 0.0
         salva(True)
         quota = preview.quota_dedup(plan)
 
         for cand in candidati:
             tipo = t(f"conf.tipo.{cand.kind.value}")
+            indice = [0]          # quale variante di questo spezzone e' in corso
 
             def passo(label: str, _tipo=tipo, _c=cand) -> None:
                 s["text"] = f"{_tipo} {_c.timecode} — {label}"
@@ -178,9 +189,12 @@ def esegui(p: Paths | None = None) -> int:
                 s["fraction"] = min(fatti / attesi, 1.0) if attesi else 0.0
                 salva()
 
-            def finita() -> None:
+            def finita(_i=indice) -> None:
                 s["done"] += 1
                 s["fraction"] = 0.0
+                s["peso_fatto"] += pesi[_i[0] % len(pesi)]
+                _i[0] += 1
+                s["peso_ora"] = pesi[_i[0] % len(pesi)]
                 salva(True)
 
             # Una clip che non si elabora non porta via le altre: sono
@@ -206,6 +220,19 @@ def esegui(p: Paths | None = None) -> int:
     s["text"] = ""
     _scrivi(c / "status.json", s)
     return 0 if s["state"] == FINITO else 1
+
+
+def quota(s: dict) -> float:
+    """Quanto e' avanti il giro di prova, 0..1, in tempo (vedi i pesi).
+
+    Uno stato scritto prima dei pesi si conta ancora a versioni."""
+    totale = float(s.get("peso_totale") or 0)
+    if totale > 0:
+        fatto = float(s.get("peso_fatto") or 0)
+        ora = float(s.get("peso_ora") or 0) * float(s.get("fraction") or 0)
+        return max(0.0, min((fatto + ora) / totale, 1.0))
+    n = max(int(s.get("total") or 0), 1)
+    return min((int(s.get("done") or 0) + float(s.get("fraction") or 0)) / n, 1.0)
 
 
 def _riassunto(res, plan, quota, catalogo) -> dict:

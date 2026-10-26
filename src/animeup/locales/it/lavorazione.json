@@ -114,7 +114,6 @@
   "lav.tappa2_cpu": "Codifica blocco · CPU",
   "lav.tappa3": "Codifica e montaggio",
   "lav.riga_fotogrammi": "{fatti}/{totale} fotogrammi",
-  "lav.sicuro": "si può fermare dopo questo blocco senza perdere niente",
   "lav.mostra_log": "Mostra il log",
   "lav.fine_sotto": "{n} di {totale} file completati",
   "lav.fine_sotto_avvisi.uno": "{n} di {totale} file completati, {a} con avvisi",
@@ -156,5 +155,8 @@
   "lav.fine_testo_difettoso": "L'uscita non ha passato i controlli ed è stata messa da parte come .DEFECTIVE. Rilancialo.",
   "lav.tar_ferma": "Ferma la calibrazione",
   "lav.av_deduplica": "ricerca dei fotogrammi ripetuti",
-  "lav.tappa1_dedup": "Fotogrammi ripetuti"
+  "lav.tappa1_dedup": "Fotogrammi ripetuti",
+  "lav.sicuro.uno": "fermando ora si rifà {n} fotogramma di questo blocco",
+  "lav.sicuro.altri": "fermando ora si rifanno i {n} fotogrammi di questo blocco",
+  "lav.sicuro_niente": "fermando ora non si perde niente"
 }

@@ -114,7 +114,6 @@
   "lav.tappa2_cpu": "Encoding chunk · CPU",
   "lav.tappa3": "Encode and assemble",
   "lav.riga_fotogrammi": "{fatti}/{totale} frames",
-  "lav.sicuro": "safe to stop after this chunk",
   "lav.mostra_log": "Show log",
   "lav.fine_sotto": "{n} of {totale} files completed",
   "lav.fine_sotto_avvisi.uno": "{n} of {totale} files completed, {a} with warnings",
@@ -156,5 +155,8 @@
   "lav.fine_testo_difettoso": "The output failed its check and was set aside as .DEFECTIVE. Run it again.",
   "lav.tar_ferma": "Stop calibration",
   "lav.av_deduplica": "finding repeated frames",
-  "lav.tappa1_dedup": "Repeated frames"
+  "lav.tappa1_dedup": "Repeated frames",
+  "lav.sicuro.uno": "stopping now redoes this chunk's {n} frame",
+  "lav.sicuro.altri": "stopping now redoes this chunk's {n} frames",
+  "lav.sicuro_niente": "stopping now loses nothing"
 }
