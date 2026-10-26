@@ -2957,8 +2957,11 @@ STYLE = f"""
   .st-key-passi > [class*="st-key-passo"] > .stButton {{ display: flex; flex: 1; }}
   .st-key-passi button {{ height: auto !important; min-height: 55px !important;
       padding-top: 6px !important; padding-bottom: 6px !important; }}
-  .st-key-passi button::before {{ position: absolute; left: 14px; top: 50%;
-      transform: translateY(-50%); width: 24px; height: 24px;
+  /* Centrato su un pixel intero e senza `transform`: con la scheda alta
+     67px il cerchio cadeva a mezzo pixel, e WebKit lo ricampionava
+     sgranando l'icona (segnalato dall'utente sulla casetta). */
+  .st-key-passi button::before {{ position: absolute; left: 14px;
+      top: round(down, calc(50% - 12px), 1px); transform: none; width: 24px; height: 24px;
       box-sizing: border-box; border-radius: 50%;
       border: 1px solid var(--borderHover); display: inline-flex;
       align-items: center; justify-content: center;
