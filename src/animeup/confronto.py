@@ -160,8 +160,12 @@ def esegui(p: Paths | None = None) -> int:
             frames=d["frames"], fps=float(plan.fps), motion=d["motion"],
             brightness=d["brightness"], reason=d["reason"])
             for d in richiesta["clips"]]
-        varianti = preview.variants_for(*richiesta["models"],
-                                        reference=richiesta["reference"])
+        # L'originale ingrandito PRIMA dei modelli: costa secondi e la pagina
+        # lo mostra subito, come metro per le versioni che arrivano (tavola
+        # CF2b; prima veniva per ultimo e lo spezzone restava vuoto per minuti).
+        varianti = sorted(preview.variants_for(*richiesta["models"],
+                                               reference=richiesta["reference"]),
+                          key=lambda v: not v.is_reference)
         s["total"] = len(candidati) * len(varianti)
         # L'avanzamento in TEMPO, non in versioni: l'originale ingrandito e'
         # una codifica di dieci secondi, un modello sono minuti di GPU. A
@@ -178,6 +182,9 @@ def esegui(p: Paths | None = None) -> int:
         s["segmenti"] = [{"tipo": cand.kind.value, "tc": cand.timecode,
                           "chiave": v.key, "peso": w}
                          for cand in candidati for v, w in zip(varianti, pesi)]
+        # Le versioni gia' pronte dello spezzone in corso, una per una, con il
+        # loro ritaglio: la pagina le mostra senza aspettare le altre.
+        s["parziali"] = {}
         s["peso_fatto"] = 0.0
         s["peso_ora"] = pesi[0] if pesi else 0.0
         salva(True)
@@ -186,17 +193,29 @@ def esegui(p: Paths | None = None) -> int:
         for cand in candidati:
             tipo = t(f"conf.tipo.{cand.kind.value}")
             indice = [0]          # quale variante di questo spezzone e' in corso
+            zona = [None]         # la zona dei ritagli, scelta sulla prima versione
+            pezzo = f"{cand.kind.value}|{cand.timecode}"
+            s["parziali"][pezzo] = {}
 
             def passo(label: str, _tipo=tipo, _c=cand) -> None:
                 s["text"] = f"{_tipo} {_c.timecode} — {label}"
                 s["fraction"] = 0.0
+                # Da quando gira il pezzo attuale: serve alla stima del tempo.
+                s["ora_da"] = time.time()
                 salva(True)
 
             def frazione(fatti: int, attesi: int) -> None:
                 s["fraction"] = min(fatti / attesi, 1.0) if attesi else 0.0
                 salva()
 
-            def finita(_i=indice) -> None:
+            def finita(chiave=None, file=None, _i=indice, _c=cand, _z=zona, _p=pezzo) -> None:
+                if chiave and file:
+                    try:
+                        ritaglio, _z[0] = preview.ritaglio_provvisorio(file, chiave, _c, _z[0])
+                        if ritaglio:
+                            s["parziali"][_p][chiave] = str(ritaglio)
+                    except Exception:                      # noqa: BLE001
+                        pass
                 s["done"] += 1
                 s["fraction"] = 0.0
                 s["peso_fatto"] += pesi[_i[0] % len(pesi)]
@@ -230,6 +249,17 @@ def esegui(p: Paths | None = None) -> int:
 
 
 def quota(s: dict) -> float:
+    """Quanto e' avanti il giro di prova, 0..1, a versioni: le versioni fatte
+    piu' la parte di quella in corso, sul totale. E' il numero che si legge
+    ovunque — barra, «% del test», scheda — perche' la barra e' fatta di
+    pezzi uguali, uno per versione (tavola CF2b), e i numeri devono tornare
+    con quello che si vede. Il tempo che manca si stima a parte, sui pesi
+    (`quota_tempo`)."""
+    n = max(int(s.get("total") or 0), 1)
+    return min((int(s.get("done") or 0) + float(s.get("fraction") or 0)) / n, 1.0)
+
+
+def quota_tempo(s: dict) -> float:
     """Quanto e' avanti il giro di prova, 0..1, in tempo (vedi i pesi).
 
     Uno stato scritto prima dei pesi si conta ancora a versioni."""

@@ -245,14 +245,14 @@ def perche_generale(altezza_uscita: int, forza: bool = False
                  t("conf.pg.mezzo_testo_da", minimo=minimo,
                    altezza=altezza_uscita))
     else:
-        mezzo = ("verde", "animevideov3",
+        mezzo = ("verde", CATALOG["animevideov3"].label,
                  t("conf.pg.mezzo_testo_mai", altezza=altezza_uscita))
     return (
         (t("conf.pg.sotto_fascia", altezza=ALTEZZA_INCERTA), "verde",
-         "animevideov3", t("conf.pg.sotto_testo")),
+         CATALOG["animevideov3"].label, t("conf.pg.sotto_testo")),
         (f"{ALTEZZA_INCERTA}p–{CLEAN_SOURCE_MIN_HEIGHT}p", *mezzo),
         (t("conf.pg.sopra_fascia", altezza=CLEAN_SOURCE_MIN_HEIGHT), "verde",
-         "CUGAN no-denoise", t("conf.pg.sopra_testo")),
+         CATALOG["cugan"].label, t("conf.pg.sopra_testo")),
     )
 
 # I colori NON stanno qui: stanno in `.streamlit/config.toml` (i token di
@@ -925,7 +925,7 @@ STYLE = f"""
      allineano in alto, quindi una descrizione da due righe lasciava la card
      più bassa delle vicine. Stira la colonna e la card la riempie. */
   [class*="st-key-clip"] {{ background: var(--surface);
-      border: 1px solid {BORDO}; border-radius: 8px; padding: 8px;
+      border: 1px solid {BORDO}; border-radius: 10px; padding: 8px;
       height: 100%;
       transition: border-color .12s ease, background .12s ease; }}
   [data-testid="stHorizontalBlock"]:has([class*="st-key-clip"]) {{
@@ -955,9 +955,6 @@ STYLE = f"""
   .au-file-eti {{ color: {TESTO}; font-weight: 600; }}
   /* Aria fra i percorsi e la CTA della cartella (era incollata). */
   [class*="st-key-finder_conf"] {{ margin-top: 10px !important; }}
-  /* Titoli degli accordion dei risultati: un gradino sopra il normale. */
-  .st-key-risultati [data-testid="stExpander"] summary p {{
-      font-size: 15px; font-weight: 600; }}
   /* Il pulsante di schermo intero sulle immagini: SEMPRE visibile (non
      solo al passaggio) e a misura d'uomo — era microscopico e fantasma
      (visto dall'utente). Coperti entrambi i markup di Streamlit. */
@@ -995,8 +992,8 @@ STYLE = f"""
       pointer-events: none; }}
   [class*="st-key-clip"] .au-c-desc {{ font-size: 11px; color: {TESTO_3};
       line-height: 1.45; padding: 0 3px 3px; }}
-  [class*="st-key-clip"] [data-testid="stCheckbox"] p {{ font-size: 13px;
-      font-weight: 500; }}
+  [class*="st-key-clip"] [data-testid="stCheckbox"] p {{ font-size: 14px;
+      font-weight: 600; }}
   /* L'etichetta prende tutta la riga così l'ora del giorno, messa da
      `::after`, può andare a fondo riga. */
   /* Tutta la catena a larghezza piena: bastava che un anello restasse largo
@@ -1016,8 +1013,8 @@ STYLE = f"""
   [class*="st-key-clip"] [data-testid="stWidgetLabel"] {{
       flex: 1 1 auto; width: 100%; align-items: center; }}
   [class*="st-key-clip"] [data-testid="stWidgetLabel"]::after {{
-      margin-left: auto; font-family: var(--mono); font-size: 11px;
-      color: {TESTO_2}; font-variant-numeric: tabular-nums; white-space: nowrap; }}
+      margin-left: auto; font-family: var(--mono); font-size: 11.5px;
+      color: var(--textCode); font-variant-numeric: tabular-nums; white-space: nowrap; }}
   /* Nome della clip e orario interi: se insieme non ci stanno, l'orario va
      sotto (prima «Moviment/o» e «00:23 - / 00:33»). */
   [class*="st-key-clip"] [data-testid="stWidgetLabel"] {{ flex-wrap: wrap; column-gap: 8px; }}
@@ -1036,7 +1033,7 @@ STYLE = f"""
      generata (`st-emotion-cache-...`), che Streamlit riusa altrove — la
      stessa sta anche su un cursore della sidebar — e che cambia a ogni
      aggiornamento. */
-  [class*="st-key-clip"] {{ gap: .5rem; }}
+  [class*="st-key-clip"] {{ gap: 10px; }}
   /* Streamlit avvolge l'HTML del markdown in un `<p>` con 14px di margine
      sotto: il video se lo portava dietro. */
   [class*="st-key-clip"] .stMarkdown p:has(> .au-clip) {{ margin-bottom: 0; }}
@@ -1652,7 +1649,7 @@ STYLE = f"""
      Il tag lo scriviamo noi senza `controls` (vedi `_video_ciclico`): è
      l'unico modo che regge anche su Safari, dove il CSS sui comandi non ha
      presa. Le regole su `[data-testid=stVideo]` restano per il ripiego. */
-  .au-clip {{ width: 100%; display: block; border-radius: .5rem;
+  .au-clip {{ width: 100%; display: block; border-radius: 6px;
              background: var(--clipBg); pointer-events: none; }}
   video[data-testid="stVideo"] {{
       border-radius: .5rem; display: block; pointer-events: none; }}
@@ -3502,7 +3499,7 @@ STYLE = f"""
      Redesign 1.6 — Confronto.
      =================================================================== */
   .st-key-fileCard {{ background: var(--surface); border: 1px solid var(--borderColor);
-      border-radius: 12px; padding: 18px 20px !important; flex-wrap: nowrap;
+      border-radius: 12px; padding: 16px 20px !important; flex-wrap: nowrap;
       gap: 0 !important; align-items: stretch; margin-top: 12px; }}
   .st-key-campoFile {{ flex: 0 0 auto; width: 420px !important;
       padding-right: 16px; gap: 8px !important; }}
@@ -3571,9 +3568,12 @@ STYLE = f"""
   .au-regola .au-p-testo {{ font-size: 12.5px; line-height: 1.45; color: var(--textSecondary); }}
   .au-regole-nota {{ font-size: 12px; color: var(--textSecondary); margin: 10px 0 6px; }}
   .st-key-modelli {{ gap: 12px !important; flex-wrap: nowrap; align-items: stretch; }}
+  /* La scheda riempie il suo involucro, che si stira all'altezza della piu'
+     alta: con `height: 100%` restava alta quanto la prima e il contenuto
+     delle altre arrivava sul bordo (misurato: 1px dal fondo). */
   [data-testid="stLayoutWrapper"]:has(> [class*="st-key-mod_"]) {{ flex: 1 1 0 !important;
-      min-width: 0; }}
-  [class*="st-key-mod_"] {{ height: 100%; box-sizing: border-box; padding: 14px !important;
+      min-width: 0; display: flex; flex-direction: column; }}
+  [class*="st-key-mod_"] {{ flex: 1 1 auto; box-sizing: border-box; padding: 14px !important;
       gap: 10px !important; border-radius: 10px; background: var(--surface);
       border: 1px solid var(--borderColor); }}
   [class*="st-key-mod_"]:has(input:checked) {{ background: rgb(var(--primaryRgb) / .08);
@@ -3583,7 +3583,10 @@ STYLE = f"""
       font-weight: 600; color: var(--textPrimary); }}
   [class*="st-key-mod_"] .au-tag {{ align-self: flex-start; }}
   [class*="st-key-mod_"] .au-m-desc {{ font-size: 13px; line-height: 1.5;
-      color: var(--textCode); margin: 8px 0 10px; }}
+      color: var(--textCode); margin: 8px 0 0; }}
+  /* Velocita' e durata in fondo, alla stessa altezza in tutte le schede. */
+  [class*="st-key-mod_"] [data-testid="stElementContainer"]:has(.au-m-vel) {{ margin-top: auto; }}
+  [class*="st-key-mod_"] [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
   [class*="st-key-mod_"]:has(input:disabled) .au-m-desc {{ color: var(--textSecondary); }}
   [class*="st-key-mod_"] .au-m-vel {{ font: 400 11.5px var(--mono); color: var(--textCode); }}
   .st-key-testaClip {{ flex-wrap: nowrap; }}
@@ -3602,9 +3605,11 @@ STYLE = f"""
   .au-c-prove {{ font-size: 12px; line-height: 1.45; color: {TESTO_2}; margin-top: 6px; }}
   .st-key-barraConfronto {{ position: fixed; bottom: 0; left: 360px; right: 0;
       width: auto !important; z-index: 100; flex-wrap: nowrap;
-      gap: 16px !important; padding: 14px 40px;
-      background: rgb(var(--bgRgb) / .96); backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--borderColor); }}
+      gap: 16px !important; padding: 16px 40px;
+      /* Pieno, come nelle tavole: velato, il testo che scorreva sotto si
+         leggeva attraverso la barra (utente). */
+      background: var(--surface); border-top: 1px solid var(--borderStrong); }}
+  .st-key-barraConfronto:has(.st-key-provaTesta) {{ border-top-color: rgb(var(--primaryRgb) / .35); }}
   .st-key-barraConfronto > div:first-child {{ flex: 1 1 auto; min-width: 0; }}
   .st-key-barraConfronto [class*="st-key-tog_"], .st-key-barraConfronto .st-key-elaboraClip {{
       flex: none; width: auto !important; }}
@@ -3620,20 +3625,23 @@ STYLE = f"""
   .st-key-barraConfronto .au-barra-testo code {{ font: 400 12px var(--mono) !important;
       color: var(--textSecondary) !important; background: none !important; padding: 0 !important; }}
   .block-container:has(.st-key-barraConfronto) {{ padding-bottom: 8rem !important; }}
+  /* Col test in corso la barra e' piu' alta (titolo, barra, etichette, «Ora:»):
+     con lo spazio delle altre il secondo spezzone finiva sotto (utente). */
+  .block-container:has(.st-key-provaTesta) {{ padding-bottom: 13rem !important; }}
   .st-key-barraConfronto [data-testid="stFragment"], .st-key-barraConfronto > div:has([data-testid="stFragment"]) {{
       flex: 1 1 auto; }}
   .st-key-provaTesta {{ flex-wrap: nowrap; gap: 14px !important; }}
   .st-key-provaTesta > div:first-child {{ flex: 1 1 auto; }}
   .st-key-provaTesta [class*="st-key-ferma"] {{ flex: none; width: auto !important; }}
-  .st-key-ferma_confronto button {{ height: 32px; min-height: 32px;
+  .st-key-ferma_confronto button {{ height: 36px; min-height: 36px; padding: 0 14px;
       border-color: rgb(var(--redRgb) / .55) !important; color: var(--redText) !important;
       background: transparent !important; }}
-  .st-key-ferma_confronto_ok button {{ height: 32px; min-height: 32px;
+  .st-key-ferma_confronto_ok button {{ height: 36px; min-height: 36px; padding: 0 14px;
       background: var(--redFill) !important; border: 0 !important; color: var(--onRed) !important; }}
   .au-prova-testa {{ display: flex; align-items: center; gap: 14px; }}
   .au-prova-testa > span {{ width: 7px; height: 7px; border-radius: 50%;
       background: var(--primary); box-shadow: 0 0 0 3px rgb(var(--primaryRgb) / .2); }}
-  .au-prova-testa b {{ font-size: 14px; font-weight: 600; }}
+  .au-prova-testa b {{ font-size: 14.5px; font-weight: 600; }}
   .au-prova-testa code {{ font: 400 12px var(--mono) !important; color: var(--primaryText) !important;
       background: none !important; padding: 0 !important; }}
   .au-prova-testa small {{ margin-left: auto; font: 400 12px var(--mono);
@@ -3652,8 +3660,8 @@ STYLE = f"""
   .st-key-barraConfronto [data-testid="stFragment"] [data-testid="stVerticalBlock"] {{
       gap: 0 !important; }}
   .st-key-provaTesta {{ align-items: center !important; }}
-  .st-key-provaTesta .au-prova-testa {{ min-height: 32px; }}
-  .st-key-barraConfronto .au-prova-barra {{ margin-top: 12px; }}
+  .st-key-provaTesta .au-prova-testa {{ min-height: 36px; }}
+  .st-key-barraConfronto .au-prova-barra {{ margin-top: 10px; }}
   .au-errore {{ padding: 12px 16px; border-radius: 10px; background: var(--redBg);
       border: 1px solid rgb(var(--redRgb) / .35); color: var(--redText);
       font-size: 13px; line-height: 1.5; margin-top: 12px; }}
@@ -3679,9 +3687,11 @@ STYLE = f"""
   .au-sez-titolo.au-grande {{ font-size: 22px; }}
   .st-key-risultati [data-testid="stExpander"] details {{ background: var(--surface);
       border: 1px solid var(--borderColor); border-radius: 12px; }}
-  .st-key-risultati [data-testid="stExpander"] summary p {{ font-size: 13px;
+  /* La testata come nella tavola CF3: nome 15 in grassetto, intervallo in
+     mono, «· mette alla prova …» 12.5 normale e grigio. */
+  .st-key-risultati [data-testid="stExpander"] summary p {{ font-size: 12.5px; font-weight: 400;
       color: var(--textSecondary); }}
-  .st-key-risultati [data-testid="stExpander"] summary p strong {{ font-size: 15px;
+  .st-key-risultati [data-testid="stExpander"] summary p strong {{ font-size: 15px; font-weight: 600;
       color: var(--textPrimary); margin-right: 8px; }}
   .st-key-risultati [data-testid="stExpander"] summary p code {{ font: 400 12px var(--mono);
       color: var(--textCode); background: none; padding: 0; margin-right: 6px; }}
@@ -3694,7 +3704,7 @@ STYLE = f"""
   .au-cnf td.au-cnf-nome {{ font: 600 13.5px var(--font); }}
   .au-cnf-nota {{ font-size: 12.5px; line-height: 1.5; color: var(--textSecondary);
       margin-top: 10px; }}
-  .au-ind-modello {{ font-size: 13.5px; font-weight: 600; margin: 8px 0 6px; }}
+  .au-ind-modello {{ font-size: 13px; font-weight: 500; margin: 8px 0 6px; }}
   .au-ind {{ display: grid; grid-template-columns: minmax(130px, max-content) minmax(0, 1fr) 48px;
       align-items: center; gap: 10px; margin: 4px 0; font-size: 12.5px;
       color: var(--textSecondary); }}
@@ -3704,7 +3714,7 @@ STYLE = f"""
       width: 1px; height: 12px; background: var(--textSecondary); }}
   .au-ind em {{ position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px;
       background: var(--primary); }}
-  .au-ind b {{ font: 400 12px var(--mono); color: var(--textCode); text-align: right; }}
+  .au-ind b {{ font: 400 12.5px var(--mono); color: var(--textCode); text-align: right; }}
   .au-res-sez {{ margin: 18px 0 2px; gap: 12px; }}
   .au-res-sez .au-sez-nota {{ font-size: 12.5px; letter-spacing: 0;
       text-transform: none; font-weight: 400; }}
@@ -3733,11 +3743,24 @@ STYLE = f"""
       color: var(--textSecondary); transition: color .12s; }}
   [class*="st-key-piedeClip_"] summary:hover p {{ color: var(--textPrimary); }}
   [class*="st-key-piedeClip_"] [data-testid="stExpanderDetails"] {{
-      padding: 6px 0 2px 24px !important; background: transparent !important; }}
+      padding: 0 0 2px 24px !important; background: transparent !important;
+      border: 0 !important; }}
+  [class*="st-key-piedeClip_"] [data-testid="stExpanderDetails"] [data-testid="stVerticalBlock"] {{
+      gap: 4px !important; }}
+  [class*="st-key-piedeClip_"] [data-testid="stExpanderDetails"] [data-testid="stMarkdownContainer"] {{
+      margin-bottom: 0 !important; }}
+  [class*="st-key-piedeClip_"] [data-testid="stExpanderDetails"] p {{ margin: 0 !important; }}
+  /* Il titolo alto quanto il pulsante accanto e centrato su di lui. */
+  [class*="st-key-piedeClip_"] summary {{ min-height: 35px; display: flex !important;
+      align-items: center; padding: 0 !important; }}
+  [class*="st-key-piedeClip_"] [class*="st-key-finder_conf"] {{ margin-top: 0 !important; }}
   [class*="st-key-piedeClip_"] {{ align-items: flex-start !important; }}
   .au-barra-pronto {{ display: flex; align-items: center; gap: 14px; }}
-  .au-barra-pronto b {{ display: block; font-size: 14px; font-weight: 600; }}
-  .au-barra-pronto span:not(.au-spunta) {{ font-size: 12.5px; color: var(--textSecondary); }}
+  .au-barra-pronto b {{ display: block; font-size: 14.5px; font-weight: 600; }}
+  .au-barra-pronto span:not(.au-spunta) {{ font-size: 13px; color: var(--textSecondary); }}
+  /* Il cerchio di «Test pronto» come nella tavola CF3: 34px, anello verde. */
+  .au-barra-pronto .au-spunta {{ width: 34px; height: 34px; border-width: 2px;
+      background: transparent; }}
   .st-key-barraConfronto .st-key-tornaClip, .st-key-barraConfronto .st-key-avantiLavorazione {{
       flex: none; width: auto !important; }}
   .st-key-tornaClip button, .st-key-avantiLavorazione button {{ height: 40px; padding: 0 18px;
@@ -4180,6 +4203,10 @@ STYLE = f"""
   .au-passo-testo {{ margin-bottom: 4px; }}
   .st-key-risultati [data-testid="stExpander"] [data-testid="stExpanderDetails"] {{
       padding: 18px !important; }}
+  /* I percorsi della clip stanno subito sotto il loro titolo, senza la
+     spaziatura delle schede dei risultati (utente: «inutilmente distanti»). */
+  .st-key-risultati [class*="st-key-piedeClip_"] [data-testid="stExpanderDetails"] {{
+      padding: 0 0 2px 24px !important; }}
   [class*="st-key-coppie_"] {{ margin-bottom: 4px; }}
   .st-key-confPassi > div:first-child {{ flex: 1 1 auto; }}
   .st-key-confPassi [class*="st-key-cambiaTest"], .st-key-confPassi .st-key-finderRisultati {{
@@ -4222,6 +4249,8 @@ STYLE = f"""
   .au-passo-testo b {{ color: var(--textPrimary); font-weight: 600; }}
   .st-key-trovaAltriRiga {{ margin-top: 4px; }}
   .st-key-trovaAltriRiga .st-key-trovaAltri {{ width: auto !important; flex: none; }}
+  .st-key-trovaAltri button {{ height: 36px; min-height: 36px; padding: 0 14px; }}
+  .st-key-trovaAltri button p {{ font-size: 13px; font-weight: 500; }}
   /* La ricerca in corso al posto del pulsante, e dopo, sopra il pulsante,
      il perche' di un lotto piu' piccolo del promesso. */
   .au-avviso-posto {{ margin-top: 4px; }}
@@ -4239,6 +4268,8 @@ STYLE = f"""
   .au-barra-num {{ width: 34px; height: 34px; flex: none; border-radius: 50%;
       background: rgb(var(--primaryRgb) / .12); color: var(--primaryText);
       display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }}
+  /* La regola generale degli `span` della barra lo faceva grigio e piu' piccolo. */
+  .au-barra-due span.au-barra-num {{ color: var(--primary); font-size: 14px; }}
   .au-barra-pronto > div {{ display: flex; flex-direction: column; gap: 2px; }}
   .au-barra-pronto b {{ line-height: 1.3; }}
   .st-key-barraConfronto :is(.st-key-avantiModelli, .st-key-indietroClip, .st-key-indietroClip3,
@@ -4250,6 +4281,9 @@ STYLE = f"""
       border-radius: 8px !important; white-space: nowrap; }}
   :is(.st-key-avantiModelli, .st-key-elaboraClip, .st-key-avantiLavorazione) button p {{
       font-size: 14.5px !important; font-weight: 600 !important; }}
+  :is(.st-key-indietroClip, .st-key-indietroClip3) button {{ padding: 0 18px !important; }}
+  :is(.st-key-indietroClip, .st-key-indietroClip3) button p {{ font-size: 14px !important;
+      font-weight: 500 !important; }}
   /* Suggerimenti: un accordion vero. Un riquadro solo; l'intestazione su
      una fascia di tono diverso (piu' chiara in scuro, piu' scura in
      chiaro), titolo a sinistra, freccia a destra in giu' da chiuso e in su
@@ -4258,8 +4292,9 @@ STYLE = f"""
       border: 1px solid var(--borderStrong) !important; border-radius: 10px !important;
       overflow: hidden; background: var(--surface) !important; }}
   :is(.st-key-consigli, .st-key-risultati) [data-testid="stExpander"] summary {{
-      background: var(--surfaceHover) !important; padding: 12px 16px !important;
+      background: var(--surfaceHover) !important; padding: 13px 16px !important;
       border-radius: 0 !important; box-shadow: none !important; }}
+  .st-key-risultati [data-testid="stExpander"] summary {{ padding: 14px 18px !important; }}
   :is(.st-key-consigli, .st-key-risultati) [data-testid="stExpander"] summary:hover {{
       background: var(--surfaceHover) !important; }}
   :is(.st-key-consigli, .st-key-risultati) [data-testid="stExpander"] details[open] > summary {{
@@ -4268,14 +4303,17 @@ STYLE = f"""
       flex-direction: row-reverse !important; justify-content: space-between !important;
       width: 100% !important; }}
   :is(.st-key-consigli, .st-key-risultati) summary [data-testid="stIconMaterial"] {{
-      transform: rotate(90deg); transition: transform .15s, color .12s;
+      transform: rotate(90deg); transition: color .12s;
       color: var(--textSecondary); }}
+  /* Niente animazione della rotazione: Streamlit cambia il glifo nello
+     stesso istante, e per qualche fotogramma la freccia puntava a sinistra
+     (utente). Si gira di scatto, come il glifo. */
   /* Streamlit cambia il glifo da solo (chiuso: freccia a destra; aperto:
      in giu'): ruotati, diventano in giu' da chiuso e in su da aperto. */
   :is(.st-key-consigli, .st-key-risultati) details[open] > summary [data-testid="stIconMaterial"] {{
       transform: rotate(180deg); }}
   :is(.st-key-consigli, .st-key-risultati) summary p {{ transition: color .12s; }}
-  .st-key-consigli summary p {{ font-size: 14px !important; font-weight: 600; color: var(--textCode); }}
+  .st-key-consigli summary p {{ font-size: 14px !important; font-weight: 600; color: var(--textPrimary); }}
   /* «N file · mostra i percorsi» dentro una clip resta un link discreto:
      la regola dell'accordion qui sopra non deve toccarlo. */
   .st-key-risultati [class*="st-key-piedeClip_"] [data-testid="stExpander"] details {{
@@ -4299,18 +4337,28 @@ STYLE = f"""
   .st-key-consigli .au-regola.au-qui .au-p-fascia {{ color: var(--primaryText); }}
   .au-qui-chip {{ margin-left: 8px; font: 500 10.5px var(--mono); padding: 1px 7px;
       border-radius: 999px; color: var(--primaryText); border: 1px solid rgb(var(--primaryRgb) / .55); }}
-  .st-key-consigli .au-regole-nota {{ margin: 10px 12px 0; line-height: 1.6; }}
+  .st-key-consigli .au-regole-nota {{ margin: 8px 12px 0; line-height: 1.6; }}
+  .st-key-consigli [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  /* La lampadina e il sottotitolo della testata (tavola CF2): disegnati qui
+     per non toccare il markup dell'expander. */
+  .st-key-consigli summary p {{ display: inline-flex; align-items: center; gap: 10px; }}
+  .st-key-consigli summary p::before {{ content: ""; width: 16px; height: 16px; flex: none;
+      background: var(--primary);
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 1.8a4.4 4.4 0 0 0-2.6 8v1.5h5.2V9.8A4.4 4.4 0 0 0 8 1.8z'/%3E%3Cpath d='M6 13.6h4'/%3E%3C/svg%3E") center / contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 1.8a4.4 4.4 0 0 0-2.6 8v1.5h5.2V9.8A4.4 4.4 0 0 0 8 1.8z'/%3E%3Cpath d='M6 13.6h4'/%3E%3C/svg%3E") center / contain no-repeat; }}
+  .st-key-consigli summary p::after {{ content: var(--au-consigli-sotto); font-size: 13px;
+      font-weight: 400; color: var(--textSecondary); }}
   .st-key-consigli .au-guida {{ margin-left: 4px; }}
   /* Le schede dei modelli: chip sempre nello stesso punto, una riga sola. */
   [class*="st-key-mod_"] .au-m-var {{ font-size: 14.5px; font-weight: 600; line-height: 1.35;
-      color: var(--textPrimary); margin: -8px 0 8px 26px; }}
-  [class*="st-key-mod_"] .au-tag {{ white-space: nowrap; }}
+      color: var(--textPrimary); margin: -8px 0 8px 21px; }}
+  [class*="st-key-mod_"] .au-tag {{ white-space: nowrap; padding: 2px 9px; font-size: 11px; }}
   .au-tag.au-grigio {{ color: var(--textSecondary); background: transparent;
       border: 1px solid var(--borderStrong); }}
   .st-key-confOriginale {{ padding: 14px 16px; border-radius: 10px; background: var(--surface);
       border: 1px solid var(--borderColor); gap: 2px !important; }}
   .st-key-confOriginale [data-testid="stCheckbox"] label p {{ font-size: 14px; font-weight: 600; }}
-  .st-key-confOriginale .au-orig-nota {{ margin-left: 50px; }}
+  .st-key-confOriginale .au-orig-nota {{ margin-left: 37px; }}
   .st-key-confOriginale [class*="st-key-tog_"] {{ flex: none; width: auto !important; }}
   .st-key-confOriginale [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
   .au-orig-nota {{ font-size: 12.5px; color: var(--textSecondary); }}
@@ -4320,18 +4368,47 @@ STYLE = f"""
       margin-top: 4px; }}
   .au-attesa b {{ font-size: 15px; color: var(--textPrimary); }}
   .au-attesa code {{ font: 400 12px var(--mono) !important; background: none !important;
-      padding: 0 !important; color: var(--textCode) !important; }}
+      padding: 0 !important; color: var(--textSecondary) !important; }}
   .au-attesa span {{ margin-left: auto; font: 400 11.5px var(--mono); }}
   .au-attesa-ora {{ border-style: dashed; border-color: rgb(var(--primaryRgb) / .45); }}
+  /* Lo spezzone in lavorazione (tavola CF2b): testata, poi le versioni a
+     due a due — pronte col ritaglio, in corso con la barra, in attesa. */
+  .st-key-inCorso {{ border: 1px solid var(--borderStrong); border-radius: 12px;
+      overflow: hidden; background: var(--surface); gap: 0 !important; }}
+  .st-key-inCorso [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .au-cc-testa {{ display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+      background: var(--surfaceHover); border-bottom: 1px solid {BORDO}; }}
+  .au-cc-testa b {{ font-size: 15px; font-weight: 600; }}
+  .au-cc-testa code {{ font: 400 12px var(--mono) !important; color: var(--textCode) !important;
+      background: none !important; padding: 0 !important; }}
+  .au-cc-testa span {{ margin-left: auto; font: 400 11.5px var(--mono); color: var(--primaryText); }}
+  .st-key-inCorsoCorpo {{ padding: 18px; background: var(--insetBackground); gap: 14px !important; }}
+  .st-key-inCorsoCorpo [data-testid="stHorizontalBlock"] {{ gap: 14px !important; }}
+  .st-key-inCorsoCorpo [data-testid="stColumn"] > div {{ gap: 8px !important; }}
+  .st-key-inCorsoCorpo img {{ border-radius: 8px; display: block; }}
+  .au-cc-vuoto {{ aspect-ratio: 1 / 1; box-sizing: border-box; border-radius: 8px;
+      border: 1px dashed {BORDO}; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px; padding: 0 40px; }}
+  .au-cc-vuoto small {{ font: 400 12px var(--mono); color: var(--textSecondary); }}
+  .au-cc-ora {{ border-color: rgb(var(--primaryRgb) / .35); }}
+  .au-cc-ora b {{ font-size: 13.5px; font-weight: 600; }}
+  .au-cc-ora i {{ width: 100%; height: 6px; border-radius: 3px; overflow: hidden;
+      background: rgb(var(--primaryRgb) / .15); }}
+  .au-cc-ora i span {{ display: block; height: 100%; background: var(--primary); }}
+  .au-cc-nome {{ display: flex; align-items: center; gap: 8px; font-size: 13px;
+      color: var(--textCode); }}
+  .au-cc-nome svg {{ color: var(--greenText); flex: none; }}
+  .au-cc-nome-solo {{ margin-top: 8px; }}
   .au-attesa-ora span {{ color: var(--primaryText); }}
   /* La barra del test intero, con una tacca per versione (o per spezzone)
      e sotto cosa e' fatto e cosa gira. */
   .au-prova-barra.au-con-tacche {{ position: relative; }}
   .au-prova-barra i {{ position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px;
-      background: var(--bg); }}
+      background: var(--surface); }}
   .au-prova-barra i.au-tacca-fine {{ width: 1px; margin-left: 0; opacity: .7; }}
-  .au-seg-righe {{ display: flex; gap: 4px; margin-top: 8px; }}
-  .au-seg-righe > div {{ min-width: 0; }}
+  /* Colonne uguali, una per pezzo della barra: stanno sotto il loro pezzo. */
+  .au-seg-righe {{ display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+      gap: 4px; margin-top: 10px; }}
   .au-seg-righe span {{ display: block; overflow: hidden; text-overflow: ellipsis;
       white-space: nowrap; font: 400 11.5px var(--mono); color: var(--textTertiary); }}
   .au-seg-righe .au-seg-fatto {{ color: var(--greenText); }}
@@ -4342,7 +4419,7 @@ STYLE = f"""
   .au-ritaglio-box {{ border-radius: 8px; overflow: hidden; background: var(--clipBg); }}
   .au-ritaglio {{ display: block; width: 100%; height: auto; image-rendering: auto; }}
   .au-ritaglio-nome {{ font-size: 13px; color: var(--textCode); }}
-  [class*="st-key-piedeRit_"] {{ gap: 8px !important; flex-wrap: wrap; margin-top: 2px;
+  [class*="st-key-piedeRit_"] {{ gap: 8px !important; flex-wrap: wrap; margin-top: 8px;
       min-height: 30px; }}
   [class*="st-key-piedeRit_"] > div:first-child {{ flex: 1 1 auto; }}
   [class*="st-key-piedeRit_"] [class*="st-key-usa"], [class*="st-key-piedeRit_"] [class*="st-key-annulla"] {{
@@ -4352,13 +4429,40 @@ STYLE = f"""
   [class*="st-key-piedeRit_"] [class*="st-key-usa_"] button {{
       border-color: rgb(var(--primaryRgb) / .55) !important; }}
   [class*="st-key-piedeRit_"] [class*="st-key-usa_"] button p {{ color: var(--primaryText) !important; }}
+  /* «Usa per questo file» e' un pulsante a contorno ciano: al passaggio
+     resta ciano (prima diventava un grigio qualunque: utente). */
+  [data-testid="stElementContainer"][class*="st-key-usa_"] .stButton button[kind="secondary"]:hover:not(:disabled):not(.a):not(.b):not(.c):not(.d):not(.e) {{
+      background: rgb(var(--primaryRgb) / .1) !important;
+      border-color: var(--primaryText) !important; }}
+  [data-testid="stElementContainer"][class*="st-key-usa_"] .stButton button[kind="secondary"]:hover:not(:disabled):not(.a):not(.b):not(.c):not(.d):not(.e) p {{
+      color: var(--primaryText) !important; }}
+  /* Le due «Finder» del Confronto: l'hover standard delle secondarie (la
+     regola generale esclude le chiavi «finder», pensate per i link). */
+  [data-testid="stElementContainer"]:is([class*="st-key-finder_conf"], .st-key-finderRisultati) .stButton button[kind="secondary"]:hover:not(:disabled) {{
+      background: var(--sidebar2) !important; border-color: var(--borderHover) !important; }}
+  [data-testid="stElementContainer"]:is([class*="st-key-finder_conf"], .st-key-finderRisultati) .stButton button[kind="secondary"]:hover:not(:disabled) p {{
+      color: {TESTO} !important; }}
   [class*="st-key-piedeRit_"] [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
   .au-usato {{ display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;
       color: var(--greenText); }}
   /* «Guarda in movimento»: la nota verde alta quanto il pulsante. */
   [class*="st-key-coppie_"] {{ align-items: center !important; }}
   [class*="st-key-coppie_"] [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
-  [class*="st-key-cmp_"] button {{ height: 38px !important; min-height: 38px !important; }}
+  [class*="st-key-coppie_"] .au-occhio {{ min-height: 38px; }}
+  [class*="st-key-coppie_"] [class*="st-key-cmp"] button {{ margin-top: 0; }}
+  [class*="st-key-cmp_"] button {{ height: 38px !important; min-height: 38px !important;
+      padding: 0 14px !important; }}
+  [class*="st-key-cmp_"] button p {{ font-size: 13.5px !important; font-weight: 500; }}
+  /* I due comandi in cima ai risultati: 36px, testo 13 medio (tavola CF3). */
+  .st-key-confPassi :is(.st-key-cambiaTest, .st-key-finderRisultati) button {{ height: 36px;
+      min-height: 36px; padding: 0 14px; }}
+  .st-key-confPassi :is(.st-key-cambiaTest, .st-key-finderRisultati) button p {{ font-size: 13px;
+      font-weight: 500; }}
+  /* Il corpo di ogni risultato sul fondo incassato, sotto la testata. */
+  .st-key-risultati [data-testid="stExpander"] [data-testid="stExpanderDetails"] {{
+      background: var(--insetBackground); }}
+  .st-key-risultati [class*="st-key-piedeClip_"] [data-testid="stExpanderDetails"] {{
+      background: transparent !important; }}
   .au-aperto {{ display: inline-flex; align-items: center; height: 38px; box-sizing: border-box;
       padding: 0 14px; border-radius: 6px; background: var(--greenBg);
       border: 1px solid rgb(var(--greenRgb) / .3); color: var(--greenText); font-size: 13px;
@@ -4379,8 +4483,12 @@ STYLE = f"""
   /* La tabella dei tempi: tutti i bordi come la riga di mezzo, testo
      centrato in verticale e staccato dai bordi. */
   .au-cnf {{ border: 1px solid var(--borderColor); }}
-  .au-cnf th, .au-cnf td {{ padding: 9px 12px !important; vertical-align: middle;
+  .au-cnf th, .au-cnf td {{ padding: 11px 12px !important; vertical-align: middle;
       border: 1px solid var(--borderColor) !important; }}
+  /* Come nella tavola CF3: intestazioni piu' basse, nomi non in grassetto. */
+  .au-cnf th {{ padding: 9px 12px !important; font-weight: 600 !important; letter-spacing: .08em; }}
+  .au-cnf td {{ font-size: 12.5px !important; }}
+  .au-cnf td.au-cnf-nome {{ font-weight: 500 !important; font-size: 13.5px !important; }}
   /* Gli indicatori: il segno bianco e' il 100% dell'ingrandimento semplice,
      con la sua etichetta sotto. */
   .au-ind i::after {{ display: none; }}
@@ -4396,14 +4504,22 @@ STYLE = f"""
       background: var(--buttonFill); }}
   [data-testid="stMain"] .st-key-passi .stButton button[kind="secondary"] {{ background: transparent; }}
   /* «Usa per tutti i file»: la conferma con l'elenco di cosa cambia. */
-  .au-dialogo-titolo {{ font-size: 17px; font-weight: 600; margin-bottom: 4px; }}
-  .au-dialogo-testo {{ font-size: 13px !important; line-height: 1.55; color: var(--textSecondary);
-      margin: 6px 0 !important; }}
-  .au-dialogo-elenco {{ list-style: none; margin: 8px 0 !important; padding: 0 !important; }}
-  .au-dialogo-elenco li {{ display: flex; justify-content: space-between; gap: 12px;
-      padding: 7px 0; border-bottom: 1px solid var(--borderColor); font-size: 13px; margin: 0 !important; }}
-  .au-dialogo-elenco code {{ font: 400 12px var(--mono) !important; background: none !important;
-      padding: 0 !important; color: var(--textCode) !important; white-space: nowrap; }}
+  .au-dialogo-testo {{ font-size: 13.5px !important; line-height: 1.55; color: var(--textSecondary);
+      margin: 0 !important; }}
+  [role="dialog"]:has(.st-key-usaTuttiBottoni) [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .st-key-usaTuttiBottoni {{ gap: 8px !important; margin-top: 8px; }}
+  .st-key-usaTuttiBottoni [class*="st-key-usaTutti"] {{ width: auto !important; flex: none; }}
+  .st-key-usaTuttiBottoni button {{ height: 34px !important; min-height: 34px !important;
+      padding: 0 14px !important; }}
+  /* Le tendine del Confronto come nelle tavole: bordo pieno e fondo appena
+     staccato. In chiaro il bordo di Streamlit era bianco su bianco e la
+     tendina non si vedeva (misurato). */
+  :is(.st-key-risultati, .st-key-fileCard) [data-testid="stSelectbox"] [role="group"] {{
+      border: 1px solid var(--borderStrong) !important; background: var(--surfaceHover) !important; }}
+  .st-key-risultati [data-testid="stSelectbox"] [role="group"] {{ border-radius: 6px !important;
+      min-height: 34px !important; }}
+  .st-key-fileCard [data-testid="stSelectbox"] [role="group"] {{ border-radius: 8px !important;
+      min-height: 38px !important; }}
   /* Le tendine: la freccia mai attaccata al bordo. */
   [data-testid="stSelectbox"] [data-baseweb="select"] > div > div:last-child {{ padding-right: 6px; }}
 
@@ -4885,17 +5001,13 @@ def header() -> str:
                     # ogni pulsante primario) azzera anche l'immagine, e
                     # a pari forza vinceva chi veniva dopo — la barretta non
                     # si vedeva piu' (segnalato dall'utente).
-                    regole.append(
-                        f'.st-key-fasi .st-key-passi {classe} {{ background-image: linear-gradient(var(--primary), '
-                        'var(--primary)), linear-gradient(rgb(var(--primaryRgb) / .2), '
-                        'rgb(var(--primaryRgb) / .2)) !important; background-size: '
-                        f'calc((100% - 91px) * {q:.3f}) 2px, calc(100% - 91px) 2px '
-                        '!important; background-position: 51px calc(100% - 6px) '
-                        '!important; background-repeat: no-repeat !important; }')
+                    regole.append(_regola_linea(classe, q))
         st.markdown(f"<div class='au-fasi-stato{' au-vivo' if stato['attivo'] else ''}'>"
                     f"<span></span>{esc(stato['voce'])}</div>",
                     unsafe_allow_html=True)
     st.markdown("<style>" + "".join(regole) + "</style>", unsafe_allow_html=True)
+    if stato["attivo"] and confronto.in_corso():
+        _scheda_confronto_viva(larghezza)
     st.iframe(
         "<script>const D=window.parent.document;"
         "if(!D.__auTendineMute){D.__auTendineMute=true;"
@@ -4927,6 +5039,33 @@ def header() -> str:
     if st.query_params.get("scheda") != attiva.lower():
         st.query_params["scheda"] = attiva.lower()
     return attiva
+
+
+@st.fragment(run_every=2)
+def _scheda_confronto_viva(larghezza: int) -> None:
+    """Sottotitolo e barretta della scheda Confronto, riletti ogni due
+    secondi mentre il test gira. La scheda si disegna col resto della
+    pagina, quindi restava ferma al numero dell'ultimo giro completo (0%
+    con la barra in basso al 44%: utente). Le regole sono le stesse
+    dell'intestazione: venendo dopo, la sostituiscono."""
+    s = confronto.stato()
+    if not s or s.get("state") != confronto.IN_CORSO:
+        return
+    q = confronto.quota(s)
+    classe = ".st-key-passo2 button"
+    regole = _regole_sottotitolo(classe, t("fasi.conf_corso", pct=int(100 * q)), False, larghezza)
+    regole.append(_regola_linea(classe, q))
+    st.markdown("<style>" + "".join(regole) + "</style>", unsafe_allow_html=True)
+
+
+def _regola_linea(classe: str, q: float) -> str:
+    """La barretta d'avanzamento sotto il sottotitolo di una scheda."""
+    return (f'.st-key-fasi .st-key-passi {classe} {{ background-image: linear-gradient(var(--primary), '
+            'var(--primary)), linear-gradient(rgb(var(--primaryRgb) / .2), '
+            'rgb(var(--primaryRgb) / .2)) !important; background-size: '
+            f'calc((100% - 91px) * {q:.3f}) 2px, calc(100% - 91px) 2px '
+            '!important; background-position: 51px calc(100% - 6px) '
+            '!important; background-repeat: no-repeat !important; }')
 
 
 def _valore_a_destra(regole: list[str], chiave: str, testo: str) -> None:
@@ -7798,7 +7937,9 @@ def _consigli(plan, cfg: dict, praticabili: dict[str, str]) -> None:
             f"<div class='au-p-mod'>{esc(modello)}"
             + (f"<span class='au-qui-chip'>{t('conf.questo_file_chip')}</span>" if qui else "")
             + f"</div><div class='au-p-testo'>{esc(testo)}</div></div>")
-    with st.expander(f"{t('conf.consigli')} · {t('conf.consigli_sotto', h=h)}", key="consigli"):
+    sotto = "· " + t("conf.consigli_sotto", h=h).replace('"', "'")
+    st.markdown(f'<style>:root {{ --au-consigli-sotto: "{sotto}"; }}</style>', unsafe_allow_html=True)
+    with st.expander(t("conf.consigli"), key="consigli"):
         st.markdown(
             "<div class='au-regole'>" + "".join(righe) + "</div>"
             f"<div class='au-regole-nota'>{t('conf.regola_nota')} "
@@ -7869,9 +8010,9 @@ def _schede_modelli(plan, path: Path, praticabili: dict[str, str]) -> list[str]:
                 st.markdown(
                     f"<div class='au-m-var'>{esc(variante)}</div>"
                     f"<span class='au-tag {classe}'>{esc(testo)}</span>"
-                    f"<div class='au-m-desc'>{esc(desc[:1].upper() + desc[1:])}</div>"
-                    f"<div class='au-m-vel'>{_pezzi(meta)}</div>",
+                    f"<div class='au-m-desc'>{esc(desc[:1].upper() + desc[1:])}</div>",
                     unsafe_allow_html=True)
+                st.markdown(f"<div class='au-m-vel'>{_pezzi(meta)}</div>", unsafe_allow_html=True)
             if acceso and not morta:
                 chiavi.append(k)
     if toccato:
@@ -8016,21 +8157,9 @@ def _passo_risultati(plan, path: Path) -> None:
             _clip_risultato(res, plan, path)
     st.session_state["conf_pezzi_visti"] = bool(s.get("segmenti")) if gira else False
     if gira:
-        # Lo spezzone in lavorazione e quelli che aspettano: i risultati
-        # compaiono uno spezzone alla volta, appena pronti.
-        fatti = {(r.get("tipo"), r.get("intervallo", "").split(" ")[0]) for r in risultati}
-        visti = []
-        for seg in s.get("segmenti") or []:
-            chiave = (seg["tipo"], seg["tc"])
-            if chiave in fatti or chiave in visti:
-                continue
-            visti.append(chiave)
-        for i, (tipo, tc) in enumerate(visti):
-            stato = t("conf.in_lavorazione") if i == 0 else t("conf.in_attesa")
-            st.markdown(
-                f"<div class='au-attesa{' au-attesa-ora' if i == 0 else ''}'>"
-                f"<b>{esc(t(f'conf.tipo.{tipo}').capitalize())}</b><code>{esc(tc)}</code>"
-                f"<span>{esc(stato)}</span></div>", unsafe_allow_html=True)
+        # Lo spezzone in lavorazione, con le sue versioni una per una appena
+        # pronte, e sotto quelli che aspettano (tavola CF2b).
+        _clip_in_corso(str(path), len(risultati))
     with st.container(key="barraConfronto", horizontal=True, vertical_alignment="center"):
         if confronto.in_corso():
             _avanzamento_confronto(str(path), len(risultati))
@@ -8038,7 +8167,7 @@ def _passo_risultati(plan, path: Path) -> None:
             durata = max(0.0, float(s.get("ended") or 0) - float(s.get("started") or 0)) \
                 if s.get("file") == str(path) else 0.0
             st.markdown(
-                f"<div class='au-barra-pronto'><span class='au-spunta'>{_svg(_I_SPUNTA, 12, 2.4)}</span>"
+                f"<div class='au-barra-pronto'><span class='au-spunta'>{_svg(_I_SPUNTA, 16, 2.2)}</span>"
                 f"<div><b>{t('conf.pronto')}"
                 + (f"<em> · {t('conf.pronto_tempo', clip=tn('conf.n_spezzoni', len(risultati)), tempo=hms(durata))}</em>"
                    if durata else "")
@@ -8052,6 +8181,82 @@ def _passo_risultati(plan, path: Path) -> None:
                         unsafe_allow_html=True)
             st.button(t("conf.indietro_clip"), key="indietroClip3",
                       icon=":material/arrow_back:", on_click=_vai_passo, args=(str(path), 1))
+
+
+def _spezzoni_da_fare(s: dict, n_risultati: int) -> list[tuple[str, str, list[str]]]:
+    """Gli spezzoni non ancora fra i risultati, in ordine: (tipo, tc, versioni)."""
+    ordine: list = []
+    for g in s.get("segmenti") or []:
+        if not ordine or (ordine[-1][0], ordine[-1][1]) != (g["tipo"], g["tc"]):
+            ordine.append((g["tipo"], g["tc"], []))
+        ordine[-1][2].append(g["chiave"])
+    return ordine[n_risultati:]
+
+
+@st.fragment(run_every=2)
+def _clip_in_corso(path: str, n_risultati: int) -> None:
+    """Lo spezzone in lavorazione come nella tavola CF2b: le versioni gia'
+    pronte col loro ritaglio, quella in corso con la sua barra e il tempo che
+    manca, le altre in attesa; sotto, una riga per ogni spezzone che aspetta.
+    Si rilegge ogni due secondi da solo: quando lo spezzone finisce, la barra
+    in basso ridisegna la pagina e diventa un risultato."""
+    s = confronto.stato()
+    if not s or s.get("state") != confronto.IN_CORSO or s.get("file") != path:
+        return
+    da_fare = _spezzoni_da_fare(s, n_risultati)
+    if not da_fare:
+        return
+    (tipo, tc, versioni), attesa = da_fare[0], da_fare[1:]
+    pronte = (s.get("parziali") or {}).get(f"{tipo}|{tc}") or {}
+    fatte = int(s.get("done") or 0)
+    corrente = (s.get("segmenti") or [{}])[min(fatte, len(s.get("segmenti") or [1]) - 1)].get("chiave")
+    frazione = float(s.get("fraction") or 0)
+    cand = st.session_state.get(f"cand_{path}") or []
+
+    def intervallo_di(tp: str, tcc: str) -> str:
+        return next((c.timecode_range for c in cand
+                     if c.kind.value == tp and c.timecode == tcc), tcc)
+    intervallo = intervallo_di(tipo, tc)
+    with st.container(key="inCorso"):
+        st.markdown(
+            f"<div class='au-cc-testa'><b>{esc(t(f'conf.tipo.{tipo}').capitalize())}</b>"
+            f"<code>{esc(intervallo)}</code>"
+            f"<span>{esc(t('conf.versioni_pronte', n=len(pronte), tot=len(versioni)))}</span></div>",
+            unsafe_allow_html=True)
+        with st.container(key="inCorsoCorpo"):
+            for riga in range(0, len(versioni), 2):
+                colonne = st.columns(2, gap="small")
+                for col, k in zip(colonne, versioni[riga:riga + 2]):
+                    nome = t("conf.originale_ingrandito") if k == "original" else (
+                        CATALOG[k].label if k in CATALOG else k)
+                    with col:
+                        if k in pronte and Path(pronte[k]).is_file():
+                            st.image(pronte[k], use_container_width=True)
+                            st.markdown(f"<div class='au-cc-nome'>{_svg(_I_SPUNTA, 12, 2.4)}{esc(nome)}</div>",
+                                        unsafe_allow_html=True)
+                        elif k == corrente:
+                            resta = ""
+                            passati = time.time() - float(s.get("ora_da") or time.time())
+                            if frazione > 0.03 and passati > 3:
+                                resta = stima_hm(passati / frazione * (1 - frazione))
+                            sotto = (t("conf.v_resta", pct=f"{frazione:.0%}", tempo=resta)
+                                     if resta else f"{frazione:.0%}")
+                            st.markdown(
+                                f"<div class='au-cc-vuoto au-cc-ora'><b>{t('conf.v_in_corso')}</b>"
+                                f"<i><span style='width:{frazione * 100:.1f}%'></span></i>"
+                                f"<small>{esc(sotto)}</small></div>"
+                                f"<div class='au-cc-nome au-cc-nome-solo'>{esc(nome)}</div>",
+                                unsafe_allow_html=True)
+                        else:
+                            st.markdown(
+                                f"<div class='au-cc-vuoto'><small>{t('conf.v_attesa')}</small></div>"
+                                f"<div class='au-cc-nome au-cc-nome-solo'>{esc(nome)}</div>",
+                                unsafe_allow_html=True)
+    for tp, tcc, _v in attesa:
+        st.markdown(
+            f"<div class='au-attesa'><b>{esc(t(f'conf.tipo.{tp}').capitalize())}</b>"
+            f"<code>{esc(intervallo_di(tp, tcc))}</code>"
+            f"<span>{esc(t('conf.in_attesa'))}</span></div>", unsafe_allow_html=True)
 
 
 @st.fragment(run_every=2)
@@ -8080,7 +8285,9 @@ def _avanzamento_confronto(path: str, n_risultati: int = 0) -> None:
         st.markdown(
             "<div class='au-prova-testa'><span></span>"
             f"<b>{t('conf.prova_titolo')}<em> · {t('conf.del_totale', pct=f'{quota:.0%}')}</em></b>"
-            f"<small>{t('conf.versione_di', n=min(fatte + 1, totale), tot=totale)}</small>"
+            f"<small>{t('conf.versione_di', n=min(fatte + 1, totale), tot=totale)}"
+            + (f" · {t('conf.resta', tempo=resta)}" if (resta := _resta_confronto(s)) else "")
+            + "</small>"
             "</div>", unsafe_allow_html=True)
         # Due clic, come gli altri Ferma: il primo chiede conferma per dieci
         # secondi, il secondo ferma davvero.
@@ -8096,58 +8303,82 @@ def _avanzamento_confronto(path: str, n_risultati: int = 0) -> None:
 
 
 def _barra_segmenti(s: dict, quota: float) -> str:
-    """La barra del test intero con le sue tacche e, sotto, cosa e' fatto e
-    cosa gira (deciso con l'utente). Una tacca piena fra uno spezzone e
-    l'altro, una sottile fra le sue versioni; sotto, il nome di ogni
-    spezzone (fatto, in corso, in attesa) e una riga «Ora: …» con la
-    versione che gira. Oltre i 12 spezzoni i nomi non ci stanno piu' e
-    resta solo la riga.
+    """La barra del test intero, come la tavola CF2b: un pezzo UGUALE per
+    ogni versione (spezzone × modello), riempito fin dove si e' arrivati.
 
-    Le etichette sono per spezzone e non per versione: l'originale pesa un
-    decimo di un modello, e la sua etichetta in un pezzo cosi' corto non si
-    leggeva (visto provandola)."""
+    Fino a 4 versioni: una tacca piena fra l'una e l'altra e sotto
+    un'etichetta per versione (fatta, in corso con la sua percentuale, in
+    attesa). Oltre: una tacca piena fra gli spezzoni e una sottile fra le
+    loro versioni, un'etichetta per spezzone e la riga «Ora: …». Oltre i 12
+    spezzoni restano solo le tacche e la riga."""
     segs = s.get("segmenti") or []
-    peso_tot = sum(float(g.get("peso") or 0) for g in segs) or 1.0
+    n = len(segs)
     fatte = int(s.get("done") or 0)
     frazione = float(s.get("fraction") or 0)
     clip_di = [(g["tipo"], g["tc"]) for g in segs]
-    tacche, sx = [], 0.0
-    for i, g in enumerate(segs[:-1]):
-        sx += float(g.get("peso") or 0) / peso_tot * 100
-        piena = clip_di[i] != clip_di[i + 1]
+    tacche = []
+    for i in range(1, n):
+        piena = n <= 4 or clip_di[i - 1] != clip_di[i]
         tacche.append(f"<i class='{'au-tacca' if piena else 'au-tacca-fine'}' "
-                      f"style='left:{sx:.2f}%'></i>")
+                      f"style='left:{i / n * 100:.2f}%'></i>")
     barra = (f"<div class='au-prova-barra au-con-tacche'><span style='width:{quota * 100:.1f}%'></span>"
              + "".join(tacche) + "</div>")
     if not segs:
         return barra
-    clip: list = []
-    for chiave, g in zip(clip_di, segs):
-        if not clip or clip[-1][0] != chiave:
-            clip.append([chiave, 0.0, 0])
-        clip[-1][1] += float(g.get("peso") or 0)
-        clip[-1][2] += 1
+
+    def nome(g, corto=True) -> str:
+        if g["chiave"] == "original":
+            return t("conf.originale_corto")
+        m = CATALOG.get(g["chiave"])
+        return (m.short if corto else m.label) if m else g["chiave"]
+
+    def tipo(g) -> str:
+        return t(f"conf.tipo.{g['tipo']}").capitalize()
+
     righe = ""
+    if n <= 4:
+        celle = []
+        for i, g in enumerate(segs):
+            if i < fatte:
+                celle.append(f"<span class='au-seg-fatto'>✓ {esc(tipo(g))} · {esc(nome(g))}</span>")
+            elif i == fatte:
+                celle.append(f"<span class='au-seg-ora'>{esc(tipo(g))} · {esc(nome(g))} {frazione:.0%}</span>")
+            else:
+                celle.append(f"<span>{esc(tipo(g))} · {esc(nome(g))}</span>")
+        return barra + f"<div class='au-seg-righe' style='--n:{n}'>{''.join(celle)}</div>"
+    clip: list = []
+    for chiave in clip_di:
+        if not clip or clip[-1][0] != chiave:
+            clip.append([chiave, 0])
+        clip[-1][1] += 1
     if len(clip) <= 12:
         indice, celle = 0, []
-        for (tipo, tc), peso, quante in clip:
+        for (tp, tc), quante in clip:
             finita = indice + quante <= fatte
             corrente = indice <= fatte < indice + quante
             classe = "au-seg-fatto" if finita else "au-seg-ora" if corrente else ""
-            celle.append(f"<div style='flex:{peso / peso_tot:.4f}'><span class='{classe}'>"
-                         f"{'✓ ' if finita else ''}{esc(t(f'conf.tipo.{tipo}').capitalize())} {esc(tc)}"
-                         "</span></div>")
+            celle.append(f"<span class='{classe}'>{'✓ ' if finita else ''}"
+                         f"{esc(t(f'conf.tipo.{tp}').capitalize())}</span>")
             indice += quante
-        righe = f"<div class='au-seg-righe'>{''.join(celle)}</div>"
-    if fatte < len(segs):
+        righe = f"<div class='au-seg-righe' style='--n:{len(clip)}'>{''.join(celle)}</div>"
+    if fatte < n:
         g = segs[fatte]
-        ver = t("conf.originale") if g["chiave"] == "original" else (
-            CATALOG[g["chiave"]].label if g["chiave"] in CATALOG else g["chiave"])
-        tipo = t(f"conf.tipo.{g['tipo']}").capitalize()
-        ora = f"{tipo} {g['tc']} — {ver} · {frazione:.0%}"
+        ora = f"{tipo(g)} {g['tc']} — {nome(g, corto=False)} · {frazione:.0%}"
         righe += (f"<div class='au-prova-nota'>{t('conf.ora')} "
                   f"<code>{esc(ora)}</code></div>")
     return barra + righe
+
+
+def _resta_confronto(s: dict) -> str:
+    """«≈ 2m» che mancano al test intero, stimati sul tempo VERO: quanto e'
+    passato diviso quanto e' fatto, pesando l'originale un decimo di un
+    modello (vedi `confronto`). Vuoto finche' non c'e' abbastanza da cui
+    stimare."""
+    fatto = confronto.quota_tempo(s)
+    passati = time.time() - float(s.get("started") or time.time())
+    if fatto < 0.03 or passati < 5:
+        return ""
+    return stima_hm(passati / fatto * (1 - fatto))
 
 
 # Una funzione e non un dizionario fisso: i testi seguono la lingua attiva.
@@ -8189,7 +8420,7 @@ def _tabella_confronto(modelli: list[dict], dedup,
              f"<th>{t('conf.th_episodio')}</th>"
              + (f"<th>{t('conf.th_vs')}</th>" if len(modelli) > 1 else "")
              + f"</tr></thead><tbody>{''.join(righe)}</tbody></table>"
-             f"<div class='au-cnf-nota'>{esc(proiezione)}</div>")
+             f"<div class='au-cnf-nota'>{esc(proiezione).replace(chr(10), '<br>')}</div>")
 
     def _c(m, i):
         q = m.get("metriche")
@@ -8270,42 +8501,69 @@ def _annulla_usa() -> None:
     st.session_state.get("da_confronto", set()).discard(u["file"])
 
 
-@st.dialog(" ", width="medium")
-def _dialogo_usa_tutti(k: str) -> None:
-    """«Usa per tutti i file»: prima si dice cosa cambia, file per file, e si
-    lasciano fuori i file per cui quel modello sarebbe una cattiva scelta."""
+def _piano_usa_tutti(k: str) -> tuple[list, list, list]:
+    """Cosa farebbe «Usa per tutti i file»: (cambiano, gia', esclusi).
+    `cambiano` sono coppie (file, modello di adesso); `esclusi` i file per
+    cui quel modello sarebbe una cattiva scelta, che restano come sono."""
     modelli = state("modelli", {})
-    cambiano, esclusi = [], []
+    cambiano, gia, esclusi = [], [], []
     for f in load_library():
         if not f.get("height"):
             continue
-        giudizio = (recommend(f["height"]).giudizi or {}).get(k)
-        if giudizio == "no":
-            esclusi.append(f["name"])
+        if (recommend(f["height"]).giudizi or {}).get(k) == "no":
+            esclusi.append(f)
             continue
         attuale = modelli.get(f["path"]) or recommend(f["height"]).model
-        if attuale != k:
+        if attuale == k:
+            gia.append(f)
+        else:
             cambiano.append((f, attuale))
-    nome = CATALOG[k].label
-    st.markdown(f"<div class='au-dialogo-titolo'>{esc(t('conf.tutti_titolo', modello=nome))}</div>",
-                unsafe_allow_html=True)
-    if not cambiano:
-        st.markdown(f"<p class='au-dialogo-testo'>{t('conf.tutti_nessuno')}</p>",
-                    unsafe_allow_html=True)
+    return cambiano, gia, esclusi
+
+
+def _dialogo_usa_tutti(k: str) -> None:
+    """«Usa per tutti i file»: prima si chiede, con cosa cambia in una frase
+    (tavola CF4). La domanda e' il titolo della finestra, accanto alla ×."""
+    cambiano, gia, _esclusi = _piano_usa_tutti(k)
+    totale = len(cambiano) + len(gia)
+    titolo = tn("conf.tutti_titolo", totale, modello=CATALOG[k].label)
+    st.dialog(titolo, width="medium")(_contenuto_usa_tutti)(k)
+
+
+def _contenuto_usa_tutti(k: str) -> None:
+    cambiano, gia, esclusi = _piano_usa_tutti(k)
+    frasi = []
+    if cambiano:
+        da: dict[str, int] = {}
+        for _f, a in cambiano:
+            da[a] = da.get(a, 0) + 1
+        nome = lambda a: CATALOG[a].label if a in CATALOG else a  # noqa: E731
+        if len(da) == 1:
+            frasi.append(tn("conf.tutti_cambiano_da", len(cambiano), da=nome(next(iter(da)))))
+        else:
+            frasi.append(tn("conf.tutti_cambiano", len(cambiano), elenco=", ".join(
+                t("conf.tutti_da", n=n, da=nome(a)) for a, n in da.items())))
     else:
-        st.markdown(
-            "<ul class='au-dialogo-elenco'>" + "".join(
-                f"<li><span>{esc(f['name'])}</span><code>{esc(CATALOG[a].short if a in CATALOG else a)}"
-                f" → {esc(CATALOG[k].short)}</code></li>" for f, a in cambiano) + "</ul>",
-            unsafe_allow_html=True)
+        frasi.append(t("conf.tutti_nessuno"))
+    if gia and cambiano:
+        frasi.append(tn("conf.tutti_gia", len(gia)))
     if esclusi:
-        st.markdown(f"<p class='au-dialogo-testo'>{esc(t('conf.tutti_esclusi', modello=nome, elenco=', '.join(esclusi)))}</p>",
-                    unsafe_allow_html=True)
-    with st.container(horizontal=True, horizontal_alignment="right"):
+        altezze = [f["height"] for f in esclusi]
+        if max(altezze) < ALTEZZA_INCERTA:
+            frasi.append(t("conf.tutti_esclusi_sotto", altezza=ALTEZZA_INCERTA))
+        elif max(altezze) < CLEAN_SOURCE_MIN_HEIGHT:
+            frasi.append(t("conf.tutti_esclusi_sotto", altezza=CLEAN_SOURCE_MIN_HEIGHT))
+        elif min(altezze) >= CLEAN_SOURCE_MIN_HEIGHT:
+            frasi.append(t("conf.tutti_esclusi_sopra", altezza=CLEAN_SOURCE_MIN_HEIGHT))
+        else:
+            frasi.append(tn("conf.tutti_esclusi_n", len(esclusi)))
+    st.markdown(f"<p class='au-dialogo-testo'>{esc(' '.join(frasi))}</p>", unsafe_allow_html=True)
+    with st.container(key="usaTuttiBottoni", horizontal=True, horizontal_alignment="right"):
         if st.button(t("conf.tutti_annulla"), key="usaTuttiNo"):
             st.rerun()
         if cambiano and st.button(tn("conf.tutti_applica", len(cambiano)), key="usaTuttiSi",
                                   type="primary"):
+            modelli = state("modelli", {})
             scelte = state("scelte_modello", set())
             for f, _a in cambiano:
                 modelli[f["path"]] = k
@@ -8321,7 +8579,8 @@ def _clip_risultato(res: dict, plan, path: Path) -> None:
     prove = preview.Kind(res["tipo"]).tests if res.get("tipo") in (
         k.value for k in preview.Kind) else ""
     prova = t("conf.prova", prove=prove) if prove else ""
-    titolo = f"**{tipo}** `{res['intervallo']}` · {prova[:1].lower() + prova[1:]}"
+    intervallo = str(res.get("intervallo") or "").replace(" - ", " – ")   # i risultati salvati prima
+    titolo = f"**{tipo}** `{intervallo}` · {prova[:1].lower() + prova[1:]}"
     cartella = res["cartella"]
     with st.expander(titolo, expanded=True):
         file_r = res.get("file") or {}

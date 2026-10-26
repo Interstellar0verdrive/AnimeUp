@@ -142,7 +142,7 @@ class Candidate:
     def timecode_range(self) -> str:
         """Inizio e fine. Il solo inizio non dice quanto dura lo spezzone."""
         fine = self.start_seconds + self.frames / self.fps
-        return f"{self.timecode} - {self._mmss(fine)}"
+        return f"{self.timecode} – {self._mmss(fine)}"
 
     @property
     def slug(self) -> str:
@@ -634,9 +634,9 @@ def render(
         for chiave_v in pronte:
             if chiave_v in tempi_salvati:
                 result.tempi[chiave_v] = tempi_salvati[chiave_v]
-        for _ in variants:
+        for v in variants:
             if callable(on_done):
-                on_done()
+                on_done(v.key, pronte[v.key])
         result.seconds = time.monotonic() - started
         return result
 
@@ -681,7 +681,7 @@ def render(
                 if variant.key in tempi_salvati:
                     result.tempi[variant.key] = tempi_salvati[variant.key]
                 if callable(on_done):
-                    on_done()
+                    on_done(variant.key, out)
                 continue
             provvisorio = out.with_name(f"{variant.key}.incomplete.mkv")
             if variant.is_reference:
@@ -703,7 +703,7 @@ def render(
             if out.is_file():
                 result.files[variant.key] = out
             if callable(on_done):
-                on_done()
+                on_done(variant.key, out if out.is_file() else None)
 
     result.seconds = time.monotonic() - started
     try:
@@ -837,6 +837,62 @@ def _indicatori(im, zone: list[tuple[int, int]] | None = None,
         [_residuo(grigio, x, y, lato) for x, y in zone])
 
 
+def zona_dettaglio(reference, size: int = 480) -> tuple[int, int]:
+    """L'angolo del ritaglio: la zona a dettaglio massimo del riferimento.
+
+    Si cerca su una versione ridotta per non scandire milioni di pixel, poi
+    si riporta alla scala piena. Una funzione sola per il foglio finale e per
+    i ritagli provvisori del test in corso, cosi' mostrano la stessa zona."""
+    from PIL import ImageChops, ImageFilter
+
+    w, h = reference.size
+    half = size // 2
+    small = reference.convert("L").resize((w // 8, h // 8))
+    edges = ImageChops.difference(small, small.filter(ImageFilter.GaussianBlur(2)))
+    step = max(1, size // 16)
+    best, bx, by = -1.0, w // 2, h // 2
+    for y in range(0, small.height - size // 8, step):
+        for x in range(0, small.width - size // 8, step):
+            box = edges.crop((x, y, x + size // 8, y + size // 8))
+            score = sum(box.getdata())
+            if score > best:
+                best, bx, by = score, x * 8, y * 8
+    bx = max(0, min(w - size, bx + half - size // 2))
+    by = max(0, min(h - size, by + half - size // 2))
+    return bx, by
+
+
+def ritaglio_provvisorio(video: Path, key: str, candidate: Candidate,
+                         zona: tuple[int, int] | None = None, *, size: int = 480,
+                         paths: Paths | None = None) -> tuple[Path | None, tuple[int, int] | None]:
+    """Il ritaglio 1:1 di UNA versione appena finita, mentre il test va
+    avanti: la pagina la mostra subito invece di aspettare tutto lo spezzone
+    (tavola CF2b). La zona si sceglie sulla prima versione pronta — il
+    riferimento, che si fa per primo — e si riusa per le altre: la stessa
+    che `crop_sheet` scegliera' alla fine."""
+    from PIL import Image
+
+    p = paths or PATHS
+    with tempfile.TemporaryDirectory(prefix="animeup-crop-") as tmp:
+        shot = Path(tmp) / f"{key}.png"
+        run_stderr([
+            str(p.ffmpeg.path), "-hide_banner", "-v", "error", "-y",
+            "-i", str(video), "-vf", f"select=eq(n\\,{candidate.frames // 2})",
+            "-frames:v", "1", str(shot),
+        ])
+        if not shot.is_file():
+            return None, zona
+        im = Image.open(shot).convert("RGB")
+        if zona is None:
+            zona = zona_dettaglio(im, size)
+        dest = video.parent / f"crop_{key}.png"
+        try:
+            im.crop((zona[0], zona[1], zona[0] + size, zona[1] + size)).save(dest)
+        except OSError:
+            return None, zona
+    return dest, zona
+
+
 def crop_sheet(
     result: PreviewResult, plan: Plan, *, size: int = 480,
     paths: Paths | None = None,
@@ -890,23 +946,7 @@ def crop_sheet(
             k: (_rapporto(v[0], base[0]), _rapporto(v[1], base[1]))
             for k, v in grezzi.items()}
 
-    w, h = reference.size
-    half = size // 2
-
-    # Zona a dettaglio massimo: si cerca su una versione ridotta per non
-    # scandire milioni di pixel, poi si riporta alla scala piena.
-    small = reference.convert("L").resize((w // 8, h // 8))
-    edges = ImageChops.difference(small, small.filter(ImageFilter.GaussianBlur(2)))
-    step = max(1, size // 16)
-    best, bx, by = -1.0, w // 2, h // 2
-    for y in range(0, small.height - size // 8, step):
-        for x in range(0, small.width - size // 8, step):
-            box = edges.crop((x, y, x + size // 8, y + size // 8))
-            score = sum(box.getdata())
-            if score > best:
-                best, bx, by = score, x * 8, y * 8
-    bx = max(0, min(w - size, bx + half - size // 2))
-    by = max(0, min(h - size, by + half - size // 2))
+    bx, by = zona_dettaglio(reference, size)
 
     for key, im in grabbed.items():
         singolo = result.folder / f"crop_{key}.png"

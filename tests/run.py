@@ -4128,7 +4128,7 @@ def _tabella_indicatori_disegna():
     uscita.clear()
     tabella(_righe((1.0, 1.0), (2.5, 3.0)), (0.3, "misurata"))
     tutto = "".join(uscita)
-    assert "dettaglio fine" in tutto and "rumore nelle aree piatte" in tutto
+    assert "dettaglio fine" in tutto.lower() and "rumore nelle aree piatte" in tutto.lower()
     assert "250%" in tutto and "300%" in tutto, (
         f"i rapporti non finiscono in tabella: {tutto[-400:]}")
     assert "Dettaglio fine</b>" in tutto and "Rumore nelle aree piatte</b>" in tutto
@@ -4138,10 +4138,10 @@ def _tabella_indicatori_disegna():
     uscita.clear()
     tabella(_righe((1.0, None), (2.5, None)), (0.0, "spenta"))
     tutto = "".join(uscita)
-    assert "dettaglio fine" in tutto, (
+    assert "dettaglio fine" in tutto.lower(), (
         "sparito anche il dettaglio fine: era il difetto di partenza, un "
         "indicatore mancante che si portava via l'altro")
-    assert "rumore nelle aree piatte" not in tutto, (
+    assert "rumore nelle aree piatte" not in tutto.lower(), (
         "resta una colonna di trattini per una misura che non esiste")
     assert "Rumore nelle aree piatte</b>" not in tutto, (
         "si spiega come leggere una colonna che non viene mostrata")
@@ -4152,7 +4152,7 @@ def _tabella_indicatori_disegna():
     uscita.clear()
     tabella(_righe((None, None), (None, None)), None)
     tutto = "".join(uscita)
-    assert "<th>dettaglio fine</th>" not in tutto, (
+    assert "<th>dettaglio fine</th>" not in tutto.lower(), (
         "si disegna la tabella degli indicatori senza un solo numero "
         f"da mettere sotto: {tutto[-300:]}")
     assert "non disponibili" in tutto, (
@@ -5370,7 +5370,7 @@ def _() -> None:
     ambiente = _esegui_app(_app_pezzi("perche_generale"), {
         "t": i18n.t, "altezza_minima": altezza_minima,
         "ALTEZZA_INCERTA": ALTEZZA_INCERTA,
-        "CLEAN_SOURCE_MIN_HEIGHT": CLEAN_SOURCE_MIN_HEIGHT})
+        "CLEAN_SOURCE_MIN_HEIGHT": CLEAN_SOURCE_MIN_HEIGHT, "CATALOG": CATALOG})
     regola = ambiente["perche_generale"]
 
     def mezzo(*a, **k):
@@ -5381,7 +5381,7 @@ def _() -> None:
     assert "540" in a1080[2] and "540" in a1080[3], a1080
     assert mezzo(1080, forza=True)[2] == i18n.t("conf.pg.mezzo_modello")
     a1440 = mezzo(1440)
-    assert a1440[1] == "verde" and a1440[2] == "animevideov3", a1440
+    assert a1440[1] == "verde" and a1440[2] == CATALOG["animevideov3"].label, a1440
 
 
 @caso("le chip della fascia dei Sorgenti dicono cosa contano")
