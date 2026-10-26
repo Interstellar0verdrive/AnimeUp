@@ -346,9 +346,30 @@ def _normalizza(testo: str) -> str:
 chiave_nome = _normalizza
 
 
-def lavori(paths: Paths | None = None) -> list[StatoLavoro]:
+# L'ultima lettura di WORK, per un secondo: un solo giro della pagina chiede
+# i lavori da piu' parti (schede, riga in corso, barra) e ogni lettura conta
+# fra i PNG di cartelle da 30.000 fotogrammi. Con la CPU satura
+# dall'estrazione aprire una tendina costava due o tre secondi (segnalato
+# dall'utente): cosi' la lettura si fa una volta e le altre la riusano.
+# Solo per chi la chiede (`recente`, in secondi): la pagina. Chi guarda
+# subito dopo aver cambiato qualcosa su disco vuole la lettura vera.
+_ULTIMA: dict[str, tuple[float, list]] = {}
+
+
+def lavori(paths: Paths | None = None, recente: float = 0.0) -> list[StatoLavoro]:
     """Tutti i lavori presenti in WORK, vivi per primi, più recenti prima."""
     p = paths or PATHS
+    chiave = str(p.work)
+    adesso = time.monotonic()
+    vista = _ULTIMA.get(chiave)
+    if recente and vista and adesso - vista[0] < recente:
+        return list(vista[1])
+    trovati = _lavori(p)
+    _ULTIMA[chiave] = (adesso, trovati)
+    return list(trovati)
+
+
+def _lavori(p: Paths) -> list[StatoLavoro]:
     if not p.work.is_dir():
         return []
     trovati = []

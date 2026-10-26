@@ -24,6 +24,7 @@ Altri principi:
 from __future__ import annotations
 
 import base64
+import hashlib
 import html
 import json
 import os
@@ -849,6 +850,15 @@ STYLE = f"""
   /* .45 e non .3: il fumetto finisce di sparire a .3 + .12; scendendo
      prima, le icone vicine gli passavano sopra durante la dissolvenza. */
   .au-info, .au-perche {{ transition: z-index 0s .45s; }}
+  /* Aperti verso l'interno quando centrati uscirebbero dalla finestra
+     (lo decide lo script della pagina, vedi `au-a-destra`). */
+  .au-a-destra .au-bolla {{ left: auto !important; right: -8px;
+      transform: translateY(3px) !important; }}
+  .au-a-sinistra .au-bolla {{ left: -8px !important; transform: translateY(3px) !important; }}
+  :is(.au-a-destra, .au-a-sinistra):is(:hover, :focus-visible) .au-bolla {{
+      transform: translateY(0) !important; }}
+  .au-a-destra .au-bolla::before {{ left: auto !important; right: 5px; }}
+  .au-a-sinistra .au-bolla::before {{ left: 15px !important; }}
   /* Nella sidebar l'icona non sale di livello: sale solo il suo fumetto
      (z-index 220 in tutta la barra). Salendo l'icona, un'altra «?» passata
      dal mouse mentre un fumetto svaniva saliva al pari e, venendo dopo,
@@ -1565,10 +1575,18 @@ STYLE = f"""
       transition: border-color .12s ease, background-color .12s ease; }}
   /* Stessa intensita' dell'hover della tendina qui accanto: prima era
      troppo squillante (ritarato con l'utente). */
-  [class*="st-key-jrow"] [data-testid="stCheckbox"]:hover
+  /* Solo sulle caselle vuote e attive: sopra una casella spuntata il
+     velo grigio copriva il ciano e la spunta diventava un quadrato spento
+     (segnalato dall'utente). Spuntata, al passaggio si schiarisce il suo
+     ciano; spenta (durante una coda), non cambia niente. */
+  [class*="st-key-jrow"] [data-testid="stCheckbox"]:hover:not(:has(input:checked)):not(:has(input:disabled))
       label > div:first-of-type {{
       border-color: var(--borderHover2) !important;
       background: rgb(var(--overlayRgb) / .07) !important; }}
+  [class*="st-key-jrow"] [data-testid="stCheckbox"]:hover:has(input:checked):not(:has(input:disabled))
+      label > div:first-of-type {{
+      border-color: var(--primaryHover) !important;
+      background: var(--primaryHover) !important; }}
   [class*="st-key-jrow"] [data-testid="stSelectbox"]:hover > div,
   .st-key-sceltaTutti [data-testid="stSelectbox"]:hover > div {{
       background: rgb(var(--overlayRgb) / .07);
@@ -1775,6 +1793,13 @@ STYLE = f"""
   .st-key-barra [data-testid="stMarkdownContainer"] {{
       margin-bottom: 0 !important; }}
   .st-key-barra .au-meta {{ font-size: 11px; }}
+  /* Riepilogo e nota uno sotto l'altra, non a 14px: erano letti come due
+     cose separate (segnalato dall'utente). */
+  .st-key-barra [data-testid="stColumn"]:first-child > [data-testid="stVerticalBlock"] {{
+      gap: 6px !important; }}
+  .au-barra-nota {{ font-size: 12.5px; line-height: 1.45; color: var(--textSecondary); }}
+  .au-avvio {{ display: flex; align-items: center; gap: 10px; font-size: 13.5px;
+      color: var(--textCode); }}
   .st-key-barra .stButton button {{ padding: 0.8rem 1.6rem; width: auto; }}
   /* Le due CTA a filo destro. `flex-end` sulla colonna non bastava: dentro
      c'e' un blocco verticale che occupa tutta la larghezza, ed è quello che
@@ -1809,7 +1834,18 @@ STYLE = f"""
      zero elementi con quella chiave), quindi lo spazio non esisteva e l'ultima
      parte del contenuto restava sotto la fascia, irraggiungibile.
      `:has()` lo applica solo dove la fascia c'e' davvero. */
-  .block-container:has(.st-key-barra) {{ padding-bottom: 9rem; }}
+  /* 15rem e non 9: la barra con riepilogo, avvisi e nota arriva a ~200px,
+     e il pannello aperto dell'ultima riga finiva sotto (visto dall'utente). */
+  .block-container:has(.st-key-barra) {{ padding-bottom: 15rem; }}
+  /* I messaggi in alto a destra (st.toast): col fondo di Streamlit erano
+     tono su tono e passavano inosservati (segnalato dall'utente). Un
+     riquadro rialzato, bordo vivo, una striscia d'accento e un'ombra. */
+  [data-testid="stToast"] {{ background: var(--sidebar2) !important;
+      border: 1px solid var(--borderHover) !important;
+      border-left: 3px solid var(--primary) !important;
+      box-shadow: 0 10px 28px rgb(var(--shadowRgb) / .5) !important; }}
+  [data-testid="stToast"] p, [data-testid="stToast"] [data-testid="stMarkdownContainer"] {{
+      color: var(--textPrimary) !important; font-weight: 500; }}
 
   /* Rotella dell'analisi in corso. Gira davvero: è l'unico posto dove
      un'animazione continua ha senso, perché dice "sto lavorando" e la
@@ -3756,7 +3792,7 @@ STYLE = f"""
       box-shadow: none !important; border: 1px solid var(--primary) !important;
       border-left-width: 3px !important; background: rgb(var(--primaryRgb) / .05) !important;
       margin: 0 !important; }}
-  .au-riga-avanz {{ padding: 4px 0 0 48px; }}
+  .au-riga-avanz {{ padding: 4px 0 16px 48px; }}
   .au-riga-testa {{ display: flex; align-items: center; gap: 14px; }}
   .au-riga-testa .au-riga-barra {{ flex: 1; margin: 0; }}
   .au-riga-testa b {{ font: 500 12.5px var(--mono); color: var(--primaryText); }}
@@ -3778,13 +3814,18 @@ STYLE = f"""
   .au-riga-dett {{ margin-top: 10px; padding: 8px 12px; border-radius: 6px;
       background: var(--insetBackground); border: 1px solid var(--borderColor);
       font: 400 11.5px var(--mono); color: var(--textCode); }}
-  [class*="st-key-log_"] {{ margin: -38px 12px 0 auto; width: auto !important;
-      position: relative; z-index: 2; }}
-  [class*="st-key-log_"] button {{ min-height: 0; padding: 0; text-decoration: underline;
-      color: var(--textSecondary) !important; font-size: 12px; }}
+  /* Il riquadro del dettaglio: testo a sinistra, «Mostra il log» a destra
+     sulla stessa linea; sotto, il respiro fino al bordo della riga (prima
+     il riquadro toccava il fondo, visto dall'utente). */
+  .au-riga-dett {{ display: flex; align-items: center; gap: 16px; }}
+  .au-riga-dett > span {{ flex: 1; min-width: 0; }}
+  a.au-log {{ flex: none; font: 500 12px var(--font); color: var(--textSecondary) !important;
+      text-decoration: underline; text-underline-offset: 2px; }}
+  a.au-log:hover {{ color: var(--textPrimary) !important; }}
+  [class*="st-key-log_"],
+  [data-testid="stElementContainer"]:has(> [class*="st-key-log_"]) {{ display: none !important; }}
 
   .au-riga-avanz {{ padding-right: 18px; box-sizing: border-box; }}
-  [class*="st-key-log_"] {{ margin-top: -34px; margin-right: 30px; }}
   .st-key-barra [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:last-child
       [data-testid="stHorizontalBlock"] {{ justify-content: flex-end; gap: 10px; }}
   .st-key-barra button {{ min-height: 40px; height: 40px; padding: 0 18px;
@@ -4004,7 +4045,6 @@ STYLE = f"""
   .au-fatta {{ background: var(--greenBg) !important; border-color: rgb(var(--greenRgb) / .3) !important;
       color: var(--greenText) !important; }}
   .au-finito, [class*="st-key-jrow"]:has(.au-fatta) .au-stima-riga {{ color: var(--greenText); }}
-  .au-riga-dett {{ padding-right: 110px; }}
   .st-key-pausa_tutto button p, [class*="st-key-riprendi_tutto"] button p {{
       color: var(--textPrimary) !important; }}
   .st-key-ferma_tutto button {{ background: transparent !important;
@@ -4291,7 +4331,7 @@ def _deduplica_dei_file_avviati() -> dict[str, tuple[float, int]]:
     aggiornamento istantaneo su una scala di ore.
     """
     fuori: dict[str, float] = {}
-    for lavoro in monitor.lavori():
+    for lavoro in monitor.lavori(recente=1.0):
         misura = monitor.dedup_esatta(lavoro.cartella)
         if misura is not None and lavoro.sorgente:
             # `setdefault` e non assegnazione: `monitor.lavori()` torna i vivi
@@ -4359,13 +4399,13 @@ def _stato_fasi() -> dict:
         stato["voce"] = t("fasi.stato_confronto", pct=pct)
         stato["attivo"] = True
     catena = monitor.catena()
-    vivo = next((l for l in monitor.lavori() if l.vivo), None)
+    vivo = next((l for l in monitor.lavori(recente=1.0) if l.vivo), None)
     if catena or vivo:
         numero = int((catena or {}).get("numero") or 1)
         totale = int((catena or {}).get("totale") or 1)
         # Lo stesso numero della barra della riga: il file intero, non la
         # fase in corso (vedi `_riempimento`).
-        pct = int(100 * _riempimento(vivo)) if vivo and vivo.totale else 0
+        pct = round(100 * _riempimento(vivo)) if vivo and vivo.totale else 0
         stato["Lavorazione"] = t("fasi.lav_corso", numero=numero,
                                  totale=totale, pct=pct)
         stato["linea"]["Lavorazione"] = pct / 100
@@ -4783,7 +4823,7 @@ def _ripristina_parametri(ricetta: dict) -> None:
 def _ricetta_sospesa() -> dict:
     """La ricetta del file sospeso più recente (per l'avviso in sidebar)."""
     migliore, quando = {}, 0.0
-    for lav in monitor.lavori():
+    for lav in monitor.lavori(recente=1.0):
         if lav.vivo:
             continue
         f = lav.cartella / "parameters.json"
@@ -5112,7 +5152,7 @@ def _taratura_intro() -> None:
                     unsafe_allow_html=True)
     else:
         st.markdown(f"<div class='au-tar-mono'>{t('lav.tar_mai')}</div>", unsafe_allow_html=True)
-    occupata = (any(l.vivo for l in monitor.lavori()) or monitor.catena() is not None
+    occupata = (any(l.vivo for l in monitor.lavori(recente=1.0)) or monitor.catena() is not None
                 or monitor.pausa() is not None or confronto.in_corso())
     if occupata:
         st.markdown(f"<div class='au-box-rosso au-box-icona'>{_svg(_I_INFO, 15, 2)}"
@@ -5601,7 +5641,7 @@ def _motivo_blocco() -> str | None:
     parametri con cui e' partito) e confonderebbe la pagina.
     """
     if (monitor.catena() is not None or monitor.pausa() is not None
-            or monitor.lancio_vivo() or any(l.vivo for l in monitor.lavori())):
+            or monitor.lancio_vivo() or any(l.vivo for l in monitor.lavori(recente=1.0))):
         return "lavoro"
     if confronto.in_corso():
         return "confronto"
@@ -7662,7 +7702,7 @@ def page_lavorazione(cfg: dict) -> None:
     # era solo qui, il confronto la' sotto risultava sempre in disaccordo e
     # forzava un rerun completo ogni 5 secondi per tutta la pausa — la
     # tempesta di rerun che fa comparire liste duplicate transitorie.
-    armato = (any(l.vivo for l in monitor.lavori())
+    armato = (any(l.vivo for l in monitor.lavori(recente=1.0))
               or monitor.pausa() is not None
               or monitor.catena() is not None
               # Il cuscinetto post-Avvia: la fase di analisi di un lotto
@@ -7875,7 +7915,7 @@ def _firma_stato() -> tuple:
     sono state scritte, se c'e' una pausa o una catena. Sono esattamente gli
     eventi che cambiano una chip, un pulsante o l'ordine delle righe.
     """
-    lavori = monitor.lavori()
+    lavori = monitor.lavori(recente=1.0)
     return (tuple(sorted((l.cartella.name, bool(l.vivo)) for l in lavori)),
             len(monitor.esiti() or {}),
             monitor.pausa() is not None,
@@ -7920,7 +7960,7 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
     """
     _controlla_firma()
 
-    lav = next((l for l in monitor.lavori()
+    lav = next((l for l in monitor.lavori(recente=1.0)
                 if l.cartella.name == cartella), None)
     if lav is None or not lav.vivo:
         return
@@ -7986,6 +8026,9 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
         dettaglio = " · ".join(pezzi)
     else:
         dettaglio = dett
+    chiave_log = "log_" + hashlib.sha1(str(cartella).encode()).hexdigest()[:10]
+    log = (f"<a class='au-log' data-preme='{chiave_log}' role='button'>"
+           f"{t('lav.mostra_log')}</a>" if lav.registro is not None else "")
     st.markdown(
         f"<div class='au-riga-avanz'>"
         f"<div class='au-riga-testa'><div class='au-riga-barra'>"
@@ -7993,15 +8036,19 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
         f"<b>{quota:.0%}</b></div>"
         f"<div class='au-riga-tappe'>{''.join(tappe)}"
         f"<span class='au-riga-misure'>{_pezzi(' · '.join(misure))}</span></div>"
-        f"<div class='au-riga-dett'>{_pezzi(dettaglio)}</div></div>",
+        f"<div class='au-riga-dett'><span>{_pezzi(dettaglio)}</span>{log}</div></div>",
         unsafe_allow_html=True)
     if lav.registro is not None:
-        if st.button(t("lav.mostra_log"), key=f"log_{cartella}", type="tertiary"):
+        # Il pulsante vero resta nascosto e lo preme il link dentro il
+        # riquadro: posato sopra con margini negativi non era mai allineato
+        # al testo accanto (visto dall'utente). La chiave e' un'impronta del
+        # nome: quello vero ha spazi e parentesi che non stanno in una classe.
+        if st.button(t("lav.mostra_log"), key=chiave_log, type="tertiary"):
             subprocess.run(["open", "-R", str(lav.registro)], check=False)
 
 
 def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
-    lavori_tutti = monitor.lavori()
+    lavori_tutti = monitor.lavori(recente=1.0)
     # I campioni per il ritmo, per cartella: ogni giro del fragment aggiunge
     # un punto; finestra di ~2 minuti per smorzare i singhiozzi della GPU.
     # Quando azzerare la finestra e quando tacere lo decide `monitor`, dove
@@ -8860,7 +8907,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
         # senza questa riga il file successivo parte senza che l'elenco se ne
         # accorga (visto dall'utente al primo cambio di file).
         _controlla_firma()
-        lavori_tutti = monitor.lavori()
+        lavori_tutti = monitor.lavori(recente=1.0)
         catena_ora = monitor.catena()
         pausa_ora = monitor.pausa()
         gpu_occupata = (any(l.vivo for l in lavori_tutti)
@@ -9012,8 +9059,8 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     a.markdown(f"<div class='au-catena'>{testo}</div>",
                                unsafe_allow_html=True)
             elif in_avvio:
-                a.markdown(f"<div class='au-catena'>{t('lavb.avvio_in_corso')}</div>",
-                           unsafe_allow_html=True)
+                a.markdown(f"<div class='au-avvio'><span class='au-rotella'></span>"
+                           f"{t('lavb.avvio_in_corso')}</div>", unsafe_allow_html=True)
             elif not coda:
                 a.markdown(f"<span class='au-hint'>{t('lavb.nessun_file')}</span>",
                            unsafe_allow_html=True)
@@ -9122,9 +9169,13 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                                unsafe_allow_html=True)
                 # La didascalia diceva a parole proprio quello che ora l'estremo
                 # basso calcola: descriveva un valore che non veniva mostrato.
-                a.markdown(f"<span class='au-meta'>{t('lavb.tempo_minimo')} "
-                           f"{_nota_taratura()}</span>",
-                           unsafe_allow_html=True)
+                # In un posto suo: al clic su Avvia si trasforma subito
+                # nell'avviso d'avvio (vedi sotto), invece di restare li'
+                # mentre la pagina sembra bloccata.
+                nota_barra = a.empty()
+                nota_barra.markdown(f"<div class='au-barra-nota'>{t('lavb.tempo_minimo')} "
+                                    f"{_nota_taratura()}</div>",
+                                    unsafe_allow_html=True)
                 # Un pulsante solo: i dettagli ora vivono dentro le righe, come
                 # nei Sorgenti, e non serve più un interruttore globale.
                 with azioni:
@@ -9146,6 +9197,12 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                         # — archiviata di nuovo l'uscita appena prodotta, che è
                         # il gesto normale — il file sarebbe rientrato in coda
                         # senza passare per la conferma che serve a imporre.
+                        # Subito, PRIMA del lavoro: `_avvia` prepara i file e
+                        # puo' metterci parecchi secondi, e senza un segno la
+                        # pagina sembrava bloccata (segnalato dall'utente).
+                        nota_barra.markdown(
+                            f"<div class='au-avvio'><span class='au-rotella'></span>"
+                            f"{t('lavb.avvio_in_corso')}</div>", unsafe_allow_html=True)
                         if _avvia(piani, cfg):
                             st.session_state["rifai_comunque"] = set()
                             st.session_state["attesa_avvio"] = time.time()
@@ -9918,6 +9975,16 @@ def _cassetto_sidebar() -> None:
         "W.auCartellaScelta=()=>{const x=D.querySelector('.st-key-applicaCartella button');if(x)x.click();};"
         # Il fumetto del percorso intero si accende solo se il percorso e'
         # davvero tagliato dai puntini (vedi `_percorso`).
+        # Un fumetto che uscirebbe dalla finestra si apre verso l'interno:
+        # centrato sull'icona, quelli delle stime in fondo alle righe della
+        # Lavorazione finivano tagliati a destra (segnalato dall'utente).
+        "if(!W.auBordo){W.auBordo=1;D.addEventListener('pointerover',e=>{"
+        "const i=e.target.closest&&e.target.closest('.au-info,.au-perche');if(!i)return;"
+        "const b=i.querySelector('.au-bolla');if(!b)return;"
+        "i.classList.remove('au-a-destra','au-a-sinistra');"
+        "const r=i.getBoundingClientRect(),m=r.left+r.width/2,w=b.offsetWidth;"
+        "if(m+w/2>W.innerWidth-12)i.classList.add('au-a-destra');"
+        "else if(m-w/2<12)i.classList.add('au-a-sinistra');},true);}"
         "if(!W.auTronco){W.auTronco=1;D.addEventListener('pointerover',e=>{"
         "const w=e.target.closest&&e.target.closest('.au-perc');if(!w)return;"
         "const c=w.querySelector('code');w.classList.toggle('au-tronco',!!c&&c.scrollWidth>c.clientWidth+1);},true);}"
