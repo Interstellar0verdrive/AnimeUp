@@ -118,6 +118,11 @@ TERNE: dict[str, tuple[str, str]] = {
     # Le velature "piu' chiaro del fondo" del tema scuro, che sul chiaro
     # devono diventare "piu' scuro del fondo".
     "overlayRgb":  ("255 255 255", "0 0 0"),
+    # Il fondo della riga aperta in Sorgenti: sullo scuro la velatura di
+    # sempre, sul chiaro bianca come le righe chiuse (utente).
+    "openRowBg":   ("rgb(255 255 255 / .03)", "#FFFFFF"),
+    # ...e il pannello dei dettagli che si apre sotto (Sorgenti e Lavorazione).
+    "openPanelBg": ("var(--insetBackground)", "#FFFFFF"),
 }
 
 

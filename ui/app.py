@@ -2254,7 +2254,7 @@ STYLE = f"""
   /* Come per il passaggio del mouse: `border-color` avrebbe riscritto anche
      il lato sinistro, cancellando il colore dello stato sulla riga aperta. */
   [class*="st-key-riga"]:has(.au-open) {{
-      background: rgb(var(--overlayRgb) / .03);
+      background: var(--openRowBg);
       border-top-color: {BORDO_VIVO}; border-right-color: {BORDO_VIVO};
       border-bottom-color: {BORDO_VIVO}; }}
 
@@ -2339,7 +2339,7 @@ STYLE = f"""
       transition: grid-template-rows .22s cubic-bezier(.4,0,.2,1),
                   opacity .18s ease, padding .22s ease,
                   border-top-color .22s ease;
-      background: var(--insetBackground);
+      background: var(--openPanelBg);
       border-top: 1px solid transparent;
       border-radius: 0 0 6px 6px; }}
   /* Aperto: la traccia prende l'altezza del contenuto e tornano spaziatura,
