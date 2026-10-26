@@ -126,6 +126,7 @@ def measure_frame_differences(
     *,
     pattern: str = "%08d.png",
     paths: Paths | None = None,
+    progresso: str | None = None,
 ) -> list[float]:
     """Differenza massima su singolo pixel fra fotogrammi consecutivi.
 
@@ -162,13 +163,27 @@ def measure_frame_differences(
             "-filter_complex", grafo, "-map", "[out]",
             "-an", "-sn", "-f", "null", "-",
         ]
+        if progresso:
+            # Con `progresso` (un nome nella cartella SOPRA i fotogrammi, cioe'
+            # quella del lavoro) ffmpeg vi riscrive ogni mezzo secondo a che
+            # fotogramma e' (`frame=N`): il monitor lo legge e la pagina puo'
+            # dire «fotogrammi ripetuti, 12.000 di 30.210». Senza, questi
+            # minuti a GPU ferma passavano per un upscale bloccato a 0
+            # (segnalato dall'utente: sei minuti su un episodio da un disco
+            # USB). Non il file delle misure: quello ffmpeg lo scrive tutto
+            # alla fine. Relativo alla cwd, come l'ingresso.
+            cmd[1:1] = ["-progress", f"../{progresso}", "-stats_period", "0.5"]
         # Misurato sui fotogrammi veri: 102 fotogrammi al secondo,
         # cioè circa tre minuti su un episodio intero. La misura sui
         # tre piani costa 1.4 volte quella sulla sola luminanza.
-        run_stderr(cmd, cwd=frames_dir, timeout=4 * 3600)
-        if not metrics.is_file():
-            return []
-        return [float(m) for m in _YMAX.findall(metrics.read_text())]
+        try:
+            run_stderr(cmd, cwd=frames_dir, timeout=4 * 3600)
+            if not metrics.is_file():
+                return []
+            return [float(m) for m in _YMAX.findall(metrics.read_text())]
+        finally:
+            if progresso:
+                (frames_dir.parent / progresso).unlink(missing_ok=True)
 
 
 FINESTRE_CAMPIONE = 6

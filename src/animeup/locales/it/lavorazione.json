@@ -154,5 +154,7 @@
   "lav.fine_testo_non_avviato": "La coda si è fermata prima di arrivare a questo file.",
   "lav.fine_motivo_difettoso": "difettoso",
   "lav.fine_testo_difettoso": "L'uscita non ha passato i controlli ed è stata messa da parte come .DEFECTIVE. Rilancialo.",
-  "lav.tar_ferma": "Ferma la calibrazione"
+  "lav.tar_ferma": "Ferma la calibrazione",
+  "lav.av_deduplica": "ricerca dei fotogrammi ripetuti",
+  "lav.tappa1_dedup": "Fotogrammi ripetuti"
 }

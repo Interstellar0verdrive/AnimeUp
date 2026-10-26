@@ -120,6 +120,9 @@ class JobError(RuntimeError):
 #  pause successive.
 SOSPESO = ".suspended"
 PAUSE_TOTALI = ".paused_seconds"
+# Le misure della ricerca dei fotogrammi ripetuti, scritte mentre avanzano:
+# il monitor le conta per mostrare la fase (vedi `dd.measure_frame_differences`).
+FILE_CONFRONTO = ".dedup-progress"
 
 
 def _chiudi_pausa_aperta(work: Path) -> None:
@@ -1041,7 +1044,8 @@ class Job:
                 cache.unlink(missing_ok=True)
 
         p.say(t("mot.pipe.fase_deduplica"), t("mot.pipe.misura_differenze"))
-        diffs = dd.measure_frame_differences(self.frames_dir, paths=self.paths)
+        diffs = dd.measure_frame_differences(self.frames_dir, paths=self.paths,
+                                             progresso=FILE_CONFRONTO)
         if not diffs:
             warnings.append(t("mot.pipe.misura_fallita"))
             return None

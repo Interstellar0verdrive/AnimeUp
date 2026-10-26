@@ -4325,8 +4325,9 @@ def _stato_fasi() -> dict:
     if catena or vivo:
         numero = int((catena or {}).get("numero") or 1)
         totale = int((catena or {}).get("totale") or 1)
-        pct = (int(100 * vivo.fatti / vivo.totale)
-               if vivo and vivo.totale else 0)
+        # Lo stesso numero della barra della riga: il file intero, non la
+        # fase in corso (vedi `_riempimento`).
+        pct = int(100 * _riempimento(vivo)) if vivo and vivo.totale else 0
         stato["Lavorazione"] = t("fasi.lav_corso", numero=numero,
                                  totale=totale, pct=pct)
         stato["linea"]["Lavorazione"] = pct / 100
@@ -7688,30 +7689,30 @@ def _resto_misurato(lav, campioni: dict, stati: dict | None = None,
 
 
 def _riempimento(lav) -> float:
-    """Quanto riempire la barra della riga, 0..1.
+    """Quanto e' avanti il FILE intero, 0..1: la barra della riga e il suo
+    numero.
 
-    Nelle prime due fasi e' la frazione di fotogrammi elaborati. Nella TERZA
-    no: li' i fotogrammi sono tutti fatti per definizione, quindi la barra
-    sarebbe piena al 100% mentre il testo accanto dice «26%» — due misure
-    diverse una sopra l'altra, che si contraddicono a colpo d'occhio
-    (segnalato dall'utente il 12/08 guardando una fase 3 in corso).
+    Prima la barra seguiva la fase in corso: piena al 90% a fine estrazione
+    e di nuovo vuota all'inizio dell'upscale. Sembrava l'avanzamento del
+    file e non lo era (segnalato dall'utente). Ora ogni fase ha una fetta
+    proporzionata a quanto dura davvero su un episodio — misurato su un
+    1080p da 30.210 fotogrammi: estrazione ~13 minuti, ricerca dei ripetuti
+    ~6, upscale e codifica dei blocchi ore, montaggio finale pochi minuti —
+    e la barra cresce una volta sola, senza mai tornare indietro. La fase
+    in corso la dicono le tappe sotto, con le loro misure.
 
-    In fase 3 la barra segue quindi il lavoro che RESTA davvero, che il
-    monitor gia' misura contando i pacchetti scritti: la prima meta' e' la
-    codifica dell'ultimo blocco, la seconda il montaggio del file finale.
-    Cosi' la barra cresce una volta sola da 0 a 1 e non torna indietro fra i
-    due sottopassi.
+    In codifica finale i fotogrammi sono tutti fatti per definizione: li' la
+    barra segue i pacchetti scritti, prima dell'ultimo blocco e poi del file
+    finale, che il monitor gia' conta.
     """
-    # Le prime due fasi si fermano al 90%: alla fine dell'upscale il file NON
-    # e' pronto, restano la codifica dell'ultimo blocco e il montaggio. Il
-    # restante 10% e' loro. Cosi' la barra non torna mai indietro — la prima
-    # versione di questa funzione faceva crollare la barra dal 100% al 13%
-    # entrando in fase 3, che e' peggio del difetto che doveva curare.
-    if lav.fase != "codifica finale":
-        return lav.frazione * 0.9
+    fette = {"estrazione": (0.0, 0.04), "deduplica": (0.04, 0.06),
+             "elaborazione": (0.06, 0.96), "codifica blocco": (0.06, 0.96)}
+    if lav.fase in fette:
+        da, a = fette[lav.fase]
+        return da + (a - da) * lav.frazione
     quota = max(0.0, min(1.0, lav.codifica_frazione))
     dentro = 0.5 + quota / 2 if lav.sottopasso == "montaggio" else quota / 2
-    return 0.9 + dentro * 0.1
+    return 0.96 + dentro * 0.04
 
 
 def _avanzamento_testo(lav, campioni: dict, stati: dict | None = None,
@@ -7756,11 +7757,11 @@ def _avanzamento_testo(lav, campioni: dict, stati: dict | None = None,
         return t("lav.av_fase2_codifica", perc=perc, quale=quale,
                  fatti=lav.fatti, totale=lav.totale,
                  trascorso=monitor.trascorso(lav))
-    numero = "1/3" if lav.fase == "estrazione" else "2/3"
-    nome_fase = "estrazione" if lav.fase == "estrazione" else "upscale"
+    numero = "1/3" if lav.fase in ("estrazione", "deduplica") else "2/3"
+    nome_fase = lav.fase if lav.fase in ("estrazione", "deduplica") else "upscale"
     # `nome_fase` si confronta qui sotto: a schermo va la sua traduzione.
-    scritta_fase = (t("lav.av_estrazione") if nome_fase == "estrazione"
-                    else t("lav.av_upscale"))
+    scritta_fase = {"estrazione": t("lav.av_estrazione"),
+                    "deduplica": t("lav.av_deduplica")}.get(nome_fase, t("lav.av_upscale"))
     if not lav.totale:
         # Estrazione appena nata, prima di state.json: il totale non è
         # ancora noto, ma dire QUANTI fotogrammi stanno uscendo è già la
@@ -7779,8 +7780,12 @@ def _avanzamento_testo(lav, campioni: dict, stati: dict | None = None,
                   if lav.blocchi_totali and nome_fase == "upscale" else "")
     testo = t("lav.av_fotogrammi", numero=numero, fase=scritta_fase,
               fatti=lav.fatti, totale=lav.totale, nel_blocco=nel_blocco)
-    ritmo = monitor.andatura(campioni.get(lav.cartella.name, []))
-    resta = _resto_misurato(lav, campioni, stati, turno_stimato, ritmo=ritmo)
+    # Il ritmo del confronto fra fotogrammi non dice niente di quello
+    # dell'upscale che verra': niente fps ne' tempo che resta, qui.
+    ritmo = (monitor.andatura(campioni.get(lav.cartella.name, []))
+             if nome_fase != "deduplica" else None)
+    resta = (_resto_misurato(lav, campioni, stati, turno_stimato, ritmo=ritmo)
+             if ritmo else None)
     if ritmo and resta is not None:
         testo += f" · ~{ritmo:.1f} fps · {t('lav.av_restano', resta=hms(resta))}"
     if monitor.trascorso(lav):
@@ -7808,7 +7813,7 @@ def _scheda_monitor(lav, campioni: dict, stati: dict | None = None) -> str:
         f"<span class='au-tag au-dim'>{esc(lav.modello)}</span>"
         f"<span class='au-mon-dx'>{extra}</span></div>"
         f"<div class='au-mon-barra'><span style='width:"
-        f"{lav.frazione * 100:.1f}%'></span></div>"
+        f"{_riempimento(lav) * 100:.1f}%'></span></div>"
         + (f"<div class='au-mon-log'>{esc(riga_log[-160:])}</div>"
            if lav.vivo and riga_log else "")
         + "</div>")
@@ -7881,9 +7886,9 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
         st.markdown(
             f"<div class='au-riga-avanz'>"
             f"<div class='au-riga-barra au-riga-ferma'>"
-            f"<span style='width:{lav.frazione * 100:.1f}%'></span></div>"
+            f"<span style='width:{_riempimento(lav) * 100:.1f}%'></span></div>"
             f"<span class='au-meta'>"
-            + t("lav.av_in_pausa", perc=f"{lav.frazione:.0%}",
+            + t("lav.av_in_pausa", perc=f"{_riempimento(lav):.0%}",
                 fatti=lav.fatti, totale=lav.totale)
             + "</span>"
             f"</div>", unsafe_allow_html=True)
@@ -7895,9 +7900,9 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
     quota = _riempimento(lav)
     # Le tre tappe, con quella in corso evidenziata: estrazione, upscale (che
     # si alterna con la codifica dei blocchi), codifica finale e montaggio.
-    corrente = {"estrazione": 1, "elaborazione": 2, "codifica blocco": 2,
-                "codifica finale": 3}.get(lav.fase, 2)
-    nomi = [t("lav.tappa1"),
+    corrente = {"estrazione": 1, "deduplica": 1, "elaborazione": 2,
+                "codifica blocco": 2, "codifica finale": 3}.get(lav.fase, 2)
+    nomi = [t("lav.tappa1_dedup") if lav.fase == "deduplica" else t("lav.tappa1"),
             t("lav.tappa2_cpu") if lav.fase == "codifica blocco" else t("lav.tappa2"),
             t("lav.tappa3")]
     tappe = []
@@ -8704,7 +8709,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                 elif concluso:
                     dett = t("lavb.concluso_residuo")
                 else:
-                    dett = t("lavb.fermo_al", quota=f"{lav.frazione:.0%}",
+                    dett = t("lavb.fermo_al", quota=f"{_riempimento(lav):.0%}",
                              fatti=lav.fatti, totale=lav.totale)
                 # Solo per le righe FERME: quella viva l'ha gia' disegnata il
                 # suo riquadro qui sopra, e ridisegnarla qui la
@@ -8713,7 +8718,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     st.markdown(
                         f"<div class='au-riga-avanz'>"
                         f"<div class='au-riga-barra au-riga-ferma'>"
-                        f"<span style='width:{lav.frazione * 100:.1f}%'>"
+                        f"<span style='width:{_riempimento(lav) * 100:.1f}%'>"
                         f"</span></div>"
                         f"<span class='au-meta'>{esc(dett)}</span></div>",
                         unsafe_allow_html=True)

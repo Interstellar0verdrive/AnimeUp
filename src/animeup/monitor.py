@@ -24,7 +24,7 @@ from pathlib import Path
 from . import su_disco
 from .models import CATALOG
 from .paths import PATHS, Paths
-from .pipeline import _processo_vivo
+from .pipeline import FILE_CONFRONTO, _processo_vivo
 
 _SEGMENTO = re.compile(r"seg(\d{8})-(\d{8})\.mkv")
 _CODA_DIR = re.compile(r" \d{4}-\d{2}-\d{2} [0-9a-f]{8}$")
@@ -68,7 +68,7 @@ class StatoLavoro:
     sorgente: str           # il NOME FILE del sorgente, dalla firma: è la
                             # chiave con cui la riga dell'elenco si riconosce
     vivo: bool              # il PID nel lucchetto è un processo attivo
-    fase: str               # "estrazione" | "elaborazione"
+    fase: str               # "estrazione" | "deduplica" | "elaborazione" | ...
     fatti: int              # fotogrammi sorgente già superati
     totale: int
     modello: str
@@ -103,6 +103,9 @@ class StatoLavoro:
             return ""
         righe = [r.strip() for r in code.splitlines() if r.strip()]
         return righe[-1] if righe else ""
+
+
+_FRAME_PROGRESSO = re.compile(r"^frame=(\d+)", re.M)
 
 
 def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
@@ -209,6 +212,18 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
         fase = "elaborazione"
     elif estratti and totale and estratti < totale:
         fase, fatti = "estrazione", estratti
+    elif (cartella / FILE_CONFRONTO).is_file() and not (cartella / "dedup.json").is_file():
+        # Fra estrazione e upscale: ffmpeg confronta ogni fotogramma col
+        # precedente per trovare quelli ripetuti. Minuti di CPU a GPU ferma
+        # che prima comparivano come «upscale 0 di 30.210» — sembrava tutto
+        # bloccato (segnalato dall'utente). Ogni fotogramma confrontato
+        # fa avanzare il `frame=N` che ffmpeg riscrive nel file di progresso.
+        fase = "deduplica"
+        try:
+            visti = _FRAME_PROGRESSO.findall((cartella / FILE_CONFRONTO).read_text())
+            fatti = int(visti[-1]) if visti else 0
+        except (OSError, ValueError):
+            fatti = 0
     else:
         fase = "elaborazione"
 
@@ -238,7 +253,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
     registro = _registro_di(nome, logs)
 
     b_fatti = b_tot = b_n = b_tutti = 0
-    if blocco and totale and fatti < totale:
+    if blocco and totale and fatti < totale and fase != "deduplica":
         b_n = n_segmenti + 1
         b_tutti = -(-totale // blocco)          # arrotonda in su
         b_tot = min(blocco, totale - fine_segmenti)
