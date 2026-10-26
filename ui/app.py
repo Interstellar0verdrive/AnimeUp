@@ -3248,6 +3248,17 @@ STYLE = f"""
       opacity: 1; transform: translateX(-50%) translateY(0);
       transition: opacity .12s ease 0s, transform .12s ease 0s; }}
   .au-agg-tip .au-bolla {{ white-space: nowrap; width: max-content; max-width: none; }}
+  /* «Rianalizza tutti»: il fumetto sopra il pulsante, aperto verso
+     sinistra (il pulsante sta sul bordo destro della pagina). */
+  .st-key-rianRiga {{ position: relative; width: auto !important; flex: none; gap: 0 !important; }}
+  .st-key-rianRiga [data-testid="stElementContainer"]:has(.au-rian-tip) {{
+      position: absolute; left: 50%; top: 0; width: 0; height: 0; margin: 0; }}
+  .st-key-rianRiga [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .au-rian-tip {{ position: absolute; left: 0; top: 0; width: 0; height: 0; }}
+  .au-rian-tip .au-bolla {{ max-width: 300px; }}
+  .st-key-rianRiga:has(.st-key-rianTutti button:hover) .au-rian-tip .au-bolla {{
+      opacity: 1; transform: translateY(0) !important;
+      transition: opacity .12s ease 0s, transform .12s ease 0s; }}
   /* La risposta del controllo aggiornamenti, al centro (vedi `_modale_esito_agg`). */
   [role="dialog"]:has(.au-esito-agg) > h2 {{ position: absolute; width: 1px; height: 1px;
       overflow: hidden; clip-path: inset(50%); }}
@@ -4524,6 +4535,11 @@ class Analizzatore:
         # puo' fare (troppo corti): senza ricordarlo, ogni ricarica li
         # rimetteva in coda, per sempre.
         self._non_misurabili: set[str] = set()
+        # I file da rifare DA CAPO («Rianalizza tutti»): senza, con
+        # l'approfondita accesa il thread prendeva la via della sola misura,
+        # che riusa il referto in cassa — e se la misura c'era gia' non
+        # rifaceva niente. Il pulsante sembrava non fare nulla (utente).
+        self._rifare: set[str] = set()
         self._lock = threading.Lock()
         self._thread: threading.Thread | None = None
 
@@ -4557,6 +4573,7 @@ class Analizzatore:
             for p in da_fare:
                 if rifai:
                     self._non_misurabili.discard(str(p))   # si riprova
+                    self._rifare.add(str(p))
                 if approfondita:
                     self._approfondire.add(str(p))
                 # Il file IN CORSO non si riaccoda: la sua cache non è ancora
@@ -4586,6 +4603,12 @@ class Analizzatore:
             try:
                 with self._lock:
                     approfondire = str(p) in self._approfondire
+                    da_capo = str(p) in self._rifare
+                    self._rifare.discard(str(p))
+                if da_capo:
+                    # Prima il referto nuovo (senza la misura), poi, se
+                    # richiesta, la misura sopra quello nuovo.
+                    library.analyse(p, force=True)
                 if approfondire:
                     # Riusa il referto gia' in cassa e ci aggiunge la misura:
                     # l'analisi veloce fatta prima non viene rifatta.
@@ -4594,7 +4617,7 @@ class Analizzatore:
                         self._approfondire.discard(str(p))
                         if esito is None or esito.dedup_campione is None:
                             self._non_misurabili.add(str(p))
-                else:
+                elif not da_capo:
                     library.analyse(p, force=True)
             except Exception:                              # noqa: BLE001
                 # Un file illeggibile non deve fermare la coda, ne' tornarci.
@@ -6983,12 +7006,17 @@ def page_sorgenti(cfg: dict) -> None:
             unsafe_allow_html=True)
         if st.button(t("src.apri_input"), key="apriInputPieno"):
             subprocess.run(["open", str(PATHS.input)], check=False)
-        if st.button(t("src.rianalizza_tutti"), key="rianTutti",
-                     disabled=in_analisi, help=t("src.rianalizza_tutti_aiuto")):
-            analizzatore().accoda([Path(f["path"]) for f in files],
-                                  approfondita=cfg.get("approfondita", True),
-                                  rifai=True)
-            st.rerun()
+        # Il fumetto nostro e non `help=`: quello di Streamlit e' un
+        # rettangolo senza punta, diverso da tutti gli altri (utente).
+        with st.container(key="rianRiga"):
+            st.markdown("<span class='au-info au-a-destra au-rian-tip' aria-hidden='true'>"
+                        f"{_bolla(t('src.rianalizza_tutti_aiuto'))}</span>",
+                        unsafe_allow_html=True)
+            if st.button(t("src.rianalizza_tutti"), key="rianTutti", disabled=in_analisi):
+                analizzatore().accoda([Path(f["path"]) for f in files],
+                                      approfondita=cfg.get("approfondita", True),
+                                      rifai=True)
+                st.rerun()
 
     # Una fascia sola: quanti file, quanto video, le soglie, gli avvisi, e a
     # destra l'analisi che avanza (in ciano: e' un processo attivo, non un
