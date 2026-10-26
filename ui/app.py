@@ -84,6 +84,16 @@ def _bolla(testo: str) -> str:
             f"{esc(testo)}</span></span>")
 
 
+def _percorso(percorso: str | Path, classe: str) -> str:
+    """Il percorso di una cartella, tagliato coi puntini se non ci sta, con
+    sopra il fumetto che lo mostra intero. Il fumetto si apre solo quando il
+    taglio c'e' davvero: lo decide lo script della pagina al passaggio
+    (classe `au-tronco`), perche' dal CSS non si sa se un testo trabocca."""
+    testo = esc(_breve(percorso))
+    return (f"<span class='au-perc'><code class='{classe}'>{testo}</code>"
+            f"<span class='au-bolla'><span class='au-bolla-riga'>{testo}</span></span></span>")
+
+
 def _icona_aiuto(testo: str, predefinito: str = "", ripristina: str | None = None) -> str:
     """Il "?" con il fumetto NOSTRO, da mettere accanto a un'etichetta.
 
@@ -3223,6 +3233,22 @@ STYLE = f"""
       text-overflow: ellipsis; font: 400 13px var(--mono) !important;
       color: var(--textPrimary) !important; background: none !important;
       padding: 0 !important; }}
+  /* Percorso e pulsanti centrati sulla stessa linea: il paragrafo che
+     Streamlit mette attorno al percorso portava 14px di margine sotto, e il
+     testo finiva 7px piu' in alto dei pulsanti (segnalato dall'utente). */
+  :is(.st-key-percInput, .st-key-percOutput, [class*="st-key-cCartellaPerc"]) p {{
+      margin: 0 !important; }}
+  .au-perc {{ display: block; position: relative; min-width: 0; }}
+  /* Il fumetto del percorso intero: ancorato a sinistra (un percorso si
+     legge dall'inizio), a capo dove serve anche a meta' nome, e aperto
+     solo se il percorso e' tagliato. */
+  .au-perc .au-bolla, [data-testid="stSidebar"] .au-perc .au-bolla {{
+      left: 0; transform: translateY(3px); max-width: 520px;
+      font: 400 12px var(--mono); overflow-wrap: anywhere; }}
+  [data-testid="stSidebar"] .au-perc .au-bolla {{ max-width: 260px; }}
+  .au-perc .au-bolla::before {{ left: 24px; }}
+  .au-perc.au-tronco:hover .au-bolla {{ opacity: 1; transform: translateY(0);
+      transition: opacity .12s ease 0s, transform .12s ease 0s; }}
   .st-key-percInput button, .st-key-percOutput button {{ height: 34px;
       min-height: 34px; white-space: nowrap; }}
   .st-key-percOutput button {{ height: 30px; min-height: 30px; }}
@@ -5356,9 +5382,15 @@ def _applica_cartella(quale: str, scelta: str) -> None:
     if quale == "output" and nuova != PATHS.output.resolve():
         # Le lavorazioni interrotte restano nella JOBS di prima, e da qui
         # non si vedrebbero piu': lo si dice prima, non dopo.
+        # Contano solo le cartelle che una lavorazione ha davvero lasciato
+        # (la ricetta, lo stato o il lucchetto): contandole tutte, due
+        # cartelle vuote finite in JOBS facevano dire «2 lavorazioni
+        # interrotte» a chi non ne aveva nessuna (successo).
         try:
             lasciati = sum(1 for d in PATHS.work.iterdir()
-                           if d.is_dir() and not d.name.startswith("."))
+                           if d.is_dir() and not d.name.startswith(".")
+                           and any((d / f).is_file() for f in
+                                   ("state.json", "parameters.json", "running.lock")))
         except OSError:
             lasciati = 0
         if lasciati:
@@ -5458,7 +5490,7 @@ def _riga_cartella(quale: str, congelata: bool, dove=st) -> None:
             unsafe_allow_html=True)
         with st.container(horizontal=True, vertical_alignment="center",
                           key=f"cCartellaPerc_{quale}"):
-            st.markdown(f"<code class='au-percorso'>{esc(_breve(_cartella_attuale(quale)))}</code>",
+            st.markdown(_percorso(_cartella_attuale(quale), "au-percorso"),
                         unsafe_allow_html=True)
             st.button(t("sb.cartella_cambia"), key=f"apriCartella_{quale}",
                       disabled=congelata, on_click=_scegli_cartella, args=(quale,))
@@ -6136,8 +6168,7 @@ def _sorgenti_vuota(vuota: bool = True) -> None:
                     unsafe_allow_html=True)
                 with st.container(key="percInput", horizontal=True,
                                   vertical_alignment="center"):
-                    st.markdown(f"<code class='au-percorso-grande'>"
-                                f"{esc(_breve(PATHS.input))}</code>",
+                    st.markdown(_percorso(PATHS.input, "au-percorso-grande"),
                                 unsafe_allow_html=True)
                     if st.button(t("src.apri_input"), key="apriInput", type="primary",
                                  icon=":material/folder_open:"):
@@ -6159,8 +6190,7 @@ def _sorgenti_vuota(vuota: bool = True) -> None:
                     unsafe_allow_html=True)
                 with st.container(key="percOutput", horizontal=True,
                                   vertical_alignment="center"):
-                    st.markdown(f"<code class='au-percorso-grande'>"
-                                f"{esc(_breve(PATHS.output))}</code>",
+                    st.markdown(_percorso(PATHS.output, "au-percorso-grande"),
                                 unsafe_allow_html=True)
                     if app:
                         st.button(t("src.cambia"), key="cambiaOutput",
@@ -9784,6 +9814,11 @@ def _cassetto_sidebar() -> None:
         # il pulsante fa quello di sempre.
         f"W.auCartelle={json.dumps(cartelle)};"
         "W.auCartellaScelta=()=>{const x=D.querySelector('.st-key-applicaCartella button');if(x)x.click();};"
+        # Il fumetto del percorso intero si accende solo se il percorso e'
+        # davvero tagliato dai puntini (vedi `_percorso`).
+        "if(!W.auTronco){W.auTronco=1;D.addEventListener('pointerover',e=>{"
+        "const w=e.target.closest&&e.target.closest('.au-perc');if(!w)return;"
+        "const c=w.querySelector('code');w.classList.toggle('au-tronco',!!c&&c.scrollWidth>c.clientWidth+1);},true);}"
         "if(!W.auPannello){W.auPannello=1;D.addEventListener('click',e=>{"
         "const h=W.webkit&&W.webkit.messageHandlers&&W.webkit.messageHandlers.animeup;if(!h)return;"
         "const b=e.target.closest&&e.target.closest('[class*=\"st-key-apriCartella_\"] button,"
