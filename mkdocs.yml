@@ -23,6 +23,7 @@ nav:
   - Deep dives:
       - How a job works inside: guide/deep-dives/how-it-works.md
       - The models and when to use them: guide/deep-dives/models.md
+      - How much texture each model keeps: guide/deep-dives/texture-study.md
       - Newer anime models, compared: guide/deep-dives/model-study.md
       - Tuning notes: TUNING.md
 

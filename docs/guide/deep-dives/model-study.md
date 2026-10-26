@@ -9,7 +9,7 @@ description: "Six newer community upscaling models tested against the four Anime
 
 AnimeUp's models date from 2022. Since then the community has trained many anime models, and some are often recommended over Real-ESRGAN and Real-CUGAN. I tested six of them against the four models AnimeUp ships, on the same frames from 360p to 1080p: what they look like, how fast they are, and what it would take to offer them.
 
-You don't need this page to use AnimeUp. It explains why the model list is what it is, and what could change it.
+You don't need this page to use AnimeUp. It explains why the model list is what it is, and what could change it. What the four AnimeUp models do to paper, grain and skies is in [How much texture each model keeps](texture-study.md).
 
 ## In short
 
@@ -43,7 +43,7 @@ You don't need this page to use AnimeUp. It explains why the model list is what 
 
     ---
 
-    Added in AnimeUp 1.6.8. It keeps painted texture and draws weaker halos than Real-CUGAN no-denoise, at the same speed. On compressed sources it keeps the artefacts too.
+    Added in AnimeUp 1.6.8. It keeps painted texture and draws weaker halos than Real-CUGAN no-denoise, at the same speed. On compressed sources it keeps the artefacts too. More in [the texture study](texture-study.md).
 
 -   **Decision: nothing is added for now**
 

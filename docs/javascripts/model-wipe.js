@@ -3,7 +3,9 @@
    <div class="ms-wipe" data-right="cugan" markdown>
    ![](../img/model-study/<case>/wipe-original.webp){ .ms-a }
    </div>
-   The other versions are looked up next to that image as wipe-<model>.webp. */
+   The other versions are looked up next to that image as wipe-<model>.webp. Optional:
+   data-models="original lanczos …" limits the choice, data-stretch adds a contrast-stretched
+   view (wipe-<model>-x.webp). */
 (function () {
   const MODELS = [
     ["original", "Original (pixels enlarged)"],
@@ -20,11 +22,11 @@
     ["spanim", "ModernSpanimation V1"],
   ];
 
-  function select(label, value, onChange) {
+  function select(label, keys, value, onChange) {
     const wrap = document.createElement("label");
     wrap.textContent = label + " ";
     const s = document.createElement("select");
-    for (const [k, name] of MODELS) s.add(new Option(name, k, false, k === value));
+    for (const [k, name] of MODELS) if (keys.includes(k)) s.add(new Option(name, k, false, k === value));
     s.addEventListener("change", () => onChange(s.value));
     wrap.appendChild(s);
     return wrap;
@@ -36,9 +38,11 @@
     if (!a) return;
     box.dataset.ready = "1";
     const base = a.getAttribute("src").replace(/wipe-[a-z0-9]+\.webp$/, "");
-    const url = (k) => base + "wipe-" + k + ".webp";
-    const left = a.getAttribute("src").match(/wipe-([a-z0-9]+)\.webp$/)[1];
-    const right = box.dataset.right || "cugan";
+    const keys = box.dataset.models ? box.dataset.models.split(" ") : MODELS.map((m) => m[0]);
+    let stretched = false;
+    const url = (k) => base + "wipe-" + k + (stretched ? "-x" : "") + ".webp";
+    let left = a.getAttribute("src").match(/wipe-([a-z0-9]+)\.webp$/)[1];
+    let right = box.dataset.right || "cugan";
 
     const view = document.createElement("div");
     view.className = "ms-wipe__view";
@@ -74,9 +78,21 @@
     const pick = document.createElement("div");
     pick.className = "ms-wipe__pick";
     pick.append(
-      select("Left", left, (k) => (a.src = url(k))),
-      select("Right", right, (k) => (b.src = url(k)))
+      select("Left", keys, left, (k) => (a.src = url((left = k)))),
+      select("Right", keys, right, (k) => (b.src = url((right = k))))
     );
+    if ("stretch" in box.dataset) {
+      const wrap = document.createElement("label");
+      const box2 = document.createElement("input");
+      box2.type = "checkbox";
+      box2.addEventListener("change", () => {
+        stretched = box2.checked;
+        a.src = url(left);
+        b.src = url(right);
+      });
+      wrap.append(box2, " Stretch contrast");
+      pick.append(wrap);
+    }
     box.prepend(pick);
     box.append(range);
   }
