@@ -35,11 +35,11 @@
   "mot.plan.spazio_insufficiente": "At least {servono} GB is needed just for the extracted frames and the video, more than the {dedicati} GB set aside: the peak will be ~{picco} GB.",
   "mot.plan.spazio_stretto": "Tight on space: {restano} GB is left for chunks after the frames, so {blocchi} chunks instead of fewer. Setting aside more space saves a few minutes.",
   "mot.modello.animevideov3.label": "Real-ESRGAN animevideov3",
-  "mot.modello.animevideov3.descrizione": "the fastest. Very crisp lines, but it flattens background texture: less detail and far fewer artefacts",
+  "mot.modello.animevideov3.descrizione": "the fastest. Very crisp lines, but it flattens background texture: less detail and far fewer artefacts.",
   "mot.modello.cugan-denoise.label": "Real-CUGAN light denoise",
-  "mot.modello.cugan-denoise.descrizione": "the middle ground. Keeps texture and gradients while cleaning up the most visible noise: for sources that aren't clean",
+  "mot.modello.cugan-denoise.descrizione": "the middle ground. Keeps texture and gradients while cleaning up the most visible noise: for sources that aren't clean.",
   "mot.modello.cugan.label": "Real-CUGAN no-denoise",
-  "mot.modello.cugan.descrizione": "keeps everything: texture, gradients and, unfortunately, the noise too. For sources that are already clean",
+  "mot.modello.cugan.descrizione": "keeps everything: texture, gradients and, unfortunately, the noise too. For sources that are already clean.",
   "mot.modello.consiglio_alta": "{altezza}p source: a modest upscale, so it pays to keep texture and gradients",
   "mot.modello.consiglio_media": "{altezza}p source: middle band. animevideov3 is the recommended baseline (fewer artefacts). If the file deserves more detail, check CUGAN light denoise in Compare; no-denoise would amplify the noise",
   "mot.modello.consiglio_bassa": "{altezza}p source: at this resolution there's no real detail to keep, and CUGAN would enlarge the compression artefacts. Less detailed, far fewer artefacts",
@@ -98,7 +98,6 @@
   "mot.preview.motivo_luminoso": "bright scene (brightness {luminosita}): high-contrast edges",
   "mot.preview.originale_ingrandito": "Original enlarged",
   "mot.preview.aperto_video_compare": "opened in video-compare: {sinistra} | {destra}",
-  "mot.preview.aperto_iina": "video-compare isn't installed: opened in IINA",
   "mot.preview.nessuno_strumento": "no comparison tool found. Install video-compare with:\n    brew install video-compare",
   "mot.taratura.tappa_estrazione": "frame extraction",
   "mot.taratura.tappa_salvataggio": "save threads",
@@ -116,5 +115,5 @@
   "mot.taratura.upscale_incompleto": "{modello} x{scala}: produced {fatti} of {attesi} frames — measurement unreliable, calibration stopped",
   "mot.taratura.tappa_upscale_grande": "upscale 1080p {modello} x{scala}",
   "mot.modello.cugan-conservative.label": "Real-CUGAN conservative",
-  "mot.modello.cugan-conservative.descrizione": "the most faithful: keeps paper and film grain, but also compression leftovers. For clean 720p or 1080p sources"
+  "mot.modello.cugan-conservative.descrizione": "the most faithful: keeps paper and film grain, but also compression leftovers. For clean 720p or 1080p sources."
 }

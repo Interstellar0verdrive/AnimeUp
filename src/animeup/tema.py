@@ -63,6 +63,10 @@ TOKEN: dict[str, tuple[str, str]] = {
     # del pulsante spariva durante il clic)
     "primaryActive":   ("#1FB3C6", "#0C8599"),
     "onPrimary":       ("#07282C", "#FFFFFF"),
+    # il fondo dei pulsanti secondari: in scuro un filo piu' chiaro della
+    # superficie, o non si leggevano come pulsanti (segnalato dall'utente);
+    # in chiaro resta il bianco di prima
+    "buttonFill":      ("#1F2226", "#FFFFFF"),
     "knobOn":          ("#07282C", "#FFFFFF"),
     # interruttore spento: tono su tono col fondo (in chiaro: chiaro, non grigio scuro)
     "toggleOff":       ("#3A3F46", "#D5D9DF"),
@@ -71,6 +75,9 @@ TOKEN: dict[str, tuple[str, str]] = {
     "green":           ("#45D483", "#12A150"),
     "greenBg":         ("#10251A", "#E6F5EC"),
     "greenText":       ("#7FE3AC", "#146C3E"),
+    # verde pieno con testo bianco: i passi gia' fatti del Confronto
+    "greenSolid":      ("#17784A", "#12804A"),
+    "onGreen":         ("#FFFFFF", "#FFFFFF"),
     "yellow":          ("#F2B84B", "#C78100"),
     "yellowBg":        ("#2A2110", "#FFF5DF"),
     "yellowText":      ("#F5CB78", "#7F5300"),

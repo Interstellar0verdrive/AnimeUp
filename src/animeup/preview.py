@@ -5,7 +5,7 @@ ore: "questo preset mi piace?".
 
 Il principio è che l'app automatizza il tedio (scegliere i punti difficili,
 tagliare, elaborare, organizzare) e si ferma lì. Il giudizio sulla resa in
-movimento si dà con video-compare o IINA sui file prodotti: un riproduttore
+movimento si dà con video-compare sui file prodotti: un riproduttore
 dentro una pagina web, a scala diversa da 1:1, nasconde proprio gli artefatti
 che si devono giudicare.
 
@@ -206,6 +206,9 @@ class PreviewResult:
     folder: Path
     files: dict[str, Path] = field(default_factory=dict)   # chiave variante -> file
     crop_sheet: Path | None = None
+    # Lo stesso ritaglio 1:1 di ogni variante, in un file a parte: la pagina
+    # ne mostra due grandi affiancati, scelti dall'utente (chiave -> PNG).
+    crops: dict[str, Path] = field(default_factory=dict)
     seconds: float = 0.0
     # Secondi PER VARIANTE: servono alla proiezione "su 10 secondi ci ha
     # messo 8m 32s, quindi l'episodio intero ≈ Xh" — col totale soltanto, il
@@ -905,6 +908,14 @@ def crop_sheet(
     bx = max(0, min(w - size, bx + half - size // 2))
     by = max(0, min(h - size, by + half - size // 2))
 
+    for key, im in grabbed.items():
+        singolo = result.folder / f"crop_{key}.png"
+        try:
+            im.crop((bx, by, bx + size, by + size)).save(singolo)
+            result.crops[key] = singolo
+        except OSError:
+            pass
+
     order = ordine_lettura(grabbed)
     cols = min(2, len(order))
     rows = -(-len(order) // cols)
@@ -942,7 +953,7 @@ def comparison_tool() -> Path | None:
     """video-compare, se installato. Non è una dipendenza della pipeline."""
     # Anche nelle cartelle di Homebrew: l'app lancia il server con il PATH
     # minimo di macOS (/usr/bin:/bin...), dove `which` da solo non lo trova
-    # e il confronto ripiegava su IINA dicendo «non installato» a chi
+    # e il confronto diceva «non installato» a chi
     # l'aveva in /opt/homebrew/bin (segnalato dall'utente).
     found = shutil.which("video-compare") or shutil.which(
         "video-compare", path="/opt/homebrew/bin:/usr/local/bin")
@@ -950,31 +961,31 @@ def comparison_tool() -> Path | None:
 
 
 def open_comparison(left: Path, right: Path) -> tuple[bool, str]:
-    """Apre due file affiancati nello strumento di confronto.
+    """Apre due file affiancati in video-compare.
 
-    Ritorna (riuscito, messaggio). Se video-compare non c'e', si ripiega su
-    IINA aprendo i due file, che almeno evita di dover copiare percorsi.
+    Ritorna (riuscito, messaggio). Senza video-compare non si ripiega su
+    altri riproduttori: due finestre separate non sono un confronto, e
+    l'interfaccia in quel caso non offre il pulsante ma spiega come
+    installarlo (deciso con l'utente).
+
+    `--high-dpi`: un pixel del video e' un pixel dello schermo. Senza, sul
+    Retina ogni pixel ne occupava quattro e il risultato si vedeva
+    ingrandito e morbido, cioe' peggio di com'e'. `--window-fit-display`:
+    la finestra mostra il fotogramma intero e lo riduce solo se non ci sta
+    (un 4K su un MacBook); per i dettagli c'e' lo zoom con la rotella.
     """
     tool = comparison_tool()
-    if tool:
-        # Una sessione sua: chiudendo l'app per macOS (che ferma il server e
-        # il suo gruppo di processi) il confronto aperto restava ucciso.
-        subprocess.Popen(
-            [str(tool), str(left), str(right)],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
-        return True, t("mot.preview.aperto_video_compare", sinistra=left.name,
-                       destra=right.name)
-
-    if Path("/Applications/IINA.app").exists():
-        subprocess.Popen(
-            ["open", "-a", "IINA", str(left), str(right)],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        )
-        return True, t("mot.preview.aperto_iina")
-
-    return False, t("mot.preview.nessuno_strumento")
+    if not tool:
+        return False, t("mot.preview.nessuno_strumento")
+    # Una sessione sua: chiudendo l'app per macOS (che ferma il server e il
+    # suo gruppo di processi) il confronto aperto restava ucciso.
+    subprocess.Popen(
+        [str(tool), "--high-dpi", "--window-fit-display", str(left), str(right)],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    return True, t("mot.preview.aperto_video_compare", sinistra=left.name,
+                   destra=right.name)
 
 
 def quota_dedup(plan) -> tuple[float, str]:

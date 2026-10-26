@@ -81,8 +81,11 @@ def _bolla(testo: str) -> str:
     (i) usa da sempre e che non ha mai sbagliato un fumetto. Meno CSS, e
     soprattutto una regola sola da capire quando qualcosa si sposta.
     """
+    # Il grassetto dei testi tradotti (<b>…</b>) si rende: escapato, il
+    # fumetto mostrava i tag come lettere (segnalato dall'utente).
+    sicuro = esc(testo).replace("&lt;b&gt;", "<b>").replace("&lt;/b&gt;", "</b>")
     return (f"<span class='au-bolla'><span class='au-bolla-riga'>"
-            f"{esc(testo)}</span></span>")
+            f"{sicuro}</span></span>")
 
 
 def _percorso(percorso: str | Path, classe: str) -> str:
@@ -2838,7 +2841,8 @@ STYLE = f"""
   [data-testid="stSidebar"] :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) {{
       position: static; transform: none; }}
   :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button {{
-      min-height: 28px !important; height: 28px; padding: 0 10px !important;
+      min-height: 28px !important; height: 28px !important; max-height: 28px;
+      box-sizing: border-box; align-self: center; padding: 0 10px !important;
       border-radius: 6px; white-space: nowrap; text-decoration: none;
       border: 1px solid var(--borderStrong) !important; }}
   /* Il colore pieno solo da attivi: forzato anche da spenti, «Cambia…» a
@@ -2854,10 +2858,18 @@ STYLE = f"""
       button:disabled p {{ color: inherit !important; }}
   :is([class*="st-key-apriTaratura"], [class*="st-key-apriCartella"]) button p {{
       font-size: 12.5px; font-weight: 500; }}
+  /* Bordo trasparente e non assente: lo stesso box di «Cambia…», che il
+     bordo ce l'ha (altezze diverse, segnalato dall'utente). */
   .st-key-apriTaratura button[kind="primary"] {{
-      background: var(--primaryStrong) !important; border: 0 !important;
+      background: var(--primaryStrong) !important; border: 1px solid transparent !important;
       color: var(--onPrimary) !important; }}
   .st-key-apriTaratura button[kind="primary"] p {{ font-weight: 600; }}
+  /* Le righe delle cartelle di Inizio: «Apri nel Finder» e i due «Cambia…»
+     alti uguali. Quello accanto al pulsante pieno si allungava a 34px e
+     quello da solo restava piu' basso (segnalato dall'utente). Solo qui:
+     non e' una regola per tutti i pulsanti. */
+  :is(.st-key-apriInput, .st-key-cambiaInput, .st-key-cambiaOutput) button {{
+      min-height: 34px !important; height: 34px !important; box-sizing: border-box; }}
   /* Il piede: versione e «About» a sinistra, su due righe alte quanto il
      pulsante Esci a destra; sempre sul bordo basso della finestra. */
   .st-key-piede {{ flex-wrap: nowrap; justify-content: space-between;
@@ -2883,10 +2895,13 @@ STYLE = f"""
   .st-key-cAggiorna {{ padding: 12px 14px; border-radius: 10px;
       background: var(--yellowBg);
       border: 1px solid rgb(var(--yellowRgb) / .45); margin-top: 12px; }}
+  /* Titolo e «Novità» nel colore del testo, non in giallo: il giallo resta
+     al riquadro e al pulsante, e il titolo si legge meglio (chiesto
+     dall'utente). */
   .au-agg-testa {{ display: flex; align-items: center; gap: 8px;
-      font-size: 13.5px; color: var(--yellowText); }}
+      font-size: 13.5px; color: var(--text); }}
   .au-agg-testa a {{ margin-left: auto; font-size: 12.5px;
-      color: var(--yellowText) !important; text-decoration: underline; }}
+      color: var(--text) !important; text-decoration: underline; }}
   .st-key-cAggiorna [data-testid="stCaptionContainer"] p {{ color: var(--yellowText) !important;
       opacity: .85; }}
   .st-key-installaAgg .stButton button[kind="primary"] {{
@@ -3119,7 +3134,8 @@ STYLE = f"""
         border: 1px solid var(--borderStrong); background: var(--surface);
         color: var(--textCode); }}
     #au-cassetto:hover {{ color: var(--primaryText); border-color: var(--borderHover); }}
-    /* Il pallino dell'aggiornamento: giallo come l'avviso, in alto a destra. */
+    /* Il pallino: qualcosa nella barra chiede attenzione (aggiornamento,
+       taratura da fare o da rifare). Giallo come gli avvisi. */
     #au-cassetto.au-agg::after {{ content: ""; position: absolute; top: -4px; right: -4px;
         width: 10px; height: 10px; border-radius: 50%; background: var(--yellow);
         box-shadow: 0 0 0 2px var(--bg); }}
@@ -4187,6 +4203,244 @@ STYLE = f"""
   .st-key-passi button[kind="secondary"]:hover {{
       box-shadow: inset 0 -1px 0 var(--bg) !important; }}
 
+  /* ===================================================================
+     Confronto in tre passi (tavole CF1-CF4 di Claude Design, 26/10).
+     =================================================================== */
+  .st-key-confNascosti,
+  [data-testid="stElementContainer"]:has(> .st-key-confNascosti),
+  [data-testid="stLayoutWrapper"]:has(> .st-key-confNascosti) {{ display: none !important; }}
+  /* Le misure delle tavole CF1-CF3: 24px dalle schede ai passi, ~20 fra
+     un blocco e l'altro (Streamlit ne mette 16 da se'). */
+  .st-key-confPassi {{ flex-wrap: nowrap; gap: 10px !important; margin: 10px 0 6px; }}
+  .st-key-fileCard {{ margin-top: 2px !important; margin-bottom: 6px; }}
+  [class*="st-key-clip"]:is(.st-key-clip0, .st-key-clip1, .st-key-clip2, .st-key-clip3,
+      .st-key-clip4, .st-key-clip5, .st-key-clip6, .st-key-clip7, .st-key-clip8,
+      .st-key-clip9, .st-key-clip10, .st-key-clip11, .st-key-clip12, .st-key-clip13,
+      .st-key-clip14, .st-key-clip15) {{ padding: 12px !important; }}
+  .au-passo-testo {{ margin-bottom: 4px; }}
+  .st-key-risultati [data-testid="stExpander"] [data-testid="stExpanderDetails"] {{
+      padding: 18px !important; }}
+  [class*="st-key-coppie_"] {{ margin-bottom: 4px; }}
+  .st-key-confPassi > div:first-child {{ flex: 1 1 auto; }}
+  .st-key-confPassi [class*="st-key-cambiaTest"], .st-key-confPassi .st-key-finderRisultati {{
+      flex: none; width: auto !important; }}
+  .st-key-confPassi [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .au-pp-riga {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }}
+  .au-pp {{ display: inline-flex; align-items: center; gap: 8px; height: 34px;
+      box-sizing: border-box; padding: 0 14px 0 6px; border-radius: 999px;
+      border: 1px solid var(--borderColor); font-size: 13.5px; font-weight: 500;
+      color: var(--textSecondary); text-decoration: none !important; }}
+  .au-pp-segno {{ width: 22px; height: 22px; box-sizing: border-box; border-radius: 50%;
+      border: 1px solid var(--borderStrong); display: inline-flex; align-items: center;
+      justify-content: center; font-size: 12px; font-weight: 600; }}
+  .au-pp-nome {{ display: inline-flex; align-items: baseline; gap: 6px; }}
+  .au-pp-nome small {{ font: 500 11.5px var(--mono); opacity: .85; }}
+  .au-pp-ora {{ background: rgb(var(--primaryRgb) / .12); border-color: rgb(var(--primaryRgb) / .55);
+      color: var(--textPrimary); font-weight: 600; }}
+  .au-pp-ora .au-pp-segno {{ background: var(--primaryStrong); border: 0; color: var(--onPrimary);
+      font-weight: 700; }}
+  .au-pp-ora .au-pp-segno.au-pp-gira {{ background: transparent;
+      border: 2px solid rgb(var(--primaryRgb) / .25); border-top-color: var(--primary);
+      animation: au-giro 1s linear infinite; }}
+  @keyframes au-giro {{ to {{ transform: rotate(360deg); }} }}
+  .au-pp-fatto {{ background: var(--greenSolid); border-color: var(--greenSolid);
+      color: var(--onGreen) !important; font-weight: 600; }}
+  .au-pp-fatto .au-pp-segno {{ border: 0; background: color-mix(in srgb, var(--onGreen) 20%, transparent);
+      color: var(--onGreen); }}
+  a.au-pp-fatto:hover {{ filter: brightness(1.1); }}
+  .au-pp-freccia {{ display: inline-flex; color: var(--textTertiary); }}
+  .au-pp-nota {{ margin-left: 6px; font-size: 13px; color: var(--textSecondary); }}
+  /* Titolo e descrizione del passo: il -14px che Streamlit mette sotto
+     ogni markdown incollava la descrizione al contenuto (visto
+     dall'utente). Lo spazio sotto e' quello delle tavole. */
+  [data-testid="stMarkdownContainer"]:has(.au-passo-titolo),
+  [data-testid="stMarkdownContainer"]:has(.au-pp-riga) {{ margin-bottom: 0 !important; }}
+  .au-passo-titolo {{ font-size: 22px; font-weight: 600; letter-spacing: -0.015em;
+      line-height: 1.3; margin-top: 0; }}
+  .au-passo-testo {{ font-size: 13.5px; line-height: 1.55; color: var(--textSecondary);
+      margin-top: 4px; }}
+  .au-passo-testo b {{ color: var(--textPrimary); font-weight: 600; }}
+  .st-key-trovaAltriRiga {{ margin-top: 4px; }}
+  .st-key-trovaAltriRiga .st-key-trovaAltri {{ width: auto !important; flex: none; }}
+  /* La fascia in basso: due righe vicine, centrate sull'icona e sui
+     pulsanti (prima il -14px del markdown le allontanava). */
+  .au-barra-due {{ display: flex; align-items: center; gap: 14px; }}
+  .au-barra-due > div {{ display: flex; flex-direction: column; gap: 2px; }}
+  .au-barra-due b {{ font-size: 14.5px; font-weight: 600; line-height: 1.3; color: var(--textPrimary); }}
+  .au-barra-due b em, .au-barra-pronto b em, .au-prova-testa b em {{ font-style: normal;
+      font-weight: 400; color: var(--textSecondary); }}
+  .au-barra-due span {{ font-size: 13px; line-height: 1.35; color: var(--textSecondary); }}
+  .au-barra-due.au-barra-giallo b {{ color: var(--yellowText); }}
+  .au-barra-num {{ width: 34px; height: 34px; flex: none; border-radius: 50%;
+      background: rgb(var(--primaryRgb) / .12); color: var(--primaryText);
+      display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }}
+  .au-barra-pronto > div {{ display: flex; flex-direction: column; gap: 2px; }}
+  .au-barra-pronto b {{ line-height: 1.3; }}
+  .st-key-barraConfronto :is(.st-key-avantiModelli, .st-key-indietroClip, .st-key-indietroClip3,
+      .st-key-elaboraClip, .st-key-avantiLavorazione) {{ flex: none; width: auto !important; }}
+  /* Una forma sola per le azioni che portano avanti (e per «Indietro»). */
+  :is(.st-key-avantiModelli, .st-key-elaboraClip, .st-key-avantiLavorazione,
+      .st-key-indietroClip, .st-key-indietroClip3) button {{
+      height: 44px !important; min-height: 44px !important; padding: 0 20px !important;
+      border-radius: 8px !important; white-space: nowrap; }}
+  :is(.st-key-avantiModelli, .st-key-elaboraClip, .st-key-avantiLavorazione) button p {{
+      font-size: 14.5px !important; font-weight: 600 !important; }}
+  /* Suggerimenti: un accordion vero. Un riquadro solo; l'intestazione su
+     una fascia di tono diverso (piu' chiara in scuro, piu' scura in
+     chiaro), titolo a sinistra, freccia a destra in giu' da chiuso e in su
+     da aperto; al passaggio si schiariscono solo titolo e freccia. */
+  :is(.st-key-consigli, .st-key-risultati) [data-testid="stExpander"] details {{
+      border: 1px solid var(--borderStrong) !important; border-radius: 10px !important;
+      overflow: hidden; background: var(--surface) !important; }}
+  :is(.st-key-consigli, .st-key-risultati) [data-testid="stExpander"] summary {{
+      background: var(--surfaceHover) !important; padding: 12px 16px !important;
+      border-radius: 0 !important; box-shadow: none !important; }}
+  :is(.st-key-consigli, .st-key-risultati) [data-testid="stExpander"] summary:hover {{
+      background: var(--surfaceHover) !important; }}
+  :is(.st-key-consigli, .st-key-risultati) [data-testid="stExpander"] details[open] > summary {{
+      border-bottom: 1px solid var(--borderColor) !important; }}
+  :is(.st-key-consigli, .st-key-risultati) summary > span {{ display: flex !important;
+      flex-direction: row-reverse !important; justify-content: space-between !important;
+      width: 100% !important; }}
+  :is(.st-key-consigli, .st-key-risultati) summary [data-testid="stIconMaterial"] {{
+      transform: rotate(90deg); transition: transform .15s, color .12s;
+      color: var(--textSecondary); }}
+  /* Streamlit cambia il glifo da solo (chiuso: freccia a destra; aperto:
+     in giu'): ruotati, diventano in giu' da chiuso e in su da aperto. */
+  :is(.st-key-consigli, .st-key-risultati) details[open] > summary [data-testid="stIconMaterial"] {{
+      transform: rotate(180deg); }}
+  :is(.st-key-consigli, .st-key-risultati) summary p {{ transition: color .12s; }}
+  .st-key-consigli summary p {{ font-size: 14px !important; font-weight: 600; color: var(--textCode); }}
+  /* «N file · mostra i percorsi» dentro una clip resta un link discreto:
+     la regola dell'accordion qui sopra non deve toccarlo. */
+  .st-key-risultati [class*="st-key-piedeClip_"] [data-testid="stExpander"] details {{
+      border: 0 !important; background: transparent !important; overflow: visible; }}
+  .st-key-risultati [class*="st-key-piedeClip_"] [data-testid="stExpander"] summary,
+  .st-key-risultati [class*="st-key-piedeClip_"] [data-testid="stExpander"] details[open] > summary {{
+      background: transparent !important; padding: 4px 0 !important; border: 0 !important; }}
+  .st-key-risultati [class*="st-key-piedeClip_"] summary > span {{ flex-direction: row !important;
+      justify-content: flex-start !important; width: auto !important; }}
+  :is(.st-key-consigli, .st-key-risultati) summary:hover p,
+  :is(.st-key-consigli, .st-key-risultati) summary:hover [data-testid="stIconMaterial"] {{
+      color: var(--textPrimary) !important; }}
+  .st-key-consigli [data-testid="stExpanderDetails"] {{ padding: 14px 16px 16px !important; }}
+  .st-key-consigli .au-regole {{ display: flex; flex-direction: column; gap: 6px; margin: 0; }}
+  .st-key-consigli .au-regola {{ display: grid; grid-template-columns: 130px minmax(0, 1fr);
+      grid-template-rows: auto auto; column-gap: 14px; row-gap: 3px; padding: 10px 12px;
+      border-color: transparent; background: transparent; }}
+  .st-key-consigli .au-regola .au-p-fascia {{ grid-row: 1 / span 2; padding-top: 2px; }}
+  .st-key-consigli .au-regola.au-qui {{ background: rgb(var(--primaryRgb) / .08);
+      border-color: rgb(var(--primaryRgb) / .35); }}
+  .st-key-consigli .au-regola.au-qui .au-p-fascia {{ color: var(--primaryText); }}
+  .au-qui-chip {{ margin-left: 8px; font: 500 10.5px var(--mono); padding: 1px 7px;
+      border-radius: 999px; color: var(--primaryText); border: 1px solid rgb(var(--primaryRgb) / .55); }}
+  .st-key-consigli .au-regole-nota {{ margin: 10px 12px 0; line-height: 1.6; }}
+  .st-key-consigli .au-guida {{ margin-left: 4px; }}
+  /* Le schede dei modelli: chip sempre nello stesso punto, una riga sola. */
+  [class*="st-key-mod_"] .au-m-var {{ font-size: 14.5px; font-weight: 600; line-height: 1.35;
+      color: var(--textPrimary); margin: -8px 0 8px 26px; }}
+  [class*="st-key-mod_"] .au-tag {{ white-space: nowrap; }}
+  .au-tag.au-grigio {{ color: var(--textSecondary); background: transparent;
+      border: 1px solid var(--borderStrong); }}
+  .st-key-confOriginale {{ padding: 14px 16px; border-radius: 10px; background: var(--surface);
+      border: 1px solid var(--borderColor); gap: 2px !important; }}
+  .st-key-confOriginale [data-testid="stCheckbox"] label p {{ font-size: 14px; font-weight: 600; }}
+  .st-key-confOriginale .au-orig-nota {{ margin-left: 50px; }}
+  .st-key-confOriginale [class*="st-key-tog_"] {{ flex: none; width: auto !important; }}
+  .st-key-confOriginale [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .au-orig-nota {{ font-size: 12.5px; color: var(--textSecondary); }}
+  /* Durante il test: lo spezzone che gira e quelli che aspettano. */
+  .au-attesa {{ display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+      border-radius: 12px; border: 1px solid var(--borderColor); color: var(--textSecondary);
+      margin-top: 4px; }}
+  .au-attesa b {{ font-size: 15px; color: var(--textPrimary); }}
+  .au-attesa code {{ font: 400 12px var(--mono) !important; background: none !important;
+      padding: 0 !important; color: var(--textCode) !important; }}
+  .au-attesa span {{ margin-left: auto; font: 400 11.5px var(--mono); }}
+  .au-attesa-ora {{ border-style: dashed; border-color: rgb(var(--primaryRgb) / .45); }}
+  .au-attesa-ora span {{ color: var(--primaryText); }}
+  /* La barra del test intero, con una tacca per versione (o per spezzone)
+     e sotto cosa e' fatto e cosa gira. */
+  .au-prova-barra.au-con-tacche {{ position: relative; }}
+  .au-prova-barra i {{ position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px;
+      background: var(--bg); }}
+  .au-prova-barra i.au-tacca-fine {{ width: 1px; margin-left: 0; opacity: .7; }}
+  .au-seg-righe {{ display: flex; gap: 4px; margin-top: 8px; }}
+  .au-seg-righe > div {{ min-width: 0; }}
+  .au-seg-righe span {{ display: block; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; font: 400 11.5px var(--mono); color: var(--textTertiary); }}
+  .au-seg-righe .au-seg-fatto {{ color: var(--greenText); }}
+  .au-seg-righe .au-seg-ora {{ color: var(--primaryText); }}
+  .au-prova-nota code {{ font: 400 12px var(--mono) !important; background: none !important;
+      padding: 0 !important; color: var(--primaryText) !important; }}
+  /* Risultati: due ritagli grandi affiancati. */
+  .au-ritaglio-box {{ border-radius: 8px; overflow: hidden; background: var(--clipBg); }}
+  .au-ritaglio {{ display: block; width: 100%; height: auto; image-rendering: auto; }}
+  .au-ritaglio-nome {{ font-size: 13px; color: var(--textCode); }}
+  [class*="st-key-piedeRit_"] {{ gap: 8px !important; flex-wrap: wrap; margin-top: 2px; }}
+  [class*="st-key-piedeRit_"] > div:first-child {{ flex: 1 1 auto; }}
+  [class*="st-key-piedeRit_"] [class*="st-key-usa"], [class*="st-key-piedeRit_"] [class*="st-key-annulla"] {{
+      flex: none; width: auto !important; }}
+  [class*="st-key-piedeRit_"] [class*="st-key-usa"] button {{ height: 30px !important;
+      min-height: 30px !important; padding: 0 12px !important; }}
+  [class*="st-key-piedeRit_"] [class*="st-key-usa_"] button {{
+      border-color: rgb(var(--primaryRgb) / .55) !important; }}
+  [class*="st-key-piedeRit_"] [class*="st-key-usa_"] button p {{ color: var(--primaryText) !important; }}
+  [class*="st-key-piedeRit_"] [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  .au-usato {{ display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;
+      color: var(--greenText); }}
+  /* «Guarda in movimento»: la nota verde alta quanto il pulsante. */
+  [class*="st-key-coppie_"] {{ align-items: center !important; }}
+  [class*="st-key-coppie_"] [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
+  [class*="st-key-cmp_"] button {{ height: 38px !important; min-height: 38px !important; }}
+  .au-aperto {{ display: inline-flex; align-items: center; height: 38px; box-sizing: border-box;
+      padding: 0 14px; border-radius: 6px; background: var(--greenBg);
+      border: 1px solid rgb(var(--greenRgb) / .3); color: var(--greenText); font-size: 13px;
+      white-space: nowrap; }}
+  .au-aperto.au-aperto-no {{ background: var(--redBg); border-color: rgb(var(--redRgb) / .35);
+      color: var(--redText); }}
+  .au-vc-manca {{ display: flex; flex-direction: column; gap: 3px; padding: 14px 18px;
+      border-radius: 10px; background: var(--insetBackground); border: 1px solid var(--borderColor); }}
+  .au-vc-manca b {{ font-size: 14px; font-weight: 600; }}
+  .au-vc-manca b em {{ font-style: normal; font-weight: 400; color: var(--textSecondary); }}
+  .au-vc-manca span {{ font-size: 13px; line-height: 1.6; color: var(--textSecondary); }}
+  .au-vc-manca code {{ font: 400 12.5px var(--mono) !important; background: none !important;
+      padding: 0 !important; color: var(--textCode) !important; }}
+  .au-copia {{ display: inline-flex; vertical-align: middle; margin: 0 2px 0 4px; padding: 3px;
+      border-radius: 4px; color: var(--textSecondary); cursor: pointer; }}
+  .au-copia:hover {{ color: var(--textPrimary); background: var(--surfaceHover); }}
+  .au-copia.au-copiato {{ color: var(--greenText); }}
+  /* La tabella dei tempi: tutti i bordi come la riga di mezzo, testo
+     centrato in verticale e staccato dai bordi. */
+  .au-cnf {{ border: 1px solid var(--borderColor); }}
+  .au-cnf th, .au-cnf td {{ padding: 9px 12px !important; vertical-align: middle;
+      border: 1px solid var(--borderColor) !important; }}
+  /* Gli indicatori: il segno bianco e' il 100% dell'ingrandimento semplice,
+     con la sua etichetta sotto. */
+  .au-ind i::after {{ display: none; }}
+  .au-ind i u {{ position: absolute; left: 25%; top: -4px; width: 2px; height: 14px;
+      margin-left: -1px; background: var(--textPrimary); text-decoration: none; }}
+  .au-ind-scala {{ margin-top: -2px; }}
+  .au-ind-scala i {{ background: transparent; height: 14px; }}
+  .au-ind-scala s {{ position: absolute; left: 25%; transform: translateX(-50%);
+      text-decoration: none; font: 400 11px var(--mono); color: var(--textTertiary); }}
+  /* I pulsanti secondari: in scuro un fondo appena piu' chiaro della
+     superficie, o non si leggono come pulsanti (in chiaro resta il bianco). */
+  [data-testid="stMain"] .stButton button[kind="secondary"]:not(:disabled) {{
+      background: var(--buttonFill); }}
+  [data-testid="stMain"] .st-key-passi .stButton button[kind="secondary"] {{ background: transparent; }}
+  /* «Usa per tutti i file»: la conferma con l'elenco di cosa cambia. */
+  .au-dialogo-titolo {{ font-size: 17px; font-weight: 600; margin-bottom: 4px; }}
+  .au-dialogo-testo {{ font-size: 13px !important; line-height: 1.55; color: var(--textSecondary);
+      margin: 6px 0 !important; }}
+  .au-dialogo-elenco {{ list-style: none; margin: 8px 0 !important; padding: 0 !important; }}
+  .au-dialogo-elenco li {{ display: flex; justify-content: space-between; gap: 12px;
+      padding: 7px 0; border-bottom: 1px solid var(--borderColor); font-size: 13px; margin: 0 !important; }}
+  .au-dialogo-elenco code {{ font: 400 12px var(--mono) !important; background: none !important;
+      padding: 0 !important; color: var(--textCode) !important; white-space: nowrap; }}
+  /* Le tendine: la freccia mai attaccata al bordo. */
+  [data-testid="stSelectbox"] [data-baseweb="select"] > div > div:last-child {{ padding-right: 6px; }}
+
 </style>
 """
 st.markdown(STYLE, unsafe_allow_html=True)
@@ -4500,6 +4754,42 @@ def _vai(sezione: str) -> None:
     st.session_state["sezione"] = sezione
 
 
+def _file_scheda() -> Path:
+    return _impostazioni_file().parent / "last-tab.txt"
+
+
+def _ricorda_scheda(sezione: str) -> None:
+    """L'ultima scheda aperta, su disco a OGNI cambio: vale anche dopo una
+    chiusura brusca o il riavvio di un aggiornamento."""
+    if st.session_state.get("_scheda_scritta") == sezione:
+        return
+    try:
+        _file_scheda().parent.mkdir(parents=True, exist_ok=True)
+        _file_scheda().write_text(sezione)
+        st.session_state["_scheda_scritta"] = sezione
+    except OSError:
+        pass
+
+
+def _scheda_di_avvio() -> str:
+    """Dove si apre l'app (deciso con l'utente), la prima regola che vale:
+    una coda che gira o un lavoro interrotto da riprendere -> Lavorazione;
+    altrimenti l'ultima scheda aperta. (Senza video, e al primo avvio, ci
+    pensa gia' chi chiama: Inizio.)"""
+    try:
+        if monitor.catena() is not None or monitor.lancio_vivo():
+            return SEZIONI[2]
+        if any(not lv.vivo and 0 < lv.fatti < lv.totale for lv in monitor.lavori(recente=1.0)):
+            return SEZIONI[2]
+    except (OSError, ValueError, AttributeError):
+        pass
+    try:
+        ultima = _file_scheda().read_text().strip()
+    except OSError:
+        ultima = ""
+    return ultima if ultima in SEZIONI + [INIZIO] else SEZIONI[0]
+
+
 _LARGHEZZE_PASSI: dict | None = None
 
 
@@ -4557,7 +4847,7 @@ def header() -> str:
     dal_url = str(st.query_params.get("scheda") or "").capitalize()
     attiva = (st.session_state.get("sezione")
               or (dal_url if dal_url in SEZIONI + [INIZIO] else
-                  INIZIO if stato["vuota"] else SEZIONI[0]))
+                  INIZIO if stato["vuota"] else _scheda_di_avvio()))
     # Senza video i tre passi sono chiusi, Sorgenti compresa: si sta su
     # Inizio. Arrivati i primi video si passa da soli ai Sorgenti, come
     # faceva la pagina vuota che si riempiva sotto gli occhi.
@@ -4567,11 +4857,19 @@ def header() -> str:
         attiva = SEZIONI[0]
     st.session_state["era_vuota"] = stato["vuota"]
     st.session_state["sezione"] = attiva
+    _ricorda_scheda(attiva)
     # Le quattro schede si dividono la larghezza in parti uguali: per decidere
     # se un sottotitolo va a capo si conta sulla piu' stretta che capita, una
     # finestra da 1000px (892 di contenuto, 218 a scheda).
     larghezza = 218
     regole = _regole_sottotitolo(".st-key-passo0 button", t("fasi.inizio"), False, larghezza)
+    # La taratura da fare o da rifare: un pallino giallo su Inizio, come quello
+    # del cassetto. Non si porta l'utente su Inizio a forza (deciso con
+    # l'utente): chi non vuole tarare non deve ritrovarcisi a ogni avvio.
+    if not stato["vuota"] and _taratura_da_rifare():
+        regole.append('.st-key-passo0 button::after { content: ""; display: inline-flex; '
+                      'min-width: 0; width: 9px; height: 9px; padding: 0; right: 12px; '
+                      'background: var(--yellow); }')
     with st.container(key="fasi", horizontal=True, vertical_alignment="center"):
         with st.container(key="passi", horizontal=True, gap=None):
             st.button(t("tab.Inizio"), key="passo0", on_click=_vai, args=(INIZIO,),
@@ -4633,6 +4931,13 @@ def header() -> str:
         "const inp=card.querySelector('[data-testid=\"stCheckbox\"] input');"
         "if(inp)inp.click();"
         "},true);"
+        # Il comando di installazione di video-compare: un clic lo copia.
+        "D.addEventListener('click',e=>{"
+        "const c=e.target.closest&&e.target.closest('[data-copia]');if(!c)return;"
+        "e.preventDefault();const W=window.parent;"
+        "(W.navigator.clipboard?W.navigator.clipboard.writeText(c.dataset.copia):Promise.reject())"
+        ".then(()=>{c.classList.add('au-copiato');setTimeout(()=>c.classList.remove('au-copiato'),1500);})"
+        ".catch(()=>{});},true);"
         "}</script>", height=1)
     if st.query_params.get("scheda") != attiva.lower():
         st.query_params["scheda"] = attiva.lower()
@@ -6348,6 +6653,7 @@ _I_CARTELLA = "<path d='M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2
 _I_MAC = "<rect x='4' y='5' width='16' height='11' rx='1.5'/><path d='M2 19h20'/>"
 _I_GIU = "<path d='M12 5v14M6 13l6 6 6-6'/>"
 _I_SPUNTA = "<path d='M4.5 12.5 9.5 17.5 19.5 7'/>"
+_I_COPIA = "<rect x='8.5' y='8.5' width='11' height='11' rx='2'/><path d='M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5'/>"
 _I_ESTERNO = "<path d='M14 4h6v6'/><path d='M20 4 11 13'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/>"
 GUIDA_MODELLI = "https://interstellar0verdrive.github.io/AnimeUp/guide/deep-dives/models/"
 _I_ATTENZIONE = "<path d='M12 4 2.5 20h19z'/><path d='M12 10v4.5M12 17.2v.1'/>"
@@ -6568,15 +6874,25 @@ def _blocco_taratura(voce_tar) -> None:
                 if st.button(t("sb.taratura_mostra"), key="ricalibraMac"):
                     _modale_taratura()
             elif st.button(t("sb.taratura_ripeti"), key="ricalibraMac",
+                           type="primary" if voce_tar.get("vecchia") else "secondary",
                            disabled=_motivo_blocco() is not None):
                 st.session_state.pop("tar_fase", None)
                 _modale_taratura()
+        # La stessa nota gialla della barra laterale, qui accanto alla
+        # taratura (chiesto dall'utente): la chiave e' la stessa, il testo
+        # non si duplica.
+        if voce_tar.get("vecchia"):
+            st.markdown(f"<div class='au-tar-nota'>{t('sb.taratura_vecchia')}</div>",
+                        unsafe_allow_html=True)
         return
+    altro = taratura.di_altro_mac()
     with st.container(key="tarDaFare"):
         st.markdown(
             "<div class='au-tar-testa'>"
             f"<b>{t('src.tar_titolo')}</b><small>{t('src.tar_prima')}</small></div>"
-            f"<p class='au-tar-testo'>{t('src.tar_testo')}</p>",
+            f"<p class='au-tar-testo'>{t('src.tar_testo')}</p>"
+            + (f"<div class='au-tar-nota'>{t('sb.taratura_altro_mac', chip=esc(altro))}</div>"
+               if altro else ""),
             unsafe_allow_html=True)
         # In corso in sottofondo (finestra chiusa): «Mostra», attivo, come
         # nella barra laterale, invece di «Calibra ora» spento.
@@ -7010,74 +7326,44 @@ def _dettagli(rep) -> None:
 # ===========================================================================
 
 def page_confronto(cfg: dict) -> None:
-    st.markdown(
-        f"<div class='au-titolo-pagina'>{t('conf.titolo')}</div>"
-        f"<div class='au-sotto-pagina'>{t('conf.intro')}</div>",
-        unsafe_allow_html=True)
+    """Il Confronto in tre passi: Spezzoni, Modelli, Risultati.
 
+    Prima era una pagina sola con tutto insieme — modelli, spezzoni, barra e
+    risultati in fondo — e non si capiva cosa fare e in che ordine
+    (segnalato dall'utente, disegnato con lui in Claude Design, tavole CF1-
+    CF4). Ogni passo ha una sola azione principale, sempre in fondo a destra.
+    """
     files = load_library()
     if not files:
         st.info(t("conf.nessun_file"))
         return
 
-    # La selezione vive nella CHIAVE del widget, non in un doppione che poi
-    # rientra da `index=`: un clic arrivato durante un rerun veniva applicato
-    # al widget vecchio e scartato, e la tendina tornava sul file di prima.
+    # Il file scelto vive in `conf_file`, non nella chiave della tendina: la
+    # tendina sta solo nel primo passo, e Streamlit butta lo stato di un
+    # widget che un giro non disegna — tornando al primo passo la tendina
+    # ripartiva dal primo file mentre la pagina parlava di un altro (visto
+    # provandola). Senza scelta: il file del confronto in corso o dell'ultimo.
     percorsi = [f["path"] for f in files]
-    nomi = {f["path"]: f["name"] for f in files}
-    if st.session_state.get("file_confronto") not in percorsi:
-        st.session_state.pop("file_confronto", None)
-    # Streamlit butta lo stato di un widget che un giro non disegna: andando
-    # su un'altra scheda e tornando, la tendina ripartiva dal primo file e i
-    # risultati del confronto sembravano persi. Lo specchio `conf_file` la
-    # rimette dov'era; senza, si parte dal file del confronto in corso o
-    # dell'ultimo fatto.
-    if "file_confronto" not in st.session_state:
-        ricordato = st.session_state.get("conf_file")
-        if ricordato not in percorsi:
-            ricordato = (confronto.stato() or {}).get("file")
-        if ricordato in percorsi:
-            st.session_state["file_confronto"] = ricordato
-    # Il file e i suoi tre numeri in un riquadro solo: cosa si prova, da che
-    # risoluzione, a quale, e quanto costerebbe l'episodio intero.
-    with st.container(key="fileCard", horizontal=True):
-        with st.container(key="campoFile"):
-            st.markdown(f"<div class='au-occhio'>{t('conf.file_da_provare')}</div>",
-                        unsafe_allow_html=True)
-            prescelto = st.selectbox(t("conf.file_da_provare"), percorsi,
-                                     key="file_confronto",
-                                     format_func=lambda pth: nomi[pth],
-                                     label_visibility="collapsed")
-            st.session_state["conf_file"] = prescelto
-        entry = next(f for f in files if f["path"] == prescelto)
-        path = Path(entry["path"])
-        posto_stat = st.empty()
+    prescelto = st.session_state.get("conf_file")
+    if prescelto not in percorsi:
+        prescelto = (confronto.stato() or {}).get("file")
+    if prescelto not in percorsi:
+        prescelto = percorsi[0]
+    st.session_state["conf_file"] = prescelto
+    entry = next(f for f in files if f["path"] == prescelto)
+    path = Path(entry["path"])
+    passo = _passo_confronto(path)
 
     # Misurati il 12/08: 8,9s su un 360p, 37s su un 720p, 49s su un 1080p.
     with st.spinner(t("conf.analisi")):
         try:
             plan = plan_for(path, cfg, entry["height"])
         except (PlanError, OSError, FFmpegError, ValueError) as exc:
-            posto_stat.empty()
+            _scheda_file(files, None, entry)
             st.markdown(
                 f"<div class='au-errore'><b>{esc(str(exc))}</b></div>",
                 unsafe_allow_html=True)
             return
-
-    # Stesso formato delle stime in Lavorazione: ore e minuti.
-    if plan.est_best_seconds < plan.est_total_seconds * 0.95:
-        intero = (f"≈ {stima_hm(plan.est_best_seconds)} "
-                  f"<small>{t('conf.stat_da_a', max=stima_hm(plan.est_total_seconds))}</small>")
-    else:
-        intero = f"≈ {stima_hm(plan.est_total_seconds)}"
-    posto_stat.markdown(
-        "<div class='au-stat-file'>"
-        f"<div><dt>{t('conf.stat_sorgente')}</dt><dd>{esc(entry['resolution'])}</dd></div>"
-        f"<div><dt>{t('conf.stat_uscita')}</dt>"
-        f"<dd>{plan.target_width}×{plan.target_height}</dd></div>"
-        f"<div><dt>{t('conf.stat_episodio')}"
-        f"{_icona_perche(t('conf.stat_episodio_aiuto'))}</dt>"
-        f"<dd>{intero}</dd></div></div>", unsafe_allow_html=True)
 
     # La praticabilita' REALE di ogni modello con le impostazioni correnti,
     # calcolata UNA volta e rispettata da tutta la pagina.
@@ -7093,128 +7379,146 @@ def page_confronto(cfg: dict) -> None:
         except (PlanError, ValueError) as exc:
             praticabili[k] = str(exc)
 
-    # Chi non sa quale scegliere trova la spiegazione lunga nella guida
-    # (chiesto dall'utente): si apre nel browser, fuori dall'app.
-    st.markdown(
-        f"<div class='au-sez-riga'><span class='au-sez-titolo'>{t('conf.modelli_titolo')}</span>"
-        f"<span class='au-sez-nota'>{t('conf.modelli_nota')}</span>"
-        f"<a class='au-guida' href='{GUIDA_MODELLI}' target='_blank' rel='noopener'>"
-        f"{t('conf.guida_modelli')}{_svg(_I_ESTERNO, 12, 2)}</a></div>",
-        unsafe_allow_html=True)
-    _verdetto(plan, cfg, praticabili)
-    chiavi = _schede_modelli(plan, path, praticabili)
-    _spezzoni(plan, path, cfg, praticabili, chiavi)
-
-
-def _verdetto(plan, cfg: dict, praticabili: dict[str, str]) -> None:
-    """Il consiglio per QUESTO file in una riga, e la regola generale sotto.
-
-    Prima questo caso, poi la teoria: chi guarda vuole sapere perche' e'
-    stato scelto quel modello per questo file. La regola sta in un cassetto
-    che si apre su una linea sottile, centrato sotto il consiglio.
-    """
-    rec = plan.recommendation
-    if not rec:
-        return
-    dubbio = bool(not rec.sicuro and not praticabili.get("cugan-denoise"))
-    h = plan.source.geometry.height
-    if h >= CLEAN_SOURCE_MIN_HEIGHT:
-        fascia_t = t("conf.caso.sopra_fascia", altezza=CLEAN_SOURCE_MIN_HEIGHT)
-        scelta, spiega = t("conf.caso.sopra_scelta"), t("conf.caso.sopra_spiega")
-    elif h >= ALTEZZA_INCERTA:
-        fascia_t = t("conf.caso.mezzo_fascia", da=ALTEZZA_INCERTA,
-                     a=CLEAN_SOURCE_MIN_HEIGHT)
-        if praticabili.get("cugan-denoise"):
-            scelta = t("conf.caso.usa_esrgan")
-            spiega = t("conf.caso.mezzo_bloccato", h=h, altezza=plan.target_height)
-        else:
-            scelta, spiega = t("conf.caso.mezzo_scelta"), t("conf.caso.mezzo_spiega")
+    _pillole_confronto(path, passo)
+    if passo == 1:
+        _scheda_file(files, plan, entry)
+        _passo_spezzoni(plan, path)
+    elif passo == 2:
+        _passo_modelli(plan, path, cfg, praticabili)
     else:
-        fascia_t = t("conf.caso.sotto_fascia", altezza=ALTEZZA_INCERTA)
-        scelta, spiega = t("conf.caso.usa_esrgan"), t("conf.caso.sotto_spiega")
-    icona = (f"<span class='au-verdetto-icona au-giallo'>?</span>" if dubbio else
-             f"<span class='au-verdetto-icona'>{_svg(_I_SPUNTA, 14, 2.4)}</span>")
-    with st.container(key="verdetto" + ("Dubbio" if dubbio else "")):
+        _passo_risultati(plan, path)
+
+
+def _scegli_file_confronto(attuale: str) -> None:
+    """La tendina del file: la chiave cambia col file, cosi' il widget
+    nuovo nasce sempre sul file giusto (`index=`) e non si porta dietro uno
+    stato vecchio."""
+    scelto = st.session_state.get(f"file_confronto_{attuale}")
+    if scelto:
+        st.session_state["conf_file"] = scelto
+
+
+def _vai_passo(path: str, passo: int) -> None:
+    st.session_state[f"conf_passo_{path}"] = passo
+
+
+def _risultati_di(path: Path) -> list[dict]:
+    """I risultati gia' pronti per questo file: dal disco (sopravvivono a un
+    ricaricamento e alla finestra chiusa), o quelli tenuti in sessione."""
+    s = confronto.stato()
+    if s and s.get("file") == str(path) and s.get("results"):
+        st.session_state[f"risultati_{path}"] = s["results"]
+    return st.session_state.get(f"risultati_{path}") or []
+
+
+def _passo_confronto(path: Path) -> int:
+    """Il passo da mostrare: il terzo se un confronto gira su questo file,
+    altrimenti quello scelto; la prima volta il terzo se ci sono gia'
+    risultati, il primo se no."""
+    chiave = f"conf_passo_{path}"
+    s = confronto.stato() or {}
+    if s.get("state") == confronto.IN_CORSO and s.get("file") == str(path):
+        st.session_state[chiave] = 3
+    elif chiave not in st.session_state:
+        st.session_state[chiave] = 3 if _risultati_di(path) else 1
+    return st.session_state[chiave]
+
+
+def _pillole_confronto(path: Path, passo: int) -> None:
+    """I tre passi in alto: fatti in verde (cliccabili per tornarci),
+    quello attuale in ciano, quelli dopo in grigio. Durante il test non si
+    torna indietro: spezzoni e modelli sono quelli che stanno girando."""
+    s = confronto.stato() or {}
+    gira = s.get("state") == confronto.IN_CORSO and s.get("file") == str(path)
+    finito = passo == 3 and not gira and bool(_risultati_di(path))
+    scelti = st.session_state.get(f"scelti_{path}") or set()
+    modelli = st.session_state.get(f"modelli_{path}")
+    n_mod = len(modelli) if modelli is not None else 1
+    orig = st.session_state.get(f"originale_{path}", True)
+    if gira and s.get("segmenti"):
+        # Dopo un ricaricamento la sessione e' nuova: i numeri del test
+        # che gira si leggono dal test stesso.
+        pezzi = s["segmenti"]
+        scelti = {(g["tipo"], g["tc"]) for g in pezzi}
+        chiavi_t = {g["chiave"] for g in pezzi}
+        orig = "original" in chiavi_t
+        n_mod = len(chiavi_t - {"original"})
+    dettagli = {
+        1: tn("conf.p_scelti", len(scelti)) if scelti else "",
+        2: (t("conf.p_ver_orig", n=n_mod) if orig else tn("conf.n_modelli", n_mod)),
+        3: "",
+    }
+    pezzi = []
+    for i, nome in ((1, t("conf.p_clip")), (2, t("conf.p_modelli")), (3, t("conf.p_risultati"))):
+        fatto = i < passo or (i == 3 and finito)
+        if fatto:
+            segno = f"<span class='au-pp-segno'>{_svg(_I_SPUNTA, 12, 2.4)}</span>"
+            classe = "au-pp au-pp-fatto"
+        elif i == passo:
+            segno = ("<span class='au-pp-segno au-pp-gira'></span>" if gira and i == 3
+                     else f"<span class='au-pp-segno'>{i}</span>")
+            classe = "au-pp au-pp-ora"
+        else:
+            segno = f"<span class='au-pp-segno'>{i}</span>"
+            classe = "au-pp"
+        testo = (f"<span class='au-pp-nome'>{esc(nome)}"
+                 + (f"<small>{esc(dettagli[i])}</small>" if fatto and dettagli[i] else "")
+                 + "</span>")
+        if fatto and not gira and i != passo:
+            pezzi.append(f"<a class='{classe}' data-preme='confPasso{i}' role='button'>"
+                         f"{segno}{testo}</a>")
+        else:
+            pezzi.append(f"<span class='{classe}'>{segno}{testo}</span>")
+    freccia = f"<span class='au-pp-freccia'>{_svg(_I_AVANTI, 12, 2)}</span>"
+    with st.container(key="confPassi", horizontal=True, vertical_alignment="center"):
+        st.markdown("<nav class='au-pp-riga'>" + freccia.join(pezzi)
+                    + (f"<span class='au-pp-nota'>{t('conf.bloccati')}</span>" if gira else "")
+                    + "</nav>", unsafe_allow_html=True)
+        if passo == 3 and not gira:
+            if st.button(t("conf.cambia_test"), key="cambiaTest"):
+                _vai_passo(str(path), 2 if st.session_state.get(f"scelti_{path}") else 1)
+                st.rerun()
+            risultati = _risultati_di(path)
+            if risultati and st.button(t("conf.mostra_finder"), key="finderRisultati"):
+                cartelle = {str(Path(r["cartella"]).parent) for r in risultati}
+                subprocess.run(["open", sorted(cartelle)[0]], check=False)
+        # I pulsanti che premono le pillole: dentro la stessa riga, nascosti,
+        # cosi' non aggiungono uno spazio vuoto sotto i passi.
+        with st.container(key="confNascosti"):
+            for i in (1, 2, 3):
+                st.button(str(i), key=f"confPasso{i}", on_click=_vai_passo, args=(str(path), i))
+
+
+def _scheda_file(files: list[dict], plan, entry: dict) -> None:
+    """Il file da provare e i suoi tre numeri in un riquadro solo."""
+    percorsi = [f["path"] for f in files]
+    nomi = {f["path"]: f["name"] for f in files}
+    with st.container(key="fileCard", horizontal=True):
+        with st.container(key="campoFile"):
+            st.markdown(f"<div class='au-occhio'>{t('conf.file_da_provare')}</div>",
+                        unsafe_allow_html=True)
+            st.selectbox(t("conf.file_da_provare"), percorsi,
+                         index=percorsi.index(entry["path"]),
+                         key=f"file_confronto_{entry['path']}",
+                         format_func=lambda pth: nomi[pth],
+                         label_visibility="collapsed",
+                         on_change=_scegli_file_confronto, args=(entry["path"],))
+        if plan is None:
+            return
+        # Stesso formato delle stime in Lavorazione: ore e minuti.
+        if plan.est_best_seconds < plan.est_total_seconds * 0.95:
+            intero = (f"≈ {stima_hm(plan.est_best_seconds)} "
+                      f"<small>{t('conf.stat_da_a', max=stima_hm(plan.est_total_seconds))}</small>")
+        else:
+            intero = f"≈ {stima_hm(plan.est_total_seconds)}"
         st.markdown(
-            f"<div class='au-verdetto'>{icona}<div>"
-            f"<div class='au-verdetto-file'>{esc(t('conf.caso.questo_file', h=h, fascia=fascia_t))}</div>"
-            f"<div class='au-verdetto-scelta'>{esc(scelta)}</div>"
-            f"<div class='au-verdetto-motivo'>{esc(spiega)}</div></div></div>",
-            unsafe_allow_html=True)
-        with st.expander(t("conf.come_scelti"), key="comeScelti"):
-            st.markdown(
-                "<div class='au-regole'>" + "".join(
-                    f"<div class='au-regola au-p-{colore}'>"
-                    f"<div class='au-p-fascia'>{esc(fascia)}</div>"
-                    f"<div class='au-p-mod'>{esc(modello)}</div>"
-                    f"<div class='au-p-testo'>{esc(testo)}</div></div>"
-                    for fascia, colore, modello, testo in perche_generale(
-                        plan.target_height, bool(cfg.get("forza"))))
-                + f"</div><div class='au-regole-nota'>{t('conf.regola_nota')}</div>",
-                unsafe_allow_html=True)
-
-
-def _schede_modelli(plan, path: Path, praticabili: dict[str, str]) -> list[str]:
-    """I tre modelli come schede spuntabili: cosa sono e quanto costano.
-
-    La spunta dice quali provare sulle clip (prima era una colonna a parte,
-    lontana dalla scheda che lo descriveva). Un modello che non arriva al
-    bersaglio non si puo' provare: la clip uscirebbe a un'altra scala e si
-    sceglierebbe su un test poi inutilizzabile.
-    """
-    giudizi = (plan.recommendation.giudizi or {}) if plan.recommendation else {}
-    CHIP = {"ok": ("au-ok", t("conf.chip_ok")),
-            "verifica": ("au-warn", t("conf.chip_verifica")),
-            "no": ("au-err", t("conf.chip_no"))}
-    for k in CATALOG:
-        if praticabili.get(k) and st.session_state.get(f"prova_{k}_{path}"):
-            # Una spunta rimasta accesa da prima non sopravvive allo
-            # spegnimento della casella.
-            st.session_state[f"prova_{k}_{path}"] = False
-    # Streamlit butta lo stato dei widget che un giro non disegna: lo
-    # specchio `modelli_` tiene la scelta fra un'uscita e un ritorno. Vale
-    # solo dopo che l'utente ha toccato le caselle; prima segue il modello
-    # del file.
-    toccato = st.session_state.get(f"tocco_modelli_{path}")
-    memoria = st.session_state.get(f"modelli_{path}") if toccato else None
-    voluti = memoria if memoria is not None else {plan.model_key}
-    if voluti and all(praticabili.get(k) for k in voluti):
-        voluti = {plan.model_key}
-    src_mpx = plan.source.geometry.width * plan.source.geometry.height / 1e6
-    chiavi: list[str] = []
-    with st.container(key="modelli", horizontal=True):
-        for k, modello in CATALOG.items():
-            morta = bool(praticabili.get(k))
-            scala = preview.scale_for(k, plan)
-            if morta:
-                classe, testo = "au-dim", t("conf.chip_non_arriva",
-                                             altezza=plan.target_height)
-                meta = t("conf.solo_scala", scala=scala,
-                         altezza=plan.source.geometry.height * scala)
-            else:
-                classe, testo = CHIP.get(giudizi.get(k), ("", ""))
-                mpx_s = modello.throughput.get(scala, min(modello.throughput.values()))
-                velocita = mpx_s / src_mpx if src_mpx else None
-                meta = (t("conf.velocita", fps=f"{velocita:.1f}",
-                          durata=stima_hm(plan.frames / velocita)) if velocita else "")
-            with st.container(key=f"mod_{k}"):
-                # Trattini che non spezzano: «Real-CUGAN no-denoise» va a capo
-                # solo fra le parole, mai dopo «no-».
-                acceso = st.checkbox(
-                    modello.label.replace("-", "\u2011"), value=(k in voluti) and not morta,
-                    key=f"prova_{k}_{path}", disabled=morta,
-                    help=praticabili.get(k) or None,
-                    on_change=_tocca_modelli, args=(str(path),))
-                st.markdown(
-                    (f"<span class='au-tag {classe}'>{esc(testo)}</span>" if testo else "")
-                    + f"<div class='au-m-desc'>{esc(modello.description[:1].upper() + modello.description[1:])}</div>"
-                    f"<div class='au-m-vel'>{_pezzi(meta)}</div>",
-                    unsafe_allow_html=True)
-            if acceso and not morta:
-                chiavi.append(k)
-    if toccato:
-        st.session_state[f"modelli_{path}"] = set(chiavi)
-    return chiavi
+            "<div class='au-stat-file'>"
+            f"<div><dt>{t('conf.stat_sorgente')}</dt><dd>{esc(entry['resolution'])}</dd></div>"
+            f"<div><dt>{t('conf.stat_uscita')}</dt>"
+            f"<dd>{plan.target_width}×{plan.target_height}</dd></div>"
+            f"<div><dt>{t('conf.stat_episodio')}"
+            f"{_icona_perche(t('conf.stat_episodio_aiuto'))}</dt>"
+            f"<dd>{intero}</dd></div></div>", unsafe_allow_html=True)
 
 
 # Oltre questa soglia si rinuncia al video incorporato: un data URI enorme
@@ -7249,176 +7553,147 @@ def _video_ciclico(f: Path) -> bool:
     return True
 
 
-def _spezzoni(plan, path: Path, cfg: dict,
-              praticabili: dict[str, str] | None = None,
-              chiavi: list[str] | None = None) -> None:
-    praticabili = praticabili or {}
-    chiavi = chiavi or []
+def _recupera_spezzoni(plan, path: Path) -> None:
+    """La scansione lascia traccia su disco: dopo un ricaricamento o un
+    riavvio i minuti spesi non sono persi e non serve ricliccare."""
     chiave = f"cand_{path}"
-    # La scansione ora lascia traccia su disco: se l'interfaccia è stata
-    # ricaricata (o riavviata) a metà lavoro, i minuti spesi non sono persi e
-    # non serve ricliccare. Prima il risultato viveva solo in sessione, e un
-    # riavvio riportava alla schermata iniziale senza errore e senza spiegazioni.
-    if chiave not in st.session_state:
-        try:
-            # Prima il deposito (l'elenco COMPLETO, tutti i lotti); se manca —
-            # file scansionati prima che il deposito esistesse — si ripiega
-            # sullo schedario del primo lotto.
-            recuperati = preview.leggi_deposito(plan, 2, preview.DEFAULT_SECONDS,
-                                                PATHS)
-            if not recuperati:
-                schedario = preview._schedario(plan, 2, preview.DEFAULT_SECONDS,
-                                               PATHS)
-                if schedario.is_file():
-                    recuperati = preview._leggi_schedario(schedario,
-                                                          float(plan.fps))
-            if recuperati:
-                st.session_state[chiave] = recuperati
-                # E anche la memoria dei GIA' VISTI, che prima non si
-                # recuperava: senza, il pulsante tornava a dire «trova gli
-                # spezzoni» e ripescava dalla cassa gli stessi otto, che
-                # finivano AGGIUNTI a quelli gia' in pagina — otto card
-                # doppie dopo un semplice ricaricamento.
-                st.session_state[f"visti_{path}"] = tuple(
-                    c.start_frame for c in recuperati)
-                st.session_state.setdefault(f"thumbs_{path}", {})
-        except OSError:
-            pass
+    if chiave in st.session_state:
+        return
+    try:
+        # Prima il deposito (l'elenco COMPLETO, tutti i lotti); se manca —
+        # file scansionati prima che il deposito esistesse — si ripiega
+        # sullo schedario del primo lotto.
+        recuperati = preview.leggi_deposito(plan, 2, preview.DEFAULT_SECONDS, PATHS)
+        if not recuperati:
+            schedario = preview._schedario(plan, 2, preview.DEFAULT_SECONDS, PATHS)
+            if schedario.is_file():
+                recuperati = preview._leggi_schedario(schedario, float(plan.fps))
+        if recuperati:
+            st.session_state[chiave] = recuperati
+            # E anche la memoria dei GIA' VISTI: senza, «Trova altri»
+            # ripescava gli stessi otto e la pagina li mostrava doppi.
+            st.session_state[f"visti_{path}"] = tuple(c.start_frame for c in recuperati)
+            st.session_state.setdefault(f"thumbs_{path}", {})
+    except OSError:
+        pass
 
-    # La testata delle clip: titolo, quante, un consiglio, e a destra il
-    # pulsante per cercarne altre. Senza clip, al posto della griglia c'e'
-    # un riquadro che spiega cosa fara' la ricerca.
-    candidati_gia = st.session_state.get(chiave)
+
+def _cerca_spezzoni(plan, path: Path, area) -> None:
+    """Cerca (altri) spezzoni difficili e li AGGIUNGE a quelli gia' in pagina."""
+    chiave = f"cand_{path}"
     gia_visti = tuple(st.session_state.get(f"visti_{path}") or ())
-    premuto = False
-    if candidati_gia:
-        with st.container(key="testaClip", horizontal=True,
-                          vertical_alignment="center"):
-            st.markdown(
-                f"<div class='au-sez-riga'><span class='au-sez-titolo'>{t('conf.clip_titolo')}</span>"
-                f"<span class='au-tag au-ok'>{t('conf.trovate', n=len(candidati_gia))}</span>"
-                f"<span class='au-sez-nota'>{t('conf.clip_nota')}</span></div>",
-                unsafe_allow_html=True)
-            premuto = st.button(t("conf.trova_altri"), key="trovaAltri")
-    else:
-        st.markdown(f"<div class='au-sez-riga'><span class='au-sez-titolo'>"
-                    f"{t('conf.clip_titolo')}</span></div>", unsafe_allow_html=True)
-        with st.container(key="trovaCard", horizontal=True,
-                          vertical_alignment="center"):
-            st.markdown(f"<div class='au-trova'><b>{t('conf.trova')}</b>"
-                        f"<p>{t('conf.trova_spiega')}</p></div>",
-                        unsafe_allow_html=True)
-            premuto = st.button(t("conf.trova"), key="trovaClip", type="primary")
-    # Il posto della riga d'avviso (scansione, estrazione delle anteprime)
-    # esiste SEMPRE, qui, vuoto quando non serve. Creato solo al bisogno,
-    # entrava al posto della prima riga di spezzoni: Streamlit sostituisce
-    # per posizione, e durante «Trova altri 8» i primi quattro sparivano per
-    # tornare a ricerca finita (segnalato dall'utente).
-    area = st.empty()
 
     def _passo(testo: str) -> None:
         area.markdown(f"<div class='au-avviso' style='margin-top:8px'>"
                       f"<span class='au-rotella'></span>{esc(testo)}"
                       f"</div>", unsafe_allow_html=True)
 
-    if premuto:
-        # La durata annunciata era "circa tre minuti": misurata, sta fra 28s
-        # (360p) e 51s (720p) su episodi interi. Sovrastimare per prudenza fa
-        # rinunciare a una cosa che costa meno di un minuto.
-        # NIENTE `st.status`: ha la forma di un accordion apribile con dentro
-        # il nulla — l'utente lo apre e resta deluso (successo). Una riga di
-        # avviso con la rotella dice le stesse cose senza fingersi altro, e a
-        # cose fatte sparisce col rerun.
-        _passo(t("conf.scansione"))
-        try:
-            nuovi = preview.find_candidates(
-                plan, per_kind=2, on_step=_passo, escludi=gia_visti)
-            if not nuovi:
+    # NIENTE `st.status`: ha la forma di un accordion apribile con dentro il
+    # nulla. Una riga di avviso con la rotella dice le stesse cose.
+    _passo(t("conf.scansione"))
+    try:
+        nuovi = preview.find_candidates(plan, per_kind=2, on_step=_passo,
+                                        escludi=gia_visti)
+        avuti = list(st.session_state.get(chiave) or [])
+        nuovi = preview.solo_nuovi(avuti, nuovi or [])
+        if not nuovi:
+            if avuti:
                 area.warning(t("conf.nessun_altro"), icon="ℹ️")
                 return
-            # I nuovi si AGGIUNGONO: chi ha chiesto altri spezzoni vuole
-            # scegliere fra piu' scene, non ricominciare da capo. Ma solo i
-            # DAVVERO nuovi: se per qualunque via ne tornasse uno gia' in
-            # pagina, aggiungerlo fabbricherebbe una card doppia.
-            avuti = list(st.session_state.get(chiave) or [])
-            nuovi = preview.solo_nuovi(avuti, nuovi)
-            if not nuovi:
-                area.warning(t("conf.nessun_altro"), icon="ℹ️")
-                return
-            tutti = avuti + nuovi
-            st.session_state[chiave] = tutti
-            st.session_state[f"visti_{path}"] = gia_visti + tuple(
-                c.start_frame for c in nuovi)
-            st.session_state.setdefault(f"thumbs_{path}", {})
-            # L'elenco completo va su disco: e' cio' che la pagina ritrova
-            # dopo un ricaricamento, lotti successivi compresi.
-            preview.scrivi_deposito(plan, tutti, 2, preview.DEFAULT_SECONDS,
-                                    PATHS)
-        except Exception as exc:                   # noqa: BLE001
-            area.error(t("conf.errore_analisi", errore=exc), icon="⚠️")
-            return
-        st.rerun()
-
-    candidati = st.session_state.get(chiave)
-    if candidati is None:
-        _barra_confronto(plan, path, cfg, [], chiavi,
-                         st.session_state.get(f"originale_{path}", True))
+            # Nessuno spezzone: si ridisegna, e la pagina lo dice invece di
+            # restare sulla riga della scansione.
+            st.session_state[chiave] = []
+            st.rerun()
+        tutti = avuti + nuovi
+        st.session_state[chiave] = tutti
+        st.session_state[f"visti_{path}"] = gia_visti + tuple(c.start_frame for c in nuovi)
+        st.session_state.setdefault(f"thumbs_{path}", {})
+        # L'elenco completo va su disco: e' cio' che la pagina ritrova dopo
+        # un ricaricamento, lotti successivi compresi.
+        preview.scrivi_deposito(plan, tutti, 2, preview.DEFAULT_SECONDS, PATHS)
+    except Exception as exc:                   # noqa: BLE001
+        area.error(t("conf.errore_analisi", errore=exc), icon="⚠️")
         return
+    st.rerun()
+
+
+def _scelta_iniziale(candidati) -> set:
+    """Al primo giro due spezzoni gia' scelti, mai di piu': uno in movimento
+    e uno scuro o fermo (il consiglio di sempre), cosi' il passo e' subito
+    valido e si capisce cosa va scelto."""
+    scelti: list[str] = []
+    for tipi in (("motion",), ("dark", "static")):
+        for c in candidati:
+            if c.kind.value in tipi and c.slug not in scelti:
+                scelti.append(c.slug)
+                break
+    if not scelti and candidati:
+        scelti.append(candidati[0].slug)
+    return set(scelti[:2])
+
+
+def _passo_spezzoni(plan, path: Path) -> None:
+    st.markdown(
+        f"<div class='au-passo-titolo'>{t('conf.c_titolo')}</div>"
+        f"<div class='au-passo-testo'>{t('conf.c_testo')}<br>{t('conf.c_testo2')}</div>",
+        unsafe_allow_html=True)
+    _recupera_spezzoni(plan, path)
+    chiave = f"cand_{path}"
+    # Il posto della riga d'avviso esiste SEMPRE, qui, vuoto quando non
+    # serve: creato solo al bisogno, Streamlit lo metteva al posto della
+    # prima riga di spezzoni, che spariva durante la ricerca.
+    area = st.empty()
+    if chiave not in st.session_state:
+        # Si cercano da soli, appena scelto il file: prima serviva un clic
+        # su un pulsante che non diceva che dopo andavano anche scelti.
+        _cerca_spezzoni(plan, path, area)
+        return
+    candidati = st.session_state.get(chiave) or []
     if not candidati:
         st.warning(t("conf.nessuno_spezzone"))
+        _barra_spezzoni(path, [], [])
         return
 
     thumbs = st.session_state.setdefault(f"thumbs_{path}", {})
-    scelti = state(f"scelti_{path}", set())
+    if f"scelti_{path}" not in st.session_state:
+        st.session_state[f"scelti_{path}"] = _scelta_iniziale(candidati)
+        for cand in candidati:
+            st.session_state[f"c_{path}_{cand.slug}"] = (
+                cand.slug in st.session_state[f"scelti_{path}"])
+    scelti = st.session_state[f"scelti_{path}"]
 
     # Spezzoni animati e non fermi immagine: su un fotogramma solo non si vede
-    # la differenza fra una scena ferma e una in movimento, che è la cosa su
-    # cui si sta scegliendo. Costano poco (misurati 1.1s e 0.3 MB per otto) e
+    # la differenza fra una scena ferma e una in movimento. Costano poco e
     # restano su disco, quindi si pagano una volta.
     mancanti = [c for c in candidati if c.slug not in thumbs]
     if mancanti:
-        # Stessa riga-avviso della scansione, per lo stesso motivo: niente
-        # finti accordion.
-        _passo(tn("conf.estraggo", len(mancanti)))
+        area.markdown(f"<div class='au-avviso' style='margin-top:8px'>"
+                      f"<span class='au-rotella'></span>"
+                      f"{esc(tn('conf.estraggo', len(mancanti)))}</div>",
+                      unsafe_allow_html=True)
         for cand in mancanti:
             # La durata sta nel nome: cambiarla senza cambiare il nome
             # avrebbe continuato a servire i ritagli vecchi dalla cache.
             secondi = int(round(cand.frames / cand.fps))
-            base = (PATHS.previews / "clips"
-                    / f"{path.stem}_{cand.slug}_{secondi}s")
-            clip = preview.animation(
-                plan, cand, base.with_suffix(".mp4"), on_step=_passo)
-            # Se l'estrazione fallisce resta il fermo immagine: peggio del
-            # video, molto meglio di un buco senza spiegazione.
-            thumbs[cand.slug] = clip or preview.thumbnail(
-                plan, cand, base.with_suffix(".jpg"))
-        # Il rerun fa sparire la riga a lavoro finito: a cose fatte non dice
-        # più niente e resterebbe come residuo in mezzo alla pagina.
+            base = PATHS.previews / "clips" / f"{path.stem}_{cand.slug}_{secondi}s"
+            clip = preview.animation(plan, cand, base.with_suffix(".mp4"))
+            # Se l'estrazione fallisce resta il fermo immagine.
+            thumbs[cand.slug] = clip or preview.thumbnail(plan, cand, base.with_suffix(".jpg"))
         st.rerun()
 
     regole_clip: list[str] = []
     for inizio in range(0, len(candidati), 4):
-        for j, (col, cand) in enumerate(
-                zip(st.columns(4), candidati[inizio:inizio + 4])):
+        for j, (col, cand) in enumerate(zip(st.columns(4), candidati[inizio:inizio + 4])):
             with col:
                 # La chiave sta sul contenitore perché il CSS possa accendere
-                # la card intera quando la casella dentro è spuntata
-                # (`:has(input:checked)`): la selezione riguarda la card, non
-                # il quadratino.
+                # la card intera quando la casella dentro è spuntata.
                 with st.container(key=f"clip{inizio + j}"):
                     media = thumbs.get(cand.slug)
                     if media and media.suffix == ".mp4":
                         if not _video_ciclico(media):
-                            st.video(str(media), loop=True, autoplay=True,
-                                     muted=True)
+                            st.video(str(media), loop=True, autoplay=True, muted=True)
                     elif media:
                         st.image(str(media), use_container_width=True)
-                    # Il timecode viene messo dal CSS in fondo alla riga
-                    # dell'etichetta (vedi `regole_clip`): dentro l'etichetta
-                    # sarebbe una stringa sola e non si potrebbe spingere a
-                    # destra, perché Streamlit non accetta markup lì.
-                    # Il tipo resta l'identificativo italiano (nomi dei
-                    # file, cassa): si traduce solo la scritta.
                     acceso = st.checkbox(
                         t(f"conf.tipo.{cand.kind.value}").capitalize(),
                         value=cand.slug in scelti, key=f"c_{path}_{cand.slug}")
@@ -7430,100 +7705,198 @@ def _spezzoni(plan, path: Path, cfg: dict,
                     else:
                         scelti.discard(cand.slug)
                     st.markdown(
-                        f"<div class='au-c-motivo'>{esc(cand.reason)}</div>"
-                        f"<div class='au-c-prove'>"
-                        f"{esc(t('conf.prova', prove=cand.kind.tests))}</div>",
+                        f"<div class='au-c-prove'>{esc(t('conf.prova', prove=cand.kind.tests))}.</div>",
                         unsafe_allow_html=True)
-
-    st.markdown("<style>" + "\n".join(regole_clip) + "</style>",
-                unsafe_allow_html=True)
+    st.markdown("<style>" + "\n".join(regole_clip) + "</style>", unsafe_allow_html=True)
     st.session_state[f"scelti_{path}"] = scelti
 
-    riferimento = st.session_state.get(f"originale_{path}", True)
+    # Sotto l'ultima riga: man mano che gli spezzoni crescono, scende con loro.
+    with st.container(key="trovaAltriRiga", horizontal=True, horizontal_alignment="center"):
+        if st.button(t("conf.trova_altri"), key="trovaAltri"):
+            _cerca_spezzoni(plan, path, area)
     prescelti = [c for c in candidati if c.slug in scelti]
-    _barra_confronto(plan, path, cfg, prescelti, chiavi, riferimento)
-    _risultati(path)
+    _barra_spezzoni(path, prescelti, candidati)
 
 
-def _barra_confronto(plan, path: Path, cfg: dict, prescelti: list,
-                     chiavi: list[str], riferimento: bool) -> None:
-    """La barra in fondo al Confronto: cosa si sta per elaborare e il via.
-
-    Mentre un confronto gira (anche partito da un altro file, anche dopo un
-    ricaricamento) la barra diventa il suo avanzamento, con Ferma.
-    """
-    _carica_esito_confronto(path)
-    if st.session_state.pop("scorri_clip", False):
-        st.iframe("<script>window.parent.document.querySelector('.st-key-testaClip')"
-                  "?.scrollIntoView({behavior:'smooth',block:'start'});</script>", height=1)
-    elif st.session_state.pop("scorri_risultati", False):
-        # Dopo un attimo: la pagina si sta ancora allungando sotto.
-        st.iframe("<script>setTimeout(()=>window.parent.document"
-                  ".querySelector('.st-key-testaRisultati')"
-                  "?.scrollIntoView({behavior:'smooth',block:'start'}),400);</script>",
-                  height=1)
-    with st.container(key="barraConfronto", horizontal=True,
-                      vertical_alignment="center"):
-        if confronto.in_corso():
-            _avanzamento_confronto(str(path))
-            return
-        fatto = confronto.stato()
-        if (not prescelti and fatto and fatto.get("state") == confronto.FINITO
-                and fatto.get("file") == str(path) and fatto.get("results")):
-            # Il confronto e' pronto e non si sta preparando altro: la barra
-            # dice com'e' andata e porta al passo successivo.
-            n_file = sum(len(r.get("file") or {}) for r in fatto["results"])
-            durata = max(0.0, float(fatto.get("ended") or 0) - float(fatto.get("started") or 0))
+def _barra_spezzoni(path: Path, prescelti: list, candidati: list) -> None:
+    with st.container(key="barraConfronto", horizontal=True, vertical_alignment="center"):
+        if prescelti:
+            elenco = t("conf.e").join(
+                f"{t(f'conf.tipo.{c.kind.value}').capitalize()} {c.timecode}" for c in prescelti) \
+                if len(prescelti) <= 2 else ", ".join(
+                f"{t(f'conf.tipo.{c.kind.value}').capitalize()} {c.timecode}" for c in prescelti[:3]) \
+                + ("…" if len(prescelti) > 3 else "")
+            secondi = int(round(sum(c.frames / c.fps for c in prescelti)))
             st.markdown(
-                f"<div class='au-barra-pronto'><span class='au-spunta'>{_svg(_I_SPUNTA, 12, 2.4)}</span>"
-                f"<div><b>{_pezzi(t('conf.pronto_barra', n=n_file, tempo=hms(durata)))}</b>"
-                f"<span>{t('conf.pronto_nota')}</span></div></div>",
+                f"<div class='au-barra-due'><span class='au-barra-num'>{len(prescelti)}</span><div>"
+                f"<b>{tn('conf.c_scelti', len(prescelti))}</b>"
+                f"<span>{esc(t('conf.c_secondi', elenco=elenco, sec=secondi))}</span></div></div>",
                 unsafe_allow_html=True)
-            if st.button(t("conf.torna_clip"), key="tornaClip"):
-                st.session_state["scorri_clip"] = True
-            st.button(t("conf.avanti_lavorazione"), key="avantiLavorazione",
-                      type="primary", icon=":material/arrow_forward:",
-                      icon_position="right", on_click=_vai, args=(SEZIONI[2],))
-            return
-        varianti = preview.variants_for(*chiavi, reference=riferimento)
-        modelli = [v for v in varianti if not v.is_reference]
-        premi = False
-        if not prescelti or not modelli:
-            st.markdown(f"<div class='au-barra-testo'>{t('conf.seleziona')}</div>",
-                        unsafe_allow_html=True)
         else:
-            ns, nm = len(prescelti), len(modelli)
-            solo_modelli = preview.estimate_seconds(plan, prescelti, modelli)
-            totale = preview.estimate_seconds(plan, prescelti, varianti)
-            riga = f"{tn('conf.n_spezzoni', ns)} × {tn('conf.n_modelli', nm)}"
-            if riferimento:
-                riga += f" + {t('conf.piu_originale')}"
-            riga += f" · {tn('conf.n_file', ns * len(varianti))}"
-            tempi = (t("conf.tempi_riga", clip=hms(solo_modelli),
-                       orig=hms(totale - solo_modelli), tot=hms(totale))
-                     if riferimento else
-                     t("conf.tempi_riga_senza", clip=hms(solo_modelli), tot=hms(totale)))
-            st.markdown(f"<div class='au-barra-testo'><b>{riga}</b>"
-                        f"<code>{tempi}</code></div>", unsafe_allow_html=True)
-        # Il «?» col fumetto nostro e non `help=`: quello nativo e' un
-        # rettangolo senza punta, diverso da tutti gli altri suggerimenti
-        # (visto dall'utente).
+            st.markdown(
+                f"<div class='au-barra-due'><div><b>{t('conf.c_nessuno')}</b>"
+                f"<span>{t('conf.c_nessuno_nota')}</span></div></div>",
+                unsafe_allow_html=True)
+        st.button(t("conf.avanti_modelli"), key="avantiModelli", type="primary",
+                  icon=":material/arrow_forward:", icon_position="right",
+                  disabled=not prescelti, on_click=_vai_passo, args=(str(path), 2))
+
+
+def _consigli(plan, cfg: dict, praticabili: dict[str, str]) -> None:
+    """«Suggerimenti per la scelta del modello»: la regola generale con la
+    fascia di questo file accesa, e in fondo l'approfondimento tecnico della
+    guida (non piu' in vista accanto ai modelli: la guida e' tecnica, e a chi
+    e' incerto bastano questi suggerimenti — deciso con l'utente)."""
+    h = plan.source.geometry.height
+    righe = []
+    for indice, (fascia, colore, modello, testo) in enumerate(
+            perche_generale(plan.target_height, bool(cfg.get("forza")))):
+        qui = indice == _fascia_del_file(h)
+        righe.append(
+            f"<div class='au-regola au-p-{colore}{' au-qui' if qui else ''}'>"
+            f"<div class='au-p-fascia'>{esc(fascia)}</div>"
+            f"<div class='au-p-mod'>{esc(modello)}"
+            + (f"<span class='au-qui-chip'>{t('conf.questo_file_chip')}</span>" if qui else "")
+            + f"</div><div class='au-p-testo'>{esc(testo)}</div></div>")
+    with st.expander(f"{t('conf.consigli')} · {t('conf.consigli_sotto', h=h)}", key="consigli"):
+        st.markdown(
+            "<div class='au-regole'>" + "".join(righe) + "</div>"
+            f"<div class='au-regole-nota'>{t('conf.regola_nota')} "
+            f"<a class='au-guida' href='{GUIDA_MODELLI}' target='_blank' rel='noopener'>"
+            f"{t('conf.guida_tecnica')}{_svg(_I_ESTERNO, 12, 2)}</a></div>",
+            unsafe_allow_html=True)
+
+
+def _fascia_del_file(h: int) -> int:
+    """La riga di `perche_generale` in cui cade questo file (0, 1 o 2)."""
+    if h >= CLEAN_SOURCE_MIN_HEIGHT:
+        return 2
+    if h >= ALTEZZA_INCERTA:
+        return 1
+    return 0
+
+
+def _schede_modelli(plan, path: Path, praticabili: dict[str, str]) -> list[str]:
+    """I modelli come schede spuntabili: cosa sono, quando sono la scelta
+    giusta, e quanto costano.
+
+    Ogni scheda ha la sua chip nello stesso punto (prima ce l'aveva solo il
+    consigliato, e il suo testo stava piu' in basso degli altri): verde per
+    il consigliato, grigia con «ideale per …» per gli altri. Il nome sta su
+    due righe — famiglia e variante — cosi' le schede restano allineate a
+    qualunque larghezza.
+    """
+    giudizi = (plan.recommendation.giudizi or {}) if plan.recommendation else {}
+    for k in CATALOG:
+        if praticabili.get(k) and st.session_state.get(f"prova_{k}_{path}"):
+            st.session_state[f"prova_{k}_{path}"] = False
+    # Lo specchio `modelli_` tiene la scelta fra un'uscita e un ritorno; vale
+    # solo dopo che l'utente ha toccato le caselle. Prima: SOLO il consigliato.
+    toccato = st.session_state.get(f"tocco_modelli_{path}")
+    memoria = st.session_state.get(f"modelli_{path}") if toccato else None
+    voluti = memoria if memoria is not None else {plan.model_key}
+    if voluti and all(praticabili.get(k) for k in voluti):
+        voluti = {plan.model_key}
+    src_mpx = plan.source.geometry.width * plan.source.geometry.height / 1e6
+    chiavi: list[str] = []
+    with st.container(key="modelli", horizontal=True):
+        for k, modello in CATALOG.items():
+            morta = bool(praticabili.get(k))
+            scala = preview.scale_for(k, plan)
+            if morta:
+                classe, testo = "au-dim", t("conf.chip_non_arriva", altezza=plan.target_height)
+                meta = t("conf.solo_scala", scala=scala,
+                         altezza=plan.source.geometry.height * scala)
+            else:
+                if k == plan.model_key:
+                    classe, testo = "au-ok", t("conf.chip_ok")
+                elif giudizi.get(k) == "verifica":
+                    classe, testo = "au-warn", t("conf.chip_verifica")
+                else:
+                    classe, testo = "au-grigio", t(f"conf.ideale.{k}")
+                mpx_s = modello.throughput.get(scala, min(modello.throughput.values()))
+                velocita = mpx_s / src_mpx if src_mpx else None
+                meta = (t("conf.velocita", fps=f"{velocita:.1f}",
+                          durata=stima_hm(plan.frames / velocita)) if velocita else "")
+            famiglia, _, variante = modello.label.partition(" ")
+            with st.container(key=f"mod_{k}"):
+                acceso = st.checkbox(
+                    famiglia, value=(k in voluti) and not morta,
+                    key=f"prova_{k}_{path}", disabled=morta,
+                    help=praticabili.get(k) or None,
+                    on_change=_tocca_modelli, args=(str(path),))
+                desc = modello.description
+                st.markdown(
+                    f"<div class='au-m-var'>{esc(variante)}</div>"
+                    f"<span class='au-tag {classe}'>{esc(testo)}</span>"
+                    f"<div class='au-m-desc'>{esc(desc[:1].upper() + desc[1:])}</div>"
+                    f"<div class='au-m-vel'>{_pezzi(meta)}</div>",
+                    unsafe_allow_html=True)
+            if acceso and not morta:
+                chiavi.append(k)
+    if toccato:
+        st.session_state[f"modelli_{path}"] = set(chiavi)
+    else:
+        st.session_state.setdefault(f"modelli_{path}", set(chiavi))
+    return chiavi
+
+
+def _passo_modelli(plan, path: Path, cfg: dict, praticabili: dict[str, str]) -> None:
+    st.markdown(
+        f"<div class='au-passo-titolo'>{t('conf.m_titolo')}</div>"
+        f"<div class='au-passo-testo'>{t('conf.m_testo')}<br>{t('conf.m_testo2')}</div>",
+        unsafe_allow_html=True)
+    _consigli(plan, cfg, praticabili)
+    chiavi = _schede_modelli(plan, path, praticabili)
+    riferimento = st.session_state.get(f"originale_{path}", True)
+    with st.container(key="confOriginale"):
         nuovo = st.toggle(t("conf.includi_originale"), value=riferimento,
                           key=f"tog_originale_{path}")
-        st.markdown(f"<div class='au-tog-aiuto'>{_icona_perche(t('conf.includi_aiuto'))}</div>",
+        st.markdown(f"<div class='au-orig-nota'>{t('conf.includi_aiuto')}</div>",
                     unsafe_allow_html=True)
-        if nuovo != riferimento:
-            st.session_state[f"originale_{path}"] = nuovo
-            st.rerun()
-        # Non durante una coda: si dividerebbero la GPU, e i tempi delle clip
-        # (quelli che stimano l'episodio intero) uscirebbero falsi.
-        occupato = _motivo_blocco() in ("lavoro", "taratura")
-        premi = st.button(t("conf.elabora"), type="primary", key="elaboraClip",
-                          disabled=not prescelti or not modelli or occupato,
+    if nuovo != riferimento:
+        st.session_state[f"originale_{path}"] = nuovo
+        st.rerun()
+
+    candidati = st.session_state.get(f"cand_{path}") or []
+    scelti = st.session_state.get(f"scelti_{path}") or set()
+    prescelti = [c for c in candidati if c.slug in scelti]
+    varianti = preview.variants_for(*chiavi, reference=riferimento)
+    # Non durante una coda: si dividerebbero la GPU, e i tempi delle clip
+    # (quelli che stimano l'episodio intero) uscirebbero falsi.
+    occupato = _motivo_blocco() in ("lavoro", "taratura")
+    premi = False
+    with st.container(key="barraConfronto", horizontal=True, vertical_alignment="center"):
+        if len(varianti) < 2:
+            st.markdown(
+                f"<div class='au-barra-due au-barra-giallo'><div><b>{t('conf.solo_una')}</b>"
+                f"<span>{t('conf.solo_una_nota')}</span></div></div>",
+                unsafe_allow_html=True)
+        elif not prescelti:
+            st.markdown(
+                f"<div class='au-barra-due'><div><b>{t('conf.c_nessuno')}</b>"
+                f"<span>{t('conf.c_nessuno_nota')}</span></div></div>",
+                unsafe_allow_html=True)
+        else:
+            totale = preview.estimate_seconds(plan, prescelti, varianti)
+            nomi = [t("conf.originale") if v.is_reference else CATALOG[v.key].label
+                    for v in sorted(varianti, key=lambda v: not v.is_reference)]
+            elenco = (", ".join(nomi[:-1]) + t("conf.e") + nomi[-1]) if len(nomi) > 1 else nomi[0]
+            st.markdown(
+                f"<div class='au-barra-due'><div>"
+                f"<b>{tn('conf.n_spezzoni', len(prescelti))} × {tn('conf.n_versioni', len(varianti))}"
+                f"<em> · {t('conf.circa', tempo=stima_hm(totale))}</em></b>"
+                f"<span>{esc(t('conf.m_seconda', elenco=elenco))}</span></div></div>",
+                unsafe_allow_html=True)
+        st.button(t("conf.indietro_clip"), key="indietroClip",
+                  icon=":material/arrow_back:", on_click=_vai_passo, args=(str(path), 1))
+        premi = st.button(t("conf.avvia_test"), key="elaboraClip", type="primary",
+                          icon=":material/arrow_forward:", icon_position="right",
+                          disabled=len(varianti) < 2 or not prescelti or occupato,
                           help=t("conf.occupato") if occupato else None)
     if premi:
-        _avvia_confronto(cfg, plan.source.geometry.height, path, prescelti,
-                         preview.variants_for(*chiavi, reference=riferimento))
+        _avvia_confronto(cfg, plan.source.geometry.height, path, prescelti, varianti)
+        _vai_passo(str(path), 3)
         st.rerun()
 
 
@@ -7555,59 +7928,118 @@ def _avvia_confronto(cfg: dict, altezza: int, path: Path, candidati,
         st.warning(t("conf.gia_in_corso"), icon="⚠️")
 
 
-def _carica_esito_confronto(path: Path) -> None:
-    """Porta in pagina l'esito dell'ultimo confronto, se riguarda questo file.
-
-    L'esito vive su disco (`cache/compare/status.json`): sopravvive a un
-    ricaricamento e alla finestra chiusa, cosa che i risultati tenuti solo
-    in sessione non facevano.
-    """
+def _avvisi_confronto(path: Path) -> None:
+    """Com'e' finito l'ultimo giro su questo file, se non e' finito bene."""
     s = confronto.stato()
     if not s or s.get("file") != str(path) or s.get("state") == confronto.IN_CORSO:
-        if st.session_state.get(f"risultati_{path}"):
-            st.markdown(f"<div class='au-hint'>{t('conf.pronto')}</div>",
-                        unsafe_allow_html=True)
         return
-    if s.get("results"):
-        st.session_state[f"risultati_{path}"] = s["results"]
-        st.markdown(f"<div class='au-hint'>{t('conf.pronto')}</div>",
-                    unsafe_allow_html=True)
     if s.get("state") == confronto.FERMATO:
         st.info(t("conf.fermato"), icon="⏹️")
     elif s.get("state") == confronto.INTERROTTO:
-        st.warning(t("conf.interrotto", pulsante=t("conf.elabora")), icon="⚠️")
+        st.warning(t("conf.interrotto", pulsante=t("conf.avvia_test")), icon="⚠️")
     for g in s.get("failures") or []:
         st.error(g, icon="⚠️")
 
 
+def _nome_versione(k: str) -> str:
+    return t("conf.originale") if k == "original" else CATALOG[k].label
+
+
+def _passo_risultati(plan, path: Path) -> None:
+    s = confronto.stato() or {}
+    gira = s.get("state") == confronto.IN_CORSO and s.get("file") == str(path)
+    risultati = _risultati_di(path)
+    if gira:
+        st.markdown(
+            f"<div class='au-passo-titolo'>{esc(t('conf.r_titolo_corso', nome=path.name))}</div>"
+            f"<div class='au-passo-testo'>{t('conf.r_corso_1')}<br>{t('conf.r_corso_2')}</div>",
+            unsafe_allow_html=True)
+    else:
+        testa = f"<div class='au-passo-titolo'>{esc(t('conf.r_titolo', nome=path.name))}</div>"
+        if risultati:
+            chiavi_r = preview.ordine_lettura(risultati[0].get("file") or {})
+            nomi = [t("conf.e_originale") if k == "original" else CATALOG[k].label
+                    for k in chiavi_r if k == "original" or k in CATALOG]
+            nomi = [n for n in nomi if n != t("conf.e_originale")] + (
+                [t("conf.e_originale")] if "original" in chiavi_r else [])
+            modelli_testo = (", ".join(nomi[:-1]) + t("conf.e") + nomi[-1]
+                             if len(nomi) > 1 else "".join(nomi))
+            testa += (f"<div class='au-passo-testo'>"
+                      f"{esc(t('conf.r_testo1', clip=tn('conf.n_spezzoni', len(risultati)), modelli=modelli_testo))}"
+                      f"<br>{t('conf.r_testo2')}</div>")
+        # Titolo e testo in un blocco solo: separati, Streamlit ci metteva
+        # 18px in mezzo e 4 sotto, al contrario della tavola.
+        st.markdown(testa, unsafe_allow_html=True)
+        _avvisi_confronto(path)
+    with st.container(key="risultati"):
+        for res in risultati:
+            _clip_risultato(res, plan, path)
+    st.session_state["conf_pezzi_visti"] = bool(s.get("segmenti")) if gira else False
+    if gira:
+        # Lo spezzone in lavorazione e quelli che aspettano: i risultati
+        # compaiono uno spezzone alla volta, appena pronti.
+        fatti = {(r.get("tipo"), r.get("intervallo", "").split(" ")[0]) for r in risultati}
+        visti = []
+        for seg in s.get("segmenti") or []:
+            chiave = (seg["tipo"], seg["tc"])
+            if chiave in fatti or chiave in visti:
+                continue
+            visti.append(chiave)
+        for i, (tipo, tc) in enumerate(visti):
+            stato = t("conf.in_lavorazione") if i == 0 else t("conf.in_attesa")
+            st.markdown(
+                f"<div class='au-attesa{' au-attesa-ora' if i == 0 else ''}'>"
+                f"<b>{esc(t(f'conf.tipo.{tipo}').capitalize())}</b><code>{esc(tc)}</code>"
+                f"<span>{esc(stato)}</span></div>", unsafe_allow_html=True)
+    with st.container(key="barraConfronto", horizontal=True, vertical_alignment="center"):
+        if confronto.in_corso():
+            _avanzamento_confronto(str(path), len(risultati))
+        elif risultati:
+            durata = max(0.0, float(s.get("ended") or 0) - float(s.get("started") or 0)) \
+                if s.get("file") == str(path) else 0.0
+            st.markdown(
+                f"<div class='au-barra-pronto'><span class='au-spunta'>{_svg(_I_SPUNTA, 12, 2.4)}</span>"
+                f"<div><b>{t('conf.pronto')}"
+                + (f"<em> · {t('conf.pronto_tempo', clip=tn('conf.n_spezzoni', len(risultati)), tempo=hms(durata))}</em>"
+                   if durata else "")
+                + f"</b><span>{t('conf.pronto_nota')}</span></div></div>",
+                unsafe_allow_html=True)
+            st.button(t("conf.avanti_lavorazione"), key="avantiLavorazione",
+                      type="primary", icon=":material/arrow_forward:",
+                      icon_position="right", on_click=_vai, args=(SEZIONI[2],))
+        else:
+            st.markdown(f"<div class='au-barra-due'><div><b>{t('conf.nessun_risultato')}</b></div></div>",
+                        unsafe_allow_html=True)
+            st.button(t("conf.indietro_clip"), key="indietroClip3",
+                      icon=":material/arrow_back:", on_click=_vai_passo, args=(str(path), 1))
+
+
 @st.fragment(run_every=2)
-def _avanzamento_confronto(path: str) -> None:
-    """Il confronto in corso, riletto ogni due secondi: dove e', quanto
-    manca, e Ferma. Quando il processo finisce si ridisegna la pagina
-    intera, che porta in pagina i risultati."""
+def _avanzamento_confronto(path: str, n_risultati: int = 0) -> None:
+    """Il test in corso, riletto ogni due secondi: TUTTO il test e non solo
+    la versione che gira, con una tacca per versione come i blocchi della
+    Lavorazione. Quando arriva uno spezzone nuovo (o il test finisce) si
+    ridisegna la pagina intera, che lo mostra."""
     s = confronto.stato()
     if not s or s.get("state") != confronto.IN_CORSO:
-        if st.session_state.pop("conf_seguito", None):
-            # Finito sotto gli occhi: i risultati arrivano in fondo alla
-            # pagina, sotto la piega, e chi non sa che ci sono non li vede
-            # (segnalato dall'utente). Al prossimo disegno ci si porta li'.
-            st.session_state["scorri_risultati"] = True
-            st.rerun()
+        st.rerun()
         return
-    st.session_state["conf_seguito"] = True
+    # Uno spezzone nuovo pronto, o i pezzi del test appena scritti (servono
+    # alla pagina per mostrare cosa gira e cosa aspetta): pagina intera.
+    nuovi_pezzi = bool(s.get("segmenti")) and not st.session_state.get("conf_pezzi_visti")
+    if s.get("file") == path and (len(s.get("results") or []) != n_risultati or nuovi_pezzi):
+        st.session_state["conf_pezzi_visti"] = True
+        st.rerun()
+        return
     totale = max(int(s.get("total") or 0), 1)
     fatte = int(s.get("done") or 0)
     quota = confronto.quota(s)
-    testo = s.get("text") or t("conf.avvio")
-    altro = ("<div class='au-prova-nota'>"
-             f"{t('conf.altro_file', nome=esc(Path(s['file']).name))}</div>"
+    altro = (f"<div class='au-prova-nota'>{t('conf.altro_file', nome=esc(Path(s['file']).name))}</div>"
              if s.get("file") != path else "")
-    with st.container(key="provaTesta", horizontal=True,
-                      vertical_alignment="center"):
+    with st.container(key="provaTesta", horizontal=True, vertical_alignment="center"):
         st.markdown(
             "<div class='au-prova-testa'><span></span>"
-            f"<b>{t('conf.prova_titolo')}</b>"
-            f"<code>{esc(testo)} · {quota:.0%}</code>"
+            f"<b>{t('conf.prova_titolo')}<em> · {t('conf.del_totale', pct=f'{quota:.0%}')}</em></b>"
             f"<small>{t('conf.versione_di', n=min(fatte + 1, totale), tot=totale)}</small>"
             "</div>", unsafe_allow_html=True)
         # Due clic, come gli altri Ferma: il primo chiede conferma per dieci
@@ -7616,15 +8048,66 @@ def _avanzamento_confronto(path: str) -> None:
             if st.button(t("conf.ferma"), key="ferma_confronto"):
                 st.session_state["conf_ferma_conferma"] = time.time()
                 st.rerun(scope="fragment")
-        elif st.button(t("conf.ferma_conferma"), key="ferma_confronto_ok",
-                       type="primary"):
+        elif st.button(t("conf.ferma_conferma"), key="ferma_confronto_ok", type="primary"):
             st.session_state.pop("conf_ferma_conferma", None)
             confronto.ferma()
             st.rerun(scope="fragment")
-    st.markdown(
-        f"<div class='au-prova-barra'><span style='width:{quota * 100:.1f}%'></span></div>"
-        f"<div class='au-prova-nota'>{t('conf.prova_nota')}</div>{altro}",
-        unsafe_allow_html=True)
+    st.markdown(_barra_segmenti(s, quota) + altro, unsafe_allow_html=True)
+
+
+def _barra_segmenti(s: dict, quota: float) -> str:
+    """La barra del test intero con le sue tacche e, sotto, cosa e' fatto e
+    cosa gira (deciso con l'utente). Una tacca piena fra uno spezzone e
+    l'altro, una sottile fra le sue versioni; sotto, il nome di ogni
+    spezzone (fatto, in corso, in attesa) e una riga «Ora: …» con la
+    versione che gira. Oltre i 12 spezzoni i nomi non ci stanno piu' e
+    resta solo la riga.
+
+    Le etichette sono per spezzone e non per versione: l'originale pesa un
+    decimo di un modello, e la sua etichetta in un pezzo cosi' corto non si
+    leggeva (visto provandola)."""
+    segs = s.get("segmenti") or []
+    peso_tot = sum(float(g.get("peso") or 0) for g in segs) or 1.0
+    fatte = int(s.get("done") or 0)
+    frazione = float(s.get("fraction") or 0)
+    clip_di = [(g["tipo"], g["tc"]) for g in segs]
+    tacche, sx = [], 0.0
+    for i, g in enumerate(segs[:-1]):
+        sx += float(g.get("peso") or 0) / peso_tot * 100
+        piena = clip_di[i] != clip_di[i + 1]
+        tacche.append(f"<i class='{'au-tacca' if piena else 'au-tacca-fine'}' "
+                      f"style='left:{sx:.2f}%'></i>")
+    barra = (f"<div class='au-prova-barra au-con-tacche'><span style='width:{quota * 100:.1f}%'></span>"
+             + "".join(tacche) + "</div>")
+    if not segs:
+        return barra
+    clip: list = []
+    for chiave, g in zip(clip_di, segs):
+        if not clip or clip[-1][0] != chiave:
+            clip.append([chiave, 0.0, 0])
+        clip[-1][1] += float(g.get("peso") or 0)
+        clip[-1][2] += 1
+    righe = ""
+    if len(clip) <= 12:
+        indice, celle = 0, []
+        for (tipo, tc), peso, quante in clip:
+            finita = indice + quante <= fatte
+            corrente = indice <= fatte < indice + quante
+            classe = "au-seg-fatto" if finita else "au-seg-ora" if corrente else ""
+            celle.append(f"<div style='flex:{peso / peso_tot:.4f}'><span class='{classe}'>"
+                         f"{'✓ ' if finita else ''}{esc(t(f'conf.tipo.{tipo}').capitalize())} {esc(tc)}"
+                         "</span></div>")
+            indice += quante
+        righe = f"<div class='au-seg-righe'>{''.join(celle)}</div>"
+    if fatte < len(segs):
+        g = segs[fatte]
+        ver = t("conf.originale") if g["chiave"] == "original" else (
+            CATALOG[g["chiave"]].label if g["chiave"] in CATALOG else g["chiave"])
+        tipo = t(f"conf.tipo.{g['tipo']}").capitalize()
+        ora = f"{tipo} {g['tc']} — {ver} · {frazione:.0%}"
+        righe += (f"<div class='au-prova-nota'>{t('conf.ora')} "
+                  f"<code>{esc(ora)}</code></div>")
+    return barra + righe
 
 
 # Una funzione e non un dizionario fisso: i testi seguono la lingua attiva.
@@ -7651,8 +8134,9 @@ def _tabella_confronto(modelli: list[dict], dedup,
             d = m["secondi"] / piu_veloce - 1
             scarto = (t("conf.piu_veloce") if d < 0.005
                       else t("conf.piu_tempo", pct=f"{d:.0%}"))
+        nome = m.get("etichetta") or m["nome"]
         righe.append(
-            f"<tr><td class='au-cnf-nome'>{esc(m['nome'])}</td>"
+            f"<tr><td class='au-cnf-nome'>{esc(nome)}</td>"
             f"<td>{stima_hm(m['secondi'])}</td>"
             f"<td>≈ {stima_hm(m['intero'])}</td>"
             + (f"<td class='au-cnf-scarto'>{esc(scarto)}</td>" if len(modelli) > 1 else "")
@@ -7680,8 +8164,8 @@ def _tabella_confronto(modelli: list[dict], dedup,
                       f"<div class='au-cnf-nota'>"
                       f"{t('conf.ind_no_rif') if not riferimento else t('conf.ind_no_aree')}</div>")
     else:
-        # Barre e non numeri soli: la tacca e' il 100% dell'ingrandimento
-        # semplice, e la barra arriva fino a 4 volte tanto.
+        # La barra arriva fino a 4 volte l'ingrandimento semplice: il segno
+        # bianco al 25% e' il suo 100%, con l'etichetta sotto.
         blocchi = []
         for m in modelli:
             barre = []
@@ -7689,98 +8173,211 @@ def _tabella_confronto(modelli: list[dict], dedup,
                 v = _c(m, i)
                 if v is None:
                     barre.append(f"<div class='au-ind'><span>{esc(testo)}</span>"
-                                 "<i></i><b>—</b></div>")
+                                 "<i><u></u></i><b>—</b></div>")
                     continue
                 barre.append(
                     f"<div class='au-ind'><span>{esc(testo)}</span>"
-                    f"<i><em style='width:{min(v / 4, 1) * 100:.1f}%'></em></i>"
+                    f"<i><em style='width:{min(v / 4, 1) * 100:.1f}%'></em><u></u></i>"
                     f"<b>{v * 100:.0f}%</b></div>")
-            blocchi.append(f"<div class='au-ind-modello'>{esc(m['nome'])}</div>"
-                           + "".join(barre))
+            nome = m.get("etichetta") or m["nome"]
+            blocchi.append(f"<div class='au-ind-modello'>{esc(nome)}</div>" + "".join(barre))
         spiega = _spiega_indicatori()
         indicatori = (f"<div class='au-occhio'>{t('conf.indicatori_titolo')}"
                       f"{_icona_perche(' '.join(spiega[i] for i, _t in colonne))}</div>"
                       + "".join(blocchi)
+                      + "<div class='au-ind au-ind-scala'><span></span><i><s>100%</s></i><b></b></div>"
                       + f"<div class='au-cnf-nota'>{t('conf.tacca')}</div>")
     st.markdown(f"<div class='au-res-due'><div>{tempi}</div><div>{indicatori}</div></div>",
                 unsafe_allow_html=True)
 
 
-def _risultati(path: Path) -> None:
-    risultati = st.session_state.get(f"risultati_{path}")
-    if not risultati:
+def _ritaglio_html(percorso: str) -> str:
+    try:
+        dati = base64.b64encode(Path(percorso).read_bytes()).decode()
+    except OSError:
+        return "<div class='au-ritaglio-vuoto'></div>"
+    return f"<img class='au-ritaglio' src='data:image/png;base64,{dati}'>"
+
+
+def _usa_modello(path: str, k: str) -> None:
+    """«Usa per questo file»: il modello sulla riga del file in Lavorazione,
+    con la possibilita' di tornare indietro (`conf_usato`)."""
+    modelli = state("modelli", {})
+    scelte = state("scelte_modello", set())
+    st.session_state["conf_usato"] = {"file": path, "modello": k,
+                                      "prima": modelli.get(path),
+                                      "era_scelta": path in scelte}
+    modelli[path] = k
+    scelte.add(path)
+    st.session_state[f"m_{path}"] = k
+    st.session_state.setdefault("da_confronto", set()).add(path)
+
+
+def _annulla_usa() -> None:
+    u = st.session_state.pop("conf_usato", None)
+    if not u:
         return
-    # L'ancora dello scroll automatico post-elaborazione.
-    st.markdown("<div class='au-ancora-risultati'></div>", unsafe_allow_html=True)
-    clip = tn("conf.n_spezzoni", len(risultati))
-    nomi_mod = [m["nome"] for m in (risultati[0].get("modelli") or [])]
-    if "original" in (risultati[0].get("file") or {}):
-        nomi_mod.append(t("conf.e_originale"))
-    modelli_testo = (", ".join(nomi_mod[:-1]) + t("conf.e") + nomi_mod[-1]
-                     if len(nomi_mod) > 1 else "".join(nomi_mod))
-    with st.container(key="risultati"):
-        with st.container(key="testaRisultati", horizontal=True,
-                          vertical_alignment="bottom"):
-            st.markdown(
-                f"<div class='au-sez-titolo au-grande'>{t('conf.risultati')}</div>"
-                f"<div class='au-sez-nota'>"
-                f"{esc(t('conf.risultati_testo', clip=clip, modelli=modelli_testo))}</div>",
+    modelli = state("modelli", {})
+    scelte = state("scelte_modello", set())
+    if u["prima"]:
+        modelli[u["file"]] = u["prima"]
+        st.session_state[f"m_{u['file']}"] = u["prima"]
+    else:
+        modelli.pop(u["file"], None)
+        st.session_state.pop(f"m_{u['file']}", None)
+    if not u["era_scelta"]:
+        scelte.discard(u["file"])
+    st.session_state.get("da_confronto", set()).discard(u["file"])
+
+
+@st.dialog(" ", width="medium")
+def _dialogo_usa_tutti(k: str) -> None:
+    """«Usa per tutti i file»: prima si dice cosa cambia, file per file, e si
+    lasciano fuori i file per cui quel modello sarebbe una cattiva scelta."""
+    modelli = state("modelli", {})
+    cambiano, esclusi = [], []
+    for f in load_library():
+        if not f.get("height"):
+            continue
+        giudizio = (recommend(f["height"]).giudizi or {}).get(k)
+        if giudizio == "no":
+            esclusi.append(f["name"])
+            continue
+        attuale = modelli.get(f["path"]) or recommend(f["height"]).model
+        if attuale != k:
+            cambiano.append((f, attuale))
+    nome = CATALOG[k].label
+    st.markdown(f"<div class='au-dialogo-titolo'>{esc(t('conf.tutti_titolo', modello=nome))}</div>",
                 unsafe_allow_html=True)
-            if st.button(t("conf.mostra_finder"), key="finderRisultati"):
-                cartelle = {str(Path(r["cartella"]).parent) for r in risultati}
-                subprocess.run(["open", sorted(cartelle)[0]], check=False)
-        for res in risultati:
-            tipo = t(f"conf.tipo.{res['tipo']}").capitalize()
-            prove = preview.Kind(res["tipo"]).tests if res.get("tipo") in (
-                k.value for k in preview.Kind) else ""
-            prova = t("conf.prova", prove=prove) if prove else ""
-            titolo = f"**{tipo}** `{res['intervallo']}` · {prova[:1].lower() + prova[1:]}"
-            with st.expander(titolo, expanded=True):
-                modelli = res.get("modelli") or []
-                if modelli:
-                    _tabella_confronto(
-                        modelli, res.get("dedup"),
-                        riferimento="original" in (res.get("file") or {}))
-                nomi = preview.ordine_lettura(res["file"])
-                coppie = [(a, b) for i, a in enumerate(nomi) for b in nomi[i + 1:]]
-                if coppie:
-                    st.markdown(f"<div class='au-occhio au-res-sez'>{t('conf.guarda')}</div>",
+    if not cambiano:
+        st.markdown(f"<p class='au-dialogo-testo'>{t('conf.tutti_nessuno')}</p>",
+                    unsafe_allow_html=True)
+    else:
+        st.markdown(
+            "<ul class='au-dialogo-elenco'>" + "".join(
+                f"<li><span>{esc(f['name'])}</span><code>{esc(CATALOG[a].short if a in CATALOG else a)}"
+                f" → {esc(CATALOG[k].short)}</code></li>" for f, a in cambiano) + "</ul>",
+            unsafe_allow_html=True)
+    if esclusi:
+        st.markdown(f"<p class='au-dialogo-testo'>{esc(t('conf.tutti_esclusi', modello=nome, elenco=', '.join(esclusi)))}</p>",
+                    unsafe_allow_html=True)
+    with st.container(horizontal=True, horizontal_alignment="right"):
+        if st.button(t("conf.tutti_annulla"), key="usaTuttiNo"):
+            st.rerun()
+        if cambiano and st.button(tn("conf.tutti_applica", len(cambiano)), key="usaTuttiSi",
+                                  type="primary"):
+            scelte = state("scelte_modello", set())
+            for f, _a in cambiano:
+                modelli[f["path"]] = k
+                scelte.add(f["path"])
+                st.session_state[f"m_{f['path']}"] = k
+                st.session_state.setdefault("da_confronto", set()).add(f["path"])
+            st.session_state.pop("conf_usato", None)
+            st.rerun()
+
+
+def _clip_risultato(res: dict, plan, path: Path) -> None:
+    tipo = t(f"conf.tipo.{res['tipo']}").capitalize()
+    prove = preview.Kind(res["tipo"]).tests if res.get("tipo") in (
+        k.value for k in preview.Kind) else ""
+    prova = t("conf.prova", prove=prove) if prove else ""
+    titolo = f"**{tipo}** `{res['intervallo']}` · {prova[:1].lower() + prova[1:]}"
+    cartella = res["cartella"]
+    with st.expander(titolo, expanded=True):
+        file_r = res.get("file") or {}
+        # In movimento: video-compare, se c'e'. Se non c'e' niente pulsante e
+        # niente ripiego su altri riproduttori, ma come installarlo
+        # (facoltativo; deciso con l'utente).
+        nomi = preview.ordine_lettura(file_r)
+        coppie = [(a, b) for i, a in enumerate(nomi) for b in nomi[i + 1:]]
+        if coppie and preview.comparison_tool():
+            with st.container(key=f"coppie_{cartella}", horizontal=True,
+                              vertical_alignment="center"):
+                st.markdown(f"<div class='au-occhio'>{t('conf.guarda')}</div>",
+                            unsafe_allow_html=True)
+                for x, y in coppie:
+                    lx = t("conf.originale") if x == "original" else CATALOG[x].short
+                    ly = t("conf.originale") if y == "original" else CATALOG[y].short
+                    if st.button(t("conf.apri_coppia", a=lx, b=ly),
+                                 key=f"cmp_{cartella}_{x}_{y}"):
+                        ok, msg = preview.open_comparison(Path(file_r[x]), Path(file_r[y]))
+                        st.session_state[f"aperto_{cartella}"] = (ok, msg)
+                aperto = st.session_state.get(f"aperto_{cartella}")
+                if aperto:
+                    st.markdown(f"<div class='au-aperto{'' if aperto[0] else ' au-aperto-no'}'>"
+                                f"{esc(aperto[1])}</div>", unsafe_allow_html=True)
+        elif coppie:
+            comando = "brew install video-compare"
+            st.markdown(
+                f"<div class='au-vc-manca'><b>{t('conf.vc_titolo')}"
+                f"<em> · {t('conf.vc_opz')}</em></b>"
+                f"<span>{t('conf.vc_testo')}<br>{t('conf.vc_installa')} "
+                f"<code>{comando}</code><a class='au-copia' data-copia='{comando}' role='button' "
+                f"title='{t('conf.copia')}'>{_svg(_I_COPIA, 13, 1.6)}</a> · "
+                f"<a href='https://github.com/pixop/video-compare' target='_blank' rel='noopener'>"
+                f"{t('conf.vc_github')} ↗</a></span></div>", unsafe_allow_html=True)
+
+        ritagli = res.get("ritagli") or {}
+        if ritagli:
+            ordine = preview.ordine_lettura(ritagli)
+            destra_di_base = plan.model_key if plan.model_key in ritagli else (
+                next((k for k in ordine if k != "original"), ordine[-1]))
+            sinistra_di_base = "original" if "original" in ritagli else ordine[0]
+            if sinistra_di_base == destra_di_base and len(ordine) > 1:
+                destra_di_base = next(k for k in ordine if k != sinistra_di_base)
+            cols = st.columns(2)
+            for lato, col, di_base in (("s", cols[0], sinistra_di_base),
+                                       ("d", cols[1], destra_di_base)):
+                with col:
+                    if len(ordine) > 2:
+                        scelto = st.selectbox(
+                            " ", ordine, index=ordine.index(di_base),
+                            key=f"rit_{lato}_{cartella}", format_func=_nome_versione,
+                            label_visibility="collapsed")
+                    else:
+                        scelto = di_base
+                    st.markdown(f"<div class='au-ritaglio-box'>{_ritaglio_html(ritagli[scelto])}</div>",
                                 unsafe_allow_html=True)
-                    with st.container(key=f"coppie_{res['cartella']}", horizontal=True):
-                        for x, y in coppie:
-                            lx = t("conf.originale") if x == "original" else CATALOG[x].short
-                            ly = t("conf.originale") if y == "original" else CATALOG[y].short
-                            if st.button(t("conf.apri_coppia", a=lx, b=ly),
-                                         key=f"cmp_{res['cartella']}_{x}_{y}"):
-                                ok, msg = preview.open_comparison(
-                                    Path(res["file"][x]), Path(res["file"][y]))
-                                (st.success if ok else st.error)(msg)
-                if res["foglio"]:
-                    # Alla larghezza NATURALE del PNG, in una striscia che
-                    # scorre di lato: riscalato, gli artefatti da giudicare
-                    # sparirebbero.
-                    lato = 480
-                    st.markdown(
-                        f"<div class='au-occhio au-res-sez'>{_pezzi(t('conf.fermo', lato=lato))}"
-                        f"<span class='au-sez-nota'>{t('conf.fermo_nota')}</span></div>",
-                        unsafe_allow_html=True)
-                    try:
-                        dati = base64.b64encode(Path(res["foglio"]).read_bytes()).decode()
-                        st.markdown(f"<div class='au-foglio'><img src='data:image/png;base64,"
-                                    f"{dati}'></div>", unsafe_allow_html=True)
-                    except OSError:
-                        pass
-                with st.container(key=f"piedeClip_{res['cartella']}", horizontal=True,
-                                  vertical_alignment="center"):
-                    with st.expander(t("conf.n_percorsi", n=len(res["file"]))):
-                        st.markdown("".join(
-                            f"<div class='au-meta'><b class='au-file-eti'>"
-                            f"{esc(t('conf.file_eti', nome=(t('conf.originale_ingrandito') if k_f == 'original' else CATALOG[k_f].label)))}"
-                            f"</b> {esc(str(v_f))}</div>"
-                            for k_f, v_f in res["file"].items()), unsafe_allow_html=True)
-                    if st.button(t("conf.apri_cartella_clip"),
-                                 key=f"finder_conf_{res['cartella']}"):
-                        subprocess.run(["open", str(res["cartella"])], check=False)
+                    with st.container(key=f"piedeRit_{lato}_{cartella}", horizontal=True,
+                                      vertical_alignment="center"):
+                        st.markdown(f"<div class='au-ritaglio-nome'>{esc(_nome_versione(scelto))}</div>",
+                                    unsafe_allow_html=True)
+                        if scelto != "original" and scelto in CATALOG:
+                            usato = st.session_state.get("conf_usato") or {}
+                            if usato.get("file") == str(path) and usato.get("modello") == scelto:
+                                st.markdown(
+                                    f"<div class='au-usato'>{_svg(_I_SPUNTA, 11, 2.4)}"
+                                    f"{t('conf.usato')}</div>", unsafe_allow_html=True)
+                                st.button(t("conf.annulla"), key=f"annulla_{lato}_{cartella}",
+                                          type="tertiary", on_click=_annulla_usa)
+                            else:
+                                st.button(t("conf.usa_file"), key=f"usa_{lato}_{cartella}",
+                                          on_click=_usa_modello, args=(str(path), scelto))
+                                if st.button(t("conf.usa_tutti"), key=f"usaTutti_{lato}_{cartella}"):
+                                    _dialogo_usa_tutti(scelto)
+        elif res.get("foglio"):
+            # I confronti fatti prima dei ritagli separati: il foglio unico,
+            # alla larghezza naturale, in una striscia che scorre di lato.
+            try:
+                dati = base64.b64encode(Path(res["foglio"]).read_bytes()).decode()
+                st.markdown(f"<div class='au-foglio'><img src='data:image/png;base64,"
+                            f"{dati}'></div>", unsafe_allow_html=True)
+            except OSError:
+                pass
+
+        modelli = res.get("modelli") or []
+        if modelli:
+            _tabella_confronto(modelli, res.get("dedup"), riferimento="original" in file_r)
+        with st.container(key=f"piedeClip_{cartella}", horizontal=True,
+                          vertical_alignment="center"):
+            with st.expander(t("conf.n_percorsi", n=len(file_r))):
+                st.markdown("".join(
+                    f"<div class='au-meta'><b class='au-file-eti'>"
+                    f"{esc(t('conf.file_eti', nome=(t('conf.originale_ingrandito') if k_f == 'original' else CATALOG[k_f].label)))}"
+                    f"</b> {esc(str(v_f))}</div>"
+                    for k_f, v_f in file_r.items()), unsafe_allow_html=True)
+            if st.button(t("conf.apri_cartella_clip"), key=f"finder_conf_{cartella}"):
+                subprocess.run(["open", str(cartella)], check=False)
 
 
 # ===========================================================================
@@ -10076,6 +10673,26 @@ def _pagina_primo_avvio() -> bool:
     return True
 
 
+def _taratura_da_rifare() -> bool:
+    """La taratura chiede attenzione: mai fatta su questo Mac, o fatta con
+    una versione vecchia (senza la misura a 1080p)."""
+    try:
+        voce = taratura.carica()
+    except (OSError, ValueError):
+        return False
+    return not voce or bool(voce.get("vecchia"))
+
+
+def _sidebar_chiede_attenzione() -> bool:
+    """Una condizione sola per il pallino del cassetto: c'e' un avviso giallo
+    nella barra laterale. Ogni avviso nuovo di quel tipo va aggiunto QUI, e
+    il pallino lo segue da solo (chiesto dall'utente: non solo per gli
+    aggiornamenti)."""
+    nuova = aggiornamenti.disponibile(
+        attivo=_impostazioni_carica().get("aggiornamenti", True))
+    return bool(nuova) or _taratura_da_rifare()
+
+
 def _cassetto_sidebar() -> None:
     """Sotto i 1360px la barra laterale diventa un cassetto.
 
@@ -10115,7 +10732,7 @@ def _cassetto_sidebar() -> None:
         "D.body.appendChild(v);D.body.appendChild(b);}"
         f"const b=D.getElementById('au-cassetto');b.title={etichetta};"
         f"b.setAttribute('aria-label',{etichetta});"
-        f"const V={versione_nuova};b.classList.toggle('au-agg',!!V);"
+        f"const V={versione_nuova};b.classList.toggle('au-agg',{json.dumps(_sidebar_chiede_attenzione())});"
         "if(V&&window.parent.matchMedia('(max-width: 1360px)').matches){try{const L=window.parent.localStorage;"
         "if(L.getItem('auCassettoAgg')!==V){L.setItem('auCassettoAgg',V);"
         "D.body.classList.add('au-sb-aperta');}}catch(e){}}"

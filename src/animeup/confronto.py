@@ -171,6 +171,13 @@ def esegui(p: Paths | None = None) -> int:
         # l'originale costa circa un decimo di un modello.
         pesi = [0.1 if v.is_reference else 1.0 for v in varianti]
         s["peso_totale"] = len(candidati) * sum(pesi)
+        # I pezzi della barra, nell'ordine in cui si fanno: uno per spezzone
+        # e versione, largo quanto il suo peso. La pagina ci disegna le
+        # tacche e scrive sotto cosa e' fatto e cosa gira (`done` e' l'indice
+        # del pezzo in corso).
+        s["segmenti"] = [{"tipo": cand.kind.value, "tc": cand.timecode,
+                          "chiave": v.key, "peso": w}
+                         for cand in candidati for v, w in zip(varianti, pesi)]
         s["peso_fatto"] = 0.0
         s["peso_ora"] = pesi[0] if pesi else 0.0
         salva(True)
@@ -245,12 +252,13 @@ def _riassunto(res, plan, quota, catalogo) -> dict:
         "cartella": str(res.folder),
         "file": {k: str(v) for k, v in res.files.items()},
         "foglio": str(res.crop_sheet) if res.crop_sheet else None,
+        "ritagli": {k: str(v) for k, v in res.crops.items()},
         "tipo": res.candidate.kind.value,
         "intervallo": res.candidate.timecode_range,
         # Quanto ci ha messo OGNI modello su questa clip e cosa
         # significherebbe sull'episodio intero, deduplica compresa.
         "modelli": [
-            {"chiave": k, "nome": catalogo[k].short,
+            {"chiave": k, "nome": catalogo[k].short, "etichetta": catalogo[k].label,
              "secondi": res.tempi[k],
              "intero": res.tempi[k] * plan.frames / max(res.candidate.frames, 1)
                        * (1 - quota[0]),

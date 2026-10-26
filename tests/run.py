@@ -4540,7 +4540,7 @@ def _confronto_ordine_e_indicatori():
     # Le frasi stanno nel catalogo italiano, non piu' nel codice.
     testi = "\n".join(i18n.catalogo("it").values())
     for pezzo in ("Dettaglio fine", "Rumore nelle aree piatte",
-                  "effetto plastica", "piu' dettaglio non significa piu' fedele"):
+                  "effetto plastica", "più dettaglio non significa più fedele"):
         assert pezzo in testi, (
             f"sparita la spiegazione degli indicatori: «{pezzo}». Due "
             f"percentuali senza istruzioni non dicono niente a nessuno")
