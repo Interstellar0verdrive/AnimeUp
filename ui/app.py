@@ -3549,6 +3549,9 @@ STYLE = f"""
   .au-sez-titolo {{ font-size: 18px; font-weight: 600; letter-spacing: -.01em;
       color: var(--textPrimary); white-space: nowrap; }}
   .au-sez-nota {{ font-size: 13px; color: var(--textSecondary); }}
+  a.au-guida {{ margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 5px;
+      font-size: 13px; color: var(--primaryText) !important; text-decoration: none; white-space: nowrap; }}
+  a.au-guida:hover {{ text-decoration: underline; text-underline-offset: 2px; }}
   [class*="st-key-verdetto"] {{ background: var(--surface); border: 1px solid var(--borderColor);
       border-radius: 12px; padding: 16px 18px 10px !important; gap: 12px !important; }}
   /* Il -14px di Streamlit sotto i markdown incollava il titolo di sezione
@@ -6345,6 +6348,8 @@ _I_CARTELLA = "<path d='M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2
 _I_MAC = "<rect x='4' y='5' width='16' height='11' rx='1.5'/><path d='M2 19h20'/>"
 _I_GIU = "<path d='M12 5v14M6 13l6 6 6-6'/>"
 _I_SPUNTA = "<path d='M4.5 12.5 9.5 17.5 19.5 7'/>"
+_I_ESTERNO = "<path d='M14 4h6v6'/><path d='M20 4 11 13'/><path d='M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'/>"
+GUIDA_MODELLI = "https://interstellar0verdrive.github.io/AnimeUp/guide/deep-dives/models/"
 _I_ATTENZIONE = "<path d='M12 4 2.5 20h19z'/><path d='M12 10v4.5M12 17.2v.1'/>"
 _I_INFO = "<circle cx='12' cy='12' r='9'/><path d='M12 7.5v5.5M12 16.3v.1'/>"
 _I_AVANTI = "<path d='M9 6l6 6-6 6'/>"
@@ -7088,9 +7093,13 @@ def page_confronto(cfg: dict) -> None:
         except (PlanError, ValueError) as exc:
             praticabili[k] = str(exc)
 
+    # Chi non sa quale scegliere trova la spiegazione lunga nella guida
+    # (chiesto dall'utente): si apre nel browser, fuori dall'app.
     st.markdown(
         f"<div class='au-sez-riga'><span class='au-sez-titolo'>{t('conf.modelli_titolo')}</span>"
-        f"<span class='au-sez-nota'>{t('conf.modelli_nota')}</span></div>",
+        f"<span class='au-sez-nota'>{t('conf.modelli_nota')}</span>"
+        f"<a class='au-guida' href='{GUIDA_MODELLI}' target='_blank' rel='noopener'>"
+        f"{t('conf.guida_modelli')}{_svg(_I_ESTERNO, 12, 2)}</a></div>",
         unsafe_allow_html=True)
     _verdetto(plan, cfg, praticabili)
     chiavi = _schede_modelli(plan, path, praticabili)

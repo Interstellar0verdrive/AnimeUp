@@ -145,5 +145,6 @@
   "conf.pronto_nota": "Compare doesn't set anything: pick the model for each file in Processing.",
   "conf.torna_clip": "Back to clips",
   "conf.avanti_lavorazione": "Next: Processing",
-  "conf.occupato": "Something else is using the GPU right now: compare when it has finished, so the timings are true."
+  "conf.occupato": "Something else is using the GPU right now: compare when it has finished, so the timings are true.",
+  "conf.guida_modelli": "Not sure which to pick? The models guide"
 }

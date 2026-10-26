@@ -145,5 +145,6 @@
   "conf.pronto_nota": "Il confronto non imposta niente: il modello di ogni file si sceglie in Lavorazione.",
   "conf.torna_clip": "Torna alle clip",
   "conf.avanti_lavorazione": "Avanti: Lavorazione",
-  "conf.occupato": "Qualcos'altro sta usando la GPU: confronta quando ha finito, così i tempi sono veri."
+  "conf.occupato": "Qualcos'altro sta usando la GPU: confronta quando ha finito, così i tempi sono veri.",
+  "conf.guida_modelli": "Non sai quale scegliere? La guida ai modelli"
 }
