@@ -117,6 +117,7 @@
   "conf.clip_nota": "Di solito ne bastano due: una di movimento più una statica o scura.",
   "conf.trova_spiega": "AnimeUp scansiona tutto il file per movimento e luminosità, poi sceglie fino a otto clip da 10 secondi dove i modelli si distinguono di più: due per tipo fra Motion, Static, Dark e Bright. Meno di un minuto, e la scansione resta salvata.",
   "conf.prova": "Mette alla prova: {prove}",
+  "conf.c_selezionato": "scelto",
   "conf.piu_originale": "originale ingrandito",
   "conf.n_file.uno": "{n} file",
   "conf.n_file.altri": "{n} file",

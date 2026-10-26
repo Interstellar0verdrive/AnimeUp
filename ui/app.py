@@ -1038,7 +1038,17 @@ STYLE = f"""
      (vedi header) e lo gira all'input vero. Qui solo la manina. */
   [class*="st-key-clip"] {{ cursor: pointer; }}
   [class*="st-key-clip"]:has(input:checked) {{
-      border-color: rgb(var(--primaryRgb) / .55); background: var(--primaryBg); }}
+      border-color: rgb(var(--primaryRgb) / .55);
+      /* `--primaryBg` non esiste: la card scelta restava trasparente.
+         La tinta del design (8%). */
+      background: rgb(var(--primaryRgb) / .08); }}
+  /* «scelto» sull'anteprima, in alto a sinistra, come nel design. */
+  [class*="st-key-clip"] {{ position: relative; }}
+  [class*="st-key-clip"]:has(input:checked)::before {{
+      content: var(--au-scelto); position: absolute; left: 20px; top: 20px; z-index: 2;
+      font-family: var(--mono); font-size: 10.5px; line-height: 1.5; padding: 1px 7px;
+      border-radius: 999px; background: var(--primaryStrong); color: var(--onPrimary);
+      pointer-events: none; }}
   [class*="st-key-clip"] .au-c-desc {{ font-size: 11px; color: {TESTO_3};
       line-height: 1.45; padding: 0 3px 3px; }}
   [class*="st-key-clip"] [data-testid="stCheckbox"] p {{ font-size: 13px;
@@ -3667,7 +3677,7 @@ STYLE = f"""
   .au-trova p {{ margin: 6px 0 0; font-size: 13px !important; line-height: 1.5;
       color: var(--textSecondary); }}
   .au-c-motivo {{ font: 400 11px var(--mono); color: var(--textSecondary); }}
-  .au-c-prove {{ font-size: 13px; line-height: 1.45; color: var(--textCode); margin-top: 6px; }}
+  .au-c-prove {{ font-size: 12px; line-height: 1.45; color: {TESTO_2}; margin-top: 6px; }}
   .st-key-barraConfronto {{ position: fixed; bottom: 0; left: 360px; right: 0;
       width: auto !important; z-index: 100; flex-wrap: nowrap;
       gap: 16px !important; padding: 14px 40px;
@@ -7764,6 +7774,7 @@ def _passo_spezzoni(plan, path: Path) -> None:
                     st.markdown(
                         f"<div class='au-c-prove'>{esc(t('conf.prova', prove=cand.kind.tests))}.</div>",
                         unsafe_allow_html=True)
+    regole_clip.append(f':root {{ --au-scelto: "{t("conf.c_selezionato")}"; }}')
     st.markdown("<style>" + "\n".join(regole_clip) + "</style>", unsafe_allow_html=True)
     st.session_state[f"scelti_{path}"] = scelti
 
