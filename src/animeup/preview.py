@@ -716,7 +716,7 @@ def render(
 # dal piu' leggero al piu' pesante — animevideov3 prima di CUGAN (chiesto
 # dall'utente il 12/08). Un ordine solo, deciso qui, o le tre viste si
 # contraddicono e il confronto diventa un esercizio di memoria.
-ORDINE = ("original", "animevideov3", "cugan", "cugan-denoise")
+ORDINE = ("original", "animevideov3", "cugan", "cugan-conservative", "cugan-denoise")
 
 # Versione della REGOLA con cui si scelgono gli spezzoni. Si alza quando la
 # scelta cambia, cosi' le casse scritte con la regola vecchia non vengono

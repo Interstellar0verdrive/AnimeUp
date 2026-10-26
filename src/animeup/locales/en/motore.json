@@ -114,5 +114,7 @@
   "mot.taratura.gia_in_corso": "a calibration is already running on this machine: wait for it to finish (it carries on even with the window closed).",
   "mot.taratura.estrazione_fallita": "extraction failed: no frames produced",
   "mot.taratura.upscale_incompleto": "{modello} x{scala}: produced {fatti} of {attesi} frames — measurement unreliable, calibration stopped",
-  "mot.taratura.tappa_upscale_grande": "upscale 1080p {modello} x{scala}"
+  "mot.taratura.tappa_upscale_grande": "upscale 1080p {modello} x{scala}",
+  "mot.modello.cugan-conservative.label": "Real-CUGAN conservative",
+  "mot.modello.cugan-conservative.descrizione": "the most faithful: keeps paper and film grain, but also compression leftovers. For clean 720p or 1080p sources"
 }

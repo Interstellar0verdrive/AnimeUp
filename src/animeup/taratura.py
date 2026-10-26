@@ -168,9 +168,15 @@ def chip() -> str:
 
 
 def _combinazioni() -> list[tuple]:
+    """Ogni modello a ogni scala, tranne le varianti che girano sulla stessa
+    rete di un altro (`STESSA_RETE`): di quelle basta la scala 2, che dice
+    se il parente vale anche per loro; le altre scale si prendono in
+    prestito e la calibrazione non si allunga di tre minuti per niente."""
+    from .models import STESSA_RETE
     return [(chiave, modello, scala)
             for chiave, modello in CATALOG.items()
-            for scala in modello.scales]
+            for scala in modello.scales
+            if chiave not in STESSA_RETE or scala == 2]
 
 
 def _combinazioni_grandi() -> list[tuple]:
@@ -360,6 +366,10 @@ def throughput(model_key: str, scale: int,
 
     piccolo = _valore("mpxs")
     grande = _valore("mpxs_grande")
+    if piccolo is None:
+        from .models import STESSA_RETE
+        if model_key in STESSA_RETE:
+            return throughput(STESSA_RETE[model_key], scale, paths, mpx=mpx)
     if mpx is None or grande is None or piccolo is None:
         return piccolo
     try:

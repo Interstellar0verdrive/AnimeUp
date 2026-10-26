@@ -7,11 +7,19 @@ Due famiglie, con caratteri opposti:
   realcugan             più lento (~2.7x), conserva la texture. Nella variante
                         no-denoise conserva però anche il rumore, quindi va
                         usata solo su sorgenti puliti.
+  cugan conservative    la stessa rete tarata per togliere ancora meno: tiene
+                        la grana della carta e della pellicola che no-denoise
+                        liscia (misurato su Monogatari S07E15, 26/10/2026:
+                        107-112% della grana dell'originale contro 85-96%).
+                        Mai consigliato in automatico: tiene anche i residui
+                        di compressione.
 
 Varianti scartate dopo verifica sui file reali:
   cugan pro           2 fotogrammi corrotti su 240, silenziosamente (uno con i
                       canali colore alterati, uno nero pieno). Inaffidabile.
-  cugan conservative  banding visibile sulle sfumature morbide.
+  cugan conservative  scartato nella 1.5 per banding sulle sfumature morbide;
+                      riammesso nella 1.6.8 come scelta a mano, dopo che sui
+                      cieli di Monogatari il banding non si e' visto.
   x4plus-anime        più morbido e 4x più lento di animevideov3.
 """
 
@@ -119,7 +127,24 @@ CATALOG: dict[str, Model] = {
                                 # dice -1, ed è sbagliato: -1 seleziona conservative.
         cugan_models="models-se",
     ),
+    # L'ultimo della fila: conserva piu' di tutti. Stessa rete di no-denoise
+    # (stessa velocita'), quindi i ritmi di fabbrica sono i suoi.
+    "cugan-conservative": Model(
+        key="up{scale}x-conservative",
+        family=Family.CUGAN,
+        chiave_label="mot.modello.cugan-conservative.label",
+        scales=(2, 3, 4),
+        throughput={2: 1.02, 3: 0.66, 4: 0.85},
+        denoises=False,
+        chiave_description="mot.modello.cugan-conservative.descrizione",
+        cugan_noise=-1,         # -1 seleziona conservative (vedi sopra)
+        cugan_models="models-se",
+    ),
 }
+
+# Le varianti che girano sulla STESSA rete di un altro modello: dove la
+# calibrazione non ha misurato una scala, vale la misura del parente.
+STESSA_RETE = {"cugan-conservative": "cugan"}
 
 DEFAULT_MODEL = "animevideov3"
 
@@ -228,10 +253,11 @@ def recommend(height: int) -> Recommendation:
             alternative="cugan-denoise",
             sicuro=False,
             giudizi={"animevideov3": "ok", "cugan-denoise": "verifica",
-                     "cugan": "no"},
+                     "cugan": "no", "cugan-conservative": "no"},
         )
     return Recommendation(
         model="animevideov3",
         reason=t("mot.modello.consiglio_bassa", altezza=height),
-        giudizi={"animevideov3": "ok", "cugan-denoise": "no", "cugan": "no"},
+        giudizi={"animevideov3": "ok", "cugan-denoise": "no", "cugan": "no",
+                 "cugan-conservative": "no"},
     )

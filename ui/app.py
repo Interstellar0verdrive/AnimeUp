@@ -10189,7 +10189,11 @@ def _cassetto_sidebar() -> None:
         # danno larghezza al contenitore. Mai oltre il bordo della finestra.
         "if(!W.auTendine){W.auTendine=1;const larga=d=>{"
         "const testi=[...d.querySelectorAll('[role=\"option\"] div')];if(!testi.length)return;"
-        "const serve=Math.max(...testi.map(x=>x.scrollWidth))+40;const r=d.getBoundingClientRect();"
+        # La larghezza del TESTO, non del suo riquadro: il riquadro segue la
+        # tendina, e misurandolo ogni allargamento ne chiedeva un altro fino
+        # al bordo della finestra.
+        "const misura=x=>{const g=D.createRange();g.selectNodeContents(x);return g.getBoundingClientRect().width;};"
+        "const serve=Math.ceil(Math.max(...testi.map(misura)))+40;const r=d.getBoundingClientRect();"
         "const w=Math.min(Math.max(serve,r.width),W.innerWidth-r.left-16);"
         "if(w>r.width+1){const su=[];for(let x=d.parentElement;x&&x!==D.body;x=x.parentElement){su.push(x);"
         "if(x.getAttribute('data-baseweb')==='popover')break;}"

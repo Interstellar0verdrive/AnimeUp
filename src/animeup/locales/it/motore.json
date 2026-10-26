@@ -114,5 +114,7 @@
   "mot.taratura.gia_in_corso": "una calibrazione è già in corso su questa macchina: aspetta che finisca (prosegue anche a finestra chiusa).",
   "mot.taratura.estrazione_fallita": "estrazione fallita: nessun fotogramma prodotto",
   "mot.taratura.upscale_incompleto": "{modello} x{scala}: prodotti {fatti} fotogrammi su {attesi} — misura non attendibile, calibrazione interrotta",
-  "mot.taratura.tappa_upscale_grande": "upscale 1080p {modello} x{scala}"
+  "mot.taratura.tappa_upscale_grande": "upscale 1080p {modello} x{scala}",
+  "mot.modello.cugan-conservative.label": "Real-CUGAN conservative",
+  "mot.modello.cugan-conservative.descrizione": "il più fedele: tiene la grana della carta e della pellicola, ma anche i residui di compressione. Per sorgenti 720p o 1080p puliti"
 }

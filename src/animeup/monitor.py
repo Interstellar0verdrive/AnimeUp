@@ -35,6 +35,7 @@ _CODA_DIR = re.compile(r" \d{4}-\d{2}-\d{2} [0-9a-f]{8}$")
 _MODELLI_LEGGIBILI = (
     ("animevideov3", "animevideov3"),
     ("denoise1x", "cugan-denoise"),
+    ("conservative", "cugan-conservative"),
     ("no-denoise", "cugan"),
 )
 
