@@ -3251,6 +3251,10 @@ STYLE = f"""
   /* «Rianalizza tutti»: il fumetto sopra il pulsante, aperto verso
      sinistra (il pulsante sta sul bordo destro della pagina). */
   .st-key-rianRiga {{ position: relative; width: auto !important; flex: none; gap: 0 !important; }}
+  /* Il contenitore del fumetto non deve allargarsi: i due pulsanti restano
+     in fondo a destra come prima (spostati, segnalato dall'utente). */
+  .st-key-testaSorgenti > [data-testid="stLayoutWrapper"]:has(> .st-key-rianRiga) {{
+      flex: 0 0 auto !important; width: auto !important; }}
   .st-key-rianRiga [data-testid="stElementContainer"]:has(.au-rian-tip) {{
       position: absolute; left: 50%; top: 0; width: 0; height: 0; margin: 0; }}
   .st-key-rianRiga [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
@@ -4408,7 +4412,8 @@ STYLE = f"""
   .au-ritaglio-box {{ border-radius: 8px; overflow: hidden; background: var(--clipBg); }}
   .au-ritaglio {{ display: block; width: 100%; height: auto; image-rendering: auto; }}
   .au-ritaglio-nome {{ font-size: 13px; color: var(--textCode); }}
-  [class*="st-key-piedeRit_"] {{ gap: 8px !important; flex-wrap: wrap; margin-top: 2px; }}
+  [class*="st-key-piedeRit_"] {{ gap: 8px !important; flex-wrap: wrap; margin-top: 2px;
+      min-height: 30px; }}
   [class*="st-key-piedeRit_"] > div:first-child {{ flex: 1 1 auto; }}
   [class*="st-key-piedeRit_"] [class*="st-key-usa"], [class*="st-key-piedeRit_"] [class*="st-key-annulla"] {{
       flex: none; width: auto !important; }}
