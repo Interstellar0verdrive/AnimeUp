@@ -26,6 +26,8 @@ from .paths import PATHS, Paths, code_root
 
 IN_CORSO, FINITO, FERMATO, FALLITO, INTERROTTO = (
     "running", "done", "stopped", "failed", "interrupted")
+# La fase del pezzo in corso mentre si estraggono i fotogrammi dello spezzone.
+PREPARA = "preparing"
 
 
 def cartella(p: Paths | None = None) -> Path:
@@ -167,35 +169,46 @@ def esegui(p: Paths | None = None) -> int:
                                                reference=richiesta["reference"]),
                           key=lambda v: not v.is_reference)
         s["total"] = len(candidati) * len(varianti)
-        # L'avanzamento in TEMPO, non in versioni: l'originale ingrandito e'
-        # una codifica di dieci secondi, un modello sono minuti di GPU. A
-        # versioni contate, un modello solo piu' l'originale stava al 50%
-        # per quattro minuti e poi saltava al 100% in un istante (segnalato
-        # dall'utente). Pesi misurati a spanne sullo stesso spezzone 1080p:
-        # l'originale costa circa un decimo di un modello.
-        pesi = [0.1 if v.is_reference else 1.0 for v in varianti]
-        s["peso_totale"] = len(candidati) * sum(pesi)
         # I pezzi della barra, nell'ordine in cui si fanno: uno per spezzone
-        # e versione, largo quanto il suo peso. La pagina ci disegna le
-        # tacche e scrive sotto cosa e' fatto e cosa gira (`done` e' l'indice
-        # del pezzo in corso).
-        s["segmenti"] = [{"tipo": cand.kind.value, "tc": cand.timecode,
-                          "chiave": v.key, "peso": w}
-                         for cand in candidati for v, w in zip(varianti, pesi)]
+        # e versione, largo quanto il TEMPO che si prevede costi (la stessa
+        # stima che la pagina annuncia prima del via). A pezzi uguali
+        # l'originale, una codifica di secondi, valeva quanto un modello da
+        # minuti: la barra correva a meta' e poi restava ferma. L'estrazione
+        # dello spezzone sta nel primo pezzo di ogni spezzone (`prep`): e' li'
+        # che si aspetta prima che parta qualcosa.
+        segmenti = []
+        for cand in candidati:
+            prep, costi = preview.costi_varianti(plan, cand.frames, varianti)
+            for i, (v, (gpu, cod)) in enumerate(zip(varianti, costi)):
+                p0 = prep if i == 0 else 0.0
+                segmenti.append({"tipo": cand.kind.value, "tc": cand.timecode,
+                                 "intervallo": cand.timecode_range,
+                                 "chiave": v.key, "peso": p0 + gpu + cod,
+                                 "prep": p0, "gpu": gpu, "cod": cod})
+        s["segmenti"] = segmenti
         # Le versioni gia' pronte dello spezzone in corso, una per una, con il
         # loro ritaglio: la pagina le mostra senza aspettare le altre.
         s["parziali"] = {}
-        s["peso_fatto"] = 0.0
-        s["peso_ora"] = pesi[0] if pesi else 0.0
         salva(True)
         quota = preview.quota_dedup(plan)
 
         for cand in candidati:
             tipo = t(f"conf.tipo.{cand.kind.value}")
-            indice = [0]          # quale variante di questo spezzone e' in corso
             zona = [None]         # la zona dei ritagli, scelta sulla prima versione
             pezzo = f"{cand.kind.value}|{cand.timecode}"
             s["parziali"][pezzo] = {}
+            fine = s["done"] + len(varianti)   # il primo pezzo dello spezzone dopo
+            # Finche' non parte la prima variante si estraggono i fotogrammi:
+            # nessun numero vero da mostrare, la pagina dice «Preparazione».
+            s["fase"] = PREPARA
+            s["fraction"] = 0.0
+            s["ora_da"] = time.time()
+            salva(True)
+
+            def inizia(chiave) -> None:
+                s["fase"] = ""
+                # L'originale e' solo codifica: comincia subito (vedi `quota_pezzo`).
+                s["cod_da"] = time.time() if chiave == "original" else None
 
             def passo(label: str, _tipo=tipo, _c=cand) -> None:
                 s["text"] = f"{_tipo} {_c.timecode} — {label}"
@@ -206,9 +219,16 @@ def esegui(p: Paths | None = None) -> int:
 
             def frazione(fatti: int, attesi: int) -> None:
                 s["fraction"] = min(fatti / attesi, 1.0) if attesi else 0.0
+                # Fotogrammi tutti prodotti: da qui la codifica, che non conta.
+                # Salvato subito: durante la codifica nessuno scrive piu', e
+                # con il limite di una scrittura al secondo andava perso.
+                if s["fraction"] >= 1.0 and not s.get("cod_da"):
+                    s["cod_da"] = time.time()
+                    salva(True)
+                    return
                 salva()
 
-            def finita(chiave=None, file=None, _i=indice, _c=cand, _z=zona, _p=pezzo) -> None:
+            def finita(chiave=None, file=None, _c=cand, _z=zona, _p=pezzo) -> None:
                 if chiave and file:
                     try:
                         ritaglio, _z[0] = preview.ritaglio_provvisorio(file, chiave, _c, _z[0])
@@ -218,16 +238,18 @@ def esegui(p: Paths | None = None) -> int:
                         pass
                 s["done"] += 1
                 s["fraction"] = 0.0
-                s["peso_fatto"] += pesi[_i[0] % len(pesi)]
-                _i[0] += 1
-                s["peso_ora"] = pesi[_i[0] % len(pesi)]
+                s["cod_da"] = None
+                # Dopo l'ultima versione si monta il foglio dei ritagli e poi
+                # si estrae lo spezzone dopo: per la pagina e' gia' attesa.
+                s["fase"] = PREPARA if s["done"] >= fine else ""
                 salva(True)
 
             # Una clip che non si elabora non porta via le altre: sono
             # indipendenti fra loro.
             try:
                 res = preview.render(plan, cand, varianti, on_step=passo,
-                                     on_progress=frazione, on_done=finita)
+                                     on_progress=frazione, on_done=finita,
+                                     on_start=inizia)
                 if res.files:
                     preview.crop_sheet(res, plan)
                     s["results"].append(_riassunto(res, plan, quota, CATALOG))
@@ -235,6 +257,9 @@ def esegui(p: Paths | None = None) -> int:
                 raise
             except Exception as exc:                       # noqa: BLE001
                 s["failures"].append(f"{tipo} {cand.timecode}: {exc}")
+            # Uno spezzone fallito a meta' non lascia la barra indietro sui
+            # pezzi dei successivi.
+            s["done"] = fine
             salva(True)
         s["state"] = FINITO
     except KeyboardInterrupt:
@@ -248,28 +273,49 @@ def esegui(p: Paths | None = None) -> int:
     return 0 if s["state"] == FINITO else 1
 
 
+def quota_pezzo(s: dict) -> float:
+    """Quanto e' avanti il pezzo in corso, 0..1, in tempo: l'estrazione (se
+    il pezzo la porta) conta intera appena finita, la GPU per i fotogrammi
+    prodotti, la codifica finale sul tempo previsto. Durante l'estrazione
+    e' zero: la pagina mostra «Preparazione» invece di un numero."""
+    segs = s.get("segmenti") or []
+    fatte = int(s.get("done") or 0)
+    frazione = float(s.get("fraction") or 0)
+    if fatte >= len(segs):
+        return 0.0
+    g = segs[fatte]
+    peso = float(g.get("peso") or 0)
+    if peso <= 0:
+        return frazione
+    if s.get("fase") == PREPARA:
+        return 0.0
+    fatto = float(g.get("prep") or 0) + float(g.get("gpu") or 0) * frazione
+    # La codifica non dice a che punto e': avanza sul tempo previsto, senza
+    # passare il 95% (se dura di piu' aspetta li', non arriva al 100% prima).
+    # Senza, il numero restava fermo un minuto e poi saltava (63% → 100%).
+    cod = float(g.get("cod") or 0)
+    if cod > 0 and s.get("cod_da"):
+        fatto += cod * min((time.time() - float(s["cod_da"])) / cod, 0.95)
+    return min(fatto / peso, 1.0)
+
+
 def quota(s: dict) -> float:
-    """Quanto e' avanti il giro di prova, 0..1, a versioni: le versioni fatte
-    piu' la parte di quella in corso, sul totale. E' il numero che si legge
-    ovunque — barra, «% del test», scheda — perche' la barra e' fatta di
-    pezzi uguali, uno per versione (tavola CF2b), e i numeri devono tornare
-    con quello che si vede. Il tempo che manca si stima a parte, sui pesi
-    (`quota_tempo`)."""
-    n = max(int(s.get("total") or 0), 1)
-    return min((int(s.get("done") or 0) + float(s.get("fraction") or 0)) / n, 1.0)
+    """Quanto e' avanti il giro di prova, 0..1, in TEMPO: i pezzi fatti piu'
+    la parte di quello in corso, ciascuno col suo peso. E' il numero che si
+    legge ovunque — barra, «% del test», scheda — e da cui si stima il tempo
+    che manca; la barra disegna i pezzi larghi quanto il loro peso, cosi'
+    numero e riempimento tornano.
 
-
-def quota_tempo(s: dict) -> float:
-    """Quanto e' avanti il giro di prova, 0..1, in tempo (vedi i pesi).
-
-    Uno stato scritto prima dei pesi si conta ancora a versioni."""
-    totale = float(s.get("peso_totale") or 0)
+    Uno stato scritto prima dei pesi si conta a versioni."""
+    segs = s.get("segmenti") or []
+    fatte = int(s.get("done") or 0)
+    pesi = [float(g.get("peso") or 0) for g in segs]
+    totale = sum(pesi)
     if totale > 0:
-        fatto = float(s.get("peso_fatto") or 0)
-        ora = float(s.get("peso_ora") or 0) * float(s.get("fraction") or 0)
-        return max(0.0, min((fatto + ora) / totale, 1.0))
+        fatto = sum(pesi[:fatte]) + (pesi[fatte] * quota_pezzo(s) if fatte < len(pesi) else 0)
+        return max(0.0, min(fatto / totale, 1.0))
     n = max(int(s.get("total") or 0), 1)
-    return min((int(s.get("done") or 0) + float(s.get("fraction") or 0)) / n, 1.0)
+    return min((fatte + float(s.get("fraction") or 0)) / n, 1.0)
 
 
 def _riassunto(res, plan, quota, catalogo) -> dict:

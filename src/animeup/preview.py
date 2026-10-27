@@ -526,26 +526,35 @@ def estimate_seconds(plan: Plan, candidates: list[Candidate], variants: list[Var
     strumento che esiste per evitare le sorprese di durata non può essere lui
     la sorpresa: chi accetta "due minuti" e ne aspetta venti non lo riapre.
     """
-    src_mpx = plan.source.geometry.width * plan.source.geometry.height / 1_000_000
     frames = sum(c.frames for c in candidates)
+    preparazione, costi = costi_varianti(plan, frames, variants)
+    total = sum(gpu + codifica for gpu, codifica in costi)
+    # Estrazione dello spezzone e montaggio dei ritagli, una volta sola.
+    return total + preparazione + 5.0 * len(candidates)
+
+
+def costi_varianti(plan: Plan, frames: int,
+                   variants: list[Variant]) -> tuple[float, list[tuple[float, float]]]:
+    """Secondi stimati per `frames` fotogrammi: l'estrazione, poi per ogni
+    variante (GPU del modello, codifica). Gli stessi conti della stima
+    d'insieme, per pezzo: il Confronto ci dimensiona la sua barra."""
+    src_mpx = plan.source.geometry.width * plan.source.geometry.height / 1_000_000
     # La codifica dipende dai pixel in USCITA, non da quelli del sorgente.
     fattore_uscita = (plan.target_width * plan.target_height) / (1920 * 1080)
     # `plan.fps_codifica` porta gia' l'eventuale taratura della macchina.
     codifica = frames / max(0.1, plan.fps_codifica / max(0.05, fattore_uscita))
-
-    total = 0.0
+    costi = []
     for v in variants:
-        total += codifica
-        if v.is_reference:
-            continue
-        model = CATALOG[v.key]
-        scala = scale_for(v.key, plan)
-        throughput = (taratura.throughput(v.key, scala, mpx=src_mpx)
-                      or model.throughput.get(
-                          scala, min(model.throughput.values())))
-        total += frames * src_mpx / throughput
-    # Estrazione dello spezzone e montaggio dei ritagli, una volta sola.
-    return total + frames / 30.0 + 5.0 * len(candidates)
+        gpu = 0.0
+        if not v.is_reference:
+            model = CATALOG[v.key]
+            scala = scale_for(v.key, plan)
+            throughput = (taratura.throughput(v.key, scala, mpx=src_mpx)
+                          or model.throughput.get(
+                              scala, min(model.throughput.values())))
+            gpu = frames * src_mpx / throughput
+        costi.append((gpu, codifica))
+    return frames / 30.0, costi
 
 
 # ===========================================================================
@@ -556,6 +565,7 @@ def render(
     plan: Plan, candidate: Candidate, variants: list[Variant],
     *, paths: Paths | None = None, on_step: object = None,
     on_progress: object = None, on_done: object = None,
+    on_start: object = None,
 ) -> PreviewResult:
     """Elabora uno spezzone con tutte le varianti e scrive in PREVIEW/."""
     from . import encode as enc
@@ -670,6 +680,10 @@ def render(
         # una verifica a conteggio pacchetti — cosi' l'interruzione costa
         # solo la variante in volo, e ricliccare Genera riparte da li'.
         for variant in variants:
+            # Prima di `on_step`, che passa anche durante l'estrazione (il
+            # ripiego lento): da qui in poi si lavora alla variante.
+            if callable(on_start):
+                on_start(variant.key)
             if on_step:
                 on_step(variant.label)
             da = time.monotonic()
@@ -696,6 +710,11 @@ def render(
                     # invece di sembrare ferma per due minuti.
                     on_progress=on_progress if callable(on_progress) else None,
                 )
+                # Il conteggio puo' fermarsi qualche fotogramma prima (visto:
+                # 243 su 250): l'upscale e' finito quando torna, e da qui
+                # comincia la codifica.
+                if callable(on_progress):
+                    on_progress(1, 1)
                 enc.encode_segment(plan, up, provvisorio, paths=p)
             if provvisorio.is_file():
                 os.replace(provvisorio, out)

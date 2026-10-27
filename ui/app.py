@@ -4400,19 +4400,27 @@ STYLE = f"""
   .au-cc-nome svg {{ color: var(--greenText); flex: none; }}
   .au-cc-nome-solo {{ margin-top: 8px; }}
   .au-attesa-ora span {{ color: var(--primaryText); }}
-  /* La barra del test intero, con una tacca per versione (o per spezzone)
-     e sotto cosa e' fatto e cosa gira. */
-  .au-prova-barra.au-con-tacche {{ position: relative; }}
-  .au-prova-barra i {{ position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px;
-      background: var(--surface); }}
-  .au-prova-barra i.au-tacca-fine {{ width: 1px; margin-left: 0; opacity: .7; }}
-  /* Colonne uguali, una per pezzo della barra: stanno sotto il loro pezzo. */
-  .au-seg-righe {{ display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr));
-      gap: 4px; margin-top: 10px; }}
-  .au-seg-righe span {{ display: block; overflow: hidden; text-overflow: ellipsis;
-      white-space: nowrap; font: 400 11.5px var(--mono); color: var(--textTertiary); }}
-  .au-seg-righe .au-seg-fatto {{ color: var(--greenText); }}
-  .au-seg-righe .au-seg-ora {{ color: var(--primaryText); }}
+  /* La barra del test intero: un pezzo per versione, largo quanto il suo
+     tempo (colonne pesate della griglia), e sotto, nelle stesse colonne,
+     cosa e' fatto e cosa gira. Con poche versioni la colonna non scende
+     sotto la sua etichetta. */
+  .au-seg-griglia {{ display: grid; row-gap: 10px; margin-top: 10px; }}
+  .au-cpz {{ grid-row: 1; height: 6px; min-width: 0; margin-left: 2px; overflow: hidden;
+      background: rgb(var(--primaryRgb) / .15); }}
+  .au-cpz:first-child {{ margin-left: 0; border-radius: 3px 0 0 3px; }}
+  .au-cpz:not(:has(~ .au-cpz)) {{ border-radius: 0 3px 3px 0; }}
+  .au-cpz.au-cpz-fine {{ margin-left: 1px; }}
+  .au-cpz > span {{ display: block; height: 100%; background: var(--primary); }}
+  .au-cpz-prepara > span, .au-cc-prepara i span {{ width: 35% !important;
+      animation: au-scorre 1.6s ease-in-out infinite; }}
+  .au-seg-griglia > span:not(.au-cpz) {{ grid-row: 2; display: block; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap; padding-right: 14px;
+      font: 400 11.5px var(--mono); color: var(--textTertiary); }}
+  /* Con overflow nascosto il minimo automatico di un elemento di griglia e'
+     zero: quello dell'etichetta va detto. */
+  .au-seg-poche > span:not(.au-cpz) {{ min-width: max-content; }}
+  .au-seg-griglia .au-seg-fatto {{ color: var(--greenText); }}
+  .au-seg-griglia .au-seg-ora {{ color: var(--primaryText); }}
   .au-prova-nota code {{ font: 400 12px var(--mono) !important; background: none !important;
       padding: 0 !important; color: var(--primaryText) !important; }}
   /* Risultati: due ritagli grandi affiancati. */
@@ -7539,8 +7547,12 @@ def _risultati_di(path: Path) -> list[dict]:
     """I risultati gia' pronti per questo file: dal disco (sopravvivono a un
     ricaricamento e alla finestra chiusa), o quelli tenuti in sessione."""
     s = confronto.stato()
-    if s and s.get("file") == str(path) and s.get("results"):
-        st.session_state[f"risultati_{path}"] = s["results"]
+    # Mentre un test gira su questo file contano solo i SUOI risultati, anche
+    # zero: con quelli del giro prima in sessione la pagina li mostrava al
+    # posto della vista in corso fino al primo spezzone pronto.
+    if s and s.get("file") == str(path) and (
+            s.get("results") or s.get("state") == confronto.IN_CORSO):
+        st.session_state[f"risultati_{path}"] = s.get("results") or []
     return st.session_state.get(f"risultati_{path}") or []
 
 
@@ -8210,12 +8222,16 @@ def _clip_in_corso(path: str, n_risultati: int) -> None:
     pronte = (s.get("parziali") or {}).get(f"{tipo}|{tc}") or {}
     fatte = int(s.get("done") or 0)
     corrente = (s.get("segmenti") or [{}])[min(fatte, len(s.get("segmenti") or [1]) - 1)].get("chiave")
-    frazione = float(s.get("fraction") or 0)
+    frazione = _quota_versione(s)
     cand = st.session_state.get(f"cand_{path}") or []
 
     def intervallo_di(tp: str, tcc: str) -> str:
-        return next((c.timecode_range for c in cand
-                     if c.kind.value == tp and c.timecode == tcc), tcc)
+        # Dallo stato del test: a pagina ricaricata gli spezzoni scelti non
+        # sono piu' in sessione e restava il solo inizio.
+        return next((g["intervallo"] for g in s.get("segmenti") or []
+                     if g["tipo"] == tp and g["tc"] == tcc and g.get("intervallo")),
+                    next((c.timecode_range for c in cand
+                          if c.kind.value == tp and c.timecode == tcc), tcc))
     intervallo = intervallo_di(tipo, tc)
     with st.container(key="inCorso"):
         st.markdown(
@@ -8234,6 +8250,19 @@ def _clip_in_corso(path: str, n_risultati: int) -> None:
                             st.image(pronte[k], use_container_width=True)
                             st.markdown(f"<div class='au-cc-nome'>{_svg(_I_SPUNTA, 12, 2.4)}{esc(nome)}</div>",
                                         unsafe_allow_html=True)
+                        elif k == corrente and (s.get("fase") == confronto.PREPARA
+                                                or _senza_numero(s)):
+                            # L'estrazione dei fotogrammi e la codifica
+                            # dell'originale non dicono quanto manca: una barra
+                            # che scorre al posto di un falso 0%.
+                            prep = s.get("fase") == confronto.PREPARA
+                            st.markdown(
+                                f"<div class='au-cc-vuoto au-cc-ora au-cc-prepara'>"
+                                f"<b>{t('conf.v_prepara') if prep else t('conf.v_in_corso')}</b>"
+                                "<i><span></span></i>"
+                                f"<small>{esc(t('conf.v_prepara_sotto') if prep else t('conf.v_originale_sotto'))}</small></div>"
+                                f"<div class='au-cc-nome au-cc-nome-solo'>{esc(nome)}</div>",
+                                unsafe_allow_html=True)
                         elif k == corrente:
                             resta = ""
                             passati = time.time() - float(s.get("ora_da") or time.time())
@@ -8302,29 +8331,69 @@ def _avanzamento_confronto(path: str, n_risultati: int = 0) -> None:
     st.markdown(_barra_segmenti(s, quota) + altro, unsafe_allow_html=True)
 
 
-def _barra_segmenti(s: dict, quota: float) -> str:
-    """La barra del test intero, come la tavola CF2b: un pezzo UGUALE per
-    ogni versione (spezzone × modello), riempito fin dove si e' arrivati.
-
-    Fino a 4 versioni: una tacca piena fra l'una e l'altra e sotto
-    un'etichetta per versione (fatta, in corso con la sua percentuale, in
-    attesa). Oltre: una tacca piena fra gli spezzoni e una sottile fra le
-    loro versioni, un'etichetta per spezzone e la riga «Ora: …». Oltre i 12
-    spezzoni restano solo le tacche e la riga."""
+def _quota_versione(s: dict) -> float:
+    """Quanto e' avanti la versione in corso, 0..1, senza l'estrazione che
+    la precede (quella e' «preparazione»): GPU e codifica col loro peso. Lo
+    stesso numero sotto la barra e nel riquadro della versione — prima uno
+    contava la sola GPU e l'altro anche la codifica, 9% contro 8%."""
     segs = s.get("segmenti") or []
+    fatte = int(s.get("done") or 0)
+    if fatte >= len(segs) or s.get("fase") == confronto.PREPARA:
+        return 0.0
+    g = segs[fatte]
+    peso, prep = float(g.get("peso") or 0), float(g.get("prep") or 0)
+    if peso - prep <= 0:
+        return float(s.get("fraction") or 0)
+    return max(0.0, min((confronto.quota_pezzo(s) * peso - prep) / (peso - prep), 1.0))
+
+
+def _senza_numero(s: dict) -> bool:
+    """La versione in corso e' l'originale ingrandito (niente GPU, quindi
+    nessun conteggio dei fotogrammi da cui dare una percentuale)."""
+    segs = s.get("segmenti") or []
+    fatte = int(s.get("done") or 0)
+    return fatte < len(segs) and "gpu" in segs[fatte] and not segs[fatte]["gpu"]
+
+
+def _barra_segmenti(s: dict, quota: float) -> str:
+    """La barra del test intero, come la tavola CF2b: un pezzo per ogni
+    versione (spezzone × modello), largo quanto il tempo che si prevede
+    costi e riempito fin dove si e' arrivati. Pezzi uguali facevano correre
+    la barra sull'originale e poi fermarla sui modelli; cosi' la barra e il
+    numero vanno insieme. Il minimo di un pezzo e' la sua etichetta.
+
+    Fino a 4 versioni: uno stacco pieno fra l'una e l'altra e sotto
+    un'etichetta per versione (fatta, in corso con la sua percentuale o
+    «preparazione», in attesa). Oltre: uno stacco pieno fra gli spezzoni e
+    uno sottile fra le loro versioni, un'etichetta per spezzone e la riga
+    «Ora: …». Oltre i 12 spezzoni restano solo i pezzi e la riga."""
+    segs = s.get("segmenti") or []
+    if not segs:
+        return (f"<div class='au-prova-barra'><span style='width:{quota * 100:.1f}%'></span></div>")
     n = len(segs)
     fatte = int(s.get("done") or 0)
-    frazione = float(s.get("fraction") or 0)
+    prepara = s.get("fase") == confronto.PREPARA
+    # L'originale ingrandito e' una codifica sola, senza conteggio: come la
+    # preparazione, una barra che scorre e nessun numero.
+    senza_numero = prepara or _senza_numero(s)
+    ora = confronto.quota_pezzo(s)
+    pesi = [float(g.get("peso") or 0) for g in segs]
+    if sum(pesi) <= 0:
+        pesi = [1.0] * n
+    totale = sum(pesi)
     clip_di = [(g["tipo"], g["tc"]) for g in segs]
-    tacche = []
-    for i in range(1, n):
-        piena = n <= 4 or clip_di[i - 1] != clip_di[i]
-        tacche.append(f"<i class='{'au-tacca' if piena else 'au-tacca-fine'}' "
-                      f"style='left:{i / n * 100:.2f}%'></i>")
-    barra = (f"<div class='au-prova-barra au-con-tacche'><span style='width:{quota * 100:.1f}%'></span>"
-             + "".join(tacche) + "</div>")
-    if not segs:
-        return barra
+    poche = n <= 4
+    colonne = " ".join(f"minmax({'auto' if poche else '6px'}, {p / totale * 100:.3f}fr)"
+                       for p in pesi)
+    pezzi = []
+    for i in range(n):
+        classi = ["au-cpz"]
+        if i == fatte and senza_numero:
+            classi.append("au-cpz-prepara")
+        if i and not poche and clip_di[i - 1] == clip_di[i]:
+            classi.append("au-cpz-fine")
+        pieno = 1.0 if i < fatte else ora if i == fatte else 0.0
+        pezzi.append(f"<span class='{' '.join(classi)}'><span style='width:{pieno * 100:.1f}%'></span></span>")
 
     def nome(g, corto=True) -> str:
         if g["chiave"] == "original":
@@ -8335,46 +8404,49 @@ def _barra_segmenti(s: dict, quota: float) -> str:
     def tipo(g) -> str:
         return t(f"conf.tipo.{g['tipo']}").capitalize()
 
-    righe = ""
-    if n <= 4:
-        celle = []
+    avanti = (t("conf.prepara_corto") if prepara else t("conf.in_corso_corto")
+              if senza_numero else f"{_quota_versione(s):.0%}")
+    celle, riga_ora = [], ""
+    if poche:
         for i, g in enumerate(segs):
             if i < fatte:
                 celle.append(f"<span class='au-seg-fatto'>✓ {esc(tipo(g))} · {esc(nome(g))}</span>")
             elif i == fatte:
-                celle.append(f"<span class='au-seg-ora'>{esc(tipo(g))} · {esc(nome(g))} {frazione:.0%}</span>")
+                celle.append(f"<span class='au-seg-ora'>{esc(tipo(g))} · {esc(nome(g))} {esc(avanti)}</span>")
             else:
                 celle.append(f"<span>{esc(tipo(g))} · {esc(nome(g))}</span>")
-        return barra + f"<div class='au-seg-righe' style='--n:{n}'>{''.join(celle)}</div>"
-    clip: list = []
-    for chiave in clip_di:
-        if not clip or clip[-1][0] != chiave:
-            clip.append([chiave, 0])
-        clip[-1][1] += 1
-    if len(clip) <= 12:
-        indice, celle = 0, []
-        for (tp, tc), quante in clip:
-            finita = indice + quante <= fatte
-            corrente = indice <= fatte < indice + quante
-            classe = "au-seg-fatto" if finita else "au-seg-ora" if corrente else ""
-            celle.append(f"<span class='{classe}'>{'✓ ' if finita else ''}"
-                         f"{esc(t(f'conf.tipo.{tp}').capitalize())}</span>")
-            indice += quante
-        righe = f"<div class='au-seg-righe' style='--n:{len(clip)}'>{''.join(celle)}</div>"
-    if fatte < n:
-        g = segs[fatte]
-        ora = f"{tipo(g)} {g['tc']} — {nome(g, corto=False)} · {frazione:.0%}"
-        righe += (f"<div class='au-prova-nota'>{t('conf.ora')} "
-                  f"<code>{esc(ora)}</code></div>")
-    return barra + righe
+    else:
+        clip: list = []
+        for chiave in clip_di:
+            if not clip or clip[-1][0] != chiave:
+                clip.append([chiave, 0])
+            clip[-1][1] += 1
+        if len(clip) <= 12:
+            indice = 0
+            for (tp, _tc), quante in clip:
+                finita = indice + quante <= fatte
+                corrente = indice <= fatte < indice + quante
+                classe = "au-seg-fatto" if finita else "au-seg-ora" if corrente else ""
+                celle.append(f"<span class='{classe}' style='grid-column:span {quante}'>"
+                             f"{'✓ ' if finita else ''}"
+                             f"{esc(t(f'conf.tipo.{tp}').capitalize())}</span>")
+                indice += quante
+        if fatte < n:
+            g = segs[fatte]
+            testo = f"{tipo(g)} {g['tc']} — {nome(g, corto=False)} · {avanti}"
+            riga_ora = (f"<div class='au-prova-nota'>{t('conf.ora')} "
+                        f"<code>{esc(testo)}</code></div>")
+    return (f"<div class='au-seg-griglia{' au-seg-poche' if poche else ''}' "
+            f"style='grid-template-columns:{colonne}'>{''.join(pezzi)}{''.join(celle)}</div>"
+            + riga_ora)
 
 
 def _resta_confronto(s: dict) -> str:
     """«≈ 2m» che mancano al test intero, stimati sul tempo VERO: quanto e'
-    passato diviso quanto e' fatto, pesando l'originale un decimo di un
-    modello (vedi `confronto`). Vuoto finche' non c'e' abbastanza da cui
+    passato diviso quanto e' fatto, ogni pezzo pesato col tempo previsto
+    (vedi `confronto.quota`). Vuoto finche' non c'e' abbastanza da cui
     stimare."""
-    fatto = confronto.quota_tempo(s)
+    fatto = confronto.quota(s)
     passati = time.time() - float(s.get("started") or time.time())
     if fatto < 0.03 or passati < 5:
         return ""
