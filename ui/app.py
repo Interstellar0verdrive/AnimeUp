@@ -2384,7 +2384,10 @@ STYLE = f"""
       background: var(--idleEdge) !important;
       border-color: var(--idleEdge) !important;
       transform: none; }}
-  .stButton button[kind="primary"]:disabled p {{
+  /* Anche l'icona: restava del colore di quando e' attivo (utente). */
+  .stButton button[kind="primary"]:disabled,
+  .stButton button[kind="primary"]:disabled p,
+  .stButton button[kind="primary"]:disabled [data-testid="stIconMaterial"] {{
       color: {TESTO_3} !important; }}
   /* IL CURSORE DI UN'APP, NON DI UNA PAGINA WEB (chiesto dall'utente):
      freccia sul testo — la barretta di selezione tradiva il browser — e
@@ -2608,7 +2611,10 @@ STYLE = f"""
   [data-testid="stElementContainer"]:not([class*="st-key-ferma"]):not(
       [class*="st-key-scarta"]):not([class*="st-key-det"]):not(
       [class*="st-key-finder"]) .stButton button[kind="secondary"]:hover:not(:disabled) {{
-      background: var(--sidebar2) !important;
+      /* Solo il colore: con `background` intero se ne andava anche la
+         barretta d'avanzamento delle schede, disegnata come immagine di
+         fondo (utente). */
+      background-color: var(--sidebar2) !important;
       border-color: var(--borderHover) !important; }}
   [data-testid="stElementContainer"]:not([class*="st-key-ferma"]):not(
       [class*="st-key-scarta"]):not([class*="st-key-det"]):not(
@@ -3627,7 +3633,7 @@ STYLE = f"""
   .block-container:has(.st-key-barraConfronto) {{ padding-bottom: 8rem !important; }}
   /* Col test in corso la barra e' piu' alta (titolo, barra, etichette, «Ora:»):
      con lo spazio delle altre il secondo spezzone finiva sotto (utente). */
-  .block-container:has(.st-key-provaTesta) {{ padding-bottom: 13rem !important; }}
+  .block-container:has(.st-key-provaTesta) {{ padding-bottom: 11rem !important; }}
   .st-key-barraConfronto [data-testid="stFragment"], .st-key-barraConfronto > div:has([data-testid="stFragment"]) {{
       flex: 1 1 auto; }}
   .st-key-provaTesta {{ flex-wrap: nowrap; gap: 14px !important; }}
@@ -3657,8 +3663,10 @@ STYLE = f"""
      riga accanto. Ora: titolo e Ferma centrati, 12px fino alla barra, la
      nota, e il padding della fascia per intero. */
   .st-key-barraConfronto [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
-  .st-key-barraConfronto [data-testid="stFragment"] [data-testid="stVerticalBlock"] {{
+  .st-key-barraConfronto [data-testid="stFragment"] [data-testid="stVerticalBlock"],
+  .st-key-barraConfronto [data-testid="stVerticalBlock"]:has(.st-key-provaTesta) {{
       gap: 0 !important; }}
+  .st-key-barraConfronto .au-prova-nota {{ margin-top: 10px; }}
   .st-key-provaTesta {{ align-items: center !important; }}
   .st-key-provaTesta .au-prova-testa {{ min-height: 36px; }}
   .st-key-barraConfronto .au-prova-barra {{ margin-top: 10px; }}
@@ -4235,6 +4243,8 @@ STYLE = f"""
   .au-pp-fatto .au-pp-segno {{ border: 0; background: color-mix(in srgb, var(--onGreen) 20%, transparent);
       color: var(--onGreen); }}
   a.au-pp-fatto:hover {{ filter: brightness(1.1); }}
+  a.au-pp-avanti:hover {{ border-color: var(--borderHover); color: var(--textPrimary);
+      background: var(--surfaceHover); }}
   .au-pp-freccia {{ display: inline-flex; color: var(--textTertiary); }}
   .au-pp-nota {{ margin-left: 6px; font-size: 13px; color: var(--textSecondary); }}
   /* Titolo e descrizione del passo: il -14px che Streamlit mette sotto
@@ -4387,10 +4397,10 @@ STYLE = f"""
   .st-key-inCorsoCorpo [data-testid="stColumn"] > div {{ gap: 8px !important; }}
   .st-key-inCorsoCorpo img {{ border-radius: 8px; display: block; }}
   .au-cc-vuoto {{ aspect-ratio: 1 / 1; box-sizing: border-box; border-radius: 8px;
-      border: 1px dashed {BORDO}; display: flex; flex-direction: column;
+      border: 1px dashed var(--dashBorder); display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 12px; padding: 0 40px; }}
   .au-cc-vuoto small {{ font: 400 12px var(--mono); color: var(--textSecondary); }}
-  .au-cc-ora {{ border-color: rgb(var(--primaryRgb) / .35); }}
+  .au-cc-ora {{ border-color: var(--dashActive); }}
   .au-cc-ora b {{ font-size: 13.5px; font-weight: 600; }}
   .au-cc-ora i {{ width: 100%; height: 6px; border-radius: 3px; overflow: hidden;
       background: rgb(var(--primaryRgb) / .15); }}
@@ -4405,11 +4415,14 @@ STYLE = f"""
      cosa e' fatto e cosa gira. Con poche versioni la colonna non scende
      sotto la sua etichetta. */
   .au-seg-griglia {{ display: grid; row-gap: 10px; margin-top: 10px; }}
-  .au-cpz {{ grid-row: 1; height: 6px; min-width: 0; margin-left: 2px; overflow: hidden;
+  /* Stacchi di 3px fra un pezzo e l'altro (2px dentro uno spezzone): con
+     quelli della tavola, 2 e 1, sulla parte ancora vuota quasi non si
+     vedevano (utente). */
+  .au-cpz {{ grid-row: 1; height: 6px; min-width: 0; margin-left: 3px; overflow: hidden;
       background: rgb(var(--primaryRgb) / .15); }}
   .au-cpz:first-child {{ margin-left: 0; border-radius: 3px 0 0 3px; }}
   .au-cpz:not(:has(~ .au-cpz)) {{ border-radius: 0 3px 3px 0; }}
-  .au-cpz.au-cpz-fine {{ margin-left: 1px; }}
+  .au-cpz.au-cpz-fine {{ margin-left: 2px; }}
   .au-cpz > span {{ display: block; height: 100%; background: var(--primary); }}
   .au-cpz-prepara > span, .au-cc-prepara i span {{ width: 35% !important;
       animation: au-scorre 1.6s ease-in-out infinite; }}
@@ -4419,8 +4432,8 @@ STYLE = f"""
   /* Con overflow nascosto il minimo automatico di un elemento di griglia e'
      zero: quello dell'etichetta va detto. */
   .au-seg-poche > span:not(.au-cpz) {{ min-width: max-content; }}
-  .au-seg-griglia .au-seg-fatto {{ color: var(--greenText); }}
-  .au-seg-griglia .au-seg-ora {{ color: var(--primaryText); }}
+  .au-seg-griglia > span.au-seg-fatto {{ color: var(--greenText); }}
+  .au-seg-griglia > span.au-seg-ora {{ color: var(--primaryText); }}
   .au-prova-nota code {{ font: 400 12px var(--mono) !important; background: none !important;
       padding: 0 !important; color: var(--primaryText) !important; }}
   /* Risultati: due ritagli grandi affiancati. */
@@ -4430,12 +4443,12 @@ STYLE = f"""
   [class*="st-key-piedeRit_"] {{ gap: 8px !important; flex-wrap: wrap; margin-top: 8px;
       min-height: 30px; }}
   [class*="st-key-piedeRit_"] > div:first-child {{ flex: 1 1 auto; }}
-  [class*="st-key-piedeRit_"] [class*="st-key-usa"], [class*="st-key-piedeRit_"] [class*="st-key-annulla"] {{
+  [class*="st-key-piedeRit_"] [class*="st-key-usa"] {{
       flex: none; width: auto !important; }}
   [class*="st-key-piedeRit_"] [class*="st-key-usa"] button {{ height: 30px !important;
       min-height: 30px !important; padding: 0 12px !important; }}
   [class*="st-key-piedeRit_"] [class*="st-key-usa_"] button {{
-      border-color: rgb(var(--primaryRgb) / .55) !important; }}
+      border-color: rgb(var(--primaryRgb) / .55) !important; background: transparent !important; }}
   [class*="st-key-piedeRit_"] [class*="st-key-usa_"] button p {{ color: var(--primaryText) !important; }}
   /* «Usa per questo file» e' un pulsante a contorno ciano: al passaggio
      resta ciano (prima diventava un grigio qualunque: utente). */
@@ -4451,8 +4464,6 @@ STYLE = f"""
   [data-testid="stElementContainer"]:is([class*="st-key-finder_conf"], .st-key-finderRisultati) .stButton button[kind="secondary"]:hover:not(:disabled) p {{
       color: {TESTO} !important; }}
   [class*="st-key-piedeRit_"] [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
-  .au-usato {{ display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px;
-      color: var(--greenText); }}
   /* «Guarda in movimento»: la nota verde alta quanto il pulsante. */
   [class*="st-key-coppie_"] {{ align-items: center !important; }}
   [class*="st-key-coppie_"] [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
@@ -4510,14 +4521,26 @@ STYLE = f"""
      superficie, o non si leggono come pulsanti (in chiaro resta il bianco). */
   [data-testid="stMain"] .stButton button[kind="secondary"]:not(:disabled) {{
       background: var(--buttonFill); }}
+  /* ...con il bordo delle tavole: quello di Streamlit, sul fondo del
+     pulsante, non si vedeva (utente). */
+  [data-testid="stMain"] .stButton button[kind="secondary"] {{
+      border-color: var(--borderStrong); }}
   [data-testid="stMain"] .st-key-passi .stButton button[kind="secondary"] {{ background: transparent; }}
+  /* Le voci delle tendine larghe quanto la tendina: la lista virtuale si
+     teneva una larghezza sua (202px in una tendina di 399) e cliccando a
+     destra della voce la tendina si chiudeva senza scegliere (utente). */
+  [data-testid="stSelectboxVirtualDropdown"] [role="listbox"],
+  [data-testid="stSelectboxVirtualDropdown"] [role="listbox"] [role="presentation"],
+  [data-testid="stSelectboxVirtualDropdown"] [role="option"] {{ width: 100% !important; }}
   /* «Usa per tutti i file»: la conferma con l'elenco di cosa cambia. */
   .au-dialogo-testo {{ font-size: 13.5px !important; line-height: 1.55; color: var(--textSecondary);
       margin: 0 !important; }}
-  [role="dialog"]:has(.st-key-usaTuttiBottoni) [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
-  .st-key-usaTuttiBottoni {{ gap: 8px !important; margin-top: 8px; }}
-  .st-key-usaTuttiBottoni [class*="st-key-usaTutti"] {{ width: auto !important; flex: none; }}
-  .st-key-usaTuttiBottoni button {{ height: 34px !important; min-height: 34px !important;
+  /* Strette e ariose: larghe e basse si leggevano male (utente). */
+  [role="dialog"]:has(:is(.st-key-usaTuttiBottoni, .st-key-usaFileBottoni)) [data-testid="stMarkdownContainer"] {{
+      margin-bottom: 0 !important; }}
+  :is(.st-key-usaTuttiBottoni, .st-key-usaFileBottoni) {{ gap: 8px !important; margin-top: 18px; }}
+  :is(.st-key-usaTuttiBottoni, .st-key-usaFileBottoni) [class*="st-key-usa"] {{ width: auto !important; flex: none; }}
+  :is(.st-key-usaTuttiBottoni, .st-key-usaFileBottoni) button {{ height: 34px !important; min-height: 34px !important;
       padding: 0 14px !important; }}
   /* Le tendine del Confronto come nelle tavole: bordo pieno e fondo appena
      staccato. In chiaro il bordo di Streamlit era bianco su bianco e la
@@ -7520,7 +7543,10 @@ def page_confronto(cfg: dict) -> None:
         except (PlanError, ValueError) as exc:
             praticabili[k] = str(exc)
 
-    _pillole_confronto(path, passo)
+    # Le pillole si scrivono DOPO il passo, al loro posto in alto: la
+    # scelta degli spezzoni cambia durante il disegno, e «Modelli» deve
+    # sapere se ce n'e' almeno uno.
+    posto_pillole = st.empty()
     if passo == 1:
         _scheda_file(files, plan, entry)
         _passo_spezzoni(plan, path)
@@ -7528,6 +7554,8 @@ def page_confronto(cfg: dict) -> None:
         _passo_modelli(plan, path, cfg, praticabili)
     else:
         _passo_risultati(plan, path)
+    with posto_pillole.container():
+        _pillole_confronto(path, passo)
 
 
 def _scegli_file_confronto(attuale: str) -> None:
@@ -7609,7 +7637,14 @@ def _pillole_confronto(path: Path, passo: int) -> None:
         testo = (f"<span class='au-pp-nome'>{esc(nome)}"
                  + (f"<small>{esc(dettagli[i])}</small>" if fatto and dettagli[i] else "")
                  + "</span>")
-        if fatto and not gira and i != passo:
+        # Avanti di un passo solo, e solo se il suo pulsante in basso lo
+        # permetterebbe: ai Modelli con almeno uno spezzone scelto, ai
+        # Risultati se ce ne sono gia' (la pillola non avvia un test).
+        avanti = not gira and i == passo + 1 and (
+            (i == 2 and bool(scelti)) or (i == 3 and bool(_risultati_di(path))))
+        if (fatto and not gira and i != passo) or avanti:
+            if avanti:
+                classe += " au-pp-avanti"
             pezzi.append(f"<a class='{classe}' data-preme='confPasso{i}' role='button'>"
                          f"{segno}{testo}</a>")
         else:
@@ -8139,6 +8174,11 @@ def _nome_versione(k: str) -> str:
 
 
 def _passo_risultati(plan, path: Path) -> None:
+    # La conferma di «Usa per…»: qui e non nel dialogo, che si chiude con
+    # un ridisegno e se la portava via.
+    avviso = st.session_state.pop("conf_avviso", None)
+    if avviso:
+        st.toast(avviso, icon=":material/check:")
     s = confronto.stato() or {}
     gira = s.get("state") == confronto.IN_CORSO and s.get("file") == str(path)
     risultati = _risultati_di(path)
@@ -8543,34 +8583,48 @@ def _ritaglio_html(percorso: str) -> str:
 
 
 def _usa_modello(path: str, k: str) -> None:
-    """«Usa per questo file»: il modello sulla riga del file in Lavorazione,
-    con la possibilita' di tornare indietro (`conf_usato`)."""
-    modelli = state("modelli", {})
-    scelte = state("scelte_modello", set())
-    st.session_state["conf_usato"] = {"file": path, "modello": k,
-                                      "prima": modelli.get(path),
-                                      "era_scelta": path in scelte}
-    modelli[path] = k
-    scelte.add(path)
+    """Il modello sulla riga del file in Lavorazione."""
+    state("modelli", {})[path] = k
+    state("scelte_modello", set()).add(path)
     st.session_state[f"m_{path}"] = k
     st.session_state.setdefault("da_confronto", set()).add(path)
 
 
-def _annulla_usa() -> None:
-    u = st.session_state.pop("conf_usato", None)
-    if not u:
-        return
-    modelli = state("modelli", {})
-    scelte = state("scelte_modello", set())
-    if u["prima"]:
-        modelli[u["file"]] = u["prima"]
-        st.session_state[f"m_{u['file']}"] = u["prima"]
+def _dialogo_usa_file(path: str, k: str) -> None:
+    """«Usa per questo file»: prima si chiede, dicendo se cambia qualcosa.
+    Prima applicava subito e al posto dei due pulsanti metteva una nota con
+    Annulla, cosi' «Usa per tutti i file» spariva (utente)."""
+    altezza = next((f["height"] for f in load_library() if f["path"] == path), 0) or 0
+    attuale = model_for(path, altezza)
+    titolo = (t("conf.file_gia_titolo") if attuale == k
+              else t("conf.file_titolo", modello=CATALOG[k].label))
+    st.dialog(titolo, width="small")(_contenuto_usa_file)(path, k, attuale, altezza)
+
+
+def _contenuto_usa_file(path: str, k: str, attuale: str, altezza: int) -> None:
+    nome = Path(path).name
+    if attuale == k:
+        frase = t("conf.file_gia", file=nome, modello=CATALOG[k].label)
     else:
-        modelli.pop(u["file"], None)
-        st.session_state.pop(f"m_{u['file']}", None)
-    if not u["era_scelta"]:
-        scelte.discard(u["file"])
-    st.session_state.get("da_confronto", set()).discard(u["file"])
+        frase = t("conf.file_cambia", file=nome,
+                  da=CATALOG[attuale].label if attuale in CATALOG else attuale,
+                  modello=CATALOG[k].label)
+        # Per un file solo si lascia fare, ma dicendolo: «Usa per tutti» quei
+        # file li salta.
+        if altezza and (recommend(altezza).giudizi or {}).get(k) == "no":
+            frase += " " + t("conf.file_sconsigliato")
+    st.markdown(f"<p class='au-dialogo-testo'>{esc(frase)}</p>", unsafe_allow_html=True)
+    with st.container(key="usaFileBottoni", horizontal=True, horizontal_alignment="right"):
+        if attuale == k:
+            if st.button(t("conf.file_ok"), key="usaFileOk", type="primary"):
+                st.rerun()
+            return
+        if st.button(t("conf.tutti_annulla"), key="usaFileNo"):
+            st.rerun()
+        if st.button(t("conf.usa_file"), key="usaFileSi", type="primary"):
+            _usa_modello(path, k)
+            st.session_state["conf_avviso"] = t("conf.usato")
+            st.rerun()
 
 
 def _piano_usa_tutti(k: str) -> tuple[list, list, list]:
@@ -8598,8 +8652,9 @@ def _dialogo_usa_tutti(k: str) -> None:
     (tavola CF4). La domanda e' il titolo della finestra, accanto alla ×."""
     cambiano, gia, _esclusi = _piano_usa_tutti(k)
     totale = len(cambiano) + len(gia)
-    titolo = tn("conf.tutti_titolo", totale, modello=CATALOG[k].label)
-    st.dialog(titolo, width="medium")(_contenuto_usa_tutti)(k)
+    titolo = (tn("conf.tutti_titolo", totale, modello=CATALOG[k].label) if cambiano
+              else t("conf.tutti_titolo_niente"))
+    st.dialog(titolo, width="small")(_contenuto_usa_tutti)(k)
 
 
 def _contenuto_usa_tutti(k: str) -> None:
@@ -8615,9 +8670,14 @@ def _contenuto_usa_tutti(k: str) -> None:
         else:
             frasi.append(tn("conf.tutti_cambiano", len(cambiano), elenco=", ".join(
                 t("conf.tutti_da", n=n, da=nome(a)) for a, n in da.items())))
-    else:
+    elif not esclusi:
         frasi.append(t("conf.tutti_nessuno"))
-    if gia and cambiano:
+    else:
+        # Non «lo usano gia' tutti»: quelli esclusi non lo usano affatto. Era
+        # il caso di CUGAN con due file sotto i 560p e uno solo che lo usava
+        # (utente).
+        frasi.append(t("conf.tutti_nessuno_breve"))
+    if gia and (cambiano or esclusi):
         frasi.append(tn("conf.tutti_gia", len(gia)))
     if esclusi:
         altezze = [f["height"] for f in esclusi]
@@ -8631,6 +8691,10 @@ def _contenuto_usa_tutti(k: str) -> None:
             frasi.append(tn("conf.tutti_esclusi_n", len(esclusi)))
     st.markdown(f"<p class='au-dialogo-testo'>{esc(' '.join(frasi))}</p>", unsafe_allow_html=True)
     with st.container(key="usaTuttiBottoni", horizontal=True, horizontal_alignment="right"):
+        if not cambiano:
+            if st.button(t("conf.file_ok"), key="usaTuttiOk", type="primary"):
+                st.rerun()
+            return
         if st.button(t("conf.tutti_annulla"), key="usaTuttiNo"):
             st.rerun()
         if cambiano and st.button(tn("conf.tutti_applica", len(cambiano)), key="usaTuttiSi",
@@ -8642,7 +8706,7 @@ def _contenuto_usa_tutti(k: str) -> None:
                 scelte.add(f["path"])
                 st.session_state[f"m_{f['path']}"] = k
                 st.session_state.setdefault("da_confronto", set()).add(f["path"])
-            st.session_state.pop("conf_usato", None)
+            st.session_state["conf_avviso"] = tn("conf.tutti_fatto", len(cambiano))
             st.rerun()
 
 
@@ -8673,10 +8737,12 @@ def _clip_risultato(res: dict, plan, path: Path) -> None:
                                  key=f"cmp_{cartella}_{x}_{y}"):
                         ok, msg = preview.open_comparison(Path(file_r[x]), Path(file_r[y]))
                         st.session_state[f"aperto_{cartella}"] = (ok, msg)
+                # Solo se non si e' aperto: la conferma verde andava a capo con
+                # tre pulsanti e la finestra di video-compare basta (utente).
                 aperto = st.session_state.get(f"aperto_{cartella}")
-                if aperto:
-                    st.markdown(f"<div class='au-aperto{'' if aperto[0] else ' au-aperto-no'}'>"
-                                f"{esc(aperto[1])}</div>", unsafe_allow_html=True)
+                if aperto and not aperto[0]:
+                    st.markdown(f"<div class='au-aperto au-aperto-no'>{esc(aperto[1])}</div>",
+                                unsafe_allow_html=True)
         elif coppie:
             comando = "brew install video-compare"
             st.markdown(
@@ -8714,18 +8780,10 @@ def _clip_risultato(res: dict, plan, path: Path) -> None:
                         st.markdown(f"<div class='au-ritaglio-nome'>{esc(_nome_versione(scelto))}</div>",
                                     unsafe_allow_html=True)
                         if scelto != "original" and scelto in CATALOG:
-                            usato = st.session_state.get("conf_usato") or {}
-                            if usato.get("file") == str(path) and usato.get("modello") == scelto:
-                                st.markdown(
-                                    f"<div class='au-usato'>{_svg(_I_SPUNTA, 11, 2.4)}"
-                                    f"{t('conf.usato')}</div>", unsafe_allow_html=True)
-                                st.button(t("conf.annulla"), key=f"annulla_{lato}_{cartella}",
-                                          type="tertiary", on_click=_annulla_usa)
-                            else:
-                                st.button(t("conf.usa_file"), key=f"usa_{lato}_{cartella}",
-                                          on_click=_usa_modello, args=(str(path), scelto))
-                                if st.button(t("conf.usa_tutti"), key=f"usaTutti_{lato}_{cartella}"):
-                                    _dialogo_usa_tutti(scelto)
+                            if st.button(t("conf.usa_file"), key=f"usa_{lato}_{cartella}"):
+                                _dialogo_usa_file(str(path), scelto)
+                            if st.button(t("conf.usa_tutti"), key=f"usaTutti_{lato}_{cartella}"):
+                                _dialogo_usa_tutti(scelto)
         elif res.get("foglio"):
             # I confronti fatti prima dei ritagli separati: il foglio unico,
             # alla larghezza naturale, in una striscia che scorre di lato.
@@ -11191,8 +11249,11 @@ def _cassetto_sidebar() -> None:
         # al bordo della finestra.
         "const misura=x=>{const g=D.createRange();g.selectNodeContents(x);return g.getBoundingClientRect().width;};"
         "const serve=Math.ceil(Math.max(...testi.map(misura)))+40;const r=d.getBoundingClientRect();"
-        "const w=Math.min(Math.max(serve,r.width),W.innerWidth-r.left-16);"
-        "if(w>r.width+1){const su=[];for(let x=d.parentElement;x&&x!==D.body;x=x.parentElement){su.push(x);"
+        # Mai sotto il campo: misurata mentre si apre, la tendina e' ancora
+        # stretta, e la lista restava bloccata a quella larghezza (utente).
+        "const base=Math.max(r.width,parseFloat(d.style.getPropertyValue('--trigger-width'))||0);"
+        "const w=Math.min(Math.max(serve,base),W.innerWidth-r.left-16);"
+        "if(w>base+1){const su=[];for(let x=d.parentElement;x&&x!==D.body;x=x.parentElement){su.push(x);"
         "if(x.getAttribute('data-baseweb')==='popover')break;}"
         "[...su,d,...d.querySelectorAll('[role=\"listbox\"],[role=\"listbox\"] > div')]"
         ".forEach(x=>{x.style.setProperty('width',w+'px','important');"
@@ -11245,6 +11306,15 @@ def _applica_tema(scelta: str) -> None:
 # Le scelte della pagina che un ricaricamento non deve perdere.
 _DA_TENERE = ("coda", "modelli", "scelte_modello", "rifai_comunque", "conf_file",
               "sezione")
+# ...e quelle del Confronto, una per file (`scelti_<percorso>` e simili):
+# senza, cambiare tema riportava al passo 1 con gli spezzoni proposti
+# all'inizio, anche se se ne erano scelti altri (utente).
+_DA_TENERE_PER_FILE = ("conf_passo_", "scelti_", "modelli_", "tocco_modelli_",
+                       "originale_", "esauriti_", "nota_cerca_")
+
+
+def _da_tenere(chiave: str) -> bool:
+    return chiave in _DA_TENERE or chiave.startswith(_DA_TENERE_PER_FILE)
 
 
 def _file_sessione() -> Path:
@@ -11253,8 +11323,8 @@ def _file_sessione() -> Path:
 
 def _metti_da_parte_sessione() -> None:
     dati = {}
-    for chiave in _DA_TENERE:
-        if chiave in st.session_state:
+    for chiave in list(st.session_state.keys()):
+        if _da_tenere(chiave):
             v = st.session_state[chiave]
             dati[chiave] = {"set": sorted(v)} if isinstance(v, set) else v
     try:
@@ -11277,7 +11347,7 @@ def _riprendi_sessione() -> None:
     if not isinstance(salvata, dict) or time.time() - float(salvata.get("quando") or 0) > 60:
         return
     for chiave, v in (salvata.get("dati") or {}).items():
-        if chiave in _DA_TENERE and chiave not in st.session_state:
+        if _da_tenere(chiave) and chiave not in st.session_state:
             st.session_state[chiave] = set(v["set"]) if isinstance(v, dict) and "set" in v else v
 
 

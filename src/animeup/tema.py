@@ -66,7 +66,7 @@ TOKEN: dict[str, tuple[str, str]] = {
     # il fondo dei pulsanti secondari: in scuro un filo piu' chiaro della
     # superficie, o non si leggevano come pulsanti (segnalato dall'utente);
     # in chiaro resta il bianco di prima
-    "buttonFill":      ("#1F2226", "#FFFFFF"),
+    "buttonFill":      ("#1C1F23", "#FFFFFF"),   # = surfaceHover, come nelle tavole
     "knobOn":          ("#07282C", "#FFFFFF"),
     # interruttore spento: tono su tono col fondo (in chiaro: chiaro, non grigio scuro)
     "toggleOff":       ("#3A3F46", "#D5D9DF"),
@@ -126,6 +126,10 @@ TERNE: dict[str, tuple[str, str]] = {
     # La tinta ciano tenue degli stati attivi (etichetta «in corso»):
     # usata dal CSS da tempo ma mai definita, quindi restava trasparente.
     "primaryBg":   ("rgb(var(--primaryRgb) / .12)", "rgb(var(--primaryRgb) / .12)"),
+    # I riquadri tratteggiati delle versioni che arrivano (Confronto in
+    # corso): sul chiaro i bordi di sempre si vedevano appena (utente).
+    "dashBorder":  ("var(--borderColor)", "#AEB4BB"),
+    "dashActive":  ("rgb(var(--primaryRgb) / .35)", "rgb(var(--primaryRgb) / .7)"),
 }
 
 
