@@ -569,10 +569,9 @@ STYLE = f"""
   /* L'avviso vero e proprio: giallo, la stessa famiglia delle chip
      `au-warn` e degli avvisi del referto. Distinto dalla nota grigia di
      congelamento, che e' una didascalia e non un avviso. */
-  .au-nota-avviso {{ background: rgb(var(--yellowRgb) / .10);
-      border: 1px solid rgb(var(--yellowRgb) / .25);
-      border-left: 3px solid rgb(var(--yellowRgb) / .55);
-      border-radius: 6px; padding: 8px 12px; margin: 6px 0 4px;
+  .au-nota-avviso {{ background: var(--yellowBg);
+      border: 1px solid rgb(var(--yellowRgb) / .45);
+      border-radius: 8px; padding: 8px 12px; margin: 6px 0 4px;
       font-size: 12px; line-height: 1.5; color: var(--yellowText); }}
   .au-nota-congelo {{ background: var(--grayBg);
       border: 1px solid rgb(var(--grayRgb) / .30);
@@ -1847,9 +1846,8 @@ STYLE = f"""
   [class*="st-key-fasciaAnalisi"] .au-avviso {{ margin: -6px 0 32px; }}
   .au-avviso {{ display: flex; align-items: center; gap: 10px;
                background: var(--yellowBg);
-               border: 1px solid rgb(var(--yellowRgb) / .2);
-               border-left: 3px solid var(--yellow);
-               border-radius: 6px; padding: 10px 14px;
+               border: 1px solid rgb(var(--yellowRgb) / .45);
+               border-radius: 8px; padding: 10px 14px;
                color: {GIALLO}; font-size: 12px; line-height: 1.5;
                margin-top: 18px; }}
   /* Lo stesso disegno, in rosso: per gli avvisi che BLOCCANO un'azione
@@ -1916,9 +1914,8 @@ STYLE = f"""
 
   .au-gpu-pausa {{ display: flex; align-items: center; gap: 10px;
                background: var(--yellowBg);
-               border: 1px solid rgb(var(--yellowRgb) / .25);
-               border-left: 3px solid var(--yellow);
-               border-radius: 6px; padding: 8px 12px;
+               border: 1px solid rgb(var(--yellowRgb) / .45);
+               border-radius: 8px; padding: 8px 12px;
                color: {GIALLO}; font-size: 12.5px; line-height: 1.5;
                margin-top: 10px; }}
   /* La fascia "Chiudi AnimeUp": ancorata al FONDO della sidebar, il
@@ -2720,11 +2717,11 @@ STYLE = f"""
       color: var(--textSecondary); margin-top: -4px; }}
   [data-testid="stElementContainer"]:has(.au-sb-ridotto) [data-testid="stMarkdownContainer"] {{
       margin-bottom: 0 !important; }}
-  .au-sb-ridotto {{ margin: 4px 0 10px; padding: 8px 10px; border-radius: 6px;
-      background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .3);
+  .au-sb-ridotto {{ margin: 4px 0 10px; padding: 8px 10px; border-radius: 8px;
+      background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .45);
       font-size: 12px; line-height: 1.45; color: var(--yellowText); }}
   .au-sb-sospeso {{ padding: 10px 12px; border-radius: 8px;
-      background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .3);
+      background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .45);
       font-size: 12.5px; line-height: 1.45; color: var(--yellowText); }}
   .st-key-cSospeso button {{ background: transparent !important;
       border: 1px solid rgb(var(--yellowRgb) / .45) !important;
@@ -2838,11 +2835,15 @@ STYLE = f"""
      dall'utente). «Novità» invece è un link e va col riquadro, in giallo. */
   .au-agg-testa {{ display: flex; align-items: center; gap: 8px;
       font-size: 13.5px; color: var(--text); }}
-  .au-agg-testa a {{ margin-left: auto; font-size: 12.5px;
+  /* Link e nota sotto il pulsante come le note gialle (la calibrazione da
+     rifare): `yellowText` pieno, peso normale. Con la trasparenza, sul
+     chiaro non si leggevano (utente). */
+  .au-agg-testa a {{ margin-left: auto; font-size: 12.5px; font-weight: 400;
       color: var(--yellowText) !important; text-decoration: underline; }}
-  .au-agg-testa a:hover {{ color: var(--yellow) !important; }}
+  .au-agg-testa a:hover {{ text-decoration-thickness: 2px; }}
+  .st-key-cAggiorna [data-testid="stCaptionContainer"] {{ opacity: 1 !important; }}
   .st-key-cAggiorna [data-testid="stCaptionContainer"] p {{ color: var(--yellowText) !important;
-      opacity: .85; }}
+      font-weight: 400; }}
   .st-key-installaAgg .stButton button[kind="primary"] {{
       background: var(--yellow) !important; border-color: var(--yellow) !important; }}
   .st-key-installaAgg .stButton button[kind="primary"] p {{ color: var(--onYellow) !important; }}
@@ -3550,7 +3551,7 @@ STYLE = f"""
   :is([class*="st-key-verdetto"], .st-key-trovaCard, .st-key-testaClip)
       [data-testid="stMarkdownContainer"] {{ margin-bottom: 0 !important; }}
   .st-key-verdettoDubbio {{ background: var(--yellowBg);
-      border-color: rgb(var(--yellowRgb) / .35); }}
+      border-color: rgb(var(--yellowRgb) / .45); }}
   .au-verdetto {{ display: flex; gap: 14px; align-items: flex-start; }}
   .au-verdetto-icona {{ width: 32px; height: 32px; flex: none; box-sizing: border-box;
       border-radius: 50%; border: 1.5px solid var(--green); color: var(--greenText);
@@ -3948,7 +3949,7 @@ STYLE = f"""
       padding: 12px 14px !important; border-radius: 8px; gap: 14px !important;
       align-items: center !important; }}
   [class*="st-key-fineAvviso"] {{ background: var(--yellowBg);
-      border: 1px solid rgb(var(--yellowRgb) / .35); }}
+      border: 1px solid rgb(var(--yellowRgb) / .45); }}
   [class*="st-key-fineGuaio"] {{ background: var(--surface); border: 1px solid var(--borderColor); }}
   [class*="st-key-fineAvviso"] > div:first-child, [class*="st-key-fineGuaio"] > div:first-child {{
       flex: 1 1 auto; min-width: 0; }}
@@ -3964,7 +3965,10 @@ STYLE = f"""
   [class*="st-key-fineAvviso"] .au-fine-voce span {{ color: var(--yellowText); }}
   .au-fine-voce em.au-motivo {{ flex: none; white-space: nowrap; }}
   /* Un riquadro giallo e non solo testo: da solo il colore del testo non
-     bastava a farla notare (segnalato dall'utente). */
+     bastava a farla notare (segnalato dall'utente). È il MODELLO di tutte
+     le note gialle (fondo yellowBg, bordo yellowRgb/.45, testo yellowText a
+     peso normale, angoli da 8px): l'utente le vuole tutte così, nei due
+     temi. Chi ne aggiunge una nuova parta da qui. */
   .au-tar-nota {{ margin-top: 8px; padding: 7px 10px; border-radius: 8px;
       font-size: 12px; line-height: 1.45; color: var(--yellowText);
       background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .45); }}
@@ -4006,8 +4010,16 @@ STYLE = f"""
   .au-tar-mono {{ font: 400 12px var(--mono); color: var(--textSecondary); }}
   .au-box-giallo, .au-box-rosso {{ padding: 10px 12px; border-radius: 8px; font-size: 13px;
       line-height: 1.5; }}
-  .au-box-giallo {{ background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .3);
+  .au-box-giallo {{ background: var(--yellowBg); border: 1px solid rgb(var(--yellowRgb) / .45);
       color: var(--yellowText); }}
+  /* Anche gli avvisi di Streamlit (`st.warning`) come le note gialle: col
+     loro giallo di serie erano l'unico riquadro diverso dagli altri. */
+  [data-testid="stAlertContainer"]:has([data-testid="stAlertContentWarning"]) {{
+      background: var(--yellowBg) !important; border-radius: 8px;
+      border: 1px solid rgb(var(--yellowRgb) / .45); }}
+  [data-testid="stAlertContentWarning"],
+  [data-testid="stAlertContentWarning"] p {{ color: var(--yellowText) !important;
+      font-weight: 400; }}
   .au-box-rosso {{ background: var(--redBg); border: 1px solid rgb(var(--redRgb) / .35);
       color: var(--redText); }}
   .st-key-tarAzioni {{ justify-content: flex-end; gap: 10px !important; }}
@@ -6155,7 +6167,7 @@ def _unito(testo: str) -> str:
     """Un valore che puo' andare a capo solo fra un pezzo e l'altro.
 
     Un numero resta attaccato alla sua unita' e a cio' che lo precede
-    («8 bit 4:2:0», «riduzione 2.00:1», «≈ 2m»): si va a capo dopo un «·» o
+    («8 bit 4:2:0», «riduzione 2.00:1», «~2m»): si va a capo dopo un «·» o
     prima di una «→», mai a meta' di una misura. Spazi normali altrove.
     """
     import re
@@ -7750,10 +7762,10 @@ def _scheda_file(files: list[dict], plan, entry: dict) -> None:
             return
         # Stesso formato delle stime in Lavorazione: ore e minuti.
         if plan.est_best_seconds < plan.est_total_seconds * 0.95:
-            intero = (f"≈ {stima_hm(plan.est_best_seconds)} "
+            intero = (f"~{stima_hm(plan.est_best_seconds)} "
                       f"<small>{t('conf.stat_da_a', max=stima_hm(plan.est_total_seconds))}</small>")
         else:
-            intero = f"≈ {stima_hm(plan.est_total_seconds)}"
+            intero = f"~{stima_hm(plan.est_total_seconds)}"
         st.markdown(
             "<div class='au-stat-file'>"
             f"<div><dt>{t('conf.stat_sorgente')}</dt><dd>{esc(entry['resolution'])}</dd></div>"
@@ -8567,7 +8579,7 @@ def _barra_segmenti(s: dict, quota: float) -> str:
 
 
 def _resta_confronto(s: dict) -> str:
-    """«≈ 2m» che mancano al test intero, stimati sul tempo VERO: quanto e'
+    """«~2m» che mancano al test intero, stimati sul tempo VERO: quanto e'
     passato diviso quanto e' fatto, ogni pezzo pesato col tempo previsto
     (vedi `confronto.quota`). Vuoto finche' non c'e' abbastanza da cui
     stimare."""
@@ -8606,7 +8618,7 @@ def _tabella_confronto(modelli: list[dict], dedup,
         righe.append(
             f"<tr><td class='au-cnf-nome'>{esc(nome)}</td>"
             f"<td>{stima_hm(m['secondi'])}</td>"
-            f"<td>≈ {stima_hm(m['intero'])}</td>"
+            f"<td>~{stima_hm(m['intero'])}</td>"
             + (f"<td class='au-cnf-scarto'>{esc(scarto)}</td>" if len(modelli) > 1 else "")
             + "</tr>")
     proiezione = (t("conf.proiezione_breve", pct=f"{quota:.0%}", come=come)
@@ -9233,7 +9245,7 @@ def _tappe_file(lav) -> str:
 
 
 def _stima_file(piano) -> str:
-    """«≈ 06h 34m» con il fumetto dell'intervallo, per la riga di un file.
+    """«~06h 34m» con il fumetto dell'intervallo, per la riga di un file.
 
     Il valore PIÙ PROBABILE, come nella fascia: la forchetta scritta con la
     barra ("05h 08m / 07h 49m") non diceva quali fossero i due numeri, e chi
@@ -9241,7 +9253,7 @@ def _stima_file(piano) -> str:
     L'intervallo resta, nel fumetto, per chi vuole sapere quanto può ballare.
     """
     b, alto = piano.est_best_seconds, piano.est_total_seconds
-    stima = f"≈ {stima_hm(piano.est_attesa_seconds)}"
+    stima = f"~{stima_hm(piano.est_attesa_seconds)}"
     if b < alto * 0.95:
         # Con la deduplica MISURATA su questo file l'incertezza non è più
         # «quanti fotogrammi ripetuti ci saranno»: quella domanda ha già
@@ -10995,7 +11007,11 @@ def _contenuto_ferma(nome: str) -> None:
             st.rerun()
         return
     frase = t("lavb.ferma_testo")
-    if _altri_dopo(lav):
+    # Con altri file dopo, chi voleva fermare tutto e ha premuto il Ferma
+    # della riga trova qui anche Ferma tutto, invece di dover chiudere e
+    # cercare la barra in basso (utente).
+    altri = _altri_dopo(lav)
+    if altri:
         frase += " " + t("lavb.ferma_altri")
     if lav.blocchi_totali and lav.fase in monitor.UNITA_UPSCALE:
         frase += " " + (t("lav.sicuro_niente") if not lav.blocco_fatti
@@ -11007,6 +11023,11 @@ def _contenuto_ferma(nome: str) -> None:
     # ogni pulsante dentro una chiave che comincia così, Annulla compreso.
     with st.container(key="bottoniStop", horizontal=True, horizontal_alignment="right"):
         if st.button(t("conf.tutti_annulla"), key="annullaFerma"):
+            st.rerun()
+        if altri and st.button(t("lavb.ferma_tutto"), key="fermaTuttoDialogo"):
+            _ferma(lav, tutto=True)
+            st.toast(t("lavb.lancio_interrotto"))
+            time.sleep(1.5)
             st.rerun()
         # «fermasi…»: il rosso pieno della conferma, come nei due temi.
         if st.button(t("lavb.ferma"), key="fermasiDialogo"):

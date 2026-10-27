@@ -130,7 +130,7 @@ The red chip names the obstacle in two or three words. The tooltip, and the row'
 
 ### On each row
 
-The **Estimate** column shows the **most likely** duration, for example **≈ 40m**. When the possible range is wide enough to matter, an **(i)** icon appears next to it. Hover it for:
+The **Estimate** column shows the **most likely** duration, for example **~40m**. When the possible range is wide enough to matter, an **(i)** icon appears next to it. Hover it for:
 
 | Line | Meaning |
 |---|---|
@@ -196,7 +196,7 @@ On a **done** file, the panel adds a **Job completed** group under the output na
 |---|---|
 | **n files selected** | How many rows you've ticked. If nothing is ticked: **No files selected.** |
 | **· n to process** + (i) | Appears only when fewer files will actually start than you ticked. The (i) breaks it down: **To process**, **In progress**, **Waiting for their turn**, **Already done**, **Cannot be processed**. |
-| **· Estimate ≈ …** + (i) | The most likely total for the files that will start, **including the pauses between files** if you set **Pause between files** in the sidebar. The (i) shows **Most likely** and **Possible duration … to …**. |
+| **· Estimate ~…** + (i) | The most likely total for the files that will start, **including the pauses between files** if you set **Pause between files** in the sidebar. The (i) shows **Most likely** and **Possible duration … to …**. |
 | Small print | "The minimum time applies when deduplication finds repeated frames, which are common in animation.", followed by the calibration note. |
 | **Start processing** | Starts the launch. Disabled when there's nothing to process, the machine is busy, or a calibration is running (a line in the bar says so). |
 

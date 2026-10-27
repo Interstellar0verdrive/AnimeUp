@@ -211,7 +211,7 @@ class PreviewResult:
     crops: dict[str, Path] = field(default_factory=dict)
     seconds: float = 0.0
     # Secondi PER VARIANTE: servono alla proiezione "su 10 secondi ci ha
-    # messo 8m 32s, quindi l'episodio intero ≈ Xh" — col totale soltanto, il
+    # messo 8m 32s, quindi l'episodio intero ~Xh" — col totale soltanto, il
     # riferimento (veloce) annacquava i modelli (lenti).
     tempi: dict[str, float] = field(default_factory=dict)
     # Due indicatori per variante: (dettaglio fine, rumore nelle aree piatte),

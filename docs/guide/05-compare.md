@@ -77,7 +77,7 @@ Which chips appear, by source height:
 
 Under the description, each usable card shows a line like:
 
-`~7.8 frames/s ≈ 6m (upscale stages only)`
+`~7.8 frames/s ~6m (upscale stages only)`
 
 That's the model's upscaling speed on **this** file in frames per second, and the time to upscale every frame of the file at that speed. It counts **only the upscale**: no deduplication, encoding or pauses between chunks. That's on purpose: those costs are the same whichever model you choose, and leaving them out shows the real difference between models. For the true total, look at the **Full episode** tile. Greyed-out (can't reach) cards have no speed line.
 

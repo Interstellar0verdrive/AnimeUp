@@ -82,7 +82,7 @@
   "lavb.n_selezionati.uno": "{n} file selected",
   "lavb.n_selezionati.altri": "{n} files selected",
   "lavb.n_da_elaborare": "{n} to process",
-  "lavb.stima_barra": "Estimate ≈ **{durata}**",
+  "lavb.stima_barra": "Estimate ~**{durata}**",
   "lavb.e_altri.uno": "and one more",
   "lavb.e_altri.altri": "and {n} more",
   "lavb.in_forse.uno": "{n} selected file has already been processed, but its output is no longer in OUTPUT: skipped for now:<br>{nomi}",
@@ -109,5 +109,5 @@
   "lavb.ferma_titolo": "Stop this file?",
   "lavb.ferma_testo": "You can resume it whenever you like.",
   "lavb.ferma_finito": "This file has already finished or stopped.",
-  "lavb.ferma_altri": "The other files in the launch carry on."
+  "lavb.ferma_altri": "The other files in the launch carry on: to stop them too, use Stop all."
 }
