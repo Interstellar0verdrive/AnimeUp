@@ -922,6 +922,82 @@ def tempo_che_resta(fatti: int, totale: int, ritmo: float | None, *,
     return resta
 
 
+def ritmo_blocchi(cartella: Path) -> tuple[float, int, float] | None:
+    """Quanto costa un fotogramma del file, misurato sui blocchi FINITI in
+    questa corsa: (secondi per fotogramma, fine dell'ultimo segmento, quando
+    quel segmento è stato scritto). `None` finché non ce n'è uno.
+
+    Il ritmo dell'ultimo minuto, proiettato su ore, sbandava: su un
+    Monogatari da 11 blocchi la GPU è scesa per qualche minuto da 1,5 a 1,1
+    fotogrammi al secondo e la riga ha detto «restano 6:52» quando ne
+    mancavano 4:40, salendo poi oltre le 7 ore (segnalato dall'utente). Un
+    blocco finito invece conta tutto — upscale, fotogrammi ripetuti saltati,
+    turno di codifica — e la mediana dei blocchi non si lascia tirare da uno
+    lento.
+
+    Ogni blocco si misura dalla fine del precedente (per il primo, dalla
+    fine della ricerca dei ripetuti) alla scrittura del suo segmento. Vale
+    solo se quell'inizio cade dopo l'avvio di QUESTA corsa: un blocco a
+    cavallo di un'interruzione misurerebbe anche la notte in cui il Mac era
+    spento.
+    """
+    try:
+        stato = json.loads((cartella / "state.json").read_text())
+        avvio = (cartella / "running.lock").stat().st_mtime
+    except (OSError, ValueError):
+        return None
+    segmenti = []
+    for voce in stato.get("segments", []) if isinstance(stato, dict) else []:
+        if not (isinstance(voce, (list, tuple)) and len(voce) >= 3):
+            continue
+        try:
+            da, a = int(voce[0]), int(voce[1])
+            quando = (cartella / "segments" / str(voce[2])).stat().st_mtime
+        except (TypeError, ValueError, OSError):
+            continue
+        if a > da:
+            segmenti.append((da, a, quando))
+    if not segmenti:
+        return None
+    segmenti.sort()
+    try:
+        prima = (cartella / "dedup.json").stat().st_mtime
+    except OSError:
+        prima = None
+    misure = []
+    for i, (da, a, quando) in enumerate(segmenti):
+        inizio = segmenti[i - 1][2] if i else (prima if da == 0 else None)
+        if inizio is not None and inizio >= avvio and quando > inizio:
+            misure.append((quando - inizio) / (a - da))
+    if not misure:
+        return None
+    misure.sort()
+    mezzo = len(misure) // 2
+    mediana = (misure[mezzo] if len(misure) % 2
+               else (misure[mezzo - 1] + misure[mezzo]) / 2)
+    return mediana, segmenti[-1][1], segmenti[-1][2]
+
+
+def resto_da_blocchi(misura: tuple[float, int, float], totale: int,
+                     adesso: float, blocco: int = 0) -> float:
+    """Quanto manca al file, dai blocchi finiti (`ritmo_blocchi`).
+
+    I fotogrammi non ancora impacchettati per il costo medio di uno, meno il
+    tempo già speso sul blocco in corso. Si conta per fotogrammi e non per
+    blocchi perché l'ultimo è il resto della divisione, più corto: costa
+    in proporzione. Il montaggio finale (pochi minuti) non si modella.
+
+    Se il blocco in corso va più lento della media, il conto non scende
+    sotto quello dei blocchi DOPO di lui: meglio fermo un momento che
+    promettere una fine già passata.
+    """
+    spf, fine, quando = misura
+    mancano = max(0, totale - fine)
+    resta = spf * mancano - max(0.0, adesso - quando)
+    dopo = spf * max(0, mancano - blocco) if blocco else 0.0
+    return max(resta, dopo, 0.0)
+
+
 def turno_misurato(stati: dict, nome: str) -> float | None:
     """Quanto dura in media un turno di codifica di questo lavoro, sui turni
     visti per intero. `None` finché non se n'è visto nessuno: è il primo

@@ -2849,6 +2849,55 @@ def _tempo_che_resta_somma_i_turni():
     # senza ritmo non si risponde: meglio tacere che inventare
     assert monitor.tempo_che_resta(1000, 2000, None) is None
     assert monitor.tempo_che_resta(1000, 2000, 0.0) is None
+
+
+@caso("il tempo che resta viene dai blocchi finiti, non dall'ultimo minuto")
+def _tempo_dai_blocchi_finiti():
+    """Un Monogatari da 11 blocchi: 35 minuti l'uno, ma la GPU rallentata per
+    qualche minuto faceva dire alla riga 6:52 invece di 4:40 (utente)."""
+    import json as _json
+    from animeup import monitor
+
+    with tempfile.TemporaryDirectory() as t:
+        c = Path(t)
+        (c / "segments").mkdir()
+        blocco, totale, ciclo = 2958, 32368, 35 * 60.0
+        avvio = 1_000_000.0
+        (c / "running.lock").write_text("1")
+        os.utime(c / "running.lock", (avvio, avvio))
+        (c / "dedup.json").write_text("{}")
+        os.utime(c / "dedup.json", (avvio + 420, avvio + 420))
+        segmenti = []
+        for i in range(2):
+            nome = f"seg{i * blocco:08d}-{(i + 1) * blocco:08d}.mkv"
+            (c / "segments" / nome).write_text("x")
+            quando = avvio + 420 + ciclo * (i + 1)
+            os.utime(c / "segments" / nome, (quando, quando))
+            segmenti.append([i * blocco, (i + 1) * blocco, nome])
+        (c / "state.json").write_text(_json.dumps({"segments": segmenti}))
+
+        misura = monitor.ritmo_blocchi(c)
+        assert misura is not None
+        assert abs(misura[0] - ciclo / blocco) < 1e-6, misura
+        assert misura[1] == 2 * blocco
+        # 25 minuti dentro il terzo blocco: ne restano 10, più gli altri 8
+        # (l'ultimo è il resto, 2.788 fotogrammi, e costa in proporzione)
+        adesso = misura[2] + 25 * 60
+        resta = monitor.resto_da_blocchi(misura, totale, adesso, blocco)
+        atteso = ciclo / blocco * (totale - 2 * blocco) - 25 * 60
+        assert abs(resta - atteso) < 0.01, (resta, atteso)
+        assert 4.5 * 3600 < resta < 4.8 * 3600, resta
+        # il blocco in corso lento non fa promettere meno dei blocchi dopo
+        tardi = monitor.resto_da_blocchi(misura, totale, misura[2] + 3 * 3600, blocco)
+        assert abs(tardi - ciclo / blocco * (totale - 3 * blocco)) < 0.01, tardi
+
+        # un'interruzione: la corsa ripartita dopo i due segmenti non li
+        # misura (conterebbero anche il tempo da spento)
+        os.utime(c / "running.lock", (avvio + 10 * 3600, avvio + 10 * 3600))
+        assert monitor.ritmo_blocchi(c) is None
+    with tempfile.TemporaryDirectory() as t:
+        # nessun blocco finito: si torna al ritmo misurato
+        assert monitor.ritmo_blocchi(Path(t)) is None
     # arrivati oltre il totale non si promette tempo negativo
     assert monitor.tempo_che_resta(2100, 2000, 4.0) == 0.0
 

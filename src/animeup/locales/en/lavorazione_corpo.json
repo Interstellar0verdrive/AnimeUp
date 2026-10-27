@@ -53,7 +53,6 @@
   "lavb.nota_dedup": "The actual duration depends on how many repeated frames are detected.",
   "lavb.ferma": "Stop",
   "lavb.ferma_aiuto": "Stops ONLY this file: processing can be resumed at any time. The other files in the launch carry on. To stop everything, use the button in the bar at the bottom.",
-  "lavb.conferma_stop": "Stop?",
   "lavb.interruzione_richiesta": "Stop requested: the row will switch to \"interrupted\" in a few seconds.",
   "lavb.fermo_al": "stopped at {quota} · {fatti}/{totale} frames",
   "lavb.elaborazione_di": "Processing {numero} of {totale}",
@@ -106,5 +105,8 @@
   "lavb.ferma_tutto": "Stop all",
   "lavb.ferma_tutto_aiuto": "Interrupts the file in progress (resumable) and cancels the remaining files in this launch.",
   "lavb.conferma_ferma_tutto": "Stop all?",
-  "lavb.lancio_interrotto": "Launch stopped: the file in progress can still be resumed."
+  "lavb.lancio_interrotto": "Launch stopped: the file in progress can still be resumed.",
+  "lavb.ferma_titolo": "Stop this file?",
+  "lavb.ferma_testo": "You can resume it whenever you like, and the other files in the launch carry on.",
+  "lavb.ferma_finito": "This file has already finished or stopped."
 }

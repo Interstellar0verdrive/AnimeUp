@@ -53,7 +53,6 @@
   "lavb.nota_dedup": "La durata effettiva dipende dalla quantità di fotogrammi ripetuti rilevati.",
   "lavb.ferma": "Ferma",
   "lavb.ferma_aiuto": "Ferma SOLO questo file: l'elaborazione potrà essere ripresa in qualsiasi momento. Gli altri file del lancio proseguono. Per fermare tutto c'è il pulsante nella barra in basso.",
-  "lavb.conferma_stop": "Ferma?",
   "lavb.interruzione_richiesta": "Interruzione richiesta: la riga passerà a \"interrotto\" tra qualche secondo.",
   "lavb.fermo_al": "fermo al {quota} · {fatti}/{totale} fotogrammi",
   "lavb.elaborazione_di": "Elaborazione {numero} di {totale}",
@@ -106,5 +105,8 @@
   "lavb.ferma_tutto": "Ferma tutto",
   "lavb.ferma_tutto_aiuto": "Interrompe il file in corso (riprendibile) e annulla i successivi di questo lancio.",
   "lavb.conferma_ferma_tutto": "Ferma tutto?",
-  "lavb.lancio_interrotto": "Lancio interrotto: il file in corso resterà riprendibile."
+  "lavb.lancio_interrotto": "Lancio interrotto: il file in corso resterà riprendibile.",
+  "lavb.ferma_titolo": "Fermare questo file?",
+  "lavb.ferma_testo": "Potrai riprenderlo quando vuoi, e gli altri file del lancio proseguono.",
+  "lavb.ferma_finito": "Questo file ha già finito o si è già fermato."
 }

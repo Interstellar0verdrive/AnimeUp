@@ -2432,8 +2432,9 @@ STYLE = f"""
      mirando al contenitore diventava grande anche la parola "Dettagli". */
 
   /* Ferma: rosso, perché interrompe — ma in bordo e testo, non pieno: il
-     pulsante convive con la riga senza urlare. La CONFERMA invece si riempie:
-     a quel punto il rosso deve pesare, sta per succedere davvero. */
+     pulsante convive con la riga senza urlare. La CONFERMA invece si riempie
+     (anche il Ferma della finestra di conferma): a quel punto il rosso deve
+     pesare, sta per succedere davvero. */
   [class*="st-key-ferma"] button,
   [class*="st-key-scarta"] button {{
       border-color: rgb(var(--redRgb) / .55) !important;
@@ -8982,6 +8983,12 @@ def _resto_misurato(lav, campioni: dict, stati: dict | None = None,
     """
     if not lav.totale:
         return None
+    # Con almeno un blocco finito in questa corsa vale la sua durata media,
+    # non il ritmo dell'ultimo minuto (vedi `monitor.ritmo_blocchi`).
+    misura = monitor.ritmo_blocchi(lav.cartella)
+    if misura is not None:
+        return monitor.resto_da_blocchi(misura, lav.totale, time.time(),
+                                        lav.blocco_dim)
     # `ritmo` si accetta gia' calcolato: la riga lo mostra a schermo e lo
     # calcolava due volte, una per scriverlo e una qui dentro.
     if ritmo is None:
@@ -9302,19 +9309,17 @@ def _avanzamento_vivo(cartella: str, turno: float | None, stima: str = "") -> No
             chiave = "lav.d_estrazione" if lav.fase == "estrazione" else "lav.d_deduplica"
             dettaglio = t(chiave, fatti=_num(lav.fatti), totale=_num(lav.totale))
         elif lav.fase == "elaborazione":
-            resta = _resto_misurato(lav, campioni, stati, turno, ritmo=ritmo) if ritmo else None
+            resta = _resto_misurato(lav, campioni, stati, turno, ritmo=ritmo)
             if not lav.fatti:
                 # Fra la ricerca dei ripetuti e il primo fotogramma ingrandito
                 # (il modello si carica, il blocco si prepara): «0 di 2.958»
                 # sembrava un upscale fermo.
                 dettaglio = t("lav.d_preparo")
             elif lav.blocchi_totali:
-                dettaglio = (t("lav.d_upscale", fatti=_num(lav.blocco_fatti),
-                               totale=_num(lav.blocco_totale), **blocchi)
-                             + " · " + (t("lav.sicuro_niente") if not lav.blocco_fatti
-                                        else t("lav.sicuro.uno") if lav.blocco_fatti == 1
-                                        else t("lav.sicuro.altri",
-                                               num=_num(lav.blocco_fatti))))
+                # Quanto si rifarebbe fermando ora lo dice la finestra di
+                # Ferma: qui allungava la riga fino a spingere fuori le misure.
+                dettaglio = t("lav.d_upscale", fatti=_num(lav.blocco_fatti),
+                              totale=_num(lav.blocco_totale), **blocchi)
             else:
                 dettaglio = t("lav.d_upscale_tutto", fatti=_num(lav.fatti),
                               totale=_num(lav.totale))
@@ -9328,7 +9333,12 @@ def _avanzamento_vivo(cartella: str, turno: float | None, stima: str = "") -> No
             durata = monitor.turno_misurato(stati, lav.cartella.name) or turno
             if lav.fase == "codifica blocco":
                 dettaglio = t("lav.d_codifica_blocco", **blocchi) + fatto
-                if durata:
+                # Coi blocchi misurati il «restano» è quello del file, come
+                # durante l'upscale: prima qui diceva il solo turno, e il
+                # numero saltava da ore a minuti e indietro a ogni blocco.
+                if monitor.ritmo_blocchi(lav.cartella) is not None:
+                    resta = _resto_misurato(lav, campioni, stati, turno)
+                elif durata:
                     resta = durata * (1 - frazione)
             elif lav.sottopasso == "montaggio":
                 dettaglio = t("lav.d_montaggio") + (
@@ -10072,28 +10082,15 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
             # file. Sulla riga resta il solo indicatore «in pausa», che è dove
             # se ne vede l'effetto — la barra che smette di avanzare.
             #
-            # Ferma con conferma in due passi A SCADENZA: il primo click arma,
-            # il secondo (entro 10 secondi) esegue, poi si disarma da solo al
-            # giro dopo. Niente finestre di dialogo: la conferma sta nel
-            # pulsante stesso, che cambia faccia e colore.
-            armato_stop = st.session_state.get("conferma_ferma")
-            in_conferma = (isinstance(armato_stop, tuple)
-                           and armato_stop[0] == chiave
-                           and time.time() - armato_stop[1] < 10)
-            if not in_conferma:
-                if c[6].button(t("lavb.ferma"), key=f"ferma{i}",
-                               use_container_width=True,
-                               help=t("lavb.ferma_aiuto")):
-                    st.session_state["conferma_ferma"] = (chiave, time.time())
-                    st.rerun()
-            else:
-                if c[6].button(t("lavb.conferma_stop"), key=f"fermasi{i}",
-                               use_container_width=True):
-                    st.session_state.pop("conferma_ferma", None)
-                    _ferma(lav, tutto=False)
-                    st.toast(t("lavb.interruzione_richiesta"))
-                    time.sleep(1.5)
-                    st.rerun()
+            # Ferma chiede conferma in una finestra che dice cosa costa:
+            # quanti fotogrammi del blocco andranno rifatti. Prima lo diceva
+            # la riga, ma la frase la allungava fino a spingere fuori fps e
+            # tempi (utente).
+            if c[6].button(t("lavb.ferma"), key=f"ferma{i}",
+                           use_container_width=True,
+                           help=t("lavb.ferma_aiuto")):
+                st.dialog(t("lavb.ferma_titolo"), width="small")(
+                    _contenuto_ferma)(lav.cartella.name)
 
         # La barra vive DENTRO la riga, sotto la testata, con tutto il testo
         # etichettato accanto: fps, quanto resta, quanto è trascorso.
@@ -10318,6 +10315,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                         vivo is not None
                         and (monitor.turno_misurato(_stati, vivo.cartella.name)
                              is not None
+                             or monitor.ritmo_blocchi(vivo.cartella) is not None
                              or not vivo.blocchi_totali
                              or vivo.blocco_n >= vivo.blocchi_totali))
                     residuo = monitor.residuo_coda(
@@ -10983,6 +10981,37 @@ def _spegni_interfaccia(lavori_in_corso: bool) -> None:
 
     fili.Thread(target=_poi, daemon=True).start()
     st.stop()
+
+
+def _contenuto_ferma(nome: str) -> None:
+    """La finestra di Ferma: cosa si perde, e Annulla o Ferma. Lo stato si
+    rilegge qui, all'apertura: quello della riga ha qualche secondo."""
+    lav = next((l for l in monitor.lavori(recente=1.0)
+                if l.cartella.name == nome), None)
+    if lav is None or not lav.vivo:
+        st.markdown(f"<p class='au-dialogo-testo'>{esc(t('lavb.ferma_finito'))}</p>",
+                    unsafe_allow_html=True)
+        if st.button(t("conf.file_ok"), key="fermaNoOk", type="primary"):
+            st.rerun()
+        return
+    frase = t("lavb.ferma_testo")
+    if lav.blocchi_totali and lav.fase in monitor.UNITA_UPSCALE:
+        frase += " " + (t("lav.sicuro_niente") if not lav.blocco_fatti
+                        else t("lav.sicuro.uno", n=lav.blocco_n) if lav.blocco_fatti == 1
+                        else t("lav.sicuro.altri", num=_num(lav.blocco_fatti),
+                               n=lav.blocco_n))
+    st.markdown(f"<p class='au-dialogo-testo'>{esc(frase)}</p>", unsafe_allow_html=True)
+    # Il contenitore NON si chiama «ferma…»: lo stile rosso di Ferma prende
+    # ogni pulsante dentro una chiave che comincia così, Annulla compreso.
+    with st.container(key="bottoniStop", horizontal=True, horizontal_alignment="right"):
+        if st.button(t("conf.tutti_annulla"), key="annullaFerma"):
+            st.rerun()
+        # «fermasi…»: il rosso pieno della conferma, come nei due temi.
+        if st.button(t("lavb.ferma"), key="fermasiDialogo"):
+            _ferma(lav, tutto=False)
+            st.toast(t("lavb.interruzione_richiesta"))
+            time.sleep(1.5)
+            st.rerun()
 
 
 def _ferma(lav, *, tutto: bool) -> None:
