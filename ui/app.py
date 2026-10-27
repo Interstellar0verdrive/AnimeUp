@@ -7536,13 +7536,17 @@ def page_confronto(cfg: dict) -> None:
     # La praticabilita' REALE di ogni modello con le impostazioni correnti,
     # calcolata UNA volta e rispettata da tutta la pagina.
     praticabili: dict[str, str] = {}
+    # I piani si tengono: le card dei modelli ne leggono il tempo di GPU,
+    # che conta la taratura di questo Mac e i fotogrammi ripetuti.
+    piani_modello: dict = {}
     for k in CATALOG:
         try:
-            build_plan(plan.source, target_height=cfg["altezza"],
-                       crf=cfg["crf"], preset=cfg["preset"],
-                       peak_disk_gb=cfg["disco"], dedup=cfg["dedup"],
-                       denoise=cfg["denoise"], forza=cfg["forza"],
-                       model_key=k)
+            piani_modello[k] = build_plan(
+                plan.source, target_height=cfg["altezza"],
+                crf=cfg["crf"], preset=cfg["preset"],
+                peak_disk_gb=cfg["disco"], dedup=cfg["dedup"],
+                denoise=cfg["denoise"], forza=cfg["forza"],
+                model_key=k)
             praticabili[k] = ""
         except (PlanError, ValueError) as exc:
             praticabili[k] = str(exc)
@@ -7559,7 +7563,7 @@ def page_confronto(cfg: dict) -> None:
         _scheda_file(files, plan, entry)
         _passo_spezzoni(plan, path)
     elif passo == 2:
-        _passo_modelli(plan, path, cfg, praticabili)
+        _passo_modelli(plan, path, cfg, praticabili, piani_modello)
     else:
         _passo_risultati(plan, path)
     with posto_pillole.container():
@@ -8027,7 +8031,8 @@ def _fascia_del_file(h: int) -> int:
     return 0
 
 
-def _schede_modelli(plan, path: Path, praticabili: dict[str, str]) -> list[str]:
+def _schede_modelli(plan, path: Path, praticabili: dict[str, str],
+                    piani_modello: dict | None = None) -> list[str]:
     """I modelli come schede spuntabili: cosa sono, quando sono la scelta
     giusta, e quanto costano.
 
@@ -8065,10 +8070,21 @@ def _schede_modelli(plan, path: Path, praticabili: dict[str, str]) -> list[str]:
                     classe, testo = "au-warn", t("conf.chip_verifica")
                 else:
                     classe, testo = "au-grigio", t(f"conf.ideale.{k}")
-                mpx_s = modello.throughput.get(scala, min(modello.throughput.values()))
-                velocita = mpx_s / src_mpx if src_mpx else None
+                # Dal piano di QUESTO modello: la taratura di questo Mac al
+                # posto delle velocita' di fabbrica, e solo i fotogrammi che
+                # si ingrandiscono davvero (i ripetuti no). Prima: fabbrica e
+                # tutti i fotogrammi, e la stima veniva il quadruplo del vero
+                # (utente: «4-5 minuti, ce ne ha messo uno»).
+                pk = (piani_modello or {}).get(k)
+                if pk is not None and pk.est_gpu_seconds > 0:
+                    velocita = pk.frames_to_upscale / pk.est_gpu_seconds
+                    durata = pk.est_gpu_seconds
+                else:
+                    mpx_s = modello.throughput.get(scala, min(modello.throughput.values()))
+                    velocita = mpx_s / src_mpx if src_mpx else None
+                    durata = plan.frames / velocita if velocita else 0
                 meta = (t("conf.velocita", fps=f"{velocita:.1f}",
-                          durata=stima_hm(plan.frames / velocita)) if velocita else "")
+                          durata=stima_hm(durata)) if velocita else "")
             famiglia, _, variante = modello.label.partition(" ")
             with st.container(key=f"mod_{k}"):
                 acceso = st.checkbox(
@@ -8092,13 +8108,14 @@ def _schede_modelli(plan, path: Path, praticabili: dict[str, str]) -> list[str]:
     return chiavi
 
 
-def _passo_modelli(plan, path: Path, cfg: dict, praticabili: dict[str, str]) -> None:
+def _passo_modelli(plan, path: Path, cfg: dict, praticabili: dict[str, str],
+                   piani_modello: dict | None = None) -> None:
     st.markdown(
         f"<div class='au-passo-titolo'>{t('conf.m_titolo')}</div>"
         f"<div class='au-passo-testo'>{t('conf.m_testo')}<br>{t('conf.m_testo2')}</div>",
         unsafe_allow_html=True)
     _consigli(plan, cfg, praticabili)
-    chiavi = _schede_modelli(plan, path, praticabili)
+    chiavi = _schede_modelli(plan, path, praticabili, piani_modello)
     riferimento = st.session_state.get(f"originale_{path}", True)
     with st.container(key="confOriginale"):
         nuovo = st.toggle(t("conf.includi_originale"), value=riferimento,

@@ -21,7 +21,7 @@
   "conf.chip_verifica": "da verificare",
   "conf.chip_no": "sconsigliato",
   "conf.chip_non_arriva": "non arriva a {altezza}p",
-  "conf.velocita": "~{fps} fotogrammi/s · ≈ {durata} solo upscale",
+  "conf.velocita": "~{fps} fotogrammi/s · file intero ≈ {durata}, solo upscale",
   "conf.modelli_disponibili": "Modelli disponibili",
   "conf.quale_modello": "Quale modello scegliere?",
   "conf.caso.sopra_fascia": "sopra i {altezza}p",

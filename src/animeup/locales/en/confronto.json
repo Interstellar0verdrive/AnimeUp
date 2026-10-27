@@ -21,7 +21,7 @@
   "conf.chip_verifica": "worth checking",
   "conf.chip_no": "not recommended",
   "conf.chip_non_arriva": "can't reach {altezza}p",
-  "conf.velocita": "~{fps} frames/s · ≈ {durata} upscale only",
+  "conf.velocita": "~{fps} frames/s · whole file ≈ {durata}, upscale only",
   "conf.modelli_disponibili": "Available models",
   "conf.quale_modello": "Which model should I choose?",
   "conf.caso.sopra_fascia": "above {altezza}p",
