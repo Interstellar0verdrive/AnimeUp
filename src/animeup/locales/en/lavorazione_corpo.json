@@ -72,7 +72,7 @@
   "lavb.rimanente_coda": "Estimated time left for the whole queue: {quanto}",
   "lavb.fine_prevista": "Expected finish: {quando}",
   "lavb.in_lavorazione_file": "Processing: {nome}",
-  "lavb.avvio_in_corso": "Starting: preparing the chosen files. With many files this can take a few minutes.",
+  "lavb.avvio_in_corso": "Starting: preparing the chosen files. With a long queue this can take a few minutes.",
   "lavb.nessun_file": "No files selected.",
   "lavb.sel_da_elaborare": "To process: {n}",
   "lavb.sel_in_lavorazione": "In progress: {n}",

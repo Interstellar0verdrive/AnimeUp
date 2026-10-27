@@ -72,7 +72,7 @@
   "lavb.rimanente_coda": "Tempo rimanente stimato per l'intera coda: {quanto}",
   "lavb.fine_prevista": "Fine prevista: {quando}",
   "lavb.in_lavorazione_file": "In lavorazione: {nome}",
-  "lavb.avvio_in_corso": "Avvio in corso: preparo i file scelti. Con molti file può volerci qualche minuto.",
+  "lavb.avvio_in_corso": "Avvio in corso: preparo i file scelti. Se sono tanti, può volerci qualche minuto.",
   "lavb.nessun_file": "Nessun file selezionato.",
   "lavb.sel_da_elaborare": "Da elaborare: {n}",
   "lavb.sel_in_lavorazione": "In lavorazione: {n}",

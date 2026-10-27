@@ -1708,7 +1708,7 @@ STYLE = f"""
      l'altezza della fascia. */
   /* -9 e non 10: fra i due paragrafi la fascia infila i suoi 14px, e il
      distacco misurato usciva 24 invece dei 5 voluti. */
-  .st-key-barra .au-catena {{ margin-top: -9px; }}
+  .st-key-barra .au-catena {{ margin-top: 0; }}
   .st-key-barra .au-gpu-pausa {{ margin-top: 10px; }}
   .st-key-barra .stMarkdown p {{ margin: 0; }}
   /* Il `margin-bottom: -14px` di Streamlit su stMarkdownContainer (vedi la
@@ -1720,11 +1720,19 @@ STYLE = f"""
   .st-key-barra .au-meta {{ font-size: 11px; }}
   /* Riepilogo e nota uno sotto l'altra, non a 14px: erano letti come due
      cose separate (segnalato dall'utente). */
+  /* 4px fra titolo, coda e tempo, come nella tavola della Lavorazione: i
+     margini negativi di prima (pensati per 14px di distacco) con 6px
+     facevano accavallare le righe (utente). */
   .st-key-barra [data-testid="stColumn"]:first-child > [data-testid="stVerticalBlock"] {{
-      gap: 6px !important; }}
+      gap: 4px !important; }}
+  .st-key-barra .stMarkdown p {{ font-size: 14px; line-height: 1.4; }}
   .au-barra-nota {{ font-size: 12.5px; line-height: 1.45; color: var(--textSecondary); }}
   .au-avvio {{ display: flex; align-items: center; gap: 10px; font-size: 13.5px;
       color: var(--textCode); }}
+  /* L'avviso d'avvio nasce al clic nel posto della nota e al giro dopo la
+     fascia lo riscrive in cima: finche' quel giro non finisce, la copia
+     vecchia restava a schermo e l'avviso si leggeva due volte (utente). */
+  .st-key-barra [data-stale="true"]:has(.au-avvio) {{ display: none !important; }}
   .st-key-barra .stButton button {{ padding: 0.8rem 1.6rem; width: auto; }}
   /* Le due CTA a filo destro. `flex-end` sulla colonna non bastava: dentro
      c'e' un blocco verticale che occupa tutta la larghezza, ed è quello che
@@ -2097,8 +2105,7 @@ STYLE = f"""
      fondo scuro (fratello di linkColor). */
   /* Titolo e sottotitolo sono una coppia: il margine negativo annulla lo
      spazio che Streamlit lascia sotto il paragrafo del titolo. */
-  .au-coda-dettaglio {{ font-size: 12px; color: {TESTO_3};
-                       margin: -13px 0 0; }}
+  .au-coda-dettaglio {{ font-size: 12.5px; line-height: 1.4; color: {TESTO_2}; margin: 0; }}
   /* La terza riga e' l'informazione principale, e per esserlo non ha
      bisogno di un riquadro: testo bianco, staccato quel tanto che basta
      dalla coppia titolo/sottotitolo. I riquadri colorati restano per cio'
@@ -2108,8 +2115,8 @@ STYLE = f"""
      chiedere il taglio con i puntini) e troncare il tempo rimanente
      sarebbe nascondere proprio cio' che si sta cercando. */
   .au-catena {{ display: block; margin: 10px 0 0;
-               color: {TESTO}; font-size: 13px; line-height: 1.5; }}
-  .au-catena .au-eti {{ color: {TESTO}; }}
+               color: var(--textCode); font: 400 12px/1.5 var(--mono); }}
+  .au-catena .au-eti {{ color: var(--textCode); }}
   .au-catena .au-val {{ color: {TESTO_2}; }}
   .au-catena b {{ font-weight: 600; }}
   /* `inline-block` + `vertical-align` non bastavano: la rotellina sedeva
@@ -3804,7 +3811,10 @@ STYLE = f"""
       box-shadow: none !important; border: 1px solid var(--primary) !important;
       border-left-width: 3px !important; background: rgb(var(--primaryRgb) / .05) !important;
       margin: 0 !important; }}
-  .au-riga-avanz {{ padding: 4px 0 16px 48px; }}
+  /* A filo col nome del file (62px dal bordo della riga, misurato): a
+     48px barra e riquadro partivano 14px prima del nome (utente). */
+  .au-riga-avanz {{ padding: 4px 0 16px 62px; }}
+  @media (max-width: 1360px) {{ .au-riga-avanz {{ padding-left: 50px; }} }}
   .au-riga-testa {{ display: flex; align-items: center; gap: 14px; }}
   .au-riga-testa .au-riga-barra {{ flex: 1; margin: 0; }}
   .au-riga-testa b {{ font: 500 12.5px var(--mono); color: var(--primaryText); }}
@@ -3837,8 +3847,8 @@ STYLE = f"""
   .au-seg {{ position: relative; min-width: 14px; height: 100%; border-radius: 3px;
       overflow: hidden; background: rgb(var(--primaryRgb) / .15); }}
   .au-seg > i {{ display: block; height: 100%; background: var(--primary); }}
-  .au-seg > b {{ position: absolute; top: 0; bottom: 0; width: 1px;
-      background: rgb(var(--bgRgb) / .7); }}
+  .au-seg > b {{ position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px;
+      background: var(--chunkLine); }}
   .au-ferma .au-seg {{ background: var(--sidebar2); }}
   .au-ferma .au-seg > i {{ background: var(--yellow); }}
   .au-ferma .au-riga-testa b {{ color: var(--yellowText); }}
@@ -3882,11 +3892,19 @@ STYLE = f"""
      il riquadro toccava il fondo, visto dall'utente). */
   .au-riga-dett {{ display: flex; align-items: center; gap: 16px; }}
   .au-riga-dett > span {{ flex: 1; min-width: 0; }}
-  a.au-log {{ flex: none; font: 500 12px var(--font); color: var(--textSecondary) !important;
-      text-decoration: underline; text-underline-offset: 2px; }}
-  a.au-log:hover {{ color: var(--textPrimary) !important; }}
-  [class*="st-key-log_"],
-  [data-testid="stElementContainer"]:has(> [class*="st-key-log_"]) {{ display: none !important; }}
+  /* Le misure del passo in corso, a destra nel riquadro che lo descrive. */
+  .au-riga-dett > span.au-riga-misure {{ flex: none; margin-left: auto;
+      font: 400 11.5px var(--mono); color: var(--textCode); white-space: nowrap; }}
+  /* Tappe a sinistra, durata del file a destra. Le tappe tagliano se non ci
+     stanno; il margine interno (compensato fuori) lascia posto all'anello
+     del pallino che pulsa, che prima usciva tagliato (utente). */
+  .au-riga-tappe-fila {{ display: flex; align-items: center; gap: 16px; margin-top: 10px; }}
+  .au-riga-tappe-fila .au-riga-tappe {{ flex: 1 1 auto; min-width: 0; margin: -7px 0 -7px -9px;
+      padding: 7px 0 7px 9px; }}
+  .au-riga-durata {{ flex: none; font-size: 12.5px; color: var(--textSecondary); white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px; }}
+  .au-riga-durata > b {{ display: inline-flex; align-items: center; gap: 6px;
+      font: 400 12.5px var(--mono); color: var(--textPrimary); }}
 
   .au-riga-avanz {{ padding-right: 18px; box-sizing: border-box; }}
   .st-key-barra [data-testid="stHorizontalBlock"] [data-testid="stColumn"]:last-child
@@ -9204,7 +9222,31 @@ def _tappe_file(lav) -> str:
     return "".join(tappe)
 
 
-def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
+def _stima_file(piano) -> str:
+    """«≈ 06h 34m» con il fumetto dell'intervallo, per la riga di un file.
+
+    Il valore PIÙ PROBABILE, come nella fascia: la forchetta scritta con la
+    barra ("05h 08m / 07h 49m") non diceva quali fossero i due numeri, e chi
+    legge una cella di elenco non ha nessuna legenda a cui appoggiarsi.
+    L'intervallo resta, nel fumetto, per chi vuole sapere quanto può ballare.
+    """
+    b, alto = piano.est_best_seconds, piano.est_total_seconds
+    stima = f"≈ {stima_hm(piano.est_attesa_seconds)}"
+    if b < alto * 0.95:
+        # Con la deduplica MISURATA su questo file l'incertezza non è più
+        # «quanti fotogrammi ripetuti ci saranno»: quella domanda ha già
+        # risposta. Resta solo quanto sbaglia il modello, e dirlo con la nota
+        # vecchia sarebbe mentire su cosa sappiamo.
+        stima += _icona_info(
+            t("lavb.durata_stimata"),
+            [t("lavb.piu_probabile", durata=stima_hm(piano.est_attesa_seconds)),
+             t("lavb.durata_possibile", da=stima_hm(b), a=stima_hm(alto))],
+            nota=(t("lavb.nota_dedup_misurata", quota=f"{piano.dedup.expected_ratio:.0%}")
+                  if piano.dedup.misurata else t("lavb.nota_dedup")))
+    return stima
+
+
+def _avanzamento_vivo(cartella: str, turno: float | None, stima: str = "") -> None:
     """La barra di UNA riga al lavoro, che si aggiorna da sola.
 
     E' il cuore della cura al lampeggio. Prima si rieseguiva l'intero corpo
@@ -9230,9 +9272,6 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
         return
     campioni = st.session_state.setdefault("mon_campioni", {})
     stati = st.session_state.setdefault("mon_stati", {})
-    chiave_log = "log_" + hashlib.sha1(str(cartella).encode()).hexdigest()[:10]
-    log = (f"<a class='au-log' data-preme='{chiave_log}' role='button'>"
-           f"{t('lav.mostra_log')}</a>" if lav.registro is not None else "")
     in_pausa = monitor.sospeso(lav) is not None
     quota = _riempimento(lav)
     perc = f"{quota:.0%}"
@@ -9304,20 +9343,20 @@ def _avanzamento_vivo(cartella: str, turno: float | None) -> None:
         misure.append(("au-m-trascorso",
                        t("lav.av_trascorsi", trascorso=monitor.trascorso(lav))))
     misure_html = "".join(f"<span class='au-mis {c}'>{esc(v)}</span>" for c, v in misure)
+    # In alto, a destra delle tappe, quanto dura il file intero; nel riquadro
+    # le misure del passo che il riquadro descrive (fps, restano, trascorsi).
+    # Prima le misure stavano in alto e la durata del file non c'era da
+    # nessuna parte a riga chiusa; il log e' sceso nel pannello (utente).
+    durata = (f"<span class='au-riga-durata'>{t('lavb.durata_stimata')}: <b>{stima}</b></span>"
+              if stima else "")
     st.markdown(
         f"<div class='au-riga-avanz{' au-ferma' if in_pausa else ''}'>"
         f"<div class='au-riga-testa'>{_barra_file(lav)}<b>{perc}</b></div>"
-        f"<div class='au-riga-tappe'>{_tappe_file(lav)}"
-        f"<span class='au-riga-misure'>{misure_html}</span></div>"
-        f"<div class='au-riga-dett'><span>{_grassetti(dettaglio)}</span>{log}</div></div>",
+        f"<div class='au-riga-tappe-fila'><div class='au-riga-tappe'>{_tappe_file(lav)}</div>"
+        f"{durata}</div>"
+        f"<div class='au-riga-dett'><span>{_grassetti(dettaglio)}</span>"
+        f"<span class='au-riga-misure'>{misure_html}</span></div></div>",
         unsafe_allow_html=True)
-    if lav.registro is not None:
-        # Il pulsante vero resta nascosto e lo preme il link dentro il
-        # riquadro: posato sopra con margini negativi non era mai allineato
-        # al testo accanto (visto dall'utente). La chiave e' un'impronta del
-        # nome: quello vero ha spazi e parentesi che non stanno in una classe.
-        if st.button(t("lav.mostra_log"), key=chiave_log, type="tertiary"):
-            subprocess.run(["open", "-R", str(lav.registro)], check=False)
 
 
 def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
@@ -9629,9 +9668,17 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
         # ogni cinque secondi finche' l'analisi lavora).
         analizzato = library.cached_report(path) is not None
         piano, errore = None, None
+        # Un file gia' partito (in corso o interrotto) si descrive con la SUA
+        # ricetta, non con le impostazioni di adesso: cambiato lo spazio
+        # massimo a lavoro avviato, il pannello mostrava 19 blocchi mentre
+        # il lavoro ne faceva 11 (utente).
+        ricetta_riga = _leggi_parametri(lav.cartella) if lav else {}
+        cfg_riga = {**cfg, **{k: ricetta_riga[k] for k in
+                              ("altezza", "crf", "preset", "disco", "dedup", "denoise", "forza")
+                              if k in ricetta_riga}}
         if analizzato:
             try:
-                piano = plan_for(path, cfg, f["height"])
+                piano = plan_for(path, cfg_riga, f["height"])
             except (PlanError, OSError, FFmpegError, ValueError) as exc:
                 errore = exc
         # "Fatto" = l'USCITA esiste, punto. Un'uscita difettosa viene
@@ -10013,30 +10060,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                 st.session_state["conferma_scarta"] = (chiave, time.time())
                 st.rerun()
         elif not elaborando and piano is not None:
-            # Il valore PIÙ PROBABILE, come nella fascia: la forchetta
-            # scritta con la barra ("05h 08m / 07h 49m") non diceva quali
-            # fossero i due numeri, e chi legge una cella di elenco non ha
-            # nessuna legenda a cui appoggiarsi. L'intervallo resta, nel
-            # fumetto, per chi vuole sapere quanto può ballare.
-            b, alto = piano.est_best_seconds, piano.est_total_seconds
-            stima = f"≈ {stima_hm(piano.est_attesa_seconds)}"
-            if b < alto * 0.95:
-                # Con la deduplica MISURATA su questo file l'incertezza non
-                # è più «quanti fotogrammi ripetuti ci saranno»: quella
-                # domanda ha già risposta. Resta solo quanto sbaglia il
-                # modello, e dirlo con la nota vecchia sarebbe mentire su
-                # cosa sappiamo.
-                stima += _icona_info(
-                    t("lavb.durata_stimata"),
-                    [t("lavb.piu_probabile",
-                       durata=stima_hm(piano.est_attesa_seconds)),
-                     t("lavb.durata_possibile", da=stima_hm(b),
-                       a=stima_hm(alto))],
-                    nota=(t("lavb.nota_dedup_misurata",
-                            quota=f"{piano.dedup.expected_ratio:.0%}")
-                          if piano.dedup.misurata else
-                          t("lavb.nota_dedup")))
-            c[6].markdown(f"<div class='au-stima-riga'>{stima}</div>",
+            c[6].markdown(f"<div class='au-stima-riga'>{_stima_file(piano)}</div>",
                           unsafe_allow_html=True)
 
         if elaborando:
@@ -10079,7 +10103,8 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     # toccare un solo pixel del resto della riga. Vedi
                     # `_avanzamento_vivo` per il perche'.
                     st.fragment(run_every="5s")(_avanzamento_vivo)(
-                        lav.cartella.name, _turno_previsto(piano, lav))
+                        lav.cartella.name, _turno_previsto(piano, lav),
+                        _stima_file(piano) if piano is not None else "")
                     dett = None
                 elif concluso:
                     dett = t("lavb.concluso_residuo")
@@ -10111,7 +10136,8 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                 with st.container():
                     _dettagli_piano(piano, errore,
                                     esito=esito if (risulta_fatta
-                                                    or difettosa) else None)
+                                                    or difettosa) else None,
+                                    lav=lav)
 
     # Lo scroll promesso all'ingresso nella scheda: SOLO se c'è davvero una
     # riga al lavoro, e una volta sola (il segnale si consuma qui).
@@ -10233,9 +10259,12 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
                     voci.append(t("lavb.uno_in_elaborazione"))
                     if attesa:
                         voci.append(t("lavb.n_in_attesa", n=attesa))
-                    a.markdown("<div class='au-coda-dettaglio'>"
-                               f"{t('lavb.coda_voci', voci=' · '.join(voci))}</div>",
-                               unsafe_allow_html=True)
+                    # Con un file solo e nessuno prima o dopo, «Coda: 1 in
+                    # elaborazione» ripeteva il titolo (utente).
+                    if len(voci) > 1:
+                        a.markdown("<div class='au-coda-dettaglio'>"
+                                   f"{t('lavb.coda_voci', voci=' · '.join(voci))}</div>",
+                                   unsafe_allow_html=True)
                 else:
                     a.markdown(f"**{t('lavb.titolo_in_corso')}**",
                                unsafe_allow_html=True)
@@ -10644,7 +10673,7 @@ def _corpo_lavorazione(cfg: dict, files: list[dict], armato: bool) -> None:
 
 
 
-def _dettagli_piano(plan, errore, esito=None) -> None:
+def _dettagli_piano(plan, errore, esito=None, lav=None) -> None:
     """Il piano di UN file, con l'impaginazione dei dettagli dei Sorgenti.
 
     Stessi gruppi con titolo e hairline, stessa griglia etichetta-sopra e
@@ -10674,7 +10703,11 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
              t("lav.det_catena_valore", modello=plan.model_name,
                rapporto=f"{plan.downscale:.2f}")),
             (t("lav.det_uscita"), f"{plan.target_width}×{plan.target_height}"),
+            # I blocchi del lavoro vero, se e' partito: la dimensione l'ha
+            # decisa alla partenza e non cambia piu'.
             (t("lav.det_blocchi"),
+             tn("lav.det_blocchi_valore", -(-lav.totale // lav.blocco_dim), dim=lav.blocco_dim)
+             if lav is not None and lav.blocco_dim and lav.totale else
              tn("lav.det_blocchi_valore", plan.chunks, dim=plan.chunk_size)),
         ]),
         (t("lav.det_codifica"), [
@@ -10698,9 +10731,16 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
         "<div class='au-valore' style='overflow-wrap:anywhere'>"
         f"{esc(plan.output.name)}</div></div>")
 
-    for w in plan.warnings:
-        pezzi.append(f"<div class='au-avviso'><span class='au-icona'>&#9888;"
-                     f"</span>{esc(w)}</div>")
+    # Gli avvisi del piano valgono per un file ancora da fare. Su uno finito
+    # descrivevano come andrebbe rifatto oggi (i «50 GB dedicati» di adesso
+    # su un file fatto con 239: utente); su uno partito, quelli sullo spazio
+    # contavano anche il disco occupato dal lavoro stesso.
+    if not (esito and esito.get("secondi")):
+        for w in plan.warnings:
+            if lav is not None and w in plan.avvisi_disco:
+                continue
+            pezzi.append(f"<div class='au-avviso'><span class='au-icona'>&#9888;"
+                         f"</span>{esc(w)}</div>")
 
     # La pagella del lavoro concluso: numeri VERI, non stime. Sta in fondo,
     # sotto il nome del file finale (posizione chiesta dall'utente). NON è
@@ -10782,6 +10822,12 @@ def _dettagli_piano(plan, errore, esito=None) -> None:
                         unsafe_allow_html=True)
     else:
         st.markdown("".join(pezzi), unsafe_allow_html=True)
+    # Il log del lavoro: era un link nel riquadro della riga in corso, che
+    # ora porta le misure del passo (utente).
+    if lav is not None and lav.registro is not None:
+        if st.button(t("lav.mostra_log"), key=f"logpan_{lav.cartella.name}",
+                     type="tertiary", icon=":material/description:"):
+            subprocess.run(["open", "-R", str(lav.registro)], check=False)
 
 
 def _riprendi(piano, cartella: Path | None, cfg: dict) -> bool:

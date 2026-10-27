@@ -135,6 +135,10 @@ TERNE: dict[str, tuple[str, str]] = {
     # vedeva appena (utente), quindi bordo pieno e una tinta di fondo.
     "accentLine":  ("rgb(var(--primaryRgb) / .55)", "var(--primaryStrong)"),
     "accentFill":  ("transparent", "rgb(var(--primaryRgb) / .07)"),
+    # Le lineette fra i blocchi dell'upscale: sullo scuro il fondo pieno
+    # (al 70% si perdevano); sul chiaro il fondo chiaro su una barra
+    # azzurro pallido non si vedeva affatto, quindi un grigio (utente).
+    "chunkLine":   ("var(--bg)", "rgb(var(--overlayRgb) / .3)"),
 }
 
 

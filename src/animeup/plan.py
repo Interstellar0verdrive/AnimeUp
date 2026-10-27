@@ -236,6 +236,10 @@ class Plan:
     est_peak_disk_gb: float
     recommendation: Recommendation | None = None
     warnings: list[str] = field(default_factory=list)
+    # Quali di quegli avvisi parlano dello spazio su disco: misurati ADESSO,
+    # per un file gia' partito conterebbero anche il disco occupato dal
+    # lavoro stesso, e l'interfaccia li tace (vedi `disk_warnings`).
+    avvisi_disco: list[str] = field(default_factory=list)
     # Ritmi delle fasi fuori GPU: di fabbrica, oppure misurati da
     # `./animeup calibrate` su questa macchina. Vivono nel piano perché le
     # proprieta' di stima non hanno accesso ai Paths.
@@ -1005,6 +1009,7 @@ def build_plan(
         warnings.append(t("mot.plan.vfr", fps=f"{float(fps):.3f}"))
     if "mov_text" in report.subtitle_codecs:
         warnings.append(t("mot.plan.mov_text"))
+    n_prima_disco = len(warnings)
     if free_gb < 60:
         warnings.append(t("mot.plan.spazio_ridotto", liberi=f"{free_gb:.0f}"))
     # Lo spazio dedicato non basta nemmeno per cio' che NON si puo' spezzare.
@@ -1020,6 +1025,7 @@ def build_plan(
     elif disponibile < TETTO_BLOCCO_GB and chunks > BLOCCHI_MINIMI:
         warnings.append(t("mot.plan.spazio_stretto",
                           restano=f"{max(disponibile, 0):.0f}", blocchi=chunks))
+    avvisi_disco = warnings[n_prima_disco:]
 
     # «upscale» solo se il bersaglio e' PIU' ALTO del sorgente. A parita' di
     # altezza (o sotto, col forza) il modello ingrandisce e poi si riduce:
@@ -1062,6 +1068,7 @@ def build_plan(
         est_peak_disk_gb=sorgenti_gb + video_gb + chunk_size * up_mb / 1024,
         recommendation=suggestion,
         warnings=warnings,
+        avvisi_disco=avvisi_disco,
         fps_estrazione=float((voce_taratura or {}).get("estrazione_fps")
                              or 60.0),
         fps_codifica=float((voce_taratura or {}).get("codifica_fps")
