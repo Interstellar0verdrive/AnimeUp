@@ -3717,7 +3717,10 @@ STYLE = f"""
   .au-cnf-nota {{ font-size: 12.5px; line-height: 1.5; color: var(--textSecondary);
       margin-top: 10px; }}
   .au-ind-modello {{ font-size: 13px; font-weight: 500; margin: 8px 0 6px; }}
-  .au-ind {{ display: grid; grid-template-columns: minmax(130px, max-content) minmax(0, 1fr) 48px;
+  /* Una larghezza sola per le etichette (la piu' lunga, «Rumore nelle aree
+     piatte»): con la larghezza di ciascuna le barre partivano in punti
+     diversi e i due segni del 100% non si allineavano (utente). */
+  .au-ind {{ display: grid; grid-template-columns: 150px minmax(0, 1fr) 48px;
       align-items: center; gap: 10px; margin: 4px 0; font-size: 12.5px;
       color: var(--textSecondary); }}
   .au-ind i {{ position: relative; height: 6px; border-radius: 3px;
