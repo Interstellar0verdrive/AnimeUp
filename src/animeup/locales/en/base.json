@@ -48,7 +48,7 @@
   "sb.chiudi": "Close AnimeUp",
   "sb.chiudi_aiuto": "Shuts down the interface (the server). Running jobs do NOT stop: they carry on by themselves and are still there next time you open AnimeUp.",
   "sb.chiudi_avviso": "The running job will NOT stop: it keeps going in the background and will be there next time you open AnimeUp. To stop everything, use \"Stop all\" in Processing first.",
-  "sb.chiudi_conferma": "Sure? Close",
+  "sb.chiudi_conferma": "Close?",
   "sb.annulla": "Cancel",
   "src.vuoto_titolo": "Add your first videos",
   "src.vuoto_testo": "AnimeUp analyses every video you copy into Videos to process, helps you choose a model by eye, then upscales the batch on this Mac, offline.",

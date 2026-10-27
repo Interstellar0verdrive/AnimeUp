@@ -107,7 +107,7 @@
   "conf.apri_finder": "Apri la cartella nel Finder",
   "conf.gia_in_corso": "C'è già un confronto in corso: aspetta che finisca, oppure fermalo.",
   "conf.ferma": "Ferma",
-  "conf.ferma_conferma": "Confermi lo stop?",
+  "conf.ferma_conferma": "Ferma?",
   "conf.fermato": "Confronto fermato. Le clip già elaborate restano: premi di nuovo il pulsante per finire le altre.",
   "conf.interrotto": "L'ultimo confronto si è interrotto (Mac spento, o processo terminato). Le clip già elaborate restano: premi «{pulsante}» per finire le altre.",
   "conf.altro_file": "In corso su un altro file: {nome}",

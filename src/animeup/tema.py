@@ -130,6 +130,11 @@ TERNE: dict[str, tuple[str, str]] = {
     # corso): sul chiaro i bordi di sempre si vedevano appena (utente).
     "dashBorder":  ("var(--borderColor)", "#AEB4BB"),
     "dashActive":  ("rgb(var(--primaryRgb) / .35)", "rgb(var(--primaryRgb) / .7)"),
+    # Pulsanti a contorno d'accento (Riprendi, Pausa, Usa per questo file):
+    # sullo scuro il ciano brillante basta; sul chiaro il contorno al 55% si
+    # vedeva appena (utente), quindi bordo pieno e una tinta di fondo.
+    "accentLine":  ("rgb(var(--primaryRgb) / .55)", "var(--primaryStrong)"),
+    "accentFill":  ("transparent", "rgb(var(--primaryRgb) / .07)"),
 }
 
 

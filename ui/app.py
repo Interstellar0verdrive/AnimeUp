@@ -2426,12 +2426,12 @@ STYLE = f"""
      a quel punto il rosso deve pesare, sta per succedere davvero. */
   [class*="st-key-ferma"] button,
   [class*="st-key-scarta"] button {{
-      border-color: rgb(var(--redRgb) / .45) !important;
+      border-color: rgb(var(--redRgb) / .55) !important;
       /* Nemmeno il fondo scuro predefinito: dentro una riga colorata era
          una toppa grigia. Il bordo rosso basta a farlo riconoscere. */
       background: transparent !important; }}
   [class*="st-key-ferma"] button p,
-  [class*="st-key-scarta"] button p {{ color: var(--red) !important; }}
+  [class*="st-key-scarta"] button p {{ color: var(--redText) !important; white-space: nowrap; }}
   [class*="st-key-ferma"] button:hover,
   [class*="st-key-scarta"] button:hover {{
       border-color: var(--red) !important;
@@ -2442,7 +2442,7 @@ STYLE = f"""
       border-color: var(--redFill) !important; }}
   [class*="st-key-fermasi"] button p,
   [class*="st-key-scartasi"] button p {{
-      color: var(--onRed) !important; font-weight: 600; }}
+      color: var(--onRed) !important; font-weight: 600; white-space: nowrap; }}
   [class*="st-key-fermasi"] button:hover,
   [class*="st-key-scartasi"] button:hover {{
       background: var(--redHover) !important; border-color: var(--redHover) !important; }}
@@ -4532,6 +4532,24 @@ STYLE = f"""
      pulsante, non si vedeva (utente). */
   [data-testid="stMain"] .stButton button[kind="secondary"] {{
       border-color: var(--borderStrong); }}
+  /* I TIPI DI PULSANTE, in un posto solo (revisione chiesta dall'utente):
+     primario pieno (kind=primary), secondario grigio col bordo (sopra),
+     terziario solo testo (kind=tertiary), CONTORNO D'ACCENTO per le azioni
+     che fanno ripartire o scegliere (qui sotto) e ROSSO per quelle che
+     fermano o buttano via (Ferma, Scarta: contorno; la conferma piena).
+     Il contorno d'accento: testo e bordo dello stesso colore. */
+  [data-testid="stElementContainer"]:is([class*="st-key-rip"]:not([class*="st-key-ripr"]),
+      [class*="st-key-pausa_tutto"], [class*="st-key-usa_"], [class*="st-key-appr"])
+      .stButton button:not(:disabled):not(.a):not(.b):not(.c) {{
+      border-color: var(--accentLine) !important; background: var(--accentFill) !important; }}
+  [data-testid="stElementContainer"]:is([class*="st-key-rip"]:not([class*="st-key-ripr"]),
+      [class*="st-key-pausa_tutto"], [class*="st-key-usa_"], [class*="st-key-appr"])
+      .stButton button:not(:disabled):not(.a):not(.b):not(.c) :is(p, [data-testid="stIconMaterial"]) {{
+      color: var(--primaryText) !important; }}
+  [data-testid="stElementContainer"]:is([class*="st-key-rip"]:not([class*="st-key-ripr"]),
+      [class*="st-key-pausa_tutto"], [class*="st-key-usa_"], [class*="st-key-appr"])
+      .stButton button:hover:not(:disabled):not(.a):not(.b):not(.c):not(.d):not(.e):not(.f) {{
+      border-color: var(--primaryText) !important; background: rgb(var(--primaryRgb) / .12) !important; }}
   [data-testid="stMain"] .st-key-passi .stButton button[kind="secondary"] {{ background: transparent; }}
   /* Le voci delle tendine larghe quanto la tendina: la lista virtuale si
      teneva una larghezza sua (202px in una tendina di 399) e cliccando a
@@ -6423,10 +6441,12 @@ def sidebar() -> dict:
         "[data-testid='stCheckbox'],[data-testid='stSelectbox'],"
         "[data-testid='stButtonGroup'],.au-sb-eti,.au-sgruppo,.au-pref-eti,"
         ".au-sb-aiuto,.au-sb-titolo > span:first-child,"
-        ".au-percorso,.au-tar-mai,.au-tar-ok,.au-agg-nota,.st-key-adv summary)"
+        ".au-percorso,.au-tar-mai,.au-tar-ok,.au-agg-nota,.st-key-adv summary,.au-cambiata)"
         "{ opacity: .45; }"
+        # Anche «predefinito: …» sotto un'impostazione cambiata: restava
+        # ciano nella sidebar bloccata (utente).
         "[data-testid='stSidebar'] :is([data-testid='stSlider'],"
-        "[data-testid='stCheckbox'],.au-info,.au-perche,a.au-tar-vedi)"
+        "[data-testid='stCheckbox'],.au-info,.au-perche,a.au-tar-vedi,.au-cambiata)"
         "{ filter: saturate(0); pointer-events: none; }"
         "[data-testid='stSidebar'] :is(.au-info, .au-perche) .au-bolla"
         "{ display: none !important; }"

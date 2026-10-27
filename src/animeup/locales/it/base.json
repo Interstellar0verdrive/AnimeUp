@@ -48,7 +48,7 @@
   "sb.chiudi": "Chiudi AnimeUp",
   "sb.chiudi_aiuto": "Spegne l'interfaccia (il server). Le lavorazioni in corso NON si fermano: proseguono da sole e restano disponibili alla prossima apertura.",
   "sb.chiudi_avviso": "La lavorazione in corso NON si ferma: continuerà in sottofondo e sarà disponibile alla prossima apertura di AnimeUp. Per interrompere completamente l'attività, utilizzare prima il pulsante \"Ferma tutto\" in Lavorazione.",
-  "sb.chiudi_conferma": "Confermi? Chiudi",
+  "sb.chiudi_conferma": "Chiudi?",
   "sb.annulla": "Annulla",
   "src.vuoto_titolo": "Aggiungi i primi video",
   "src.vuoto_testo": "AnimeUp analizza ogni video che copi nella cartella dei video da elaborare, ti aiuta a scegliere il modello a occhio, poi ingrandisce tutto su questo Mac, offline.",

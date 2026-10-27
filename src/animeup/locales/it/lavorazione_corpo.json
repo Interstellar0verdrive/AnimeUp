@@ -34,7 +34,7 @@
   "lavb.giudizio_ok": "consigliato",
   "lavb.giudizio_verifica": "da verificare",
   "lavb.giudizio_no": "sconsigliato",
-  "lavb.conferma_scarta": "Confermi? Scarta",
+  "lavb.conferma_scarta": "Scarta?",
   "lavb.scartata": "Lavorazione scartata: la riga è tornata come nuova.",
   "lavb.riprendi": "Riprendi",
   "lavb.riprendi_attesa": "L'analisi di questo file non è ancora pronta: il Riprendi si accende appena arriva il referto.",
@@ -53,7 +53,7 @@
   "lavb.nota_dedup": "La durata effettiva dipende dalla quantità di fotogrammi ripetuti rilevati.",
   "lavb.ferma": "Ferma",
   "lavb.ferma_aiuto": "Ferma SOLO questo file: l'elaborazione potrà essere ripresa in qualsiasi momento. Gli altri file del lancio proseguono. Per fermare tutto c'è il pulsante nella barra in basso.",
-  "lavb.conferma_stop": "Confermi lo stop?",
+  "lavb.conferma_stop": "Ferma?",
   "lavb.interruzione_richiesta": "Interruzione richiesta: la riga passerà a \"interrotto\" tra qualche secondo.",
   "lavb.fermo_al": "fermo al {quota} · {fatti}/{totale} fotogrammi",
   "lavb.elaborazione_di": "Elaborazione {numero} di {totale}",
@@ -105,6 +105,6 @@
   "lavb.in_pausa": "In pausa. Riprende da qui quando vuoi.",
   "lavb.ferma_tutto": "Ferma tutto",
   "lavb.ferma_tutto_aiuto": "Interrompe il file in corso (riprendibile) e annulla i successivi di questo lancio.",
-  "lavb.conferma_ferma_tutto": "Confermi? Ferma tutto",
+  "lavb.conferma_ferma_tutto": "Ferma tutto?",
   "lavb.lancio_interrotto": "Lancio interrotto: il file in corso resterà riprendibile."
 }
