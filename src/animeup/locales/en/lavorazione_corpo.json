@@ -107,6 +107,7 @@
   "lavb.conferma_ferma_tutto": "Stop all?",
   "lavb.lancio_interrotto": "Launch stopped: the file in progress can still be resumed.",
   "lavb.ferma_titolo": "Stop this file?",
-  "lavb.ferma_testo": "You can resume it whenever you like, and the other files in the launch carry on.",
-  "lavb.ferma_finito": "This file has already finished or stopped."
+  "lavb.ferma_testo": "You can resume it whenever you like.",
+  "lavb.ferma_finito": "This file has already finished or stopped.",
+  "lavb.ferma_altri": "The other files in the launch carry on."
 }

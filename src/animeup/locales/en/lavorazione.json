@@ -157,7 +157,7 @@
   "lav.av_deduplica": "finding repeated frames",
   "lav.tappa1_dedup": "Repeated frames",
   "lav.sicuro.uno": "On resume, the one frame already upscaled in chunk {n} will be redone.",
-  "lav.sicuro.altri": "On resume, the {num} frames already upscaled in chunk {n} will be redone.",
+  "lav.sicuro.altri": "On resume, ~{num} frames already upscaled in chunk {n} will be redone.",
   "lav.sicuro_niente": "Stopping now loses nothing: it resumes from the last saved chunk.",
   "lav.passo1": "Extraction",
   "lav.passo2": "Repeated frames",

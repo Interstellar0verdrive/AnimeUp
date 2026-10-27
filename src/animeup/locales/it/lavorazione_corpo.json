@@ -107,6 +107,7 @@
   "lavb.conferma_ferma_tutto": "Ferma tutto?",
   "lavb.lancio_interrotto": "Lancio interrotto: il file in corso resterà riprendibile.",
   "lavb.ferma_titolo": "Fermare questo file?",
-  "lavb.ferma_testo": "Potrai riprenderlo quando vuoi, e gli altri file del lancio proseguono.",
-  "lavb.ferma_finito": "Questo file ha già finito o si è già fermato."
+  "lavb.ferma_testo": "Potrai riprenderlo quando vuoi.",
+  "lavb.ferma_finito": "Questo file ha già finito o si è già fermato.",
+  "lavb.ferma_altri": "Gli altri file del lancio proseguono."
 }

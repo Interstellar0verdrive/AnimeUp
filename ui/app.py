@@ -2834,13 +2834,13 @@ STYLE = f"""
   .st-key-cAggiorna {{ padding: 12px 14px; border-radius: 10px;
       background: var(--yellowBg);
       border: 1px solid rgb(var(--yellowRgb) / .45); margin-top: 12px; }}
-  /* Titolo e «Novità» nel colore del testo, non in giallo: il giallo resta
-     al riquadro e al pulsante, e il titolo si legge meglio (chiesto
-     dall'utente). */
+  /* Il titolo nel colore del testo, non in giallo: si legge meglio (chiesto
+     dall'utente). «Novità» invece è un link e va col riquadro, in giallo. */
   .au-agg-testa {{ display: flex; align-items: center; gap: 8px;
       font-size: 13.5px; color: var(--text); }}
   .au-agg-testa a {{ margin-left: auto; font-size: 12.5px;
-      color: var(--text) !important; text-decoration: underline; }}
+      color: var(--yellowText) !important; text-decoration: underline; }}
+  .au-agg-testa a:hover {{ color: var(--yellow) !important; }}
   .st-key-cAggiorna [data-testid="stCaptionContainer"] p {{ color: var(--yellowText) !important;
       opacity: .85; }}
   .st-key-installaAgg .stButton button[kind="primary"] {{
@@ -10995,6 +10995,8 @@ def _contenuto_ferma(nome: str) -> None:
             st.rerun()
         return
     frase = t("lavb.ferma_testo")
+    if _altri_dopo(lav):
+        frase += " " + t("lavb.ferma_altri")
     if lav.blocchi_totali and lav.fase in monitor.UNITA_UPSCALE:
         frase += " " + (t("lav.sicuro_niente") if not lav.blocco_fatti
                         else t("lav.sicuro.uno", n=lav.blocco_n) if lav.blocco_fatti == 1
@@ -11012,6 +11014,25 @@ def _contenuto_ferma(nome: str) -> None:
             st.toast(t("lavb.interruzione_richiesta"))
             time.sleep(1.5)
             st.rerun()
+
+
+def _altri_dopo(lav) -> bool:
+    """Nel lancio c'e' ancora qualche file DOPO questo? Solo allora la
+    finestra di Ferma dice che gli altri proseguono: per l'unico file, o
+    l'ultimo, la frase prometteva qualcosa che non c'era (utente).
+
+    L'ordine vero e' quello di `.launch`, scritto dall'interfaccia in ordine
+    di esecuzione e su tutti i gruppi di modelli; `.queue` copre solo il
+    gruppo in corso. Un lancio da Terminale ha solo il secondo."""
+    nome = Path(lav.sorgente).name if lav.sorgente else ""
+    try:
+        files = json.loads((PATHS.work / ".launch").read_text()).get("files") or []
+    except (OSError, ValueError, AttributeError):
+        files = []
+    if nome and nome in files and monitor.lancio_vivo():
+        return files.index(nome) < len(files) - 1
+    catena_ora = monitor.catena()
+    return bool(catena_ora and catena_ora.get("in_coda"))
 
 
 def _ferma(lav, *, tutto: bool) -> None:

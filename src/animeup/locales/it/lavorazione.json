@@ -157,7 +157,7 @@
   "lav.av_deduplica": "ricerca dei fotogrammi ripetuti",
   "lav.tappa1_dedup": "Fotogrammi ripetuti",
   "lav.sicuro.uno": "Alla ripresa andrà rifatto l'unico fotogramma già ingrandito del blocco {n}.",
-  "lav.sicuro.altri": "Alla ripresa andranno rifatti i {num} fotogrammi già ingranditi del blocco {n}.",
+  "lav.sicuro.altri": "Alla ripresa andranno rifatti ~{num} fotogrammi già ingranditi del blocco {n}.",
   "lav.sicuro_niente": "Fermando ora non si perde niente: si riprende dall'ultimo blocco salvato.",
   "lav.passo1": "Estrazione",
   "lav.passo2": "Fotogrammi ripetuti",
