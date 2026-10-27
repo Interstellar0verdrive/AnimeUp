@@ -1338,9 +1338,13 @@ STYLE = f"""
   .st-key-intestLav [data-testid="stCheckbox"] label > div:not([data-testid]) {{
       width: 18px; height: 18px; flex-shrink: 0;
       border-color: {BORDO_VIVO}; }}
-  [class*="st-key-jrow"] [data-testid="stCheckbox"] label > div:not([data-testid]) svg,
-  .st-key-intestLav [data-testid="stCheckbox"] label > div:not([data-testid]) svg {{
-      width: 100%; height: 100%; }}
+  /* La spunta a due terzi della scatola, al centro: riempiendola tutta
+     (l'SVG va da bordo a bordo) pesava troppo (utente). Vale per ogni
+     casella della pagina; gli interruttori non hanno SVG. */
+  [data-testid="stMain"] [data-testid="stCheckbox"] label > div:not([data-testid]):has(svg) {{
+      display: flex; align-items: center; justify-content: center; }}
+  [data-testid="stMain"] [data-testid="stCheckbox"] label > div:not([data-testid]) svg {{
+      width: 68% !important; height: 68% !important; }}
   /* La riga d'intestazione si centra in verticale: la spunta-madre e le
      etichette (FILE, RISOLUZIONE...) sulla stessa linea mediana. Misurato:
      la madre ERA centrata — erano le etichette a stare in cima a colonne
@@ -1725,7 +1729,6 @@ STYLE = f"""
      facevano accavallare le righe (utente). */
   .st-key-barra [data-testid="stColumn"]:first-child > [data-testid="stVerticalBlock"] {{
       gap: 4px !important; }}
-  .st-key-barra .stMarkdown p {{ font-size: 14px; line-height: 1.4; }}
   .au-barra-nota {{ font-size: 12.5px; line-height: 1.45; color: var(--textSecondary); }}
   .au-avvio {{ display: flex; align-items: center; gap: 10px; font-size: 13.5px;
       color: var(--textCode); }}
