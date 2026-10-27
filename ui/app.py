@@ -3507,12 +3507,14 @@ STYLE = f"""
   .st-key-fileCard {{ background: var(--surface); border: 1px solid var(--borderColor);
       border-radius: 12px; padding: 16px 20px !important; flex-wrap: nowrap;
       gap: 0 !important; align-items: stretch; margin-top: 12px; }}
-  .st-key-campoFile {{ flex: 0 0 auto; width: 420px !important;
+  /* La tendina prende lo spazio che resta: le risoluzioni stanno in poco, e
+     i nomi lunghi degli episodi si tagliavano (utente). */
+  .st-key-campoFile {{ flex: 1 1 auto; width: auto !important; min-width: 300px;
       padding-right: 16px; gap: 8px !important; }}
-  .st-key-fileCard > div:last-child {{ flex: 1 1 auto; min-width: 0; }}
-  .au-stat-file {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  .st-key-fileCard > div:last-child {{ flex: 0 0 auto; min-width: 0; width: auto !important; }}
+  .au-stat-file {{ display: grid; grid-template-columns: repeat(3, max-content);
       height: 100%; }}
-  .au-stat-file > div {{ padding: 0 16px; border-left: 1px solid var(--borderColor);
+  .au-stat-file > div {{ padding: 0 22px; border-left: 1px solid var(--borderColor);
       display: flex; flex-direction: column; gap: 10px; }}
   .au-stat-file dt {{ display: flex; align-items: center; gap: 6px; white-space: nowrap;
       font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
@@ -7549,6 +7551,10 @@ def page_confronto(cfg: dict) -> None:
     # scelta degli spezzoni cambia durante il disegno, e «Modelli» deve
     # sapere se ce n'e' almeno uno.
     posto_pillole = st.empty()
+    # Subito una prima versione: un passo che lavora a lungo (la ricerca degli
+    # spezzoni) altrimenti restava senza pillole fino alla fine.
+    with posto_pillole.container():
+        _pillole_confronto(path, passo, bozza=True)
     if passo == 1:
         _scheda_file(files, plan, entry)
         _passo_spezzoni(plan, path)
@@ -7599,7 +7605,7 @@ def _passo_confronto(path: Path) -> int:
     return st.session_state[chiave]
 
 
-def _pillole_confronto(path: Path, passo: int) -> None:
+def _pillole_confronto(path: Path, passo: int, bozza: bool = False) -> None:
     """I tre passi in alto: fatti in verde (cliccabili per tornarci),
     quello attuale in ciano, quelli dopo in grigio. Durante il test non si
     torna indietro: spezzoni e modelli sono quelli che stanno girando."""
@@ -7652,10 +7658,16 @@ def _pillole_confronto(path: Path, passo: int) -> None:
         else:
             pezzi.append(f"<span class='{classe}'>{segno}{testo}</span>")
     freccia = f"<span class='au-pp-freccia'>{_svg(_I_AVANTI, 12, 2)}</span>"
+    riga = ("<nav class='au-pp-riga'>" + freccia.join(pezzi)
+            + (f"<span class='au-pp-nota'>{t('conf.bloccati')}</span>" if gira else "")
+            + "</nav>")
+    if bozza:
+        # Solo la riga, senza pulsanti: quelli hanno chiavi, e la versione
+        # completa arriva a fine passo nello stesso posto.
+        st.markdown(riga, unsafe_allow_html=True)
+        return
     with st.container(key="confPassi", horizontal=True, vertical_alignment="center"):
-        st.markdown("<nav class='au-pp-riga'>" + freccia.join(pezzi)
-                    + (f"<span class='au-pp-nota'>{t('conf.bloccati')}</span>" if gira else "")
-                    + "</nav>", unsafe_allow_html=True)
+        st.markdown(riga, unsafe_allow_html=True)
         if passo == 3 and not gira:
             if st.button(t("conf.cambia_test"), key="cambiaTest"):
                 _vai_passo(str(path), 2 if st.session_state.get(f"scelti_{path}") else 1)
@@ -7845,6 +7857,15 @@ def _passo_spezzoni(plan, path: Path) -> None:
     if chiave not in st.session_state:
         # Si cercano da soli, appena scelto il file: prima serviva un clic
         # su un pulsante che non diceva che dopo andavano anche scelti.
+        # Durante la ricerca Streamlit lascia a schermo, «vecchio», cio' che
+        # questo giro non ha ancora ridisegnato: gli spezzoni e la barra del
+        # file di prima (utente). Solo in questo giro si nascondono.
+        st.markdown(
+            "<style>[data-testid='stMain'] [data-stale='true'],"
+            "[data-testid='stMain'] :is([data-testid='stVerticalBlock'],"
+            "[data-testid='stHorizontalBlock']):has([data-stale='true'])"
+            ":not(:has([data-stale='false'])) { display: none !important; }</style>",
+            unsafe_allow_html=True)
         _cerca_spezzoni(plan, path, area)
         return
     candidati = st.session_state.get(chiave) or []
