@@ -3703,8 +3703,10 @@ STYLE = f"""
       color: var(--textPrimary); margin-right: 8px; }}
   .st-key-risultati [data-testid="stExpander"] summary p code {{ font: 400 12px var(--mono);
       color: var(--textCode); background: none; padding: 0; margin-right: 6px; }}
+  /* Staccati dai ritagli con aria e una riga: attaccati ai pulsanti «Usa»
+     sembravano la loro didascalia (utente). */
   .au-res-due {{ display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 28px; }}
+      gap: 28px; margin-top: 12px; padding-top: 22px; border-top: 1px solid var(--borderColor); }}
   .au-res-due .au-occhio {{ margin-bottom: 10px; }}
   .au-cnf th {{ font-size: 10.5px; color: var(--textTertiary); }}
   .au-cnf td:not(:first-child), .au-cnf th:not(:first-child) {{ text-align: right; }}
