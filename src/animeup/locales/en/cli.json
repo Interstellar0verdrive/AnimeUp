@@ -181,5 +181,6 @@
   "cli.rep.tick.altri": "{n} ticks",
   "cli.ui.rete": "Also accept connections from other devices on your network (by default only this Mac can open the interface).",
   "cli.ui.senza_browser": "Don't open a browser window (used by the macOS app, which shows the interface in its own window).",
-  "cli.compare.aiuto": "Run the clip comparison requested by the interface (used internally)."
+  "cli.compare.aiuto": "Run the clip comparison requested by the interface (used internally).",
+  "cli.serve.aiuto": "Engine for the native app: JSON lines on stdin/stdout."
 }

@@ -32,6 +32,7 @@ VOCABOLARIO: dict[str, str] = {
     "lingua": "language",
     "aggiornamenti": "check_updates",
     "tema": "theme",
+    "cartella_lavoro": "work_folder",
     # storico dei file (history.jsonl)
     "secondi": "seconds",
     "avvisi": "warnings",

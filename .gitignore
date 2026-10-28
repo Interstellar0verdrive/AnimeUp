@@ -37,3 +37,9 @@ dist/
 
 # --- generated documentation ---
 site/
+
+# --- native app build output (xcodebuild / swift build) ---
+/build/
+macos/Native/AnimeUpKit/.build/
+macos/Native/AnimeUpKit/.swiftpm/
+xcuserdata/

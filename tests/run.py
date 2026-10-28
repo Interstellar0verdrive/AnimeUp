@@ -4002,16 +4002,19 @@ def _interruttori_ricordati():
     Ricavando le chiavi dai valori di fabbrica il difetto non puo' tornare
     per un interruttore futuro, che e' il punto."""
     import ast as _ast
+    from unittest import mock
+    from animeup import impostazioni
 
-    app = (ROOT / "ui" / "app.py").read_text()
-    albero = _ast.parse(app)
-    fn = next(n for n in _ast.walk(albero)
-              if isinstance(n, _ast.FunctionDef)
-              and n.name == "_impostazioni_pulite")
+    # Le regole stanno nel motore (`animeup.impostazioni`), che le serve
+    # all'interfaccia web e all'app nativa.
+    fonte = (ROOT / "src" / "animeup" / "impostazioni.py").read_text()
+    albero = _ast.parse(fonte)
+    fn = next(n for n in albero.body
+              if isinstance(n, _ast.FunctionDef) and n.name == "pulite")
     corpo = _ast.unparse(fn)
 
     # Nessun elenco di chiavi scritto a mano: si ciclano i valori di fabbrica.
-    assert "_IMPOSTAZIONI_DEFAULT.items()" in corpo, (
+    assert "PREDEFINITE.items()" in corpo, (
         "le chiavi booleane non si ricavano piu' dai valori di fabbrica: "
         "un interruttore aggiunto domani non verra' ricordato, e senza errori")
 
@@ -4019,29 +4022,23 @@ def _interruttori_ricordati():
     # completo salva -> rileggi, in ENTRAMBI i versi.
     fdef = next(n for n in albero.body
                 if isinstance(n, _ast.Assign)
-                and any(getattr(x, "id", "") == "_IMPOSTAZIONI_DEFAULT"
-                        for x in n.targets))
+                and any(getattr(x, "id", "") == "PREDEFINITE" for x in n.targets))
     fabbrica = _ast.literal_eval(fdef.value)
     booleani = [k for k, v in fabbrica.items() if isinstance(v, bool)]
     assert booleani, "nessun interruttore fra i valori di fabbrica"
 
-    ambiente = {
-        "_predefiniti": lambda: dict(fabbrica, disco=100),
-        "_IMPOSTAZIONI_DEFAULT": fabbrica,
-        "MINIMO_SPAZIO_GB": 50,
-        "_tetto_spazio": lambda: (500, 600),
-        "i18n": i18n,
-        "tema": __import__("animeup.tema", fromlist=["tema"]),
-    }
-    exec(compile(_ast.Module(body=[fn], type_ignores=[]), "app", "exec"),
-         ambiente)
-    pulisci = ambiente["_impostazioni_pulite"]
-    for chiave in booleani:
-        for valore in (True, False):
-            fuori = pulisci({chiave: valore})
-            assert fuori[chiave] is valore, (
-                f"l'interruttore «{chiave}» salvato a {valore} torna "
-                f"{fuori[chiave]}: l'app non ricorda quello che si e' scelto")
+    with mock.patch.object(impostazioni, "tetto_spazio", lambda _c=None: (500, 600)):
+        for chiave in booleani:
+            for valore in (True, False):
+                fuori = impostazioni.pulite({chiave: valore})
+                assert fuori[chiave] is valore, (
+                    f"l'interruttore «{chiave}» salvato a {valore} torna "
+                    f"{fuori[chiave]}: l'app non ricorda quello che si e' scelto")
+
+    # E l'interfaccia web non ne ha una copia sua: usa quelle del motore.
+    app = (ROOT / "ui" / "app.py").read_text()
+    assert "_IMPOSTAZIONI_DEFAULT = impostazioni.PREDEFINITE" in app
+    assert "return impostazioni.pulite(dati, PATHS.output)" in app
 
 
 @caso("la regola dello spazio si comporta bene su ogni disco")
@@ -4054,20 +4051,12 @@ def _regola_spazio_si_comporta():
     import ast as _ast
     import types as _types
 
-    src = (ROOT / "ui" / "app.py").read_text()
-    albero = _ast.parse(src)
-    fn = next(n for n in albero.body
-              if isinstance(n, _ast.FunctionDef) and n.name == "_tetto_spazio")
-    cost = [n for n in albero.body if isinstance(n, _ast.Assign)
-            and any(getattr(x, "id", "") == "MINIMO_SPAZIO_GB" for x in n.targets)]
-    GB = 1073741824
+    from unittest import mock
+    from animeup import impostazioni
 
     def tetto(libero_gb):
-        env = {"gb_liberi": lambda _p: libero_gb,
-               "PATHS": _types.SimpleNamespace(output=ROOT)}
-        exec(compile(_ast.Module(body=cost + [fn], type_ignores=[]),
-                     "app", "exec"), env)
-        return env["_tetto_spazio"](), env["MINIMO_SPAZIO_GB"]
+        with mock.patch.object(impostazioni, "gb_liberi", lambda _p: libero_gb):
+            return impostazioni.tetto_spazio(ROOT), impostazioni.MINIMO_SPAZIO_GB
 
     for libero in (10, 45, 60, 100, 300, 716, 2000):
         (t_gb, letto), minimo = tetto(libero)
@@ -4764,24 +4753,26 @@ def _spazio_predefinito_e_una_regola():
     l'impostazione si e' ritrovata a 50 GB senza che nessuno l'avesse scelta
     — mentre il fumetto ne annunciava 40, che non era il predefinito di
     nessun ramo del codice (segnalato dall'utente il 12/08)."""
-    app = (ROOT / "ui" / "app.py").read_text()
+    app = (ROOT / "src" / "animeup" / "impostazioni.py").read_text()
 
     assert '"disco": None' in app, (
         "il predefinito di `disco` e' tornato un numero fisso: su un disco "
         "diverso da quello di chi l'ha scritto sara' sbagliato")
-    assert "puliti = _predefiniti()" in app, (
+    assert "puliti = predefinite(cartella)" in app, (
         "la sanificazione riparte dai valori di fabbrica grezzi, dove "
         "`disco` non ha ancora un numero")
 
-    # Nessun 40 residuo dove si parla di spazio: era la stringa mostrata a
-    # schermo come predefinito, e il ripiego della sessione non seminata.
-    assert 'predefinito=f"40 GB' not in app, (
+    # Nessun 40 residuo dove si parla di spazio nella pagina: era la stringa
+    # mostrata a schermo come predefinito, e il ripiego della sessione non
+    # seminata.
+    pagina = (ROOT / "ui" / "app.py").read_text()
+    assert 'predefinito=f"40 GB' not in pagina, (
         "il fumetto annuncia ancora 40 GB come predefinito")
-    assert 'st.session_state.get("w_disco", 40)' not in app, (
+    assert 'st.session_state.get("w_disco", 40)' not in pagina, (
         "il ripiego del cursore e' ancora 40")
 
     # E la regola dev'essere quella: piu' prudente fra 85% e libero-40.
-    fonte = app[app.index("def _tetto_spazio"):]
+    fonte = app[app.index("def tetto_spazio"):]
     fonte = fonte[:fonte.index("\n\n\n")]
     assert "0.85" in fonte and "libero - 40" in fonte, (
         "la regola dello spazio predefinito e' cambiata senza dirlo")
@@ -4790,9 +4781,9 @@ def _spazio_predefinito_e_una_regola():
     # difetto tornato due volte il 12/08 (`disco` al minimo del cursore su un
     # disco quasi vuoto, scritto da una sessione con la chiave non seminata).
     # Senza questa riga il valore sbagliato sopravvive a ogni ricaricamento.
-    carica = app[app.index("def _impostazioni_carica"):]
+    carica = app[app.index("def carica("):]
     carica = carica[:carica.index("\ndef ", 1)]
-    assert 'puliti["disco"] = _tetto_spazio()[0]' in carica, (
+    assert 'puliti["disco"] = tetto_spazio(cartella)[0]' in carica, (
         "lo spazio per file non si ricalcola piu' a ogni avvio")
     assert "if not valido" not in carica, (
         "e' tornato il ramo che rispetta il valore salvato: un minimo finito "
@@ -5357,7 +5348,8 @@ def _() -> None:
     class _St:
         session_state = stato
 
-    ambiente = _esegui_app(pezzi, {"st": _St,
+    from animeup import impostazioni
+    ambiente = _esegui_app(pezzi, {"st": _St, "impostazioni": impostazioni,
                                    "_impostazioni_pulite": lambda r: dict(r)})
     fabbrica = ambiente["_IMPOSTAZIONI_DEFAULT"]
     assert "disco" in fabbrica, "lo spazio non e' piu' un'impostazione?"
@@ -5556,6 +5548,173 @@ def _() -> None:
             assert len((stato / "records" / "history.jsonl").read_text().splitlines()) == 1
         finally:
             pass
+
+
+# ===========================================================================
+#  Il motore dell'app nativa (`animeup serve`)
+# ===========================================================================
+
+def _serve(righe: list[str], stato: Path, codice: str | None = None,
+           ambiente: dict | None = None) -> tuple[list[dict], str]:
+    """Lancia il motore con `righe` su stdin; ritorna (messaggi, stderr).
+
+    Ogni riga di stdout DEVE essere JSON: e' il punto del canale dedicato."""
+    env = {**os.environ, "ANIMEUP_STATO": str(stato),
+           "ANIMEUP_WORK": str(stato / "Jobs"),
+           "PYTHONPATH": str(ROOT / "src"), **(ambiente or {})}
+    env.pop("ANIMEUP_LANG", None)
+    comando = ([sys.executable, "-c", codice] if codice
+               else [sys.executable, "-m", "animeup.cli", "serve"])
+    esito = subprocess.run(comando, input="\n".join(righe) + "\n",
+                           capture_output=True, text=True, env=env, timeout=120)
+    assert esito.returncode == 0, esito.stderr[-2000:]
+    import json as _json
+    messaggi = []
+    for riga in esito.stdout.splitlines():
+        try:
+            messaggi.append(_json.loads(riga))
+        except ValueError:
+            raise AssertionError(f"riga non JSON sul canale del protocollo: {riga!r}")
+    return messaggi, esito.stderr
+
+
+def _risposte(messaggi: list[dict]) -> dict:
+    return {m["id"]: m for m in messaggi if "id" in m and m["id"] is not None}
+
+
+@caso("serve: risponde a ogni metodo, per id, e dice prima di essere pronto")
+def _() -> None:
+    import json as _json
+    with tempfile.TemporaryDirectory() as tmp:
+        metodi = ["hello", "machine.info", "calibration.state", "tools.status",
+                  "folders.state", "settings.get"]
+        righe = [_json.dumps({"id": i, "method": m}) for i, m in enumerate(metodi, 1)]
+        messaggi, err = _serve(righe, Path(tmp))
+        assert messaggi[0].get("event") == "ready", messaggi[:1]
+        r = _risposte(messaggi)
+        for i, m in enumerate(metodi, 1):
+            assert "result" in r.get(i, {}), (m, r.get(i), err[-800:])
+        from animeup import __version__
+        assert r[1]["result"]["version"] == __version__
+        assert r[1]["result"]["protocol"] == 1
+        info = r[2]["result"]
+        assert info["chip"] and info["arch"], info
+        cal = r[3]["result"]
+        assert cal["state"] == "never" and cal["when"] is None, cal
+        assert [x["key"] for x in cal["models"]][:1] == ["animevideov3"]
+        attrezzi = {x["key"]: x for x in r[4]["result"]["tools"]}
+        assert set(attrezzi) == {"ffmpeg", "ffprobe", "realesrgan", "realcugan"}
+        # Una cartella di stato vuota non ha binari suoi: niente e' verificato.
+        assert not r[4]["result"]["all_verified"]
+        assert r[4]["result"]["python"]["short"].startswith("3.")
+        cartelle = r[5]["result"]
+        assert cartelle["work_folder"] == str(Path(tmp) / "Jobs"), cartelle
+        assert cartelle["is_default"] and not cartelle["exists"]
+        assert cartelle["space_rule_gb"] > cartelle["space_min_gb"]
+        imp = r[6]["result"]
+        # Le chiavi come sul file, in inglese.
+        assert imp["language"] == "en" and imp["height"] == 1080, imp
+        assert imp["disk_gb"] == cartelle["space_rule_gb"], (imp, cartelle)
+        # Niente cartelle della 1.6 create dal motore.
+        assert not (Path(tmp) / "INPUT").exists()
+
+
+@caso("serve: gli errori tornano come errori, e il motore non cade")
+def _() -> None:
+    import json as _json
+    with tempfile.TemporaryDirectory() as tmp:
+        righe = ["questo non e' JSON",
+                 _json.dumps({"id": 1, "method": "niente.di.simile"}),
+                 _json.dumps({"id": 2, "method": "settings.set", "params": {"values": 3}}),
+                 _json.dumps([1, 2]),
+                 _json.dumps({"id": 3, "method": "hello"})]
+        messaggi, _err = _serve(righe, Path(tmp))
+        r = _risposte(messaggi)
+        assert r[1]["error"]["code"] == "unknown_method", r[1]
+        assert r[2]["error"]["code"] == "bad_params", r[2]
+        assert "result" in r[3], "dopo gli errori il motore non risponde piu'"
+        codici = sorted(m["error"]["code"] for m in messaggi
+                        if m.get("id") is None and "error" in m)
+        assert codici == ["bad_json", "bad_request"], codici
+
+
+@caso("serve: le impostazioni si salvano, sanificate, e lo si annuncia")
+def _() -> None:
+    import json as _json
+    from animeup import su_disco
+    with tempfile.TemporaryDirectory() as tmp:
+        stato = Path(tmp)
+        valori = {"language": "it", "height": 1440, "crf": 3, "dedup": False,
+                  "work_folder": str(stato / "Altrove"), "inventata": 1}
+        righe = [_json.dumps({"id": 1, "method": "settings.set",
+                              "params": {"values": valori}}),
+                 _json.dumps({"id": 2, "method": "folders.state"})]
+        messaggi, err = _serve(righe, stato)
+        r = _risposte(messaggi)
+        fuori = r[1]["result"]
+        assert fuori["language"] == "it" and fuori["height"] == 1440, fuori
+        assert fuori["crf"] == 18, "un CRF sotto il minimo e' passato"
+        assert fuori["dedup"] is False and "inventata" not in fuori
+        assert any(m.get("event") == "settings.changed" for m in messaggi)
+        salvato = su_disco.leggi(stato / "records" / "settings.json")
+        assert salvato["lingua"] == "it" and salvato["cartella_lavoro"] == str(stato / "Altrove")
+        # Il file in inglese, per chi lo apre.
+        grezzo = _json.loads((stato / "records" / "settings.json").read_text())
+        assert grezzo["work_folder"] == str(stato / "Altrove") and "lingua" not in grezzo
+        # La cartella di lavoro scelta vale subito (l'ordine fra le due
+        # risposte non e' garantito: si rilegge in un secondo giro).
+        messaggi, _ = _serve([_json.dumps({"id": 1, "method": "folders.state"})], stato)
+        cartelle = _risposte(messaggi)[1]["result"]
+        assert cartelle["work_folder"] == str(stato / "Altrove") and not cartelle["is_default"]
+
+
+@caso("serve: una print dimenticata non sporca il canale del protocollo")
+def _() -> None:
+    import json as _json
+    codice = ("import sys, subprocess\n"
+              "import animeup.serve as s\n"
+              "def rumore(p):\n"
+              "    print('rumore da print')\n"
+              "    subprocess.run(['echo', 'rumore da un sottoprocesso'])\n"
+              "    return {'ok': True}\n"
+              "s.METODI['rumore'] = rumore\n"
+              "raise SystemExit(s.esegui())\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        messaggi, err = _serve([_json.dumps({"id": 1, "method": "rumore"})],
+                               Path(tmp), codice=codice)
+        assert _risposte(messaggi)[1]["result"] == {"ok": True}
+        assert "rumore da print" in err and "rumore da un sottoprocesso" in err, err
+
+
+@caso("serve: una taratura di un altro Mac o vecchia si riconosce")
+def _() -> None:
+    import json as _json
+    from animeup import taratura
+    with tempfile.TemporaryDirectory() as tmp:
+        stato = Path(tmp)
+        (stato / "records").mkdir()
+        f = stato / "records" / "calibration.json"
+        f.write_text(_json.dumps({"version": 1, "machines": {
+            "mac-altro": {"id": "mac-altro", "chip": "Apple M1", "when": 1.0}}}))
+        messaggi, _ = _serve([_json.dumps({"id": 1, "method": "calibration.state"})], stato)
+        cal = _risposte(messaggi)[1]["result"]
+        assert cal["state"] == "other_mac" and cal["other_chip"] == "Apple M1", cal
+        # Una voce di prima dell'1.6.8: chiavata sul chip, senza impronta.
+        f.write_text(_json.dumps({"version": 1, "machines": {
+            taratura.chip(): {"chip": taratura.chip(), "when": 1700000000.0,
+                              "mpxs": {"animevideov3": {"2": 2.0}}}}}))
+        messaggi, _ = _serve([_json.dumps({"id": 1, "method": "calibration.state"})], stato)
+        cal = _risposte(messaggi)[1]["result"]
+        assert cal["state"] == "old_version" and cal["when"] == 1700000000.0, cal
+        v3 = next(m for m in cal["models"] if m["key"] == "animevideov3")
+        assert v3["fps_1080p"] == round(2.0 / (960 * 540 / 1e6), 2), v3
+        # E una fatta qui: chiavata sull'impronta di questo Mac.
+        f.write_text(_json.dumps({"version": 1, "machines": {
+            taratura.macchina_id(): {"id": taratura.macchina_id(), "chip": taratura.chip(),
+                                     "when": 1800000000.0,
+                                     "mpxs": {"animevideov3": {"2": 3.0}}}}}))
+        messaggi, _ = _serve([_json.dumps({"id": 1, "method": "calibration.state"})], stato)
+        assert _risposte(messaggi)[1]["result"]["state"] == "done"
 
 
 def main() -> int:

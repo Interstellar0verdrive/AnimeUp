@@ -733,6 +733,16 @@ def compare() -> None:
     raise typer.Exit(confronto.esegui())
 
 
+@app.command(name="serve", hidden=True, help=t("cli.serve.aiuto"))
+def serve() -> None:
+    """Il motore dell'app nativa: JSON a righe su stdin/stdout (vedi `serve`).
+
+    Nascosto: lo avvia l'app SwiftUI e ci parla per tutta la sua vita.
+    """
+    from . import serve as modulo
+    raise typer.Exit(modulo.esegui())
+
+
 @app.command(help=t("cli.version.aiuto"))
 def version() -> None:
     """Mostra la versione."""
@@ -1135,10 +1145,13 @@ def main() -> None:
     # Le cartelle si creano all'avvio. `ensure_dirs` esisteva e non la
     # chiamava nessuno: su un ANIMEUP_ROOT nuovo la schermata vuota diceva
     # "copia i file in .../INPUT" indicando una cartella che non c'era.
-    try:
-        PATHS.ensure_dirs()
-    except OSError:
-        pass          # radice di sola lettura: lo dirà il primo comando vero
+    # Non per `serve`: il motore dell'app nativa non usa INPUT/OUTPUT, e non
+    # deve migrare ne' creare cartelle della 1.6 dove l'app non le vuole.
+    if sys.argv[1:2] != ["serve"]:
+        try:
+            PATHS.ensure_dirs()
+        except OSError:
+            pass      # radice di sola lettura: lo dirà il primo comando vero
     try:
         app()
     except MissingToolError as exc:
