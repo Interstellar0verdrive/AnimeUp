@@ -129,6 +129,7 @@ struct QueueHeader: View {
                 if tickState == .on { model.unticked = Set(model.files.map(\.id)) } else { model.unticked = [] }
             }
             .frame(width: QueueColumns.check)
+            .disabled(model.progress.queue.running)
             Text(model.t("nat.col.file")).frame(maxWidth: .infinity, alignment: .leading)
             Text(model.t("nat.col.resolution")).frame(width: QueueColumns.resolution, alignment: .trailing)
             Text(model.t("nat.col.length")).frame(width: QueueColumns.length, alignment: .trailing)
@@ -204,6 +205,11 @@ struct QueueRow: View {
 
     private var open: Bool { model.expanded == file.id }
     private var job: QueueProgress.Job? { model.job(file.id) }
+    /// While a queue runs, rows that aren't part of it (board "out" state).
+    private var outOfRun: Bool {
+        model.progress.queue.running && !(model.progress.queue.ids ?? []).contains(file.id) && job?.state != .done
+    }
+    private var inRun: Bool { model.progress.queue.running && (model.progress.queue.ids ?? []).contains(file.id) }
 
     private var fillMode: RowFill.Mode? {
         switch job?.state {
@@ -227,7 +233,25 @@ struct QueueRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
+            VStack(spacing: 0) {
+                header
+                if let j = job, j.state == .running || j.state == .paused {
+                    RowStageLines(job: j, estimate: model.plan(file.id)?.estimate)
+                        .padding(.leading, 15 + QueueColumns.check + 12)
+                        .padding(.trailing, 14)
+                        .padding(.bottom, 10)
+                    PiecedEdgeBar(fraction: j.fraction ?? 0, chunks: j.chunks ?? 1,
+                                  color: j.state == .paused ? AU.yellow : AU.primary)
+                }
+            }
+            .background(alignment: .leading) {
+                if let mode = fillMode {
+                    GeometryReader { g in
+                        RowFill(fraction: (mode == .running || mode == .paused) ? (job?.fraction ?? 0) : 1, mode: mode)
+                            .frame(width: g.size.width, height: g.size.height)
+                    }
+                }
+            }
             if open {
                 FilePanel(file: file)
                     .padding(.horizontal, 12)
@@ -240,19 +264,6 @@ struct QueueRow: View {
                 if file.state == .analysing {
                     SlidingLight().clipShape(RoundedRectangle(cornerRadius: AU.Radius.card))
                 }
-                if let mode = fillMode {
-                    RowFill(fraction: job?.fraction ?? 1, mode: mode)
-                        .frame(height: 54)
-                        .clipShape(RoundedRectangle(cornerRadius: AU.Radius.card))
-                }
-            }
-        }
-        .overlay(alignment: .top) {
-            if let j = job, j.state == .running || j.state == .paused {
-                PiecedEdgeBar(fraction: j.fraction ?? 0, chunks: j.chunks ?? 1,
-                              color: j.state == .paused ? AU.yellow : AU.primary)
-                    .padding(.top, 50)
-                    .clipShape(RoundedRectangle(cornerRadius: AU.Radius.card))
             }
         }
         .overlay(alignment: .bottom) {
@@ -260,9 +271,12 @@ struct QueueRow: View {
                 SlidingEdge().frame(height: 3).clipShape(RoundedRectangle(cornerRadius: AU.Radius.card))
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: AU.Radius.card))
         .overlay(RoundedRectangle(cornerRadius: AU.Radius.card)
             .strokeBorder(selected ? AU.primary : borderColor, lineWidth: selected ? 1.5 : 1))
         .contentShape(RoundedRectangle(cornerRadius: AU.Radius.card))
+        .opacity(outOfRun ? 0.45 : 1)
+        .disabled(outOfRun)
         .onTapGesture { click() }
         .contextMenu { menu }
     }
@@ -273,17 +287,10 @@ struct QueueRow: View {
                 if model.unticked.contains(file.id) { model.unticked.remove(file.id) } else { model.unticked.insert(file.id) }
             }
             .frame(width: QueueColumns.check)
-            .disabled(file.state != .ready)
+            .disabled(file.state != .ready || model.progress.queue.running)
             VStack(alignment: .leading, spacing: 5) {
                 Text(file.name).font(.system(size: 12.5, weight: .medium)).foregroundStyle(AU.text)
                     .lineLimit(1).truncationMode(.middle)
-                if let j = job, j.state == .running || j.state == .paused {
-                    HStack(spacing: 6) {
-                        Text(model.actionLine(j)).foregroundStyle(j.state == .paused ? AU.yellowText : AU.primaryText)
-                        Text(model.measures(j)).font(AUFont.smallNumbers)
-                    }
-                    .font(.system(size: 11)).foregroundStyle(AU.text3).lineLimit(1)
-                } else {
                 HStack(spacing: 5) {
                     if !file.warnings.isEmpty && file.state == .ready {
                         Label(model.localizer.tn("nat.queue.n_warnings", file.warnings.count),
@@ -294,7 +301,6 @@ struct QueueRow: View {
                     Text(detailLine).lineLimit(1).truncationMode(.tail)
                 }
                 .font(.system(size: 11)).foregroundStyle(AU.text3)
-                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Text(verbatim: file.report.map { r -> String in "\(r.width)×\(r.height)" } ?? "—")
@@ -395,12 +401,8 @@ struct QueueRow: View {
 
     @ViewBuilder
     private var modelColumn: some View {
-        if let j = job, j.state == .running || j.state == .paused {
-            HStack {
-                Spacer()
-                Button { model.confirmStop(file.id) } label: { Label(model.t("nat.run.stop"), systemImage: "stop.fill") }
-                    .auButton(.secondary, .small)
-            }
+        if inRun || job?.state == .done, let key = model.plan(file.id)?.model {
+            PopupLabel(model.shortModel(key), width: QueueColumns.model).opacity(0.5)
         } else if let j = job, j.state == .interrupted, !model.progress.queue.running {
             HStack(spacing: 6) {
                 Spacer()
@@ -408,8 +410,6 @@ struct QueueRow: View {
                 Button(model.t("nat.run.discard")) { model.confirmDiscard(file.id) }.auButton(.destructive, .small)
             }
             .opacity(j.defective == true ? 1 : 1)
-        } else if let j = job, j.state == .done || j.state == .queued {
-            Text(model.shortModel(model.plan(file.id)?.model ?? "")).font(.system(size: 12)).foregroundStyle(AU.text2)
         } else if file.state == .ready, let p = model.plan(file.id), let current = p.model {
             Menu {
                 ForEach(p.models ?? []) { opt in
@@ -445,8 +445,8 @@ struct QueueRow: View {
     @ViewBuilder
     private var timeColumn: some View {
         if let j = job, j.state == .running || j.state == .paused {
-            Text(verbatim: "\(Int(((j.fraction ?? 0) * 100).rounded()))%").font(AUFont.numbers)
-                .foregroundStyle(j.state == .paused ? AU.yellowText : AU.primaryText)
+            Button { model.confirmStop(file.id) } label: { Label(model.t("nat.run.stop"), systemImage: "stop.fill") }
+                .auButton(.secondary, .small)
         } else if let j = job, j.state == .done {
             Text(verbatim: Fmt.span(j.seconds ?? 0)).font(AUFont.numbers).foregroundStyle(AU.textCode)
         } else if let j = job, j.state == .interrupted {
@@ -561,7 +561,6 @@ struct FilePanel: View {
             }
             if model.panelTab == .processing {
                 if let j = model.job(file.id), j.state == .running || j.state == .paused {
-                    StageLine(job: j, estimate: model.plan(file.id)?.estimate)
                     if let p = model.plan(file.id) { ProcessingPanel(file: file, plan: p) }
                 } else if let j = model.job(file.id), j.state == .done {
                     JobCompleted(file: file, job: j)
@@ -737,6 +736,7 @@ struct ProcessingPanel: View {
                                : "\(plan.height ?? 1080)", width: 160)
                 }
                 .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+                .disabled(model.progress.queue.running || model.job(file.id)?.state == .done)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(model.t("nat.plan.name")).font(.system(size: 11)).foregroundStyle(AU.text3)
@@ -798,6 +798,17 @@ struct QueueActionBar: View {
 struct RunningBar: View {
     @Environment(AppModel.self) private var model
 
+    /// "Queue: 1 completed · 1 processing · 2 waiting · estimated time left ~ 2h 10m · expected finish 18:40"
+    private func queueLine(done: Int, waiting: Int, q: QueueProgress.Queue) -> String {
+        var parts = [model.t("nat.run.q_completed", ["n": done]), model.t("nat.run.q_processing"),
+                     model.t("nat.run.q_waiting", ["n": waiting])]
+        if let lo = q.leftMin, let hi = q.leftMax {
+            parts.append(model.t("nat.run.q_left", ["t": Fmt.estimate((lo + hi) / 2)]))
+        }
+        if let f = q.finish { parts.append(model.t("nat.run.q_finish", ["time": model.clockTime(f)])) }
+        return model.t("nat.run.q_prefix") + " " + parts.joined(separator: " · ")
+    }
+
     var body: some View {
         let q = model.progress.queue
         HStack(spacing: 12) {
@@ -810,17 +821,12 @@ struct RunningBar: View {
                     }
                     Text(model.t("nat.run.rest_note")).font(.system(size: 12)).foregroundStyle(AU.text2)
                 } else {
-                    HStack(spacing: 0) {
-                        Text(model.t(q.paused ? "nat.run.paused_line" : "nat.run.processing_line",
-                                     ["i": q.position ?? 1, "n": q.total ?? 1]))
-                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(q.paused ? AU.yellowText : AU.text)
-                        if let f = q.finish, !q.paused {
-                            Text(" · " + model.t("nat.run.ends_around", ["time": model.clockTime(f)]))
-                                .font(.system(size: 13)).foregroundStyle(AU.text2)
-                        }
-                    }
-                    Text(model.t(q.paused ? "nat.run.paused_note" : "nat.run.running_note"))
-                        .font(.system(size: 12)).foregroundStyle(AU.text2)
+                    let waiting = (q.ids ?? []).filter { model.job($0)?.state == .queued }.count
+                    let done = (q.ids ?? []).filter { model.job($0)?.state == .done || model.job($0)?.state == .interrupted }.count
+                    Text(model.t(q.paused ? "nat.run.paused_line" : "nat.run.processing_line", ["i": q.position ?? 1, "n": q.total ?? 1])
+                         + (waiting > 0 ? " · " + model.localizer.tn("nat.run.waiting_files", waiting) : ""))
+                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(q.paused ? AU.yellowText : AU.text)
+                    Text(queueLine(done: done, waiting: waiting, q: q)).font(.system(size: 12)).foregroundStyle(AU.text2)
                 }
             }
             Spacer()
@@ -835,7 +841,7 @@ struct RunningBar: View {
                     .auButton(.secondary, .regular)
             }
             Button { model.confirmStopAll() } label: { Label(model.t("nat.run.stop_all"), systemImage: "stop.fill") }
-                .auButton(.secondary, .regular)
+                .auButton(.destructive, .regular)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

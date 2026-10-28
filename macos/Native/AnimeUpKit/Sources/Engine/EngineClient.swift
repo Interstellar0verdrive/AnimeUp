@@ -158,6 +158,19 @@ public actor EngineClient {
     }
     public func lastLaunch() async throws -> LaunchRecord { try await call("queue.last") }
     public func calibrationRun() async throws -> CalibrationRun { try await call("calibration.status") }
+    public func compareClips(_ id: String) async throws -> CompareClips { try await call("compare.clips", params: ["id": id]) }
+    public func compareScan(_ id: String, more: Bool) async throws { _ = try await raw("compare.scan", params: ["id": id, "more": more]) }
+    public func compareModels(_ id: String, clips: [Int]) async throws -> CompareModels {
+        try await call("compare.models", params: ["id": id, "clips": clips])
+    }
+    public func compareStart(_ id: String, clips: [Int], models: [String], reference: Bool) async throws {
+        _ = try await raw("compare.start", params: ["id": id, "clips": clips, "models": models, "reference": reference])
+    }
+    public func compareStatus() async throws -> CompareStatus { try await call("compare.status") }
+    public func playable(_ path: String) async throws -> String {
+        struct R: Decodable, Sendable { var path: String }
+        return try await call("compare.playable", params: ["path": path], as: R.self).path
+    }
     public func updatesState() async throws -> UpdatesState { try await call("updates.state") }
     public func checkUpdates() async throws -> UpdatesState { try await call("updates.check") }
 

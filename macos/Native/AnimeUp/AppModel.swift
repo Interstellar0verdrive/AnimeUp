@@ -71,6 +71,8 @@ final class AppModel {
     var panelTab: PanelTab = .analysis
     var alert: AppAlert?
     var undoRemoved: [QueueFile] = []
+    // Compare (M8–M9)
+    var cmp = CompareState()
     // Queue run (M5–M7)
     var progress = QueueProgress()
     var calRun: CalibrationRun?
@@ -216,6 +218,24 @@ final class AppModel {
                 if let p = try? event.decode(QueueProgress.self) { applyProgress(p) }
             case "queue.finished":
                 if let r = try? event.decode(LaunchRecord.self) { queueFinished(r.launch) }
+            case "compare.scan.progress":
+                if let d = try? JSONSerialization.jsonObject(with: event.data) as? [String: Any] {
+                    cmp.scanning = true
+                    if let text = d["text"] as? String, !text.isEmpty { cmp.scanText = text }
+                }
+            case "compare.scan.done":
+                if let c = try? event.decode(CompareClips.self), c.id == cmp.fileId {
+                    cmp.scanning = false
+                    cmp.scanError = nil
+                    applyClips(c)
+                }
+            case "compare.scan.failed":
+                if let d = try? JSONSerialization.jsonObject(with: event.data) as? [String: Any] {
+                    cmp.scanning = false
+                    cmp.scanError = d["error"] as? String
+                }
+            case "compare.progress":
+                if let st = try? event.decode(CompareStatus.self) { applyCompareStatus(st) }
             case "calibration.progress":
                 if let c = try? event.decode(CalibrationRun.self) { calRun = c }
             case "calibration.changed":

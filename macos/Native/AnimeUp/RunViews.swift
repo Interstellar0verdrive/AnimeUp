@@ -117,52 +117,60 @@ extension AppModel {
         return parts.joined(separator: " · ")
     }
 
+    /// Times follow the system's region format (the texts follow the app language).
     func clockTime(_ epoch: Double) -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: localizer.language)
-        f.dateStyle = .none
-        f.timeStyle = .short
-        return f.string(from: Date(timeIntervalSince1970: epoch))
+        Date(timeIntervalSince1970: epoch).formatted(
+            Date.FormatStyle(locale: .current).hour(.twoDigits(amPM: .abbreviated)).minute(.twoDigits))
     }
 }
 
-/// F4b: the stage line in the open running row.
-struct StageLine: View {
+/// F4: the stage line and the action line under a running row's header.
+struct RowStageLines: View {
     @Environment(AppModel.self) private var model
     var job: QueueProgress.Job
     var estimate: Double?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let current = RunStages.order.firstIndex(of: job.stage ?? "upscale") ?? 2
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
                 ForEach(Array(RunStages.order.enumerated()), id: \.offset) { i, stage in
                     if i > 0 { Image(systemName: "arrow.right").font(.system(size: 8)).foregroundStyle(AU.text3) }
-                    let current = RunStages.order.firstIndex(of: job.stage ?? "upscale") ?? 2
                     HStack(spacing: 5) {
                         Circle().fill(i < current ? AU.green : i == current ? (job.state == .paused ? AU.yellow : AU.primary) : AU.text3)
                             .frame(width: 7, height: 7)
                         Text(model.stageName(stage)).font(.system(size: 12, weight: i == current ? .semibold : .regular))
                             .foregroundStyle(i < current ? AU.greenText : i == current ? AU.text : AU.text3)
+                        Text(Self.range(stage)).font(.system(size: 10, design: .monospaced)).foregroundStyle(AU.text3)
                     }
                 }
-                Spacer()
-                Text("\(Text(model.t("nat.run.completed")).foregroundStyle(AU.text2)) \(Text("\(Int(((job.fraction ?? 0) * 100).rounded()))%").fontWeight(.semibold))")
+                Spacer(minLength: 8)
+                Text("\(Text(model.t("nat.run.completed")).foregroundStyle(AU.text2)) \(Text("\(Int(((job.fraction ?? 0) * 100).rounded()))%").font(.system(size: 13, weight: .bold)).foregroundStyle(job.state == .paused ? AU.yellowText : AU.text))")
                     .font(.system(size: 12))
             }
             HStack(spacing: 8) {
                 Text(model.actionLine(job)).font(.system(size: 12, weight: .medium)).foregroundStyle(AU.text)
-                Rectangle().fill(AU.line).frame(width: 1, height: 12)
-                Text(model.measures(job)).font(AUFont.smallNumbers).foregroundStyle(AU.text2)
-                Spacer()
+                    .lineLimit(1)
+                Rectangle().fill(AU.text3).frame(width: 1, height: 11)
+                Text(model.measures(job)).font(AUFont.smallNumbers).foregroundStyle(AU.text2).lineLimit(1)
+                Spacer(minLength: 8)
                 if let estimate {
                     Text("\(Text(model.t("nat.run.estimated")).foregroundStyle(AU.text2)) \(Text(Fmt.estimate(estimate)).fontWeight(.semibold))")
                         .font(.system(size: 12))
                 }
             }
         }
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: AU.Radius.field).fill(AU.surface))
-        .overlay(RoundedRectangle(cornerRadius: AU.Radius.field).strokeBorder(AU.line))
+    }
+
+    /// "0–4%", "6–96%"…
+    static func range(_ stage: String) -> String {
+        var start = 0.0
+        for s in RunStages.order {
+            let share = RunStages.shares[s] ?? 0
+            if s == stage { return "\(Int((start * 100).rounded()))–\(Int(((start + share) * 100).rounded()))%" }
+            start += share
+        }
+        return ""
     }
 }
 

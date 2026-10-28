@@ -40,8 +40,7 @@ struct MainView: View {
                 AU.bg.ignoresSafeArea()
                 switch model.tab {
                 case .start: StartView()
-                case .compare: PlaceholderView(title: model.t("nat.tab.compare"), symbol: "rectangle.split.2x1",
-                                               text: model.t("nat.compare.later"))
+                case .compare: CompareView()
                 case .queue: QueueView()
                 }
             }

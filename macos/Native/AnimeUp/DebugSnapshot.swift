@@ -86,6 +86,57 @@ enum DebugSnapshot {
                 renderQueue(model, "\(base)-queue-ready-it.png")
                 model.localizer.setLanguage(model.settings?.language ?? "en")
             }
+            if env["ANIMEUP_SNAPSHOT_K2"] == "1" {
+                model.calRun = try? await model.engine.calibrationRun()
+                render(CalibrationSheet().environment(model), width: 520, "\(base)-cal-results.png")
+                render(SettingsPage(tab: .calibration).environment(model), width: 640, "\(base)-settings-calibration.png")
+                renderComposite(model, "\(base)-start-calibrated.png")
+            }
+            if let name = env["ANIMEUP_SNAPSHOT_QUICKRUN"], let f = model.files.first(where: { $0.name.contains(name) }) {
+                model.tab = .queue
+                model.expanded = f.id
+                model.panelTab = .processing
+                try? await model.engine.queueStart([f.id])
+                for _ in 0..<120 {
+                    try? await Task.sleep(for: .seconds(1))
+                    if model.job(f.id)?.stage == "upscale" && (model.job(f.id)?.fps ?? 0) > 0 { break }
+                }
+                renderQueue(model, "\(base)-run-open.png")
+                model.expanded = nil
+                renderQueue(model, "\(base)-run-collapsed.png")
+                for _ in 0..<600 where model.progress.queue.running { try? await Task.sleep(for: .seconds(1)) }
+                log.info("quickrun: \(String(describing: model.job(f.id)))")
+                model.showFinished = false
+            }
+            if let name = env["ANIMEUP_SNAPSHOT_COMPARE"], let f = model.files.first(where: { $0.name.contains(name) }) {
+                model.tab = .compare
+                model.selectCompareFile(f.id)
+                for _ in 0..<300 {
+                    try? await Task.sleep(for: .seconds(1))
+                    if !model.cmp.clips.isEmpty && !model.cmp.scanning { break }
+                }
+                try? await Task.sleep(for: .seconds(1))
+                log.info("compare clips: \(model.cmp.clips.count) error=\(model.cmp.scanError ?? "-")")
+                renderPage(CompareView(), model, "\(base)-cmp-clips.png")
+                model.goToModels()
+                for _ in 0..<30 where model.cmp.models == nil { try? await Task.sleep(for: .milliseconds(500)) }
+                model.cmp.chosenModels = ["animevideov3"]
+                renderPage(CompareView(), model, "\(base)-cmp-models.png")
+                model.startTest()
+                for _ in 0..<30 where model.cmp.status?.running != true { try? await Task.sleep(for: .seconds(1)) }
+                try? await Task.sleep(for: .seconds(8))
+                renderPage(CompareView(), model, "\(base)-cmp-running.png")
+                for _ in 0..<900 where model.cmp.status?.running == true { try? await Task.sleep(for: .seconds(1)) }
+                try? await Task.sleep(for: .seconds(2))
+                log.info("compare status: \(model.cmp.status?.state ?? "-") results=\(model.cmp.status?.results?.count ?? 0) failures=\(model.cmp.status?.failures ?? [])")
+                if let r = model.cmp.status?.results?.first {
+                    for (k, path) in r.file {
+                        do { let mp4 = try await model.engine.playable(path); log.info("playable \(k): \(mp4)") }
+                        catch { log.error("playable \(k) failed: \(error)") }
+                    }
+                }
+                renderPage(CompareView(), model, "\(base)-cmp-results.png")
+            }
             if let name = env["ANIMEUP_SNAPSHOT_RUN"], let f = model.files.first(where: { $0.name.contains(name) }) {
                 await runScenario(model, f.id, base)
             }
@@ -202,6 +253,24 @@ enum DebugSnapshot {
            let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
             try? png.write(to: URL(fileURLWithPath: path))
         }
+    }
+
+    static func renderPage<V: View>(_ page: V, _ model: AppModel, _ path: String) {
+        let view = HStack(spacing: 0) {
+            SidebarView()
+                .padding(.top, 44)
+                .frame(width: 236)
+                .frame(maxHeight: .infinity)
+                .background(RoundedRectangle(cornerRadius: 16).fill(AU.side)
+                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(AU.glassLine)))
+                .padding([.leading, .vertical], 8)
+            page
+        }
+        .frame(width: 1360, height: 840, alignment: .top)
+        .background(AU.bg)
+        .environment(model)
+        .environment(\.colorScheme, .dark)
+        render(view, width: 1360, path)
     }
 
     static func renderQueue(_ model: AppModel, _ path: String) {

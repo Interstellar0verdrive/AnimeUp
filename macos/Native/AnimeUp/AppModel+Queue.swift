@@ -156,6 +156,11 @@ extension AppModel {
     /// "5 files · 1 analysing" for the sidebar.
     var queueSubtitle: String {
         if files.isEmpty { return t("nat.tab.queue_sub") }
+        if progress.queue.running {
+            let live = progress.files.values.first { $0.state == .running || $0.state == .paused }
+            return t("nat.run.tab_sub", ["i": progress.queue.position ?? 1, "n": progress.queue.total ?? 1,
+                                         "pct": Int(((live?.fraction ?? 0) * 100).rounded())])
+        }
         var parts = [localizer.tn("nat.queue.files", files.count)]
         if analysingCount > 0 {
             parts.append(t("nat.queue.analysing_n", ["n": analysingCount]))

@@ -391,7 +391,7 @@ struct UpdateSettings: View {
     private var checkedLine: String {
         guard let c = model.updates?.checked else { return model.t("nat.set.never_checked") }
         let f = DateFormatter()
-        f.locale = Locale(identifier: model.localizer.language)
+        f.locale = .current
         f.doesRelativeDateFormatting = true
         f.dateStyle = .medium
         f.timeStyle = .short

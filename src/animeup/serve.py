@@ -464,6 +464,7 @@ def _osservatore() -> None:
         if _elenco is not None:
             _emetti_progresso()
         _emetti_calibrazione()
+        _emetti_confronto()
 
 
 def _calibration_status(_params: dict) -> dict:
@@ -532,6 +533,56 @@ def _emetti_calibrazione(forza: bool = False) -> None:
     _ultima_cal["testo"] = testo
 
 
+# --- il Confronto ------------------------------------------------------------
+
+def _prova():
+    from . import prova
+    return prova
+
+
+def _compare_call(funzione, *args, **kw):
+    try:
+        return funzione(*args, **kw)
+    except ValueError as exc:
+        raise ErroreMetodo("not_ready", str(exc)) from exc
+    except RuntimeError as exc:
+        raise ErroreMetodo("busy" if str(exc) == "busy" else "failed", str(exc)) from exc
+
+
+def _compare_start(params: dict) -> dict:
+    from . import coda
+    if coda.occupata():
+        raise ErroreMetodo("gpu_busy", coda.occupata() or "")
+    clips = params.get("clips")
+    if not isinstance(clips, list):
+        raise ErroreMetodo("bad_params", "clips must be a list of start frames")
+    esito = _compare_call(_prova().avvia, _voce(params.get("id")), [int(c) for c in clips],
+                          [str(m) for m in params.get("models") or []], bool(params.get("reference", True)))
+    _emetti_confronto(forza=True)
+    return esito
+
+
+def _compare_stop(_params: dict) -> dict:
+    from . import confronto
+    fermato = confronto.ferma()
+    _emetti_confronto(forza=True)
+    return {"stopped": fermato}
+
+
+_ultimo_conf: dict = {"testo": None}
+
+
+def _emetti_confronto(forza: bool = False) -> None:
+    try:
+        st = _prova().stato()
+    except Exception:  # noqa: BLE001
+        return
+    testo = json.dumps(st, sort_keys=True, default=str)
+    if forza or testo != _ultimo_conf["testo"]:
+        _emetti("compare.progress", st or {})
+    _ultimo_conf["testo"] = testo
+
+
 def _queue_last(_params: dict) -> dict:
     from . import su_disco
     lancio = _coda().ultimo_lancio()
@@ -568,6 +619,15 @@ METODI: dict[str, Callable[[dict], dict]] = {
     "queue.resume": lambda p: _comando(_coda().riprendi_pausa),
     "queue.startNow": lambda p: _comando(_coda().parti_ora),
     "queue.last": _queue_last,
+    "compare.clips": lambda p: _compare_call(_prova().clips, _voce(p.get("id"))),
+    "compare.scan": lambda p: _prova().scansiona(_voce(p.get("id")), _emetti, altri=bool(p.get("more"))),
+    "compare.models": lambda p: _compare_call(_prova().modelli, _voce(p.get("id")),
+                                              [int(c) for c in p["clips"]] if isinstance(p.get("clips"), list) else None),
+    "compare.start": _compare_start,
+    "compare.stop": _compare_stop,
+    "compare.status": lambda p: _prova().stato() or {},
+    "compare.playable": lambda p: {"path": _compare_call(_prova().riproducibile, str(p.get("path")))},
+    "compare.state": lambda p: _prova().leggi_stati(),
     "calibration.status": _calibration_status,
     "calibration.start": _calibration_start,
     "calibration.stop": _calibration_stop,
