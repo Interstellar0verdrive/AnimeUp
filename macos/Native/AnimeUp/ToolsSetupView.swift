@@ -25,7 +25,8 @@ struct ToolsSetupView: View {
             }
             if let failed {
                 NoteView(.red, title: model.t("nat.tools.stopped_title"),
-                         text: model.t("nat.tools.stopped_text", ["tool": name(failed.key)])
+                         text: model.t(failed.error.lowercased().contains("checksum") ? "nat.tools.stopped_checksum" : "nat.tools.stopped_text",
+                                       ["tool": name(failed.key)])
                             + "\n" + model.t("nat.tools.stopped_kept"))
                     .help(failed.error)
             } else {
@@ -34,7 +35,7 @@ struct ToolsSetupView: View {
                     Text(model.t("nat.tools.downloading", ["i": totals.index, "n": totals.count]))
                         .font(.system(size: 13, weight: .semibold)).foregroundStyle(AU.text)
                     Text(model.t("nat.tools.progress", ["done": totals.done / 1_000_000,
-                                                        "total": totals.total / 1_000_000]))
+                                                        "total": totals.total / 1_000_000]) + timeLeft(totals))
                         .font(.system(size: 12)).foregroundStyle(AU.text2)
                 }
             }
@@ -57,6 +58,15 @@ struct ToolsSetupView: View {
         .padding(.bottom, 24)
         .frame(width: 600)
         .background(AU.bg)
+    }
+
+    /// " · about a minute left", from the bytes since the window opened.
+    private func timeLeft(_ t: (done: Int64, total: Int64, index: Int, count: Int)) -> String {
+        guard let start = model.tools2.startedAt, t.done > model.tools2.startBytes else { return "" }
+        let rate = Double(t.done - model.tools2.startBytes) / max(1, Date().timeIntervalSince1970 - start)
+        let left = Double(t.total - t.done) / max(1, rate)
+        guard left.isFinite, left > 0 else { return "" }
+        return " · " + (left < 90 ? model.t("nat.tools.minute_left") : model.t("nat.tools.minutes_left", ["n": Int((left / 60).rounded())]))
     }
 
     private var totalMB: Int {

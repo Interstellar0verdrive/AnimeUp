@@ -39,6 +39,15 @@ public struct QueueProgress: Codable, Sendable, Equatable {
         public var warnings: [String]?
         public var defective: Bool?
         public var output: String?
+        public var recipe: Recipe?
+    }
+
+    /// The values a job started with, where they differ from the settings now.
+    public struct Recipe: Codable, Sendable, Equatable {
+        public var values: [String: JSONValue]
+        public var model: String?
+        public var id: String?
+        public var name: String?
     }
 
     public var queue: Queue
@@ -67,6 +76,7 @@ public struct CalibrationRun: Codable, Sendable, Equatable {
     public var seen: Bool?
     public var ended: Double?
     public var steps: [String]
+    public var stepStarted: [Double?]?
     public var running: Bool
     public var log: String
     public var table: [Row]

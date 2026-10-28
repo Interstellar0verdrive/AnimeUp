@@ -28,6 +28,8 @@ struct ToolsSetupState: Equatable {
     var rows: [Row] = []
     /// Python was being set up when the window opened (very first launch).
     var pythonPending = false
+    var startedAt: Double?
+    var startBytes: Int64 = 0
 
     static let sizesMB: [String: Int64] = ["ffmpeg": 38, "realesrgan": 46, "realcugan": 96, "python": 42]
 }
@@ -88,6 +90,10 @@ extension AppModel {
         if let b = p.bytes { tools2.rows[i].bytes = b }
         if let t = p.total, t > 0 { tools2.rows[i].total = t }
         if p.state == .done { tools2.rows[i].bytes = max(tools2.rows[i].bytes, tools2.rows[i].total) }
+        if tools2.startedAt == nil && p.state == .running {
+            tools2.startedAt = Date().timeIntervalSince1970
+            tools2.startBytes = toolsTotals.done
+        }
         if p.state == .failed {
             tools2.phase = .failed(key: p.key, error: p.error ?? "")
         }

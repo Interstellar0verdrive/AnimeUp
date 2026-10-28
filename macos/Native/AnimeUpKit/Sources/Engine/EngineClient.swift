@@ -171,6 +171,10 @@ public actor EngineClient {
         struct R: Decodable, Sendable { var path: String }
         return try await call("compare.playable", params: ["path": path], as: R.self).path
     }
+    public func pausedWithOtherValues() async throws -> QueueProgress.Recipe? {
+        struct R: Decodable, Sendable { var paused: QueueProgress.Recipe? }
+        return try await call("settings.paused", as: R.self).paused
+    }
     public func updatesState() async throws -> UpdatesState { try await call("updates.state") }
     public func checkUpdates() async throws -> UpdatesState { try await call("updates.check") }
 

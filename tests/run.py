@@ -4891,6 +4891,40 @@ def _() -> None:
     assert not errori, "\n".join(errori)
 
 
+@caso("coda: un file in pausa partito con altri valori li dice, in inglese")
+def _() -> None:
+    """Le Impostazioni avvisano se un file interrotto o in pausa era partito
+    con valori diversi, e "Use Its Values" li rimette: servono solo quelli
+    diversi, con le chiavi inglesi del protocollo."""
+    from types import SimpleNamespace
+    from animeup import coda, impostazioni, monitor
+    with tempfile.TemporaryDirectory() as tmp:
+        cartella = Path(tmp)
+        from animeup import su_disco as su_disco_
+        (cartella / "parameters.json").write_text(su_disco_.dumps(
+            {"altezza": 1440, "crf": 16, "preset": "slower", "modello": "cugan"}))
+        lav = SimpleNamespace(cartella=cartella, vivo=False)
+        vecchi = (coda._lavoro_di, impostazioni.carica_native)
+        coda._lavoro_di = lambda v: lav
+        impostazioni.carica_native = lambda: {"altezza": 1080, "crf": 16, "preset": "slower"}
+        try:
+            r = coda.sospeso_diverso([{"id": "a", "path": "/x/Ep1.mkv"}])
+            assert r and r["name"] == "Ep1.mkv" and r["id"] == "a", r
+            assert r["values"] == {"height": 1440}, r["values"]
+            impostazioni.carica_native = lambda: {"altezza": 1440, "crf": 16, "preset": "slower"}
+            assert coda.sospeso_diverso([{"id": "a", "path": "/x/Ep1.mkv"}]) is None
+            lav.vivo = True
+            vecchio_sospeso = monitor.sospeso
+            monitor.sospeso = lambda l: False
+            impostazioni.carica_native = lambda: {"altezza": 720}
+            try:
+                assert coda.sospeso_diverso([{"id": "a", "path": "/x/Ep1.mkv"}]) is None, "uno che gira non conta"
+            finally:
+                monitor.sospeso = vecchio_sospeso
+        finally:
+            coda._lavoro_di, impostazioni.carica_native = vecchi
+
+
 @caso("la cartella LAVORAZIONI di prima della 1.4 diventa JOBS, col contenuto")
 def _() -> None:
     """Rinominata la cartella, una lavorazione interrotta sotto il nome vecchio

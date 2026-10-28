@@ -83,6 +83,8 @@ final class AppModel {
     // Plans (M4)
     var plans: [String: FilePlan] = [:]
     var calibratedWhen: Double?
+    /// ST5: an interrupted file that started with other values.
+    var pausedRecipe: QueueProgress.Recipe?
     var includeSubfolders: Bool = UserDefaults.standard.bool(forKey: "includeSubfolders") {
         didSet { UserDefaults.standard.set(includeSubfolders, forKey: "includeSubfolders") }
     }

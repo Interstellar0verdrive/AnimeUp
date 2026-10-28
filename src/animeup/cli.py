@@ -784,6 +784,9 @@ def taratura(
 
         def avanzamento(etichetta: str, indice: int, totale: int,
                         frazione: float, resta: float) -> None:
+            # Quando comincia ogni tappa: l'app nativa mostra quanto e' durata.
+            inizi = stato.setdefault("step_started", {})
+            inizi.setdefault(str(indice), time_.time())
             stato.update({"label": etichetta, "index": indice, "total": totale,
                           "fraction": frazione, "left": resta})
             modulo.scrivi_stato(stato)

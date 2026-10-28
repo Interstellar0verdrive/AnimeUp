@@ -98,7 +98,12 @@ menus, the video player) show as placeholders in these images.
 - Light appearance: the app is dark only for now.
 - No Sparkle updates yet: Check for Updates only checks GitHub.
 - The release uses the same bundle identifier as the 1.6 app.
-- Compare: the player's split, hover and 1:1 haven't been checked by eye in the
-  real window yet.
+- Compare: the player's split, hover and 1:1, and the native switches and
+  menus, haven't been checked by eye in the real window yet. My renders draw
+  AppKit controls as placeholders.
 - Queue: no "Pause After This File", no Open Recent.
-- Calibration: per-step times aren't shown in the checklist.
+- Calibration: step times show only for runs started with this version; an
+  older run's checklist has no times. The repeated-frames row sits where the
+  engine runs it (near the end), not second as on the board.
+- The finished-job sheet has no per-stage timings: the job files don't record
+  them yet.

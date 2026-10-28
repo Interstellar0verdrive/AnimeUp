@@ -343,13 +343,21 @@ struct QueueRow: View {
             if let d = r.dedupMeasured { parts.append("dedup \(Int((d * 100).rounded()))%") }
         }
         if file.state == .failed, let e = file.error { parts.append(e) }
+        if let r = job?.recipe, job?.state == .interrupted {
+            var own: [String] = []
+            if let h = r.values["height"]?.number { own.append("\(Int(h))p") }
+            if let c = r.values["crf"]?.number { own.append("CRF \(Int(c))") }
+            if let p = r.values["preset"]?.string { own.append(p) }
+            if !own.isEmpty { parts.append(model.t("nat.queue.own_settings", ["values": own.joined(separator: " · ")])) }
+        }
         if file.state == .missing { parts = [model.t("nat.files.missing_file")] }
         return parts.joined(separator: " · ")
     }
 
     @ViewBuilder
     private var statusChip: some View {
-        if let j = job {
+        // Once the run is over, files it never launched show their ready state again (F6).
+        if let j = job, !(j.state == .queued && !model.progress.queue.running) {
             switch j.state {
             case .running: StatusChip(model.t("nat.chip.in_progress"), tone: .accent)
             case .paused: StatusChip(model.t("nat.chip.paused"), tone: .yellow, symbol: "pause.fill")

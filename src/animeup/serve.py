@@ -472,6 +472,8 @@ def _calibration_status(_params: dict) -> dict:
     fondo = taratura.stato_fondo() or {}
     fuori = {k: fondo.get(k) for k in ("state", "started", "index", "total", "fraction", "left",
                                        "label", "error", "seen", "ended")}
+    inizi = fondo.get("step_started") or {}
+    fuori["step_started"] = [inizi.get(str(i)) for i in range(len(fondo.get("steps") or []))]
     fuori["steps"] = [s[0] if isinstance(s, (list, tuple)) else s for s in (fondo.get("steps") or [])]
     fuori["running"] = taratura.in_corso() or fondo.get("state") == taratura.IN_CORSO
     fuori["log"] = str(PATHS.cache / "calibration.log")
@@ -583,6 +585,11 @@ def _emetti_confronto(forza: bool = False) -> None:
     _ultimo_conf["testo"] = testo
 
 
+def _settings_paused(_params: dict) -> dict:
+    """Un file interrotto con valori diversi dalle impostazioni (ST5)."""
+    return {"paused": _coda().sospeso_diverso(elenco().voci())}
+
+
 def _queue_last(_params: dict) -> dict:
     from . import su_disco
     lancio = _coda().ultimo_lancio()
@@ -619,6 +626,7 @@ METODI: dict[str, Callable[[dict], dict]] = {
     "queue.resume": lambda p: _comando(_coda().riprendi_pausa),
     "queue.startNow": lambda p: _comando(_coda().parti_ora),
     "queue.last": _queue_last,
+    "settings.paused": _settings_paused,
     "compare.clips": lambda p: _compare_call(_prova().clips, _voce(p.get("id"))),
     "compare.scan": lambda p: _prova().scansiona(_voce(p.get("id")), _emetti, altri=bool(p.get("more"))),
     "compare.models": lambda p: _compare_call(_prova().modelli, _voce(p.get("id")),

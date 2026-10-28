@@ -23,6 +23,10 @@ struct SettingsView: View {
     @State var tab: SettingsTab = .general
 
     var body: some View {
+        tabs.task { model.pausedRecipe = try? await model.engine.pausedWithOtherValues() }
+    }
+
+    private var tabs: some View {
         TabView(selection: $tab) {
             ForEach(SettingsTab.allCases) { t in
                 SettingsPage(tab: t)
@@ -127,6 +131,40 @@ struct LockedNote: View {
     var body: some View {
         if model.settingsLocked {
             NoteView(.yellow, title: model.t("nat.set.locked_title"), text: model.t("nat.set.locked_text"))
+        } else if let r = model.pausedRecipe {
+            NoteView(.yellow, title: model.t("nat.set.paused_title", ["name": r.name ?? ""]),
+                     text: model.t("nat.set.paused_text", ["values": Self.describe(r, model)]) + "\n" + model.t("nat.set.paused_new")) {
+                Button(model.t("nat.set.use_its_values")) { useIts(r) }.buttonStyle(AUButtonStyle(.notice, size: .small))
+            }
+        }
+    }
+
+    static func describe(_ r: QueueProgress.Recipe, _ model: AppModel) -> String {
+        var parts: [String] = []
+        if let h = r.values["height"]?.number { parts.append("\(Int(h))p") }
+        if let c = r.values["crf"]?.number { parts.append("CRF \(Int(c))") }
+        if let p = r.values["preset"]?.string { parts.append(p) }
+        for k in ["dedup", "denoise", "force"] {
+            if case .bool(let b)? = r.values[k] { parts.append("\(k) \(b ? model.t("nat.set.on") : model.t("nat.set.off"))") }
+        }
+        guard parts.count > 1 else { return parts.joined() }
+        return parts.dropLast().joined(separator: ", ") + model.t("nat.cmp.and") + parts.last!
+    }
+
+    private func useIts(_ r: QueueProgress.Recipe) {
+        var values: [String: any Sendable] = [:]
+        for (k, v) in r.values {
+            switch v {
+            case .number(let n): values[k] = Int(n)
+            case .string(let s): values[k] = s
+            case .bool(let b): values[k] = b
+            default: break
+            }
+        }
+        Task {
+            if let s = try? await model.engine.setSettings(values) { model.settings = s }
+            model.pausedRecipe = try? await model.engine.pausedWithOtherValues()
+            await model.refreshPlans()
         }
     }
 }

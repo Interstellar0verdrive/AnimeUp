@@ -436,7 +436,8 @@ def stato(voci: list[dict]) -> dict:
         elif lav is not None:
             voce.update({"state": "interrupted", "fraction": round(_frazione(lav)[1], 4),
                          "stage": FASI.get(lav.fase, "upscale"),
-                         "log": str(lav.registro) if lav.registro else None})
+                         "log": str(lav.registro) if lav.registro else None,
+                         "recipe": _ricetta(lav)})
         elif lancio_vivo and v["id"] in (lancio.get("ids") or []):
             voce["state"] = "queued"
         else:
@@ -458,6 +459,36 @@ def stato(voci: list[dict]) -> dict:
         if riposo:
             coda["resting_until"] = riposo[0]
     return {"queue": coda, "files": file_stati, "now": adesso}
+
+
+_CONFRONTATE = ("altezza", "crf", "preset", "dedup", "denoise", "forza")
+
+
+def _ricetta(lav) -> dict | None:
+    """I valori con cui il lavoro e' partito, in inglese, se diversi da adesso."""
+    try:
+        r = su_disco.leggi(lav.cartella / "parameters.json")
+    except (OSError, ValueError):
+        return None
+    if not isinstance(r, dict):
+        return None
+    cfg = impostazioni.carica_native()
+    diversi = {k: r[k] for k in _CONFRONTATE if k in r and r[k] != cfg.get(k)}
+    if not diversi:
+        return None
+    return {"values": su_disco.in_inglese(diversi), "model": r.get("modello")}
+
+
+def sospeso_diverso(voci: list[dict]) -> dict | None:
+    """Il primo file interrotto (o in pausa) partito con valori diversi."""
+    for v in voci:
+        lav = _lavoro_di(v)
+        if lav is None or (lav.vivo and not monitor.sospeso(lav)):
+            continue
+        r = _ricetta(lav)
+        if r:
+            return {"id": v["id"], "name": Path(v["path"]).name, **r}
+    return None
 
 
 def ultimo_lancio() -> dict | None:

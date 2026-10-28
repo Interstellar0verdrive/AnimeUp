@@ -1,6 +1,7 @@
 #if DEBUG
 import AppKit
 import DesignSystem
+import Models
 import SwiftUI
 
 /// Debug only: `ANIMEUP_SNAPSHOT=/path/shot` writes PNGs of the main window
@@ -46,6 +47,10 @@ enum DebugSnapshot {
                 model.jobRunning = true
                 render(SettingsPage(tab: .output).environment(model), width: 640, "\(base)-settings-output-locked.png")
                 model.jobRunning = false
+                let json = #"{"id":"x","name":"Morevna Ep2 [480p].mkv","model":"cugan","values":{"height":1440,"crf":16}}"#
+                model.pausedRecipe = try? JSONDecoder().decode(QueueProgress.Recipe.self, from: Data(json.utf8))
+                render(SettingsPage(tab: .output).environment(model), width: 640, "\(base)-settings-output-paused.png")
+                model.pausedRecipe = nil
                 var fake = model.tools2
                 model.tools2.rows = [.init(key: "ffmpeg", state: .done, bytes: 38_000_000, total: 38_000_000),
                                      .init(key: "realesrgan", state: .running, bytes: 30_000_000, total: 46_000_000),
@@ -91,7 +96,8 @@ enum DebugSnapshot {
                 model.calRun = nil
                 render(CalibrationSheet().environment(model), width: 540, "\(base)-k1-intro.png")
                 if var fake = real {
-                    fake.running = true; fake.state = "running"; fake.index = 4; fake.fraction = 0.38; fake.left = 360
+                    fake.running = true; fake.state = "running"; fake.index = 7; fake.fraction = 0.38; fake.left = 360
+                    fake.stepStarted = fake.steps.indices.map { $0 <= 7 ? 1000 + Double($0 * $0) * 9 : nil }
                     model.calRun = fake
                     render(CalibrationSheet().environment(model), width: 540, "\(base)-k1-running.png")
                     fake.running = false; fake.state = "failed"; fake.index = 4
