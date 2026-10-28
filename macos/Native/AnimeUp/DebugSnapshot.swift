@@ -118,6 +118,14 @@ enum DebugSnapshot {
                 try? await Task.sleep(for: .seconds(1))
                 log.info("compare clips: \(model.cmp.clips.count) error=\(model.cmp.scanError ?? "-")")
                 renderPage(CompareView(), model, "\(base)-cmp-clips.png")
+                // ScrollView content doesn't reach ImageRenderer: the grid on its own.
+                renderPage(VStack(alignment: .leading, spacing: 12) {
+                    StepIndicator(step: .clips)
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4), spacing: 12) {
+                        ForEach(model.cmp.clips) { ClipCard(clip: $0) }
+                    }
+                    Spacer()
+                }.padding(28), model, "\(base)-cmp-grid.png")
                 model.goToModels()
                 for _ in 0..<30 where model.cmp.models == nil { try? await Task.sleep(for: .milliseconds(500)) }
                 model.cmp.chosenModels = ["animevideov3"]

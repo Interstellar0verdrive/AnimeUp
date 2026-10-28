@@ -237,6 +237,7 @@ struct CompareModelsStep: View {
                 HStack(alignment: .top, spacing: 12) {
                     ForEach(m.models) { card in ModelCard(card: card, recommended: card.key == m.recommended) }
                 }
+                .fixedSize(horizontal: false, vertical: true)
                 Toggle(isOn: Binding(get: { model.cmp.includeOriginal }, set: { model.cmp.includeOriginal = $0 })) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(model.t("nat.cmp.include_original")).font(.system(size: 13, weight: .medium))
