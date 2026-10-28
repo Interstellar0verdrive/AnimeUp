@@ -196,58 +196,105 @@ struct JobCompleted: View {
     }
 }
 
-/// O5: the sheet when the queue ends.
+/// O5: the sheet when the queue ends (edge.py).
 struct FinishedSheet: View {
     @Environment(AppModel.self) private var model
 
+    private struct Row: Identifiable {
+        var id: String { name }
+        var name: String
+        var state: String          // done | warn | failed | stopped | skipped
+        var warnings: [String] = []
+        var seconds: Double?
+        var file: QueueFile?
+    }
+
+    private var rows: [Row] {
+        let l = model.finished ?? [:]
+        func names(_ k: String) -> [String] { l[k]?.array.compactMap(\.string) ?? [] }
+        var out: [Row] = []
+        for n in names("expected") + names("succeeded") where !out.contains(where: { $0.name == n }) {
+            let f = model.files.first { $0.name == n }
+            let job = f.flatMap { model.job($0.id) }
+            let state: String
+            if names("succeeded").contains(n) { state = (job?.warnings ?? []).isEmpty ? "done" : "warn" }
+            else if names("failed").contains(n) || names("defective_outputs").contains(n) { state = "failed" }
+            else if names("interrupted").contains(n) { state = "stopped" }
+            else if names("skipped").contains(n) { state = "skipped" }
+            else { state = "done" }
+            out.append(Row(name: n, state: state, warnings: job?.warnings ?? [], seconds: job?.seconds, file: f))
+        }
+        return out
+    }
+
     var body: some View {
         let l = model.finished ?? [:]
-        let ok = l["succeeded"]?.array.compactMap(\.string) ?? []
-        let failed = l["failed"]?.array.compactMap(\.string) ?? []
-        let stopped = l["interrupted"]?.array.compactMap(\.string) ?? []
-        let skipped = l["skipped"]?.array.compactMap(\.string) ?? []
-        let seconds = l["seconds"]?.number ?? ((l["ended"]?.number ?? 0) - (l["started"]?.number ?? 0))
-        let allGood = failed.isEmpty && stopped.isEmpty
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 12) {
-                Image(systemName: allGood ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                    .font(.system(size: 28)).foregroundStyle(allGood ? AU.greenText : AU.yellow)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(model.t(allGood ? "nat.fin.title_ok" : "nat.fin.title_some")).font(.system(size: 17, weight: .bold))
-                    Text(model.t("nat.fin.time", ["time": Fmt.span(max(60, seconds))])).auSmall()
+        let rows = rows
+        let done = rows.filter { $0.state == "done" || $0.state == "warn" }.count
+        let bad = rows.filter { $0.state == "failed" || $0.state == "stopped" }.count
+        let seconds = (l["ended"]?.number ?? 0) - (l["started"]?.number ?? 0)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                Image(systemName: bad == 0 ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                    .font(.system(size: 18)).foregroundStyle(bad == 0 ? AU.green : AU.yellow)
+                Text(model.t("nat.fin.title")).font(.system(size: 15, weight: .semibold))
+                Spacer()
+                Text(model.t("nat.fin.in_all", ["time": Fmt.span(max(60, seconds))])).font(.system(size: 12)).foregroundStyle(AU.text2)
+            }
+            Text(model.t("nat.fin.summary", ["done": done, "n": rows.count])
+                 + (bad > 0 ? " " + model.localizer.tn("nat.fin.summary_bad", bad) : ""))
+                .auSmall().fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 2) {
+                ForEach(rows) { r in
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(r.name).font(.system(size: 12, weight: .medium)).lineLimit(1).truncationMode(.middle)
+                            if let w = r.warnings.first { Text(w).font(.system(size: 12)).foregroundStyle(AU.yellowText).lineLimit(1) }
+                            if r.state == "failed" { Text(model.t("nat.fin.failed_line")).font(.system(size: 12)).foregroundStyle(AU.redText) }
+                        }
+                        Spacer()
+                        chip(r)
+                        Text(r.seconds.map { Self.duration($0) } ?? "—").font(.system(size: 11.5, design: .monospaced))
+                            .foregroundStyle(AU.text2).frame(width: 70, alignment: .trailing)
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(RoundedRectangle(cornerRadius: 7).fill(r.state == "failed" ? AU.redSoft : .clear))
                 }
             }
-            VStack(alignment: .leading, spacing: 6) {
-                ForEach(ok, id: \.self) { row($0, "checkmark", AU.greenText, nil) }
-                ForEach(stopped, id: \.self) { row($0, "pause.fill", AU.yellowText, model.t("nat.fin.stopped")) }
-                ForEach(failed, id: \.self) { row($0, "exclamationmark.octagon.fill", AU.redText, model.t("nat.fin.failed")) }
-                ForEach(skipped, id: \.self) { row($0, "minus", AU.text3, model.t("nat.fin.skipped")) }
-            }
-            .padding(12)
-            .background(RoundedRectangle(cornerRadius: AU.Radius.field).fill(AU.inset))
-            Text(model.t("nat.fin.next_to")).auSmall()
-            HStack {
+            HStack(spacing: 8) {
+                Button { model.openLog(model.configuration.stateFolder.appendingPathComponent("records/queue.log").path) } label: {
+                    Label(model.t("nat.btn.show_log"), systemImage: "doc.text")
+                }
+                .auButton(.plain, .regular)
                 Spacer()
-                Button(model.t("nat.fin.show_finder")) {
-                    let urls = model.files.compactMap { model.job($0.id)?.output }.map { URL(fileURLWithPath: $0) }
+                Button(model.t("nat.menu.show_in_finder")) {
+                    let urls = rows.compactMap { $0.file.flatMap { model.job($0.id)?.output } }.map { URL(fileURLWithPath: $0) }
                     if !urls.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(urls) }
                 }
-                .auButton(.secondary, .large)
-                Button(model.t("nat.btn.ok")) { model.markFinishedSeen() }.auButton(.primary, .large)
+                .auButton(.secondary, .regular)
+                Button(model.t("nat.cal.close")) { model.markFinishedSeen() }.auButton(.primary, .regular)
                     .keyboardShortcut(.defaultAction)
             }
         }
-        .padding(24)
-        .frame(width: 480)
+        .padding(20)
+        .frame(width: 640)
         .background(AU.bg)
     }
 
-    private func row(_ name: String, _ symbol: String, _ color: Color, _ tag: String?) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: symbol).font(.system(size: 10, weight: .semibold)).foregroundStyle(color).frame(width: 14)
-            Text(name).font(.system(size: 12, weight: .medium)).lineLimit(1).truncationMode(.middle)
-            Spacer()
-            if let tag { Text(tag).font(AUFont.smallNumbers).foregroundStyle(color) }
+    @ViewBuilder
+    private func chip(_ r: Row) -> some View {
+        switch r.state {
+        case "done": StatusChip(model.t("nat.chip.done"), tone: .green, symbol: "checkmark")
+        case "warn": StatusChip(model.localizer.tn("nat.chip.done_warn", r.warnings.count), tone: .yellow, symbol: "exclamationmark.triangle.fill")
+        case "failed": StatusChip(model.t("nat.chip.failed"), tone: .red)
+        case "stopped": StatusChip(model.t("nat.chip.stopped"), tone: .red)
+        default: StatusChip(model.t("nat.fin.skipped"))
         }
+    }
+
+    /// 24m 10s / 1h 52m
+    static func duration(_ s: Double) -> String {
+        let t = Int(s.rounded())
+        return t >= 3600 ? "\(t / 3600)h \(String(format: "%02d", (t % 3600) / 60))m" : "\(t / 60)m \(String(format: "%02d", t % 60))s"
     }
 }

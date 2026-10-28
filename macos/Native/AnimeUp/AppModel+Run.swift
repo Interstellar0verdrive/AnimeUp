@@ -29,6 +29,9 @@ extension AppModel {
 
     func job(_ id: String) -> QueueProgress.Job? { progress.files[id] }
 
+    /// The first queued file of the run (it starts after the rest between files).
+    var nextQueuedId: String? { (progress.queue.ids ?? []).first { job($0)?.state == .queued } }
+
     var queueTicked: [String] { files.filter { isTicked($0) && job($0.id)?.state != .done }.map(\.id) }
 
     // MARK: commands
@@ -114,6 +117,15 @@ extension AppModel {
         }
         _ = sem.wait(timeout: .now() + 3)
         return true
+    }
+
+    func quitApp() {
+        let sheetOpen = showFinished || showCalibration || cmp.showUseMany
+        showFinished = false
+        showCalibration = false
+        cmp.showUseMany = false
+        for w in NSApp.windows { if let sheet = w.attachedSheet { w.endSheet(sheet) } }
+        DispatchQueue.main.asyncAfter(deadline: .now() + (sheetOpen ? 0.35 : 0)) { NSApp.terminate(nil) }
     }
 
     // MARK: end of queue (M6)

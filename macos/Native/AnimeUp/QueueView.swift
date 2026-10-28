@@ -353,7 +353,12 @@ struct QueueRow: View {
             switch j.state {
             case .running: StatusChip(model.t("nat.chip.in_progress"), tone: .accent)
             case .paused: StatusChip(model.t("nat.chip.paused"), tone: .yellow, symbol: "pause.fill")
-            case .queued: StatusChip(model.t("nat.chip.queued"))
+            case .queued:
+                if let until = model.progress.queue.restingUntil, model.nextQueuedId == file.id {
+                    StatusChip(model.t("nat.chip.next", ["time": model.clockTime(until)]), tone: .accent)
+                } else {
+                    StatusChip(model.t("nat.chip.queued"))
+                }
             case .done:
                 if (j.warnings ?? []).isEmpty {
                     StatusChip(model.t("nat.chip.done"), tone: .green, symbol: "checkmark")
@@ -815,8 +820,11 @@ struct RunningBar: View {
             VStack(alignment: .leading, spacing: 3) {
                 if let until = q.restingUntil {
                     TimelineView(.periodic(from: .now, by: 1)) { ctx in
-                        Text(model.t("nat.run.rest_line", ["i": min((q.position ?? 1) + 1, q.total ?? 1), "n": q.total ?? 1,
-                                                          "t": Fmt.elapsed(until - ctx.date.timeIntervalSince1970)]))
+                        Label {
+                            Text(model.t("nat.run.rest_line", ["i": min((q.position ?? 1) + 1, q.total ?? 1), "n": q.total ?? 1,
+                                                              "t": Fmt.elapsed(until - ctx.date.timeIntervalSince1970)]))
+                        } icon: { Image(systemName: "cup.and.saucer") }
+                        .labelStyle(SmallIconLabel())
                             .font(.system(size: 13, weight: .semibold)).foregroundStyle(AU.text)
                     }
                     Text(model.t("nat.run.rest_note")).font(.system(size: 12)).foregroundStyle(AU.text2)

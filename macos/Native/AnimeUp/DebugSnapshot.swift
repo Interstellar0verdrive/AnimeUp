@@ -86,6 +86,32 @@ enum DebugSnapshot {
                 renderQueue(model, "\(base)-queue-ready-it.png")
                 model.localizer.setLanguage(model.settings?.language ?? "en")
             }
+            if env["ANIMEUP_SNAPSHOT_SHEETS"] == "1" {
+                let real = try? await model.engine.calibrationRun()
+                model.calRun = nil
+                render(CalibrationSheet().environment(model), width: 540, "\(base)-k1-intro.png")
+                if var fake = real {
+                    fake.running = true; fake.state = "running"; fake.index = 4; fake.fraction = 0.38; fake.left = 360
+                    model.calRun = fake
+                    render(CalibrationSheet().environment(model), width: 540, "\(base)-k1-running.png")
+                    fake.running = false; fake.state = "failed"; fake.index = 4
+                    model.calRun = fake
+                    render(CalibrationSheet().environment(model), width: 540, "\(base)-k2-failed.png")
+                }
+                var done = real
+                done?.seen = nil; done?.state = "done"; done?.running = false
+                model.calRun = done
+                render(CalibrationSheet().environment(model), width: 540, "\(base)-k2-finished.png")
+                model.calRun = real
+                if let r = try? await model.engine.lastLaunch() { model.finished = r.launch }
+                render(FinishedSheet().environment(model), width: 640, "\(base)-o5-finished.png")
+                if env["ANIMEUP_SNAPSHOT_QUITSHEET"] == "1" {
+                    model.showFinished = true
+                    try? await Task.sleep(for: .seconds(2))
+                    log.info("quit test: sheet open, calling quitApp")
+                    model.quitApp()
+                }
+            }
             if env["ANIMEUP_SNAPSHOT_K2"] == "1" {
                 model.calRun = try? await model.engine.calibrationRun()
                 render(CalibrationSheet().environment(model), width: 520, "\(base)-cal-results.png")
@@ -281,7 +307,8 @@ enum DebugSnapshot {
     }
 
     static func render<V: View>(_ view: V, width: CGFloat, _ path: String) {
-        let renderer = ImageRenderer(content: view.frame(width: width).environment(\.colorScheme, .dark))
+        let renderer = ImageRenderer(content: view.frame(width: width).environment(\.colorScheme, .dark)
+            .environment(\.auNoScroll, true))
         renderer.scale = 2
         if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
            let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {

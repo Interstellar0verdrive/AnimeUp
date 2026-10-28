@@ -176,7 +176,7 @@ struct QueueCard: View {
         let total = Double(max(1, q.total ?? 1))
         let fraction = (Double(max(0, (q.position ?? 1) - 1)) + (live?.fraction ?? 0)) / total
         if let until = q.restingUntil {
-            ActivityCard(kind: model.t("nat.run.card_rest"),
+            ActivityCard(kind: model.t("nat.run.card_rest"), symbol: "cup.and.saucer",
                          line: Text(model.t("nat.run.rest_line", ["i": min((q.position ?? 1) + 1, q.total ?? 1), "n": q.total ?? 1,
                                                                  "t": Fmt.elapsed(until - Date().timeIntervalSince1970)])),
                          fraction: fraction) {

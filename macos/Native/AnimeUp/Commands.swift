@@ -8,6 +8,12 @@ struct AppCommands: Commands {
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
+        // ⌘Q also when a sheet is open: close the sheets first, then quit
+        // (the O1 alert still comes when a job runs).
+        CommandGroup(replacing: .appTermination) {
+            Button(model.t("nat.menu.quit")) { model.quitApp() }
+                .keyboardShortcut("q", modifiers: .command)
+        }
         CommandGroup(after: .appInfo) {
             Button(model.t("nat.menu.check_updates")) { model.checkForUpdates() }
             Button(model.t("nat.menu.calibrate")) { model.calibrate() }

@@ -244,6 +244,7 @@ struct YourVideosCard: View {
                     HStack(spacing: 5) { Text(model.t("nat.start.next_compare")); Image(systemName: "arrow.right") }
                 }
                 .auButton(.primary, .regular)
+                .disabled(!model.files.contains { $0.state == .ready })
             }
         }
     }

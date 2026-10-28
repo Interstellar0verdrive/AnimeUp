@@ -468,15 +468,19 @@ public struct ActivityCard<Buttons: View>: View {
     var leading: AnyView
     @ViewBuilder var buttons: () -> Buttons
 
-    public init(kind: String, line: Text, fraction: Double?, footnote: String? = nil,
+    public init(kind: String, symbol: String? = nil, line: Text, fraction: Double?, footnote: String? = nil,
                 paused: Bool = false, @ViewBuilder buttons: @escaping () -> Buttons) {
         self.kind = kind
         self.line = line
         self.fraction = fraction
         self.footnote = footnote
-        self.leading = paused
-            ? AnyView(Image(systemName: "pause.fill").font(.system(size: 9)))
-            : AnyView(Spinner(size: 11))
+        if let symbol {
+            self.leading = AnyView(Image(systemName: symbol).font(.system(size: 11)))
+        } else {
+            self.leading = paused
+                ? AnyView(Image(systemName: "pause.fill").font(.system(size: 9)))
+                : AnyView(Spinner(size: 11))
+        }
         self.buttons = buttons
     }
 
