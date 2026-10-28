@@ -18,7 +18,7 @@ enum DebugSnapshot {
                     if model.showsToolsWindow {
                         n += 1
                         render(ToolsSetupView().environment(model), width: 600, "\(base)-tools-live-\(n).png")
-                        log.info("tools window: \(String(describing: model.tools2.rows), privacy: .public)")
+                        log.info("tools window: \(String(describing: model.tools2.rows))")
                     } else if n > 0 {
                         renderComposite(model, "\(base)-after-tools.png")
                         break
@@ -86,6 +86,26 @@ enum DebugSnapshot {
                 renderQueue(model, "\(base)-queue-ready-it.png")
                 model.localizer.setLanguage(model.settings?.language ?? "en")
             }
+            if let name = env["ANIMEUP_SNAPSHOT_RUN"], let f = model.files.first(where: { $0.name.contains(name) }) {
+                await runScenario(model, f.id, base)
+            }
+            if env["ANIMEUP_SNAPSHOT_CAL"] == "1" {
+                model.showCalibration = true
+                render(CalibrationSheet().environment(model), width: 520, "\(base)-cal-intro.png")
+                model.startCalibration()
+                for _ in 0..<40 {
+                    try? await Task.sleep(for: .seconds(1))
+                    if let r = model.calRun, r.running, (r.index ?? 0) >= 1 { break }
+                }
+                render(CalibrationSheet().environment(model), width: 520, "\(base)-cal-running.png")
+                renderQueue(model, "\(base)-cal-sidebar.png")
+                log.info("calibration run: \(String(describing: model.calRun))")
+                model.stopCalibration()
+                try? await Task.sleep(for: .seconds(3))
+                log.info("calibration after stop: \(String(describing: model.calRun))")
+                render(CalibrationSheet().environment(model), width: 520, "\(base)-cal-stopped.png")
+                model.showCalibration = false
+            }
             if env["ANIMEUP_SNAPSHOT_TABS"] == "1" {
                 model.localizer.setLanguage("it")
                 try? await Task.sleep(for: .seconds(1))
@@ -142,6 +162,36 @@ enum DebugSnapshot {
         }
     }
 
+    /// Start → pause → resume → stop → resume → done, with renders.
+    static func runScenario(_ model: AppModel, _ id: String, _ base: String) async {
+        func wait(_ what: String, _ limit: Int, _ cond: () -> Bool) async {
+            for _ in 0..<limit where !cond() { try? await Task.sleep(for: .seconds(1)) }
+            log.info("scenario \(what): \(String(describing: model.job(id)))")
+        }
+        model.tab = .queue
+        model.expanded = id
+        model.panelTab = .processing
+        try? await model.engine.queueStart([id])
+        await wait("running", 120) { model.job(id)?.stage == "upscale" && (model.job(id)?.framesDone ?? 0) > 20 && model.job(id)?.state == .running }
+        renderQueue(model, "\(base)-run-running.png")
+        model.command("queue.pause")
+        await wait("paused", 20) { model.job(id)?.state == .paused }
+        renderQueue(model, "\(base)-run-paused.png")
+        model.command("queue.resume")
+        await wait("resumed", 60) { model.job(id)?.state == .running && model.job(id)?.stage == "upscale" }
+        model.command("queue.stop", id: id)
+        await wait("stopped", 60) { model.job(id)?.state == .interrupted && !model.progress.queue.running }
+        renderQueue(model, "\(base)-run-interrupted.png")
+        model.showFinished = false
+        model.command("job.resume", id: id)
+        await wait("resumed job", 30) { model.job(id)?.state == .running }
+        await wait("done", 900) { model.job(id)?.state == .done }
+        try? await Task.sleep(for: .seconds(3))
+        renderQueue(model, "\(base)-run-done.png")
+        render(FinishedSheet().environment(model), width: 480, "\(base)-run-finished.png")
+        log.info("scenario finished sheet: \(String(describing: model.finished))")
+    }
+
     static func render<V: View>(_ view: V, width: CGFloat, _ path: String) {
         let renderer = ImageRenderer(content: view.frame(width: width).environment(\.colorScheme, .dark))
         renderer.scale = 2
@@ -181,7 +231,7 @@ enum DebugSnapshot {
         view.cacheDisplay(in: view.bounds, to: rep)
         if let png = rep.representation(using: .png, properties: [:]) {
             try? png.write(to: URL(fileURLWithPath: path))
-            log.info("snapshot \(path, privacy: .public)")
+            log.info("snapshot \(path)")
         }
     }
 }

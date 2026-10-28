@@ -4,7 +4,31 @@ import Models
 import Observation
 import OSLog
 
-let log = Logger(subsystem: "io.github.interstellar0verdrive.animeup", category: "app")
+/// The app's log: the unified log plus `<state>/records/app.log` (one line per
+/// entry), so it can be read without Console.
+struct AppLog: @unchecked Sendable {
+    private let logger = Logger(subsystem: "io.github.interstellar0verdrive.animeup", category: "app")
+    private let lock = NSLock()
+    var file: URL?
+
+    func info(_ s: String) { write("INFO", s); logger.info("\(s, privacy: .public)") }
+    func error(_ s: String) { write("ERROR", s); logger.error("\(s, privacy: .public)") }
+    func debug(_ s: String) { logger.debug("\(s, privacy: .public)") }
+
+    private func write(_ level: String, _ s: String) {
+        guard let file else { return }
+        lock.lock(); defer { lock.unlock() }
+        let line = "\(ISO8601DateFormatter().string(from: Date())) \(level) \(s)\n"
+        if let h = try? FileHandle(forWritingTo: file) {
+            h.seekToEndOfFile(); h.write(Data(line.utf8)); try? h.close()
+        } else {
+            try? FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try? Data(line.utf8).write(to: file)
+        }
+    }
+}
+
+nonisolated(unsafe) var log = AppLog()
 
 enum Tab: String, CaseIterable, Identifiable {
     case start, compare, queue
@@ -47,6 +71,13 @@ final class AppModel {
     var panelTab: PanelTab = .analysis
     var alert: AppAlert?
     var undoRemoved: [QueueFile] = []
+    // Queue run (M5–M7)
+    var progress = QueueProgress()
+    var calRun: CalibrationRun?
+    var showCalibration = false
+    var finished: [String: JSONValue]?
+    var showFinished = false
+    @ObservationIgnored var lastJobStates: [String: QueueProgress.Job.State] = [:]
     // Plans (M4)
     var plans: [String: FilePlan] = [:]
     var calibratedWhen: Double?
@@ -79,7 +110,8 @@ final class AppModel {
         engine = EngineClient(configuration: configuration)
         let firstLanguage = Self.savedLanguage(in: configuration.stateFolder) ?? Localizer.systemLanguage()
         localizer = Localizer(folder: configuration.localesFolder, language: firstLanguage)
-        log.info("code \(self.configuration.codeFolder.path, privacy: .public), state \(self.configuration.stateFolder.path, privacy: .public)")
+        log.file = configuration.stateFolder.appendingPathComponent("records/app.log")
+        log.info("code \(self.configuration.codeFolder.path), state \(self.configuration.stateFolder.path)")
     }
 
     static var appVersion: String {
@@ -105,7 +137,7 @@ final class AppModel {
             enginePID = await engine.pid
             await loadAll(firstRun: true)
         } catch {
-            log.error("engine start failed: \(String(describing: error), privacy: .public)")
+            log.error("engine start failed: \(String(describing: error))")
             status = .failed(String(describing: error))
         }
     }
@@ -124,7 +156,7 @@ final class AppModel {
         do {
             let h = try await engine.hello()
             hello = h
-            log.info("engine \(h.version, privacy: .public) (python \(h.python, privacy: .public), pid \(h.pid))")
+            log.info("engine \(h.version) (python \(h.python), pid \(h.pid))")
             if firstRun, Self.savedLanguage(in: configuration.stateFolder) == nil {
                 // First launch: the language follows macOS (English or Italian).
                 settings = try? await engine.setSettings(["language": localizer.language])
@@ -144,13 +176,16 @@ final class AppModel {
             defaults = try? await engine.defaults()
             updates = try? await engine.updatesState()
             await refreshFiles()
+            if let p = try? await engine.queueStatus() { applyProgress(p) }
+            calRun = try? await engine.calibrationRun()
             decideTools(tools)
             status = .ready
+            if firstRun { afterLaunch() }
         } catch EngineError.terminated {
             // A crash while loading: the restart's `engine.started` reloads.
             log.error("engine stopped while loading")
         } catch {
-            log.error("engine load failed: \(String(describing: error), privacy: .public)")
+            log.error("engine load failed: \(String(describing: error))")
             status = .failed(String(describing: error))
         }
     }
@@ -170,18 +205,26 @@ final class AppModel {
                     await loadAll()
                 }
             case "engine.exited":
-                log.info("engine exited: \(String(data: event.data, encoding: .utf8) ?? "", privacy: .public)")
+                log.info("engine exited: \(String(data: event.data, encoding: .utf8) ?? "")")
             case "engine.gave_up":
                 status = .gaveUp
             case "tools.progress":
                 if let p = try? event.decode(ToolProgress.self) { toolProgress(p) }
             case "tools.done":
                 await toolsFinished()
+            case "queue.progress":
+                if let p = try? event.decode(QueueProgress.self) { applyProgress(p) }
+            case "queue.finished":
+                if let r = try? event.decode(LaunchRecord.self) { queueFinished(r.launch) }
+            case "calibration.progress":
+                if let c = try? event.decode(CalibrationRun.self) { calRun = c }
+            case "calibration.changed":
+                if let c = try? event.decode(CalibrationState.self) { calibration = c; await refreshPlans() }
             case "file.added", "files.changed", "analysis.started", "analysis.done",
                  "analysis.failed", "analysis.progress":
                 scheduleFilesRefresh()
             default:
-                log.debug("event \(event.name, privacy: .public)")
+                log.debug("event \(event.name)")
             }
         }
     }
@@ -206,11 +249,6 @@ final class AppModel {
 
     func setSpace(_ gb: Int) {
         Task { settings = try? await engine.setSettings(["disk_gb": gb]) }
-    }
-
-    func calibrate() {
-        // M1: the calibration sheet comes in a later milestone.
-        log.info("Calibrate pressed (calibration sheet: later milestone)")
     }
 
     func checkForUpdates() {

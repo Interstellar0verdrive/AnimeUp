@@ -29,6 +29,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from functools import cache
@@ -399,6 +400,144 @@ def _files_set(params: dict) -> dict:
     return elenco().scegli(_ids(params), **scelte)
 
 
+# --- la coda delle lavorazioni -------------------------------------------
+
+def _coda():
+    from . import coda
+    return coda
+
+
+def _voce(ident: object) -> dict:
+    v = next((v for v in elenco().voci() if v["id"] == ident), None)
+    if v is None:
+        raise ErroreMetodo("not_found", f"no file with id {ident!r}")
+    return v
+
+
+def _comando(funzione, *args) -> dict:
+    c = _coda()
+    try:
+        esito = funzione(*args)
+    except c.ErroreCoda as exc:
+        raise ErroreMetodo(exc.codice, str(exc)) from exc
+    _emetti_progresso(forza=True)
+    return esito
+
+
+def _queue_start(params: dict) -> dict:
+    ids = _ids(params)
+    voci = [v for v in elenco().voci() if v["id"] in set(ids)]
+    voci.sort(key=lambda v: ids.index(v["id"]))
+    return _comando(_coda().avvia, voci)
+
+
+def _queue_status(_params: dict) -> dict:
+    return _coda().stato(elenco().voci())
+
+
+_ultimo_progresso: dict = {"testo": None, "in_corso": False}
+_progresso_lock = threading.Lock()
+
+
+def _emetti_progresso(forza: bool = False) -> None:
+    """`queue.progress` se qualcosa e' cambiato (o `forza`); `queue.finished`
+    quando un lancio finisce."""
+    with _progresso_lock:
+        try:
+            st = _coda().stato(elenco().voci())
+        except Exception:  # noqa: BLE001
+            traceback.print_exc(file=sys.stderr)
+            return
+        testo = json.dumps({k: v for k, v in st.items() if k != "now"}, sort_keys=True, default=str)
+        in_corso = bool(st["queue"].get("running"))
+        if forza or testo != _ultimo_progresso["testo"] or in_corso:
+            _emetti("queue.progress", st)
+        if _ultimo_progresso["in_corso"] and not in_corso:
+            _emetti("queue.finished", _queue_last({}))
+        _ultimo_progresso["testo"] = testo
+        _ultimo_progresso["in_corso"] = in_corso
+
+
+def _osservatore() -> None:
+    while True:
+        time.sleep(1.0)
+        if _elenco is not None:
+            _emetti_progresso()
+        _emetti_calibrazione()
+
+
+def _calibration_status(_params: dict) -> dict:
+    from . import taratura
+    fondo = taratura.stato_fondo() or {}
+    fuori = {k: fondo.get(k) for k in ("state", "started", "index", "total", "fraction", "left",
+                                       "label", "error", "seen", "ended")}
+    fuori["steps"] = [s[0] if isinstance(s, (list, tuple)) else s for s in (fondo.get("steps") or [])]
+    fuori["running"] = taratura.in_corso() or fondo.get("state") == taratura.IN_CORSO
+    fuori["log"] = str(PATHS.cache / "calibration.log")
+    prima, nuova = fondo.get("previous") or {}, fondo.get("new") or {}
+    righe = []
+    from .models import CATALOG
+    for chiave in CATALOG:
+        def fps(voce):
+            try:
+                v = (voce.get("mpxs") or {}).get(chiave, {}).get("2")
+                return round(float(v) / _MPX_540, 2) if v else None
+            except (AttributeError, TypeError, ValueError):
+                return None
+        righe.append({"key": chiave, "before": fps(prima), "now": fps(nuova)})
+    fuori["table"] = righe
+    return fuori
+
+
+def _calibration_start(_params: dict) -> dict:
+    from . import taratura
+    from . import coda
+    if coda.occupata() == "running":
+        raise ErroreMetodo("busy", "the queue is running")
+    if not taratura.avvia_fondo():
+        raise ErroreMetodo("busy", "a calibration is already running")
+    _emetti_calibrazione(forza=True)
+    return {"started": True}
+
+
+def _calibration_stop(_params: dict) -> dict:
+    from . import taratura
+    fermata = taratura.ferma_fondo()
+    _emetti_calibrazione(forza=True)
+    return {"stopped": fermata}
+
+
+def _calibration_seen(_params: dict) -> dict:
+    from . import taratura
+    s = taratura.stato_fondo() or {}
+    if s:
+        s["seen"] = True
+        taratura.scrivi_stato(s)
+    return {"ok": True}
+
+
+_ultima_cal: dict = {"testo": None}
+
+
+def _emetti_calibrazione(forza: bool = False) -> None:
+    try:
+        st = _calibration_status({})
+    except Exception:  # noqa: BLE001
+        return
+    testo = json.dumps(st, sort_keys=True, default=str)
+    if forza or testo != _ultima_cal["testo"]:
+        _emetti("calibration.progress", st)
+        if _ultima_cal["testo"] is not None and '"running": true' in _ultima_cal["testo"] and not st["running"]:
+            _emetti("calibration.changed", _calibration_state({}))
+    _ultima_cal["testo"] = testo
+
+
+def _queue_last(_params: dict) -> dict:
+    from . import su_disco
+    lancio = _coda().ultimo_lancio()
+    return {"launch": su_disco.in_inglese(lancio) if isinstance(lancio, dict) else None}
+
+
 METODI: dict[str, Callable[[dict], dict]] = {
     "hello": _hello,
     "version": _hello,
@@ -421,6 +560,20 @@ METODI: dict[str, Callable[[dict], dict]] = {
     "files.report": _files_report,
     "files.set": _files_set,
     "plans.get": _plans_get,
+    "queue.start": _queue_start,
+    "queue.status": _queue_status,
+    "queue.stop": lambda p: _comando(_coda().ferma_file, _voce(p.get("id"))),
+    "queue.stopAll": lambda p: _comando(_coda().ferma_tutto),
+    "queue.pause": lambda p: _comando(_coda().pausa),
+    "queue.resume": lambda p: _comando(_coda().riprendi_pausa),
+    "queue.startNow": lambda p: _comando(_coda().parti_ora),
+    "queue.last": _queue_last,
+    "calibration.status": _calibration_status,
+    "calibration.start": _calibration_start,
+    "calibration.stop": _calibration_stop,
+    "calibration.seen": _calibration_seen,
+    "job.resume": lambda p: _comando(_coda().riprendi, _voce(p.get("id"))),
+    "job.discard": lambda p: _comando(_coda().scarta, _voce(p.get("id"))),
 }
 
 
@@ -475,6 +628,9 @@ def esegui() -> int:
     global _uscita
     # Il protocollo su una copia di stdout; fd 1 diventa stderr.
     _uscita = os.fdopen(os.dup(1), "w", encoding="utf-8", buffering=1)
+    # I video finiti dell'app nativa vanno accanto agli originali (anche
+    # nei piani mostrati, che devono dire lo stesso nome e la stessa cartella).
+    os.environ.setdefault("ANIMEUP_ACCANTO", "1")
     os.dup2(2, 1)
     sys.stdout = sys.stderr
 
@@ -493,6 +649,9 @@ def esegui() -> int:
         risposta = gestisci(richiesta)
         if risposta is not None:
             _scrivi(risposta)
+
+    if os.environ.get("ANIMEUP_SERVE_WAIT") != "1":
+        threading.Thread(target=_osservatore, daemon=True, name="queue-watch").start()
 
     with ThreadPoolExecutor(max_workers=4, thread_name_prefix="serve") as pool:
         for riga in sys.stdin:

@@ -151,6 +151,13 @@ public actor EngineClient {
         if let height { params["height"] = height }
         _ = try await raw("files.set", params: params)
     }
+    public func queueStatus() async throws -> QueueProgress { try await call("queue.status") }
+    public func queueStart(_ ids: [String]) async throws { _ = try await raw("queue.start", params: ["ids": ids]) }
+    public func queueCommand(_ method: String, id: String? = nil) async throws {
+        if let id { _ = try await raw(method, params: ["id": id]) } else { _ = try await raw(method) }
+    }
+    public func lastLaunch() async throws -> LaunchRecord { try await call("queue.last") }
+    public func calibrationRun() async throws -> CalibrationRun { try await call("calibration.status") }
     public func updatesState() async throws -> UpdatesState { try await call("updates.state") }
     public func checkUpdates() async throws -> UpdatesState { try await call("updates.check") }
 

@@ -57,7 +57,7 @@ enum QueueColumns {
     static let length: CGFloat = 54
     static let status: CGFloat = 150
     static let model: CGFloat = 172
-    static let time: CGFloat = 84
+    static let time: CGFloat = 92
     static let chevron: CGFloat = 20
 }
 
@@ -203,6 +203,26 @@ struct QueueRow: View {
     var file: QueueFile
 
     private var open: Bool { model.expanded == file.id }
+    private var job: QueueProgress.Job? { model.job(file.id) }
+
+    private var fillMode: RowFill.Mode? {
+        switch job?.state {
+        case .running: .running
+        case .paused: .paused
+        case .done: (job?.warnings ?? []).isEmpty ? .done : .doneWarn
+        default: nil
+        }
+    }
+
+    private var borderColor: Color {
+        switch job?.state {
+        case .running: AU.softLine
+        case .paused: AU.yellowLine
+        case .done: (job?.warnings ?? []).isEmpty ? AU.greenLine : AU.yellowLine
+        case .interrupted: job?.defective == true ? AU.redLine : AU.line
+        default: AU.line
+        }
+    }
     private var selected: Bool { model.selection.contains(file.id) }
 
     var body: some View {
@@ -215,11 +235,24 @@ struct QueueRow: View {
             }
         }
         .background {
-            ZStack {
-                RoundedRectangle(cornerRadius: AU.Radius.card).fill(AU.surface)
+            ZStack(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: AU.Radius.card).fill(job?.state == .interrupted && job?.defective == true ? AU.redSoft : AU.surface)
                 if file.state == .analysing {
                     SlidingLight().clipShape(RoundedRectangle(cornerRadius: AU.Radius.card))
                 }
+                if let mode = fillMode {
+                    RowFill(fraction: job?.fraction ?? 1, mode: mode)
+                        .frame(height: 54)
+                        .clipShape(RoundedRectangle(cornerRadius: AU.Radius.card))
+                }
+            }
+        }
+        .overlay(alignment: .top) {
+            if let j = job, j.state == .running || j.state == .paused {
+                PiecedEdgeBar(fraction: j.fraction ?? 0, chunks: j.chunks ?? 1,
+                              color: j.state == .paused ? AU.yellow : AU.primary)
+                    .padding(.top, 50)
+                    .clipShape(RoundedRectangle(cornerRadius: AU.Radius.card))
             }
         }
         .overlay(alignment: .bottom) {
@@ -228,7 +261,7 @@ struct QueueRow: View {
             }
         }
         .overlay(RoundedRectangle(cornerRadius: AU.Radius.card)
-            .strokeBorder(selected ? AU.primary : AU.line, lineWidth: selected ? 1.5 : 1))
+            .strokeBorder(selected ? AU.primary : borderColor, lineWidth: selected ? 1.5 : 1))
         .contentShape(RoundedRectangle(cornerRadius: AU.Radius.card))
         .onTapGesture { click() }
         .contextMenu { menu }
@@ -244,6 +277,13 @@ struct QueueRow: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text(file.name).font(.system(size: 12.5, weight: .medium)).foregroundStyle(AU.text)
                     .lineLimit(1).truncationMode(.middle)
+                if let j = job, j.state == .running || j.state == .paused {
+                    HStack(spacing: 6) {
+                        Text(model.actionLine(j)).foregroundStyle(j.state == .paused ? AU.yellowText : AU.primaryText)
+                        Text(model.measures(j)).font(AUFont.smallNumbers)
+                    }
+                    .font(.system(size: 11)).foregroundStyle(AU.text3).lineLimit(1)
+                } else {
                 HStack(spacing: 5) {
                     if !file.warnings.isEmpty && file.state == .ready {
                         Label(model.localizer.tn("nat.queue.n_warnings", file.warnings.count),
@@ -254,6 +294,7 @@ struct QueueRow: View {
                     Text(detailLine).lineLimit(1).truncationMode(.tail)
                 }
                 .font(.system(size: 11)).foregroundStyle(AU.text3)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Text(verbatim: file.report.map { r -> String in "\(r.width)×\(r.height)" } ?? "—")
@@ -302,6 +343,29 @@ struct QueueRow: View {
 
     @ViewBuilder
     private var statusChip: some View {
+        if let j = job {
+            switch j.state {
+            case .running: StatusChip(model.t("nat.chip.in_progress"), tone: .accent)
+            case .paused: StatusChip(model.t("nat.chip.paused"), tone: .yellow, symbol: "pause.fill")
+            case .queued: StatusChip(model.t("nat.chip.queued"))
+            case .done:
+                if (j.warnings ?? []).isEmpty {
+                    StatusChip(model.t("nat.chip.done"), tone: .green, symbol: "checkmark")
+                } else {
+                    StatusChip(model.localizer.tn("nat.chip.done_warn", j.warnings?.count ?? 0), tone: .yellow,
+                               symbol: "exclamationmark.triangle.fill")
+                }
+            case .interrupted:
+                if j.defective == true { StatusChip(model.t("nat.chip.failed"), tone: .red, symbol: "exclamationmark.octagon.fill") }
+                else { StatusChip(model.t("nat.chip.interrupted"), tone: .yellow) }
+            }
+        } else {
+            plainStatusChip
+        }
+    }
+
+    @ViewBuilder
+    private var plainStatusChip: some View {
         switch file.state {
         case .analysing:
             TimelineView(.periodic(from: .now, by: 1)) { ctx in
@@ -331,7 +395,22 @@ struct QueueRow: View {
 
     @ViewBuilder
     private var modelColumn: some View {
-        if file.state == .ready, let p = model.plan(file.id), let current = p.model {
+        if let j = job, j.state == .running || j.state == .paused {
+            HStack {
+                Spacer()
+                Button { model.confirmStop(file.id) } label: { Label(model.t("nat.run.stop"), systemImage: "stop.fill") }
+                    .auButton(.secondary, .small)
+            }
+        } else if let j = job, j.state == .interrupted, !model.progress.queue.running {
+            HStack(spacing: 6) {
+                Spacer()
+                Button(model.t("nat.run.resume")) { model.command("job.resume", id: file.id) }.auButton(.secondary, .small)
+                Button(model.t("nat.run.discard")) { model.confirmDiscard(file.id) }.auButton(.destructive, .small)
+            }
+            .opacity(j.defective == true ? 1 : 1)
+        } else if let j = job, j.state == .done || j.state == .queued {
+            Text(model.shortModel(model.plan(file.id)?.model ?? "")).font(.system(size: 12)).foregroundStyle(AU.text2)
+        } else if file.state == .ready, let p = model.plan(file.id), let current = p.model {
             Menu {
                 ForEach(p.models ?? []) { opt in
                     Button { model.chooseModel(opt.key, for: [file.id]) } label: {
@@ -365,7 +444,16 @@ struct QueueRow: View {
 
     @ViewBuilder
     private var timeColumn: some View {
-        if let p = model.plan(file.id), let e = p.estimate {
+        if let j = job, j.state == .running || j.state == .paused {
+            Text(verbatim: "\(Int(((j.fraction ?? 0) * 100).rounded()))%").font(AUFont.numbers)
+                .foregroundStyle(j.state == .paused ? AU.yellowText : AU.primaryText)
+        } else if let j = job, j.state == .done {
+            Text(verbatim: Fmt.span(j.seconds ?? 0)).font(AUFont.numbers).foregroundStyle(AU.textCode)
+        } else if let j = job, j.state == .interrupted {
+            Text(model.t("nat.run.stopped_at", ["pct": Int(((j.fraction ?? 0) * 100).rounded())]))
+                .font(AUFont.smallNumbers).foregroundStyle(j.defective == true ? AU.redText : AU.yellowText)
+                .lineLimit(1).fixedSize()
+        } else if let p = model.plan(file.id), let e = p.estimate {
             HStack(spacing: 4) {
                 Text(verbatim: Fmt.estimate(e)).font(AUFont.numbers).foregroundStyle(AU.textCode)
                     .lineLimit(1).fixedSize()
@@ -464,12 +552,20 @@ struct FilePanel: View {
                 .pickerStyle(.segmented).labelsHidden().fixedSize()
                 Spacer()
                 dedup
+                if let log = model.job(file.id)?.log {
+                    UnderlineLink(model.t("nat.btn.show_log"), tone: .neutral) { model.openLog(log) }
+                }
                 Button { model.reanalyse([file.id]) } label: { Label(model.t("nat.menu.reanalyse"), systemImage: "arrow.clockwise") }
                     .auButton(.secondary, .small)
-                    .disabled(file.state == .analysing)
+                    .disabled(file.state == .analysing || model.job(file.id) != nil && model.progress.queue.running)
             }
             if model.panelTab == .processing {
-                if let p = model.plan(file.id), p.model != nil {
+                if let j = model.job(file.id), j.state == .running || j.state == .paused {
+                    StageLine(job: j, estimate: model.plan(file.id)?.estimate)
+                    if let p = model.plan(file.id) { ProcessingPanel(file: file, plan: p) }
+                } else if let j = model.job(file.id), j.state == .done {
+                    JobCompleted(file: file, job: j)
+                } else if let p = model.plan(file.id), p.model != nil {
                     ProcessingPanel(file: file, plan: p)
                 } else if let p = model.plan(file.id), let e = p.error {
                     NoteView(.red, title: model.t("nat.chip.cant_process"), text: e)
@@ -661,6 +757,10 @@ struct ProcessingPanel: View {
 struct QueueActionBar: View {
     @Environment(AppModel.self) private var model
 
+    var body: some View {
+        if model.progress.queue.running { RunningBar() } else { idle }
+    }
+
     private var calibrationNote: String {
         if let w = model.calibratedWhen {
             return model.t("nat.queue.calibrated_note", ["when": model.relative(Date(timeIntervalSince1970: w))])
@@ -668,7 +768,8 @@ struct QueueActionBar: View {
         return model.t("nat.queue.factory_note")
     }
 
-    var body: some View {
+    @ViewBuilder
+    private var idle: some View {
         let n = model.files.filter { model.isTicked($0) }.count
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
@@ -681,14 +782,64 @@ struct QueueActionBar: View {
                 Text(model.t("nat.queue.estimate_note") + " · " + calibrationNote).font(.system(size: 12)).foregroundStyle(AU.text2)
             }
             Spacer()
-            Button { } label: { Label(model.t("nat.queue.start"), systemImage: "play.fill") }
+            Button { model.startQueue() } label: { Label(model.t("nat.queue.start"), systemImage: "play.fill") }
                 .auButton(.primary, .regular)
-                .disabled(true)
-                .help(model.t("nat.queue.start_later"))
+                .disabled(model.queueTicked.isEmpty || model.calRun?.running == true)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(RoundedRectangle(cornerRadius: AU.Radius.card).fill(AU.surface))
         .overlay(RoundedRectangle(cornerRadius: AU.Radius.card).strokeBorder(AU.line))
+    }
+}
+
+
+/// The action bar while the queue runs (F4, F5, F7).
+struct RunningBar: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let q = model.progress.queue
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                if let until = q.restingUntil {
+                    TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                        Text(model.t("nat.run.rest_line", ["i": min((q.position ?? 1) + 1, q.total ?? 1), "n": q.total ?? 1,
+                                                          "t": Fmt.elapsed(until - ctx.date.timeIntervalSince1970)]))
+                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(AU.text)
+                    }
+                    Text(model.t("nat.run.rest_note")).font(.system(size: 12)).foregroundStyle(AU.text2)
+                } else {
+                    HStack(spacing: 0) {
+                        Text(model.t(q.paused ? "nat.run.paused_line" : "nat.run.processing_line",
+                                     ["i": q.position ?? 1, "n": q.total ?? 1]))
+                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(q.paused ? AU.yellowText : AU.text)
+                        if let f = q.finish, !q.paused {
+                            Text(" · " + model.t("nat.run.ends_around", ["time": model.clockTime(f)]))
+                                .font(.system(size: 13)).foregroundStyle(AU.text2)
+                        }
+                    }
+                    Text(model.t(q.paused ? "nat.run.paused_note" : "nat.run.running_note"))
+                        .font(.system(size: 12)).foregroundStyle(AU.text2)
+                }
+            }
+            Spacer()
+            if q.resting {
+                Button { model.command("queue.startNow") } label: { Label(model.t("nat.run.start_now"), systemImage: "play.fill") }
+                    .auButton(.secondary, .regular)
+            } else if q.paused {
+                Button { model.command("queue.resume") } label: { Label(model.t("nat.run.resume"), systemImage: "play.fill") }
+                    .auButton(.secondary, .regular)
+            } else {
+                Button { model.command("queue.pause") } label: { Label(model.t("nat.run.pause"), systemImage: "pause.fill") }
+                    .auButton(.secondary, .regular)
+            }
+            Button { model.confirmStopAll() } label: { Label(model.t("nat.run.stop_all"), systemImage: "stop.fill") }
+                .auButton(.secondary, .regular)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(RoundedRectangle(cornerRadius: AU.Radius.card).fill(q.paused ? AU.yellowBg : AU.soft))
+        .overlay(RoundedRectangle(cornerRadius: AU.Radius.card).strokeBorder(q.paused ? AU.yellowLine : AU.softLine))
     }
 }

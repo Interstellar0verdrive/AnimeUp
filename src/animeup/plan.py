@@ -6,6 +6,8 @@ va *fatto*, e lo rende ispezionabile prima di spendere ore di GPU.
 
 from __future__ import annotations
 
+import os
+
 import re
 import shutil
 from dataclasses import dataclass, field
@@ -1042,10 +1044,15 @@ def build_plan(
     # ieri risulterebbe da rifare — dieci ore buttate per una parola.
     nome_storico = (output_name(report.path.stem, etichetta="upscale", **voci)
                     if etichetta != "upscale" else None)
+    # L'app nativa (2.0) mette i video finiti accanto agli originali:
+    # ANIMEUP_ACCANTO=1. Lo spazio e i file di lavoro restano su OUTPUT, che
+    # per lei e' la cartella di lavoro.
+    cartella_uscita = (report.path.parent if os.environ.get("ANIMEUP_ACCANTO") == "1"
+                       else p.output)
     return Plan(
         source=report,
-        output=p.output / f"{name}.mkv",
-        uscita_storica=(p.output / f"{nome_storico}.mkv"
+        output=cartella_uscita / f"{name}.mkv",
+        uscita_storica=(cartella_uscita / f"{nome_storico}.mkv"
                         if nome_storico else None),
         log=p.job_logs / f"{name}.log",
         target_width=target_w,

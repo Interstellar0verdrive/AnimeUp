@@ -5797,6 +5797,43 @@ def _() -> None:
         assert piano["output_height"] == 720, piano
         assert piano["output_folder"] == str(video.resolve())
 
+@caso("coda: Start Now accorcia il riposo fra due file, e solo quello")
+def _() -> None:
+    import threading as _th
+    from unittest import mock
+    from animeup import cli as _cli, coda as _coda
+    from animeup.paths import Paths
+    with tempfile.TemporaryDirectory() as tmp:
+        finti = Paths(root=Path(tmp))
+        finti.work.mkdir(parents=True)
+        with mock.patch.object(_cli, "PATHS", finti):
+            inizio = time.monotonic()
+            filo = _th.Thread(target=_cli._pausa_respiro, args=(1,))
+            filo.start()
+            time.sleep(1.2)
+            assert (finti.work / ".pause").is_file(), "il riposo non si dichiara su disco"
+            with mock.patch.object(_coda, "paths_lavoro", lambda: finti), \
+                    mock.patch.object(_coda.monitor, "pausa", lambda p=None: (time.time() + 50, os.getpid())):
+                assert _coda.parti_ora() == {"skipped": True}
+            filo.join(timeout=5)
+            assert not filo.is_alive(), "Start Now non ha accorciato il riposo"
+            assert time.monotonic() - inizio < 5
+            assert not (finti.work / ".pause").exists() and not (finti.work / ".pause-skip").exists()
+
+
+@caso("coda: le fasi riempiono la barra a pezzi nell'ordine giusto")
+def _() -> None:
+    import types as _types
+    from animeup import coda as _coda
+    def lav(fase, fatti, totale=100, sub=""):
+        return _types.SimpleNamespace(fase=fase, fatti=fatti, totale=totale, frazione=fatti / totale,
+                                      codifica_frazione=0.5, sottopasso=sub)
+    valori = [_coda._frazione(lav("estrazione", 50))[1], _coda._frazione(lav("deduplica", 50))[1],
+              _coda._frazione(lav("elaborazione", 10))[1], _coda._frazione(lav("elaborazione", 90))[1],
+              _coda._frazione(lav("codifica finale", 100))[1]]
+    assert valori == sorted(valori), valori
+    assert 0 < valori[0] < 0.05 and 0.95 < valori[-1] <= 1.0, valori
+
 @caso("strumenti: lo scaricamento riprende da dove si era fermato")
 def _() -> None:
     import hashlib as _hl

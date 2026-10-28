@@ -47,6 +47,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// The red button closes the window; the app keeps running. ⌘Q quits.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        MainActor.assumeIsolated {
+            log.info("applicationShouldTerminate, jobRunning=\(model?.jobRunning ?? false)")
+            guard let model, model.jobRunning else { return .terminateNow }
+            return model.confirmQuitWhileRunning() ? .terminateNow : .terminateCancel
+        }
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

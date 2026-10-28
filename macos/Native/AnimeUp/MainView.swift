@@ -17,8 +17,16 @@ struct MainView: View {
             }
         }
         .onAppear { model.reopenMainWindow = { openWindow(id: "main") } }
+        .sheet(isPresented: Binding(get: { model.showCalibration }, set: { if !$0 { model.closeCalibration() } })) {
+            CalibrationSheet().environment(model).preferredColorScheme(.dark)
+        }
+        .sheet(isPresented: Binding(get: { model.showFinished && !model.showCalibration },
+                                    set: { if !$0 { model.markFinishedSeen() } })) {
+            FinishedSheet().environment(model).preferredColorScheme(.dark)
+        }
         .alert(item: Binding(get: { model.alert }, set: { model.alert = $0 })) { alert in
-            AlertBuilder.build(alert, model: model)
+            log.info("alert: \(alert)")
+            return AlertBuilder.build(alert, model: model)
         }
     }
 

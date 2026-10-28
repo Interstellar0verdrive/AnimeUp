@@ -1093,8 +1093,18 @@ def _pausa_respiro(minuti: int) -> None:
     except OSError:
         pass
     dire(t("cli.pausa", minuti=minuti), "dim")
+    # «Start Now» dell'app nativa: un marcatore `.pause-skip` accorcia il
+    # riposo. Si guarda una volta al secondo; per il resto il riposo e'
+    # quello di sempre.
+    salta = PATHS.work / ".pause-skip"
+    salta.unlink(missing_ok=True)
     try:
-        time_.sleep(minuti * 60)
+        fine = time_.time() + minuti * 60
+        while time_.time() < fine:
+            if salta.exists():
+                salta.unlink(missing_ok=True)
+                break
+            time_.sleep(min(1.0, max(0.0, fine - time_.time())))
     finally:
         # Solo se e' ancora nostro: con due code insieme si toglieva quello
         # dell'altra.

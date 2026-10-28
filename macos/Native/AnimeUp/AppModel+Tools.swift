@@ -74,7 +74,7 @@ extension AppModel {
         }
         tools2.rows = rows
         tools2.phase = .installing
-        log.info("tools missing: \(keys.joined(separator: ","), privacy: .public)")
+        log.info("tools missing: \(keys.joined(separator: ","))")
         Task { try? await engine.installTools(keys) }
     }
 

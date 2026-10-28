@@ -16,7 +16,18 @@ struct SidebarView: View {
             Spacer(minLength: 12)
             // The activity card slot: one card for whatever keeps AnimeUp
             // busy (analysis now; queue, Compare test, calibration later).
-            if model.activity.running, let name = model.activity.name {
+            if let run = model.calRun, run.running {
+                ActivityCard(kind: model.t("nat.cal.card"),
+                             line: Text(model.t("nat.cal.step", ["i": min((run.index ?? 0) + 1, max(1, run.total ?? 1)), "n": max(1, run.total ?? 1)])
+                                        + (run.left.map { " · " + model.t("nat.run.left", ["t": Fmt.elapsed($0)]) } ?? "")),
+                             fraction: run.fraction ?? 0) {
+                    Button { model.stopCalibration() } label: { Label(model.t("nat.run.stop"), systemImage: "stop.fill") }
+                        .auButton(.secondary, .small, fullWidth: true)
+                }
+                .onTapGesture { model.showCalibration = true }
+            } else if model.progress.queue.running {
+                QueueCard()
+            } else if model.activity.running, let name = model.activity.name {
                 ActivityCard(kind: model.t("nat.side.analysis"),
                              line: Text("\(model.t("nat.side.file_of", ["i": model.activity.index ?? 1, "n": model.activity.total ?? 1])) · \(name)"),
                              fraction: Double((model.activity.index ?? 1) - 1) / Double(max(1, model.activity.total ?? 1)),
@@ -44,7 +55,8 @@ struct SidebarView: View {
             SidebarTab(symbol: "rectangle.split.2x1", title: model.t("nat.tab.compare"),
                        subtitle: model.t("nat.tab.compare_sub"), selected: model.tab == .compare) { model.tab = .compare }
             SidebarTab(symbol: "film.stack", title: model.t("nat.tab.queue"), subtitle: model.queueSubtitle,
-                       selected: model.tab == .queue, trailing: model.activity.running ? .busy : .none) { model.tab = .queue }
+                       selected: model.tab == .queue,
+                       trailing: model.activity.running || (model.progress.queue.running && !model.progress.queue.paused) ? .busy : .none) { model.tab = .queue }
         }
     }
 
@@ -74,7 +86,7 @@ struct SidebarView: View {
     @ViewBuilder
     private var calibration: some View {
         if let c = model.calibration {
-            if c.running {
+            if c.running || model.calRun?.running == true {
                 HStack(spacing: 6) {
                     Spinner(size: 11)
                     Text(model.t("nat.side.cal_running")).font(.system(size: 12)).foregroundStyle(AU.primaryText)
@@ -150,5 +162,49 @@ struct SidebarView: View {
         }
         .padding(.horizontal, 6)
         .padding(.top, 2)
+    }
+}
+
+
+/// The sidebar card while the queue runs, rests or is paused (DS4 activity cards).
+struct QueueCard: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let q = model.progress.queue
+        let live = model.progress.files.values.first { $0.state == .running || $0.state == .paused }
+        let total = Double(max(1, q.total ?? 1))
+        let fraction = (Double(max(0, (q.position ?? 1) - 1)) + (live?.fraction ?? 0)) / total
+        if let until = q.restingUntil {
+            ActivityCard(kind: model.t("nat.run.card_rest"),
+                         line: Text(model.t("nat.run.rest_line", ["i": min((q.position ?? 1) + 1, q.total ?? 1), "n": q.total ?? 1,
+                                                                 "t": Fmt.elapsed(until - Date().timeIntervalSince1970)])),
+                         fraction: fraction) {
+                Button { model.command("queue.startNow") } label: { Label(model.t("nat.run.start_now"), systemImage: "play.fill") }
+                    .auButton(.secondary, .small, fullWidth: true)
+                Button { model.confirmStopAll() } label: { Label(model.t("nat.run.stop_all"), systemImage: "stop.fill") }
+                    .auButton(.secondary, .small, fullWidth: true)
+            }
+        } else if q.paused {
+            ActivityCard(kind: model.t("nat.run.card_paused"),
+                         line: Text(model.t("nat.run.card_paused_line", ["i": q.position ?? 1, "n": q.total ?? 1,
+                                                                        "pct": Int(((live?.fraction ?? 0) * 100).rounded())])),
+                         fraction: fraction, paused: true) {
+                Button { model.command("queue.resume") } label: { Label(model.t("nat.run.resume"), systemImage: "play.fill") }
+                    .auButton(.secondary, .small, fullWidth: true)
+                Button { model.confirmStopAll() } label: { Label(model.t("nat.run.stop_all"), systemImage: "stop.fill") }
+                    .auButton(.secondary, .small, fullWidth: true)
+            }
+        } else {
+            ActivityCard(kind: model.t("nat.tab.queue"),
+                         line: Text(model.t("nat.run.processing_line", ["i": q.position ?? 1, "n": q.total ?? 1])
+                                    + (q.finish.map { " · " + model.t("nat.run.ends_around", ["time": model.clockTime($0)]) } ?? "")),
+                         fraction: fraction) {
+                Button { model.command("queue.pause") } label: { Label(model.t("nat.run.pause"), systemImage: "pause.fill") }
+                    .auButton(.secondary, .small, fullWidth: true)
+                Button { model.confirmStopAll() } label: { Label(model.t("nat.run.stop_all"), systemImage: "stop.fill") }
+                    .auButton(.secondary, .small, fullWidth: true)
+            }
+        }
     }
 }

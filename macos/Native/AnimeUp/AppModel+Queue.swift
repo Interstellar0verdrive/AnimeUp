@@ -5,7 +5,8 @@ import Models
 enum PanelTab: String { case analysis, processing }
 
 /// Native alerts the app shows (boards O2, O6).
-struct AppAlert: Identifiable {
+struct AppAlert: Identifiable, CustomStringConvertible {
+    var description: String { "\(kind)" }
     enum Kind {
         case noVideos(folder: String, subfoldersIncluded: Bool, paths: [String])
         case workNotWritable(folder: String)
@@ -103,7 +104,7 @@ extension AppModel {
                     tab = .queue
                 }
             } catch {
-                log.error("files.add failed: \(String(describing: error), privacy: .public)")
+                log.error("files.add failed: \(String(describing: error))")
             }
         }
     }
