@@ -96,6 +96,8 @@ public struct CompareStatus: Codable, Sendable, Equatable {
     public var segmenti: [Segment]?
     public var request: Request?
     public var log: String?
+    /// "kind|mm:ss" → version key → crop image, for versions already done.
+    public var parziali: [String: [String: String]]?
 
     public var running: Bool { state == "running" }
 }

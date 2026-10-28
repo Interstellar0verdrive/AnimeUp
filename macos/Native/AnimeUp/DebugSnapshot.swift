@@ -118,14 +118,7 @@ enum DebugSnapshot {
                 try? await Task.sleep(for: .seconds(1))
                 log.info("compare clips: \(model.cmp.clips.count) error=\(model.cmp.scanError ?? "-")")
                 renderPage(CompareView(), model, "\(base)-cmp-clips.png")
-                // ScrollView content doesn't reach ImageRenderer: the grid on its own.
-                renderPage(VStack(alignment: .leading, spacing: 12) {
-                    StepIndicator(step: .clips)
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4), spacing: 12) {
-                        ForEach(model.cmp.clips) { ClipCard(clip: $0) }
-                    }
-                    Spacer()
-                }.padding(28), model, "\(base)-cmp-grid.png")
+
                 model.goToModels()
                 for _ in 0..<30 where model.cmp.models == nil { try? await Task.sleep(for: .milliseconds(500)) }
                 model.cmp.chosenModels = ["animevideov3"]
@@ -144,6 +137,39 @@ enum DebugSnapshot {
                     }
                 }
                 renderPage(CompareView(), model, "\(base)-cmp-results.png")
+                model.cmp.useKey = model.cmp.right
+                render(UseManySheet().environment(model), width: 620, "\(base)-cmp-usemany.png")
+                // E2: one version only; E3: GPU busy (state faked for the render).
+                model.cmp.step = .models
+                let keep = model.cmp.chosenModels
+                model.cmp.chosenModels = []
+                renderPage(CompareView(), model, "\(base)-cmp-e2.png")
+                model.cmp.chosenModels = keep
+                var fake = model.progress
+                fake.queue.running = true; fake.queue.position = 2; fake.queue.total = 4; fake.queue.finish = Date().timeIntervalSince1970 + 3600
+                let real = model.progress
+                model.progress = fake
+                renderPage(CompareView(), model, "\(base)-cmp-e3.png")
+                model.progress = real
+                // E8: a 480p file at 1080p: light denoise can't reach it.
+                if let f480 = model.files.first(where: { $0.name.contains("Part 2") }) {
+                    model.selectCompareFile(f480.id)
+                    for _ in 0..<200 where model.cmp.clips.isEmpty || model.cmp.scanning { try? await Task.sleep(for: .seconds(1)) }
+                    renderPage(CompareView(), model, "\(base)-cmp-clips-480.png")
+                    model.goToModels()
+                    for _ in 0..<30 where model.cmp.models == nil { try? await Task.sleep(for: .milliseconds(500)) }
+                    renderPage(CompareView(), model, "\(base)-cmp-e8.png")
+                    // E4: stop a test after its first version.
+                    model.cmp.chosenModels = ["animevideov3", "cugan"]
+                    model.startTest()
+                    for _ in 0..<60 where model.cmp.status?.running != true { try? await Task.sleep(for: .seconds(1)) }
+                    for _ in 0..<600 where (model.cmp.status?.done ?? 0) < 2 { try? await Task.sleep(for: .seconds(1)) }
+                    renderPage(CompareView(), model, "\(base)-cmp-running2.png")
+                    model.stopTest()
+                    for _ in 0..<30 where model.cmp.status?.running == true { try? await Task.sleep(for: .seconds(1)) }
+                    try? await Task.sleep(for: .seconds(2))
+                    renderPage(CompareView(), model, "\(base)-cmp-e4.png")
+                }
             }
             if let name = env["ANIMEUP_SNAPSHOT_RUN"], let f = model.files.first(where: { $0.name.contains(name) }) {
                 await runScenario(model, f.id, base)
@@ -278,6 +304,7 @@ enum DebugSnapshot {
         .background(AU.bg)
         .environment(model)
         .environment(\.colorScheme, .dark)
+        .environment(\.auNoScroll, true)
         render(view, width: 1360, path)
     }
 

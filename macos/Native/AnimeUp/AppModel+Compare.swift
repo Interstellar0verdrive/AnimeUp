@@ -21,6 +21,7 @@ struct CompareState: Equatable {
     var left = "original"
     var right = ""
     var showUseMany = false
+    var useKey = ""
 }
 
 extension AppModel {

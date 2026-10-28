@@ -150,17 +150,21 @@ struct AddVideosCard: View {
 struct PopupLabel: View {
     var title: String
     var width: CGFloat
-    init(_ title: String, width: CGFloat = 280) { self.title = title; self.width = width }
+    var height: CGFloat
+    var size: CGFloat
+    init(_ title: String, width: CGFloat = 280, height: CGFloat = 28, size: CGFloat = 13) {
+        self.title = title; self.width = width; self.height = height; self.size = size
+    }
 
     var body: some View {
         HStack {
-            Text(title).font(.system(size: 13)).foregroundStyle(AU.text)
+            Text(title).font(.system(size: size, weight: size < 13 ? .medium : .regular)).foregroundStyle(AU.text).lineLimit(1)
             Spacer()
             Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundStyle(AU.text2)
         }
         .padding(.leading, 12)
         .padding(.trailing, 10)
-        .frame(width: width, height: 28)
+        .frame(width: width, height: height)
         .background(RoundedRectangle(cornerRadius: AU.Radius.field).fill(AU.control))
         .overlay(RoundedRectangle(cornerRadius: AU.Radius.field).strokeBorder(AU.glassLine, lineWidth: 1))
         .contentShape(Rectangle())
