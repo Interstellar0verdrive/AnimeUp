@@ -5834,6 +5834,43 @@ def _() -> None:
     assert valori == sorted(valori), valori
     assert 0 < valori[0] < 0.05 and 0.95 < valori[-1] <= 1.0, valori
 
+@caso("confronto: gli spezzoni si trovano in sottofondo, e le clip diventano mp4")
+def _() -> None:
+    import json as _json
+    import shutil as _sh
+    with tempfile.TemporaryDirectory() as tmp:
+        stato = Path(tmp) / "stato"
+        video = Path(tmp) / "video"
+        video.mkdir()
+        _sh.copy(CAMPIONI / "TEST-CFR-23-976fps---2min.mkv", video / "A.mkv")
+        codice = ("import json, sys, threading\n"
+                  "import animeup.serve as s\n"
+                  "from animeup import prova\n"
+                  "e = s.elenco()\n"
+                  f"esito = e.aggiungi([{str(video)!r}], False)\n"
+                  "e.aspetta()\n"
+                  "voce = e.voci()[0]\n"
+                  "fatto = threading.Event()\n"
+                  "visti = []\n"
+                  "def ev(n, d):\n"
+                  "    visti.append((n, d))\n"
+                  "    if n in ('compare.scan.done', 'compare.scan.failed'): fatto.set()\n"
+                  "print(json.dumps(prova.scansiona(voce, ev)), file=sys.stderr)\n"
+                  "fatto.wait(240)\n"
+                  "nome, dati = visti[-1]\n"
+                  "mp4 = prova.riproducibile(voce['path'])\n"
+                  "s._uscita = sys.__stdout__\n"
+                  "print(json.dumps({'id': 1, 'result': {'event': nome, 'data': dati, 'mp4': mp4}}))\n")
+        messaggi, err = _serve([], stato, codice=codice)
+        r = _risposte(messaggi)[1]["result"]
+        assert r["event"] == "compare.scan.done", (r, err[-1500:])
+        clips = r["data"]["clips"]
+        # Il campione sintetico puo' non avere niente che spicchi (E7): conta che
+        # la scansione finisca, e che ogni spezzone trovato abbia la miniatura.
+        assert all(c["thumbnail"] and Path(c["thumbnail"]).is_file() for c in clips), clips
+        assert {c["kind"] for c in clips} <= {"motion", "static", "dark", "bright"}
+        assert Path(r["mp4"]).is_file() and r["mp4"].endswith(".mp4")
+
 @caso("strumenti: lo scaricamento riprende da dove si era fermato")
 def _() -> None:
     import hashlib as _hl

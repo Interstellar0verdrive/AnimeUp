@@ -24,10 +24,8 @@ struct AnimeUpApp: App {
         .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
         .commands {
-            CommandGroup(replacing: .newItem) {
-                Button(model.t("nat.add.open")) { model.openVideos() }
-                    .keyboardShortcut("o", modifiers: .command)
-            }
+            SidebarCommands()
+            AppCommands(model: model)
         }
 
         Settings {
@@ -55,6 +53,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// The Dock icon menu (O7): Open Videos…, and Pause / Stop All while a queue runs.
+    func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
+        MainActor.assumeIsolated {
+            guard let model else { return nil }
+            let menu = NSMenu()
+            menu.addItem(DockAction(model.t("nat.add.open")) { model.openVideos() })
+            if model.progress.queue.running {
+                menu.addItem(.separator())
+                let paused = model.progress.queue.paused
+                menu.addItem(DockAction(model.t(paused ? "nat.run.resume" : "nat.run.pause")) {
+                    model.command(paused ? "queue.resume" : "queue.pause")
+                })
+                menu.addItem(DockAction(model.t("nat.run.stop_all")) { model.confirmStopAll() })
+            }
+            return menu
+        }
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -65,4 +81,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated { model?.terminateEngineNow() }
     }
+}
+
+
+/// A menu item that runs a closure.
+final class DockAction: NSMenuItem {
+    private let run: @MainActor () -> Void
+
+    init(_ title: String, _ run: @escaping @MainActor () -> Void) {
+        self.run = run
+        super.init(title: title, action: #selector(fire), keyEquivalent: "")
+        target = self
+    }
+
+    required init(coder: NSCoder) { fatalError() }
+
+    @objc private func fire() { MainActor.assumeIsolated { run() } }
 }

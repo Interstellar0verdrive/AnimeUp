@@ -458,5 +458,11 @@
   "nat.cmp.use_for_n.uno": "Usa per {n} file",
   "nat.cmp.use_for_n.altri": "Usa per {n} file",
   "nat.cmp.note_done_title": "Prova finita",
-  "nat.cmp.note_done": "Le versioni di {name} sono pronte da confrontare."
+  "nat.cmp.note_done": "Le versioni di {name} sono pronte da confrontare.",
+  "nat.menu.check_updates": "Controlla aggiornamenti…",
+  "nat.menu.calibrate": "Calibra questo Mac…",
+  "nat.menu.stop_test": "Ferma la prova del Confronto",
+  "nat.menu.guide": "Guida di AnimeUp",
+  "nat.menu.open_log": "Apri il log in Console",
+  "nat.menu.report": "Segnala un problema…"
 }
