@@ -598,6 +598,7 @@ struct CompareResultsStep: View {
                     }
                     .padding(.leading, 10)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 Button { if let r { NSWorkspace.shared.open(URL(fileURLWithPath: r.cartella)) } } label: {
                     Label(model.t("nat.cmp.show_clips"), systemImage: "folder")
                 }
@@ -623,8 +624,10 @@ struct CompareResultsStep: View {
                             ForEach(models, id: \.self) { key in
                                 if let m = r?.modelli.first(where: { $0.chiave == key }) {
                                     ResultCard(result: m, inUse: model.plan(model.cmp.fileId ?? "")?.model == key)
-                                } else {
+                                } else if !(st.failures ?? []).isEmpty {
                                     FailedCard(key: key, log: st.log)
+                                } else {
+                                    PendingCard(key: key)
                                 }
                             }
                         }
@@ -940,6 +943,23 @@ struct ResultCard: View {
             }
             .frame(height: 11)
         }
+    }
+}
+
+/// A version not rendered yet on this clip (stopped test).
+struct PendingCard: View {
+    @Environment(AppModel.self) private var model
+    var key: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(model.t("mot.modello.\(key).label")).font(.system(size: 13, weight: .semibold)).foregroundStyle(AU.text2)
+            Text(model.t("nat.cmp.not_rendered")).auSmall(AU.text3)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 8).fill(AU.raised))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(AU.chipLine, style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
     }
 }
 

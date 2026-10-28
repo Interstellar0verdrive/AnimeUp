@@ -548,5 +548,6 @@
   "nat.cmp.file_select_all": "File · select all",
   "nat.cmp.now_after": "Model now → after",
   "nat.cmp.poor_fit": "{h}p: a poor fit",
-  "nat.cmp.nothing_yet": "Nothing of this clip finished yet: Render the Rest picks up from here."
+  "nat.cmp.nothing_yet": "Nothing of this clip finished yet: Render the Rest picks up from here.",
+  "nat.cmp.not_rendered": "Not rendered on this clip yet."
 }

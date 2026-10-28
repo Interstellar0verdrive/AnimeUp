@@ -548,5 +548,6 @@
   "nat.cmp.file_select_all": "File · seleziona tutti",
   "nat.cmp.now_after": "Modello ora → dopo",
   "nat.cmp.poor_fit": "{h}p: poco adatto",
-  "nat.cmp.nothing_yet": "Di questa clip non è ancora finito niente: Elabora il resto riparte da qui."
+  "nat.cmp.nothing_yet": "Di questa clip non è ancora finito niente: Elabora il resto riparte da qui.",
+  "nat.cmp.not_rendered": "Non ancora elaborato su questa clip."
 }
