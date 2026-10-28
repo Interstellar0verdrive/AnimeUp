@@ -43,7 +43,7 @@ final class Sidecar: @unchecked Sendable {
         posix_spawn_file_actions_adddup2(&actions, stdinPipe[0], 0)
         posix_spawn_file_actions_adddup2(&actions, stdoutPipe[1], 1)
         posix_spawn_file_actions_adddup2(&actions, logFD, 2)
-        posix_spawn_file_actions_addchdir_np(&actions, configuration.stateFolder.path)
+        posix_spawn_file_actions_addchdir(&actions, configuration.stateFolder.path)
 
         var attributes: posix_spawnattr_t? = nil
         posix_spawnattr_init(&attributes)
