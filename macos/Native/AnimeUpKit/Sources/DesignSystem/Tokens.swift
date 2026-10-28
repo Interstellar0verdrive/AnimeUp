@@ -97,6 +97,7 @@ public enum AU {
     public static let redBg = Color(dark: "rgba(242,109,109,.10)", light: "#FDECEA")
     public static let redBgPress = Color(dark: "rgba(242,109,109,.17)", light: "#FADAD6")
     public static let redLine = Color(dark: "rgba(242,109,109,.55)", light: "rgba(217,64,46,.45)")
+    public static let redSoft = Color(dark: "rgba(242,109,109,.07)", light: "rgba(217,64,46,.05)")
     public static let redTint = Color(dark: "rgba(242,109,109,.16)", light: "rgba(217,64,46,.12)")
 
     public static let chipBg = Color(dark: "#1C1F23", light: "#EEF0F2")

@@ -43,7 +43,7 @@ struct StartContent: View {
             }
             if model.status == .ready {
                 GridLayout(gap: 14, leftShare: 1.15 / 2.15, minHeight: minGrid) {
-                    AddVideosCard()
+                    if model.files.isEmpty { AddVideosCard() } else { YourVideosCard() }
                     WhereFilesGoCard()
                     ThisMacCard()
                     HowABatchGoesCard()
@@ -149,7 +149,8 @@ struct AddVideosCard: View {
 /// The popup menu look of the boards: control fill, glass line, chevron.
 struct PopupLabel: View {
     var title: String
-    init(_ title: String) { self.title = title }
+    var width: CGFloat
+    init(_ title: String, width: CGFloat = 280) { self.title = title; self.width = width }
 
     var body: some View {
         HStack {
@@ -159,7 +160,7 @@ struct PopupLabel: View {
         }
         .padding(.leading, 12)
         .padding(.trailing, 10)
-        .frame(width: 280, height: 28)
+        .frame(width: width, height: 28)
         .background(RoundedRectangle(cornerRadius: AU.Radius.field).fill(AU.control))
         .overlay(RoundedRectangle(cornerRadius: AU.Radius.field).strokeBorder(AU.glassLine, lineWidth: 1))
         .contentShape(Rectangle())
@@ -171,6 +172,91 @@ struct SmallIconLabel: LabelStyle {
         HStack(spacing: 6) {
             configuration.icon.font(.system(size: 11))
             configuration.title
+        }
+    }
+}
+
+// MARK: - Your videos (S2b)
+
+struct YourVideosCard: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let files = model.files
+        let length = files.compactMap { $0.report?.duration }.reduce(0, +)
+        Card {
+            CardTitle(model.t("nat.start.your_videos"), symbol: "film") {
+                Text(summary(files.count, length)).auSmall()
+            }
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(Array(files.enumerated()), id: \.element.id) { i, f in
+                        if i > 0 { Rectangle().fill(AU.line).frame(height: 1) }
+                        Button { model.tab = .queue; model.expanded = f.id; model.panelTab = .analysis } label: {
+                            HStack(spacing: 8) {
+                                icon(f).frame(width: 16)
+                                Text(f.name).font(.system(size: 12, weight: .medium)).foregroundStyle(AU.text)
+                                    .lineLimit(1).truncationMode(.middle)
+                                Spacer(minLength: 4)
+                                if !f.warnings.isEmpty {
+                                    StatusChip(model.localizer.tn("nat.queue.n_warnings", f.warnings.count), tone: .yellow,
+                                               symbol: "exclamationmark.triangle.fill")
+                                }
+                                Text(f.report.map { Fmt.clock($0.duration) } ?? "—").font(AUFont.smallNumbers)
+                                    .foregroundStyle(AU.textCode).frame(width: 50, alignment: .trailing)
+                            }
+                            .padding(.horizontal, 8).padding(.vertical, 5)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+            .frame(height: 150)
+            .mask(LinearGradient(stops: [.init(color: .black, location: 0.72), .init(color: .clear, location: 1)],
+                                 startPoint: .top, endPoint: .bottom))
+            .background(RoundedRectangle(cornerRadius: AU.Radius.field).fill(AU.inset))
+            .overlay(RoundedRectangle(cornerRadius: AU.Radius.field).strokeBorder(AU.line))
+            Text(model.t("nat.start.click_report")).auSmall(AU.text3).padding(.top, -6)
+            HStack(spacing: 10) {
+                Text(model.t("nat.start.drop_more")).auSmall()
+                Button { model.openVideos() } label: { Label(model.t("nat.queue.add"), systemImage: "plus") }
+                    .auButton(.secondary, .small)
+            }
+            .frame(maxWidth: .infinity, minHeight: 58, maxHeight: .infinity)
+            .overlay(RoundedRectangle(cornerRadius: AU.Radius.field)
+                .strokeBorder(AU.boxLine, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
+            .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+                Task { @MainActor in model.add(await loadURLs(providers)) }
+                return true
+            }
+            HStack(spacing: 8) {
+                Text(model.analysingCount > 0 ? model.t("nat.start.analysing_left", ["n": model.analysingCount])
+                     : model.warningCount > 0 ? model.t("nat.start.all_analysed_warn") : model.t("nat.start.all_analysed"))
+                    .auSmall()
+                Spacer()
+                Button { model.tab = .compare } label: {
+                    HStack(spacing: 5) { Text(model.t("nat.start.next_compare")); Image(systemName: "arrow.right") }
+                }
+                .auButton(.primary, .regular)
+            }
+        }
+    }
+
+    private func summary(_ n: Int, _ length: Double) -> String {
+        var parts = [model.localizer.tn("nat.queue.files", n), Fmt.span(length)]
+        if model.warningCount > 0 { parts.append(model.localizer.tn("nat.queue.warnings", model.warningCount)) }
+        return parts.joined(separator: " · ")
+    }
+
+    @ViewBuilder
+    private func icon(_ f: QueueFile) -> some View {
+        switch f.state {
+        case .ready: Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(AU.greenText)
+        case .analysing: Spinner(size: 10)
+        case .queued: Circle().strokeBorder(AU.glassLine).frame(width: 10, height: 10)
+        case .failed, .missing: Image(systemName: "exclamationmark.octagon.fill").font(.system(size: 10)).foregroundStyle(AU.redText)
         }
     }
 }

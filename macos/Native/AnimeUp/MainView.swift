@@ -8,6 +8,21 @@ struct MainView: View {
     @State private var columns = NavigationSplitViewVisibility.all
 
     var body: some View {
+        Group {
+            if model.showsToolsWindow {
+                ToolsSetupView()
+                    .onAppear { WindowSizer.toTools() }
+            } else {
+                split
+            }
+        }
+        .onAppear { model.reopenMainWindow = { openWindow(id: "main") } }
+        .alert(item: Binding(get: { model.alert }, set: { model.alert = $0 })) { alert in
+            AlertBuilder.build(alert, model: model)
+        }
+    }
+
+    private var split: some View {
         NavigationSplitView(columnVisibility: $columns) {
             SidebarView()
                 .navigationSplitViewColumnWidth(min: 236, ideal: 236, max: 280)
@@ -19,15 +34,13 @@ struct MainView: View {
                 case .start: StartView()
                 case .compare: PlaceholderView(title: model.t("nat.tab.compare"), symbol: "rectangle.split.2x1",
                                                text: model.t("nat.compare.later"))
-                case .queue: PlaceholderView(title: model.t("nat.tab.queue"), symbol: "film.stack",
-                                             text: model.t("nat.queue.later"))
+                case .queue: QueueView()
                 }
             }
             .toolbar(.hidden, for: .windowToolbar)
         }
         .navigationSplitViewStyle(.balanced)
         .frame(minWidth: 1100, minHeight: 720)
-        .onAppear { model.reopenMainWindow = { openWindow(id: "main") } }
     }
 }
 

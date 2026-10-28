@@ -14,8 +14,15 @@ struct SidebarView: View {
             Rectangle().fill(AU.glassLine).frame(height: 1).padding(.horizontal, 6).padding(.vertical, 2)
             thisMac
             Spacer(minLength: 12)
-            // The activity card slot: queue, Compare test or calibration
-            // (later milestones). Empty while nothing runs.
+            // The activity card slot: one card for whatever keeps AnimeUp
+            // busy (analysis now; queue, Compare test, calibration later).
+            if model.activity.running, let name = model.activity.name {
+                ActivityCard(kind: model.t("nat.side.analysis"),
+                             line: Text("\(model.t("nat.side.file_of", ["i": model.activity.index ?? 1, "n": model.activity.total ?? 1])) · \(name)"),
+                             fraction: Double((model.activity.index ?? 1) - 1) / Double(max(1, model.activity.total ?? 1)),
+                             footnote: model.t("nat.side.usable_meanwhile")) { EmptyView() }
+                    .onTapGesture { model.tab = .queue; model.expanded = model.activity.id }
+            }
             footer
         }
         .padding(.horizontal, 10)
@@ -36,8 +43,8 @@ struct SidebarView: View {
                        selected: model.tab == .start) { model.tab = .start }
             SidebarTab(symbol: "rectangle.split.2x1", title: model.t("nat.tab.compare"),
                        subtitle: model.t("nat.tab.compare_sub"), selected: model.tab == .compare) { model.tab = .compare }
-            SidebarTab(symbol: "film.stack", title: model.t("nat.tab.queue"), subtitle: model.t("nat.tab.queue_sub"),
-                       selected: model.tab == .queue) { model.tab = .queue }
+            SidebarTab(symbol: "film.stack", title: model.t("nat.tab.queue"), subtitle: model.queueSubtitle,
+                       selected: model.tab == .queue, trailing: model.activity.running ? .busy : .none) { model.tab = .queue }
         }
     }
 
@@ -122,8 +129,9 @@ struct SidebarView: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            Text(model.t("nat.side.version", ["version": model.hello?.version ?? "…"]))
+            Text(model.t("nat.side.version", ["version": AppModel.appVersion]))
                 .font(AUFont.smallNumbers).foregroundStyle(AU.text3)
+                .help(model.t("nat.side.engine_version", ["version": model.hello?.version ?? "…"]))
             Button { model.checkForUpdates() } label: {
                 Image(systemName: "arrow.clockwise").font(.system(size: 10, weight: .medium))
             }

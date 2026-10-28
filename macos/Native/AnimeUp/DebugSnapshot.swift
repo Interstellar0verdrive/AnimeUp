@@ -10,6 +10,22 @@ import SwiftUI
 enum DebugSnapshot {
     static func scheduleIfAsked(model: AppModel) {
         guard let base = ProcessInfo.processInfo.environment["ANIMEUP_SNAPSHOT"], !base.isEmpty else { return }
+        if ProcessInfo.processInfo.environment["ANIMEUP_SNAPSHOT_TOOLS"] == "1" {
+            Task { @MainActor in
+                var n = 0
+                for _ in 0..<240 {
+                    try? await Task.sleep(for: .seconds(3))
+                    if model.showsToolsWindow {
+                        n += 1
+                        render(ToolsSetupView().environment(model), width: 600, "\(base)-tools-live-\(n).png")
+                        log.info("tools window: \(String(describing: model.tools2.rows), privacy: .public)")
+                    } else if n > 0 {
+                        renderComposite(model, "\(base)-after-tools.png")
+                        break
+                    }
+                }
+            }
+        }
         Task { @MainActor in
             for _ in 0..<120 where model.status != .ready { try? await Task.sleep(for: .milliseconds(500)) }
             try? await Task.sleep(for: .seconds(2))
@@ -22,7 +38,50 @@ enum DebugSnapshot {
                 renderComposite(model, "\(base)-composite-\(lang).png")
             }
             model.localizer.setLanguage(saved)
-            if ProcessInfo.processInfo.environment["ANIMEUP_SNAPSHOT_TABS"] == "1" {
+            let env = ProcessInfo.processInfo.environment
+            if env["ANIMEUP_SNAPSHOT_SETTINGS"] == "1" {
+                for tab in SettingsTab.allCases {
+                    render(SettingsPage(tab: tab).environment(model), width: 640, "\(base)-settings-\(tab.rawValue).png")
+                }
+                model.jobRunning = true
+                render(SettingsPage(tab: .output).environment(model), width: 640, "\(base)-settings-output-locked.png")
+                model.jobRunning = false
+                var fake = model.tools2
+                model.tools2.rows = [.init(key: "ffmpeg", state: .done, bytes: 38_000_000, total: 38_000_000),
+                                     .init(key: "realesrgan", state: .running, bytes: 30_000_000, total: 46_000_000),
+                                     .init(key: "realcugan"), .init(key: "python", state: .done)]
+                model.tools2.phase = .installing
+                render(ToolsSetupView().environment(model), width: 600, "\(base)-tools-downloading.png")
+                model.tools2.rows[1].state = .failed
+                model.tools2.phase = .failed(key: "realesrgan", error: "URLError: connection lost")
+                render(ToolsSetupView().environment(model), width: 600, "\(base)-tools-failed.png")
+                fake.phase = .notNeeded
+                model.tools2 = fake
+            }
+            if let videos = env["ANIMEUP_SNAPSHOT_ADD"] {
+                model.add([URL(fileURLWithPath: videos)], subfolders: true)
+                try? await Task.sleep(for: .seconds(4))
+                model.tab = .queue
+                if let first = model.files.first(where: { $0.state == .analysing }) ?? model.files.first {
+                    model.expanded = first.id
+                }
+                try? await Task.sleep(for: .seconds(1))
+                renderQueue(model, "\(base)-queue-analysing.png")
+                renderComposite(model, "\(base)-start-files.png")
+                for _ in 0..<120 where model.activity.running || model.files.contains(where: { $0.state != .ready }) {
+                    try? await Task.sleep(for: .seconds(1))
+                    await model.refreshFiles()
+                }
+                model.expanded = model.files.first(where: { !$0.warnings.isEmpty })?.id ?? model.files.first?.id
+                model.selection = []
+                try? await Task.sleep(for: .seconds(1))
+                renderQueue(model, "\(base)-queue-ready.png")
+                renderComposite(model, "\(base)-start-files-done.png")
+                model.localizer.setLanguage("it")
+                renderQueue(model, "\(base)-queue-ready-it.png")
+                model.localizer.setLanguage(model.settings?.language ?? "en")
+            }
+            if env["ANIMEUP_SNAPSHOT_TABS"] == "1" {
                 model.localizer.setLanguage("it")
                 try? await Task.sleep(for: .seconds(1))
                 capture("\(base)-start-it.png")
@@ -76,6 +135,38 @@ enum DebugSnapshot {
            let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
             try? png.write(to: URL(fileURLWithPath: path))
         }
+    }
+
+    static func render<V: View>(_ view: V, width: CGFloat, _ path: String) {
+        let renderer = ImageRenderer(content: view.frame(width: width).environment(\.colorScheme, .dark))
+        renderer.scale = 2
+        if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
+           let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+            try? png.write(to: URL(fileURLWithPath: path))
+        }
+    }
+
+    static func renderQueue(_ model: AppModel, _ path: String) {
+        let view = HStack(spacing: 0) {
+            SidebarView()
+                .padding(.top, 44)
+                .frame(width: 236)
+                .frame(maxHeight: .infinity)
+                .background(RoundedRectangle(cornerRadius: 16).fill(AU.side)
+                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(AU.glassLine)))
+                .padding([.leading, .vertical], 8)
+            VStack(spacing: 0) {
+                QueueContent().padding(.top, 28).padding(.horizontal, 28).padding(.bottom, 16)
+                Spacer(minLength: 0)
+                QueueActionBar().padding(.horizontal, 28).padding(.bottom, 24)
+            }
+        }
+        .frame(width: 1360, alignment: .top)
+        .frame(minHeight: 840, alignment: .top)
+        .background(AU.bg)
+        .environment(model)
+        .environment(\.colorScheme, .dark)
+        render(view, width: 1360, path)
     }
 
     static func capture(_ path: String) {

@@ -34,6 +34,29 @@ final class AppModel {
     var tools: ToolsStatus?
     var folders: FoldersState?
     var tab: Tab = .start
+
+    // Queue (M3)
+    var files: [QueueFile] = []
+    var activity = FilesActivity()
+    /// Rows the user unticked (the checkbox column): every analysed file
+    /// is ticked unless it's here.
+    var unticked: Set<String> = []
+    /// Selected rows (List selection: context menu, ⌫).
+    var selection: Set<String> = []
+    var expanded: String?
+    var panelTab: PanelTab = .analysis
+    var alert: AppAlert?
+    var undoRemoved: [QueueFile] = []
+    var includeSubfolders: Bool = UserDefaults.standard.bool(forKey: "includeSubfolders") {
+        didSet { UserDefaults.standard.set(includeSubfolders, forKey: "includeSubfolders") }
+    }
+
+    // Tools (M2)
+    var tools2 = ToolsSetupState()
+    var updates: UpdatesState?
+    var defaults: EngineSettings?
+    /// While a queue runs, settings are locked (M5 sets it).
+    var jobRunning = false
     /// A short line under the drop zone after videos arrive (M1: no Queue yet).
     var lastReceived: Int?
     /// Set by the main window, so the Dock icon can reopen it.
@@ -41,6 +64,7 @@ final class AppModel {
     /// Kept outside the actor so the app can signal it while quitting.
     @ObservationIgnored private(set) var enginePID: Int32?
     @ObservationIgnored private var started = false
+    @ObservationIgnored var refreshPending = false
 
     init() {
         #if DEBUG
@@ -55,6 +79,10 @@ final class AppModel {
         log.info("code \(self.configuration.codeFolder.path, privacy: .public), state \(self.configuration.stateFolder.path, privacy: .public)")
     }
 
+    static var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "2.0"
+    }
+
     func t(_ key: String, _ values: [String: Any] = [:]) -> String { localizer.t(key, values) }
 
     // MARK: engine
@@ -62,6 +90,7 @@ final class AppModel {
     func start() {
         guard !started else { return }
         started = true
+        prepareToolsWindowIfFirstLaunch()
         Task { await listen() }
         Task { await launch() }
     }
@@ -109,6 +138,10 @@ final class AppModel {
             self.tools = tools
             self.folders = folders
             localizer.setLanguage(settings.language)
+            defaults = try? await engine.defaults()
+            updates = try? await engine.updatesState()
+            await refreshFiles()
+            decideTools(tools)
             status = .ready
         } catch EngineError.terminated {
             // A crash while loading: the restart's `engine.started` reloads.
@@ -137,6 +170,13 @@ final class AppModel {
                 log.info("engine exited: \(String(data: event.data, encoding: .utf8) ?? "", privacy: .public)")
             case "engine.gave_up":
                 status = .gaveUp
+            case "tools.progress":
+                if let p = try? event.decode(ToolProgress.self) { toolProgress(p) }
+            case "tools.done":
+                await toolsFinished()
+            case "file.added", "files.changed", "analysis.started", "analysis.done",
+                 "analysis.failed", "analysis.progress":
+                scheduleFilesRefresh()
             default:
                 log.debug("event \(event.name, privacy: .public)")
             }
@@ -174,21 +214,9 @@ final class AppModel {
         log.info("Check for updates pressed (Sparkle: later milestone)")
     }
 
-    func receive(_ urls: [URL]) {
-        guard !urls.isEmpty else { return }
-        for url in urls { log.info("video received: \(url.path, privacy: .public)") }
-        lastReceived = urls.count
-    }
+    func receive(_ urls: [URL]) { add(urls) }
 
-    func openVideos() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = true
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = true
-        panel.allowedContentTypes = [.movie, .video, .mpeg4Movie, .quickTimeMovie, .folder]
-        panel.prompt = t("nat.add.open").replacingOccurrences(of: "…", with: "")
-        if panel.runModal() == .OK { receive(panel.urls) }
-    }
+    func openVideos() { openVideosPanel() }
 
     func chooseWorkFolder() {
         let panel = NSOpenPanel()
@@ -199,7 +227,7 @@ final class AppModel {
         if let folder = folders?.workFolder {
             panel.directoryURL = URL(fileURLWithPath: folder).deletingLastPathComponent()
         }
-        if panel.runModal() == .OK, let url = panel.url { setWorkFolder(url) }
+        if panel.runModal() == .OK, let url = panel.url { validateAndSetWorkFolder(url) }
     }
 
     func showLog() {
