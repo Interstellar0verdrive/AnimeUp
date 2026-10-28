@@ -97,7 +97,7 @@ struct CalibrationSheet: View {
                     if state == "running" { AUBar(run.fraction ?? 0).frame(width: 90) }
                     if state == "failed" { StatusChip(model.t("nat.chip.stopped"), tone: .red) }
                 }
-                .padding(.horizontal, 14).frame(height: 34)
+                .padding(.horizontal, 14).frame(height: 29)
                 .background(state == "running" ? AU.soft : state == "failed" ? AU.redSoft : .clear)
             }
         }
@@ -117,7 +117,7 @@ struct CalibrationSheet: View {
                 Spacer()
                 Text("\(Int(((run.fraction ?? 0) * 100).rounded()))%").font(.system(size: 12, design: .monospaced)).foregroundStyle(AU.primaryText)
             }
-            MaybeScroll { checklist(run) }.frame(maxHeight: 360)
+            MaybeScroll { checklist(run) }.frame(maxHeight: 470).clipped()
             HStack(spacing: 8) {
                 Button { model.stopCalibration() } label: { Label(model.t("nat.run.stop"), systemImage: "stop.fill") }
                     .auButton(.destructive, .regular)
