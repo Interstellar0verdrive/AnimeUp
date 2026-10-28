@@ -45,6 +45,10 @@ public struct EngineSettings: Codable, Sendable, Equatable {
     public var checkUpdates: Bool
     public var theme: String
     public var workFolder: String?
+    public var notifications: Bool?
+    public var dockProgress: Bool?
+    public var keepWorkFiles: Bool?
+    public var autoInstall: Bool?
 
     public init(height: Int = 1080, crf: Int = 18, preset: String = "slower", dedup: Bool = true,
                 denoise: Bool = false, force: Bool = false, diskGb: Int = 51,

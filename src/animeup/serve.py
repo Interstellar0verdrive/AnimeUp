@@ -269,6 +269,120 @@ def _folders_state(_params: dict) -> dict:
     }
 
 
+def _settings_defaults(_params: dict) -> dict:
+    lavoro = impostazioni.cartella_lavoro()
+    return _impostazioni_inglese({**impostazioni.predefinite(lavoro), **impostazioni.SOLO_NATIVE})
+
+
+# --- strumenti video --------------------------------------------------------
+
+_installazione = threading.Lock()
+
+
+def _tools_install(params: dict) -> dict:
+    """Parte in un thread e risponde subito: l'avanzamento arriva come
+    eventi `tools.progress`, la fine come `tools.done`."""
+    from . import strumenti
+    chiavi = params.get("keys")
+    if chiavi is not None and not (isinstance(chiavi, list) and all(isinstance(c, str) for c in chiavi)):
+        raise ErroreMetodo("bad_params", "keys must be a list of strings")
+    if not _installazione.acquire(blocking=False):
+        return {"started": False, "reason": "already_running"}
+    da_fare = chiavi if chiavi is not None else strumenti.mancanti()
+
+    def lavora() -> None:
+        try:
+            ok = strumenti.installa(da_fare, lambda e: _emetti("tools.progress", e))
+            _emetti("tools.done", {"ok": ok, "status": _tools_status({})})
+        finally:
+            _installazione.release()
+
+    threading.Thread(target=lavora, daemon=True, name="tools-install").start()
+    return {"started": True, "keys": da_fare}
+
+
+# --- aggiornamenti ----------------------------------------------------------
+
+def _updates_state(_params: dict) -> dict:
+    from . import aggiornamenti
+    salvato = aggiornamenti._leggi()
+    nuova = aggiornamenti.disponibile(attivo=impostazioni.carica_native().get("aggiornamenti", True))
+    return {"current": __version__, "checked": salvato.get("controllato"),
+            "latest": (salvato.get("ultima") or "").lstrip("v") or None,
+            "available": nuova["versione"] if nuova else None,
+            "url": (nuova or {}).get("url") or aggiornamenti.PAGINA_RELEASE}
+
+
+def _updates_check(_params: dict) -> dict:
+    from . import aggiornamenti
+    esito, versione = aggiornamenti.controlla_ora()
+    return {"result": {"nuova": "available", "aggiornato": "up_to_date"}.get(esito, "error"),
+            "version": versione or None, **_updates_state({})}
+
+
+# --- l'elenco dei video -----------------------------------------------------
+
+_elenco = None
+_elenco_lock = threading.Lock()
+
+
+def elenco():
+    global _elenco
+    with _elenco_lock:
+        if _elenco is None:
+            from .elenco import Elenco
+            _elenco = Elenco(_emetti_se_attivo,
+                             lambda: bool(impostazioni.carica_native().get("approfondita", True)))
+        return _elenco
+
+
+def _emetti_se_attivo(nome: str, dati: dict) -> None:
+    _emetti(nome, dati)
+
+
+def _ids(params: dict, chiave: str = "ids") -> list[str]:
+    ids = params.get(chiave)
+    if not isinstance(ids, list) or not all(isinstance(i, str) for i in ids):
+        raise ErroreMetodo("bad_params", f"{chiave} must be a list of ids")
+    return ids
+
+
+def _files_list(_params: dict) -> dict:
+    e = elenco()
+    return {"files": e.elenco(), "activity": e.attivita()}
+
+
+def _files_add(params: dict) -> dict:
+    percorsi = params.get("paths")
+    if not isinstance(percorsi, list) or not all(isinstance(p, str) for p in percorsi):
+        raise ErroreMetodo("bad_params", "paths must be a list of strings")
+    return elenco().aggiungi(percorsi, bool(params.get("subfolders", False)))
+
+
+def _files_remove(params: dict) -> dict:
+    return elenco().togli(_ids(params))
+
+
+def _files_order(params: dict) -> dict:
+    return elenco().ordina(_ids(params))
+
+
+def _files_reanalyse(params: dict) -> dict:
+    return elenco().rianalizza(None if params.get("all") else _ids(params))
+
+
+def _files_deep(params: dict) -> dict:
+    return elenco().approfondisci(_ids(params))
+
+
+def _files_report(params: dict) -> dict:
+    ident = params.get("id")
+    voce = elenco().voce(ident) if isinstance(ident, str) else None
+    if voce is None:
+        raise ErroreMetodo("not_found", f"no file with id {ident!r}")
+    return voce
+
+
 METODI: dict[str, Callable[[dict], dict]] = {
     "hello": _hello,
     "version": _hello,
@@ -278,6 +392,17 @@ METODI: dict[str, Callable[[dict], dict]] = {
     "calibration.state": _calibration_state,
     "tools.status": _tools_status,
     "folders.state": _folders_state,
+    "settings.defaults": _settings_defaults,
+    "tools.install": _tools_install,
+    "updates.state": _updates_state,
+    "updates.check": _updates_check,
+    "files.list": _files_list,
+    "files.add": _files_add,
+    "files.remove": _files_remove,
+    "files.order": _files_order,
+    "files.reanalyse": _files_reanalyse,
+    "files.deep": _files_deep,
+    "files.report": _files_report,
 }
 
 
@@ -364,4 +489,7 @@ def esegui() -> int:
                 _scrivi({"id": richiesta.get("id"), "result": {"bye": True}})
                 break
             pool.submit(lavora, riga)
+    # Per i test: a stdin chiuso si aspetta la fine delle analisi in corso.
+    if os.environ.get("ANIMEUP_SERVE_WAIT") == "1" and _elenco is not None:
+        _elenco.aspetta()
     return 0

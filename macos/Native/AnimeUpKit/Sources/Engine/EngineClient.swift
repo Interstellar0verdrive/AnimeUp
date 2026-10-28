@@ -122,6 +122,26 @@ public actor EngineClient {
     public func calibrationState() async throws -> CalibrationState { try await call("calibration.state") }
     public func toolsStatus() async throws -> ToolsStatus { try await call("tools.status") }
     public func foldersState() async throws -> FoldersState { try await call("folders.state") }
+    public func defaults() async throws -> EngineSettings { try await call("settings.defaults") }
+    public func filesList() async throws -> FilesList { try await call("files.list") }
+    public func addFiles(_ paths: [String], subfolders: Bool) async throws -> AddResult {
+        try await call("files.add", params: ["paths": paths, "subfolders": subfolders])
+    }
+    public func removeFiles(_ ids: [String]) async throws {
+        _ = try await raw("files.remove", params: ["ids": ids])
+    }
+    public func reanalyse(_ ids: [String]?) async throws {
+        if let ids { _ = try await raw("files.reanalyse", params: ["ids": ids]) }
+        else { _ = try await raw("files.reanalyse", params: ["all": true]) }
+    }
+    public func deepAnalysis(_ ids: [String]) async throws { _ = try await raw("files.deep", params: ["ids": ids]) }
+    public func orderFiles(_ ids: [String]) async throws { _ = try await raw("files.order", params: ["ids": ids]) }
+    public func installTools(_ keys: [String]?) async throws {
+        if let keys { _ = try await raw("tools.install", params: ["keys": keys]) }
+        else { _ = try await raw("tools.install") }
+    }
+    public func updatesState() async throws -> UpdatesState { try await call("updates.state") }
+    public func checkUpdates() async throws -> UpdatesState { try await call("updates.check") }
 
     // MARK: incoming
 

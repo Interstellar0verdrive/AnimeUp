@@ -78,6 +78,14 @@ SOLO_NATIVE = {
     # La cartella dei file di lavoro; None = quella di fabbrica (vedi
     # `cartella_lavoro_predefinita`).
     "cartella_lavoro": None,
+    # Notifiche di macOS e avanzamento sull'icona del Dock.
+    "notifiche": True,
+    "dock": True,
+    # Dopo un file finito: False = si cancellano i file di lavoro (il log
+    # resta sempre), True = si tiene tutto.
+    "tieni_lavoro": False,
+    # Scaricare e installare gli aggiornamenti da soli (mai durante una coda).
+    "installa_auto": False,
 }
 
 
@@ -200,6 +208,9 @@ def native_pulite(dati: object) -> dict:
         cartella = dati.get("cartella_lavoro")
         if isinstance(cartella, str) and cartella.startswith("/"):
             puliti["cartella_lavoro"] = cartella
+        for chiave, fabbrica in SOLO_NATIVE.items():
+            if isinstance(fabbrica, bool) and isinstance(dati.get(chiave), bool):
+                puliti[chiave] = dati[chiave]
     return puliti
 
 

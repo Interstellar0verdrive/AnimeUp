@@ -24,6 +24,7 @@ final class Sidecar: @unchecked Sendable {
          onExit: @escaping @Sendable (Int32) -> Void) throws {
         let fm = FileManager.default
         try fm.createDirectory(at: configuration.logFile.deletingLastPathComponent(), withIntermediateDirectories: true)
+        Self.rotate(configuration.logFile)
         if !fm.fileExists(atPath: configuration.logFile.path) {
             fm.createFile(atPath: configuration.logFile.path, contents: nil)
         }
@@ -100,6 +101,15 @@ final class Sidecar: @unchecked Sendable {
             }
             for line in self.append(chunk) { onLine(line) }
         }
+    }
+
+    /// Keeps two files of ~5 MB: `engine.log` and `engine.1.log`.
+    static func rotate(_ log: URL, limit: Int = 5_000_000) {
+        let fm = FileManager.default
+        guard let size = (try? fm.attributesOfItem(atPath: log.path))?[.size] as? Int, size > limit else { return }
+        let old = log.deletingPathExtension().appendingPathExtension("1.log")
+        try? fm.removeItem(at: old)
+        try? fm.moveItem(at: log, to: old)
     }
 
     private func markExited() {

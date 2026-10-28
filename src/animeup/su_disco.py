@@ -33,6 +33,10 @@ VOCABOLARIO: dict[str, str] = {
     "aggiornamenti": "check_updates",
     "tema": "theme",
     "cartella_lavoro": "work_folder",
+    "notifiche": "notifications",
+    "dock": "dock_progress",
+    "tieni_lavoro": "keep_work_files",
+    "installa_auto": "auto_install",
     # storico dei file (history.jsonl)
     "secondi": "seconds",
     "avvisi": "warnings",

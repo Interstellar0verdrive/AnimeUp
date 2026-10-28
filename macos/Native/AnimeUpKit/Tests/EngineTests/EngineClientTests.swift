@@ -124,3 +124,17 @@ let python = repo.appendingPathComponent(".venv/bin/python").path
         #expect(env.codeFolder.path == "/c" && env.stateFolder.path == "/s")
     }
 }
+
+@Suite struct LogRotationTests {
+    @Test func rotatesAboveTheLimit() throws {
+        let dir = tempState()
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let log = dir.appendingPathComponent("engine.log")
+        try Data(repeating: 65, count: 2000).write(to: log)
+        Sidecar.rotate(log, limit: 5000)
+        #expect(FileManager.default.fileExists(atPath: log.path))
+        Sidecar.rotate(log, limit: 1000)
+        #expect(!FileManager.default.fileExists(atPath: log.path))
+        #expect(FileManager.default.fileExists(atPath: dir.appendingPathComponent("engine.1.log").path))
+    }
+}

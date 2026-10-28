@@ -5717,6 +5717,105 @@ def _() -> None:
         assert _risposte(messaggi)[1]["result"]["state"] == "done"
 
 
+@caso("serve: i video si aggiungono, si espandono, si analizzano e si tolgono")
+def _() -> None:
+    import json as _json
+    import shutil as _sh
+    with tempfile.TemporaryDirectory() as tmp:
+        stato = Path(tmp) / "stato"
+        video = Path(tmp) / "video"
+        (video / "Sotto").mkdir(parents=True)
+        (video / "Vuota").mkdir()
+        _sh.copy(CAMPIONI / "clip20s.mkv", video / "A [480p].mkv")
+        _sh.copy(CAMPIONI / "TEST-CFR-23-976fps---17s.mkv", video / "Sotto" / "B.mkv")
+        (video / "note.txt").write_text("x")
+        righe = [
+            _json.dumps({"id": 1, "method": "files.add",
+                         "params": {"paths": [str(video)], "subfolders": False}}),
+            _json.dumps({"id": 2, "method": "files.add",
+                         "params": {"paths": [str(video / "Vuota")], "subfolders": True}}),
+            _json.dumps({"id": 3, "method": "files.add",
+                         "params": {"paths": [str(video)], "subfolders": True}}),
+        ]
+        messaggi, err = _serve(righe, stato, ambiente={"ANIMEUP_SERVE_WAIT": "1"})
+        r = _risposte(messaggi)
+        assert len(r[1]["result"]["added"]) == 1 and r[1]["result"]["unsupported"] == 1, r[1]
+        assert r[2]["result"]["empty_folders"] == [str(video / "Vuota")], r[2]
+        assert len(r[3]["result"]["added"]) == 1 and r[3]["result"]["already"] == 1, r[3]
+        eventi = [m.get("event") for m in messaggi if "event" in m]
+        assert eventi.count("file.added") == 2, eventi
+        assert eventi.count("analysis.done") == 2, (eventi, err[-1500:])
+        fatto = next(m["data"] for m in messaggi if m.get("event") == "analysis.done")
+        assert fatto["state"] == "ready" and fatto["report"]["width"] > 0, fatto
+        assert "warnings" in fatto["report"] and fatto["report"]["fps_text"], fatto
+        # L'elenco sopravvive al riavvio, nello stesso ordine; si toglie un file.
+        ids = r[1]["result"]["added"] + r[3]["result"]["added"]
+        messaggi, _ = _serve([_json.dumps({"id": 1, "method": "files.list"}),
+                              _json.dumps({"id": 2, "method": "files.remove", "params": {"ids": ids[:1]}}),
+                              _json.dumps({"id": 3, "method": "files.report", "params": {"id": "nessuno"}})],
+                             stato)
+        r = _risposte(messaggi)
+        assert [f["id"] for f in r[1]["result"]["files"]] == ids, r[1]
+        assert all(f["state"] == "ready" for f in r[1]["result"]["files"]), r[1]
+        assert r[2]["result"]["removed"] == 1
+        assert r[3]["error"]["code"] == "not_found"
+        salvato = _json.loads((stato / "records" / "files.json").read_text())
+        assert [f["id"] for f in salvato["files"]] == ids[1:]
+
+
+@caso("strumenti: lo scaricamento riprende da dove si era fermato")
+def _() -> None:
+    import hashlib as _hl
+    import http.server
+    import threading as _th
+    from unittest import mock
+    from animeup import strumenti
+
+    dati = os.urandom(300_000)
+    richieste = []
+
+    class Gestore(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            intervallo = self.headers.get("Range")
+            richieste.append(intervallo)
+            inizio = int(intervallo.split("=")[1].rstrip("-")) if intervallo else 0
+            self.send_response(206 if intervallo else 200)
+            self.send_header("Content-Length", str(len(dati) - inizio))
+            self.end_headers()
+            self.wfile.write(dati[inizio:])
+
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Gestore)
+    _th.Thread(target=server.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{server.server_address[1]}/pacchetto.zip"
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            finti = mock.patch.object(strumenti, "_cartella_parziali", lambda: Path(tmp))
+            with finti:
+                (Path(tmp) / "p.zip.part").write_bytes(dati[:100_000])
+                visti = []
+                f = strumenti.scarica(url, "p.zip", _hl.sha256(dati).hexdigest(),
+                                      lambda a, b: visti.append((a, b)))
+                assert f.read_bytes() == dati
+                assert richieste == ["bytes=100000-"], richieste
+                assert visti[-1] == (len(dati), len(dati)), visti[-1:]
+                # Gia' completo: nessuna richiesta in piu'.
+                strumenti.scarica(url, "p.zip", _hl.sha256(dati).hexdigest(), lambda a, b: None)
+                assert len(richieste) == 1
+                # Checksum sbagliato: errore, e il parziale non resta.
+                try:
+                    strumenti.scarica(url, "q.zip", "0" * 64, lambda a, b: None)
+                    raise AssertionError("un checksum sbagliato e' passato")
+                except ValueError:
+                    pass
+                assert not (Path(tmp) / "q.zip.part").exists()
+                assert not (Path(tmp) / "q.zip").exists()
+    finally:
+        server.shutdown()
+
+
 def main() -> int:
     if SINTETICI:
         # Detto a schermo: un verde sui sintetici non e' un verde sui veri.
