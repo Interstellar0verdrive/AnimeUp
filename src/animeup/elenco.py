@@ -162,6 +162,10 @@ class Elenco:
                         "path": v["path"], "added": v.get("added") or time.time()}
                 if v.get("no_dedup"):
                     voce["no_dedup"] = True
+                if isinstance(v.get("model"), str):
+                    voce["model"] = v["model"]
+                if v.get("height") in (720, 1080, 1440, 2160):
+                    voce["height"] = v["height"]
                 fuori.append(voce)
         return fuori
 
@@ -176,7 +180,8 @@ class Elenco:
     def _stato(self, voce: dict) -> dict:
         p = Path(voce["path"])
         fuori: dict = {"id": voce["id"], "path": voce["path"], "name": p.name,
-                       "added": voce["added"], "dedup_unmeasurable": bool(voce.get("no_dedup"))}
+                       "added": voce["added"], "dedup_unmeasurable": bool(voce.get("no_dedup")),
+                       "model": voce.get("model"), "height": voce.get("height")}
         try:
             fuori["size"] = p.stat().st_size
             esiste = True
@@ -263,6 +268,32 @@ class Elenco:
         if tolti:
             self._evento("files.changed", {})
         return {"removed": tolti}
+
+    def voci(self) -> list[dict]:
+        with self._lock:
+            return [dict(v) for v in self._voci]
+
+    def scegli(self, ids: list[str], **scelte) -> dict:
+        """Modello e/o altezza d'uscita per file. None torna al predefinito."""
+        from .models import CATALOG
+        via = set(ids)
+        with self._lock:
+            for v in self._voci:
+                if v["id"] not in via:
+                    continue
+                if "model" in scelte:
+                    if scelte["model"] in CATALOG:
+                        v["model"] = scelte["model"]
+                    else:
+                        v.pop("model", None)
+                if "height" in scelte:
+                    if scelte["height"] in (720, 1080, 1440, 2160):
+                        v["height"] = scelte["height"]
+                    else:
+                        v.pop("height", None)
+            self._scrivi()
+        self._evento("files.changed", {})
+        return {"ok": True}
 
     def ordina(self, ids: list[str]) -> dict:
         with self._lock:

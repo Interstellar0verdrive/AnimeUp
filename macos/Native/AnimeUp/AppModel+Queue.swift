@@ -28,6 +28,54 @@ extension AppModel {
         unticked = unticked.intersection(ids)
         selection = selection.intersection(ids)
         if let e = expanded, !ids.contains(e) { expanded = nil }
+        await refreshPlans()
+    }
+
+    func refreshPlans() async {
+        guard files.contains(where: { $0.state == .ready }),
+              let reply = try? await engine.plans() else {
+            if files.isEmpty { plans = [:] }
+            return
+        }
+        plans = reply.plans
+        calibratedWhen = reply.calibratedWhen
+    }
+
+    func plan(_ id: String) -> FilePlan? { plans[id].flatMap { $0.ready ? $0 : nil } }
+
+    func chooseModel(_ key: String, for ids: [String]) {
+        Task {
+            try? await engine.setFiles(ids, model: key)
+            await refreshPlans()
+        }
+    }
+
+    /// "Same for all": the model for every analysed file it can process.
+    func sameForAll(_ key: String) {
+        let ids = files.filter { f in
+            f.state == .ready && plans[f.id]?.option(key)?.unreachable == nil
+        }.map(\.id)
+        chooseModel(key, for: ids)
+    }
+
+    func chooseHeight(_ height: Int?, for id: String) {
+        Task {
+            try? await engine.setFiles([id], height: height.map { $0 as any Sendable } ?? NSNull())
+            await refreshPlans()
+        }
+    }
+
+    /// Ticked files' estimate, in seconds.
+    var selectionEstimate: Double {
+        files.filter { isTicked($0) }.compactMap { plans[$0.id]?.estimate }.reduce(0, +)
+    }
+
+    /// Short model name: catalog label without "Real-ESRGAN " / "Real-".
+    func shortModel(_ key: String) -> String {
+        let k = "mot.modello.\(key).label"
+        let label = localizer.has(k) ? t(k) : key
+        return label.hasPrefix("Real-ESRGAN ") ? String(label.dropFirst(12))
+            : label.hasPrefix("Real-") ? String(label.dropFirst(5)) : label
     }
 
     func scheduleFilesRefresh() {

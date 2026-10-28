@@ -383,6 +383,22 @@ def _files_report(params: dict) -> dict:
     return voce
 
 
+def _plans_get(params: dict) -> dict:
+    from . import piani
+    voci = elenco().voci()
+    ids = params.get("ids")
+    if isinstance(ids, list):
+        voci = [v for v in voci if v["id"] in set(ids)]
+    return piani.piani(voci)
+
+
+def _files_set(params: dict) -> dict:
+    scelte = {k: params[k] for k in ("model", "height") if k in params}
+    if not scelte:
+        raise ErroreMetodo("bad_params", "files.set wants model and/or height")
+    return elenco().scegli(_ids(params), **scelte)
+
+
 METODI: dict[str, Callable[[dict], dict]] = {
     "hello": _hello,
     "version": _hello,
@@ -403,6 +419,8 @@ METODI: dict[str, Callable[[dict], dict]] = {
     "files.reanalyse": _files_reanalyse,
     "files.deep": _files_deep,
     "files.report": _files_report,
+    "files.set": _files_set,
+    "plans.get": _plans_get,
 }
 
 

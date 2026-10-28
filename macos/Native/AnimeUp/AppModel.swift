@@ -47,6 +47,9 @@ final class AppModel {
     var panelTab: PanelTab = .analysis
     var alert: AppAlert?
     var undoRemoved: [QueueFile] = []
+    // Plans (M4)
+    var plans: [String: FilePlan] = [:]
+    var calibratedWhen: Double?
     var includeSubfolders: Bool = UserDefaults.standard.bool(forKey: "includeSubfolders") {
         didSet { UserDefaults.standard.set(includeSubfolders, forKey: "includeSubfolders") }
     }

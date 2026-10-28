@@ -5763,6 +5763,40 @@ def _() -> None:
         assert [f["id"] for f in salvato["files"]] == ids[1:]
 
 
+@caso("serve: i piani seguono il modello e l'altezza scelti per file")
+def _() -> None:
+    import json as _json
+    import shutil as _sh
+    with tempfile.TemporaryDirectory() as tmp:
+        stato = Path(tmp) / "stato"
+        video = Path(tmp) / "video"
+        video.mkdir()
+        _sh.copy(CAMPIONI / "TEST-CFR-23-976fps---17s.mkv", video / "A.mkv")
+        messaggi, err = _serve([_json.dumps({"id": 1, "method": "files.add",
+                                             "params": {"paths": [str(video)]}})],
+                               stato, ambiente={"ANIMEUP_SERVE_WAIT": "1"})
+        ident = _risposte(messaggi)[1]["result"]["added"][0]
+        # Le richieste girano in parallelo: un giro per ognuna, in ordine.
+        r = {}
+        for i, riga in enumerate([
+                _json.dumps({"id": 1, "method": "plans.get"}),
+                _json.dumps({"id": 2, "method": "files.set",
+                             "params": {"ids": [ident], "model": "cugan", "height": 720}}),
+                _json.dumps({"id": 3, "method": "files.set", "params": {"ids": [ident]}})], 1):
+            messaggi, err = _serve([riga], stato)
+            r.update(_risposte(messaggi))
+        piano = r[1]["result"]["plans"][ident]
+        assert piano["ready"] and piano["model"] == piano["recommended"], piano
+        assert piano["estimate"] > 0 and piano["chunks"] >= 1, piano
+        assert {m["key"] for m in piano["models"]} >= {"animevideov3", "cugan"}
+        assert piano["height_is_default"] and piano["height"] == 1080
+        assert r[3]["error"]["code"] == "bad_params"
+        messaggi, _ = _serve([_json.dumps({"id": 1, "method": "plans.get", "params": {"ids": [ident]}})], stato)
+        piano = _risposte(messaggi)[1]["result"]["plans"][ident]
+        assert piano["model"] == "cugan" and piano["height"] == 720 and not piano["height_is_default"], piano
+        assert piano["output_height"] == 720, piano
+        assert piano["output_folder"] == str(video.resolve())
+
 @caso("strumenti: lo scaricamento riprende da dove si era fermato")
 def _() -> None:
     import hashlib as _hl

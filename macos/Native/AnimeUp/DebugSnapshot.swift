@@ -76,6 +76,11 @@ enum DebugSnapshot {
                 model.selection = []
                 try? await Task.sleep(for: .seconds(1))
                 renderQueue(model, "\(base)-queue-ready.png")
+                model.expanded = model.files.first(where: { $0.name.contains("720p") })?.id ?? model.expanded
+                model.panelTab = .processing
+                try? await Task.sleep(for: .seconds(1))
+                renderQueue(model, "\(base)-queue-plan.png")
+                model.panelTab = .analysis
                 renderComposite(model, "\(base)-start-files-done.png")
                 model.localizer.setLanguage("it")
                 renderQueue(model, "\(base)-queue-ready-it.png")

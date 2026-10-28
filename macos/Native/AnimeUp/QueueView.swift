@@ -57,7 +57,7 @@ enum QueueColumns {
     static let length: CGFloat = 54
     static let status: CGFloat = 150
     static let model: CGFloat = 172
-    static let time: CGFloat = 70
+    static let time: CGFloat = 84
     static let chevron: CGFloat = 20
 }
 
@@ -136,12 +136,19 @@ struct QueueHeader: View {
             HStack {
                 Text(model.t("nat.col.model"))
                 Spacer()
-                HStack(spacing: 3) {
-                    Text(model.t("nat.col.same_for_all"))
-                    Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
+                Menu {
+                    ForEach(["animevideov3", "cugan-denoise", "cugan", "cugan-conservative"], id: \.self) { key in
+                        Button(model.shortModel(key)) { model.sameForAll(key) }
+                    }
+                } label: {
+                    HStack(spacing: 3) {
+                        Text(model.t("nat.col.same_for_all"))
+                        Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
+                    }
+                    .foregroundStyle(AU.text2)
                 }
-                .opacity(0.4)
-                .help(model.t("nat.queue.models_later"))
+                .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+                .disabled(model.plans.isEmpty)
             }
             .frame(width: QueueColumns.model)
             Text(model.t("nat.col.time")).frame(width: QueueColumns.time, alignment: .trailing)
@@ -256,12 +263,8 @@ struct QueueRow: View {
                 .font(AUFont.numbers).foregroundStyle(AU.textCode)
                 .frame(width: QueueColumns.length, alignment: .trailing)
             HStack { statusChip; Spacer(minLength: 0) }.frame(width: QueueColumns.status)
-            Text(file.state == .ready ? "—" : model.t("nat.queue.after_analysis"))
-                .font(.system(size: 12)).foregroundStyle(AU.text2)
-                .frame(width: QueueColumns.model, alignment: .leading)
-                .help(model.t("nat.queue.models_later"))
-            Text("—").font(AUFont.numbers).foregroundStyle(AU.text2)
-                .frame(width: QueueColumns.time, alignment: .trailing)
+            modelColumn.frame(width: QueueColumns.model, alignment: .leading)
+            timeColumn.frame(width: QueueColumns.time, alignment: .trailing)
             Button { toggle() } label: {
                 Image(systemName: open ? "chevron.up" : "chevron.down").font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(AU.text2).frame(width: QueueColumns.chevron, height: 24)
@@ -307,13 +310,70 @@ struct QueueRow: View {
             }
         case .queued: StatusChip(model.t("nat.chip.awaiting"))
         case .ready:
-            if file.warnings.isEmpty {
-                StatusChip(model.t("nat.chip.ready"), tone: .green, symbol: "checkmark")
+            if let p = model.plan(file.id) {
+                if p.error != nil && p.model == nil {
+                    StatusChip(model.t("nat.chip.cant_process"), tone: .red).help(p.error ?? "")
+                } else {
+                    switch p.verdict {
+                    case "ok": StatusChip(model.t("nat.chip.recommended"), tone: .green, symbol: "checkmark")
+                    case "verifica": StatusChip(model.t("nat.chip.worth_checking"), tone: .yellow)
+                    case "no": StatusChip(model.t("nat.chip.not_recommended"), tone: .red)
+                    default: StatusChip(model.t("nat.chip.your_choice"))
+                    }
+                }
             } else {
-                StatusChip(model.t("nat.chip.ready"), tone: .yellow, symbol: "exclamationmark.triangle.fill")
+                StatusChip(model.t("nat.chip.ready"), tone: .green, symbol: "checkmark")
             }
         case .failed: StatusChip(model.t("nat.chip.unreadable"), tone: .red, symbol: "exclamationmark.octagon.fill")
         case .missing: StatusChip(model.t("nat.chip.missing"), tone: .red)
+        }
+    }
+
+    @ViewBuilder
+    private var modelColumn: some View {
+        if file.state == .ready, let p = model.plan(file.id), let current = p.model {
+            Menu {
+                ForEach(p.models ?? []) { opt in
+                    Button { model.chooseModel(opt.key, for: [file.id]) } label: {
+                        Text(optionLabel(opt))
+                    }
+                    .disabled(opt.unreachable != nil)
+                }
+            } label: {
+                PopupLabel(model.shortModel(current), width: QueueColumns.model)
+            }
+            .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden)
+            .help(p.reason ?? "")
+        } else {
+            Text(file.state == .ready ? "—" : model.t("nat.queue.after_analysis"))
+                .font(.system(size: 12)).foregroundStyle(AU.text2)
+        }
+    }
+
+    private func optionLabel(_ opt: FilePlan.ModelOption) -> String {
+        var label = model.shortModel(opt.key)
+        if let why = opt.unreachable { return label + " — " + why }
+        switch opt.verdict {
+        case "ok": label += " · " + model.t("nat.chip.recommended")
+        case "verifica": label += " · " + model.t("nat.chip.worth_checking")
+        case "no": label += " · " + model.t("nat.chip.not_recommended")
+        default: break
+        }
+        if let e = opt.estimate { label += "   " + Fmt.estimate(e) }
+        return label
+    }
+
+    @ViewBuilder
+    private var timeColumn: some View {
+        if let p = model.plan(file.id), let e = p.estimate {
+            HStack(spacing: 4) {
+                Text(verbatim: Fmt.estimate(e)).font(AUFont.numbers).foregroundStyle(AU.textCode)
+                    .lineLimit(1).fixedSize()
+                Image(systemName: "info.circle").font(.system(size: 9)).foregroundStyle(AU.text3)
+            }
+            .help(model.t("nat.queue.range", ["best": Fmt.span(p.estimateBest ?? e), "worst": Fmt.span(p.estimateWorst ?? e)]))
+        } else {
+            Text(verbatim: "—").font(AUFont.numbers).foregroundStyle(AU.text2)
         }
     }
 
@@ -409,7 +469,13 @@ struct FilePanel: View {
                     .disabled(file.state == .analysing)
             }
             if model.panelTab == .processing {
-                Text(model.t("nat.panel.processing_later")).auSmall()
+                if let p = model.plan(file.id), p.model != nil {
+                    ProcessingPanel(file: file, plan: p)
+                } else if let p = model.plan(file.id), let e = p.error {
+                    NoteView(.red, title: model.t("nat.chip.cant_process"), text: e)
+                } else {
+                    Text(model.t("nat.panel.waiting")).auSmall()
+                }
             } else if let r = file.report {
                 analysis(r)
             } else if file.state == .failed {
@@ -506,9 +572,10 @@ struct DataGroup: View {
                             if i < items.count {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(items[i].0).font(.system(size: 11)).foregroundStyle(AU.text3)
-                                    Text(items[i].1).font(AUFont.numbers)
+                                    Text(verbatim: items[i].1).font(AUFont.numbers)
                                         .foregroundStyle(items[i].2 ? AU.yellowText : AU.text)
-                                        .lineLimit(1)
+                                        .lineLimit(2)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
@@ -521,18 +588,97 @@ struct DataGroup: View {
     }
 }
 
+// MARK: - Processing panel (F3)
+
+struct ProcessingPanel: View {
+    @Environment(AppModel.self) private var model
+    var file: QueueFile
+    var plan: FilePlan
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 32) {
+                DataGroup(title: model.t("nat.plan.job"), items: [
+                    (model.t("nat.col.model"), model.shortModel(plan.model ?? ""), plan.verdict == "no"),
+                    (model.t("nat.plan.pipeline"), pipeline, false),
+                    (model.t("nat.plan.output"), "\(plan.outputWidth ?? 0)×\(plan.outputHeight ?? 0)", false),
+                    (model.t("nat.plan.chunks"), model.t("nat.plan.chunks_of", ["n": plan.chunks ?? 1, "frames": Fmt.count(plan.frames ?? 0)]), (plan.chunks ?? 1) > 3),
+                ])
+                DataGroup(title: model.t("nat.plan.encoding"), items: [
+                    (model.t("nat.plan.codec"), "\((plan.codec ?? "").replacingOccurrences(of: "lib", with: "").replacingOccurrences(of: "x265", with: "hevc")) \(plan.pixFmt ?? "")", false),
+                    ("CRF", "\(plan.crf ?? 18)", false),
+                    (model.t("nat.plan.preset"), plan.preset ?? "", false),
+                    (model.t("nat.plan.restoration"), (plan.restoration ?? []).isEmpty ? model.t("nat.plan.none") : (plan.restoration ?? []).joined(separator: ", "), false),
+                ])
+                outputGroup
+            }
+            ForEach((plan.warnings ?? []), id: \.self) { w in NoteView(.yellow, text: w) }
+        }
+    }
+
+    private var pipeline: String {
+        var s = "\(model.shortModel(plan.model ?? "").components(separatedBy: " ").first ?? "") \(plan.scale ?? 2)×"
+        if let d = plan.downscale, d > 1.001 { s += " → downscale \(String(format: "%.2f", d)):1" }
+        return s
+    }
+
+    private var outputGroup: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(model.t("nat.plan.output_file")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(AU.text)
+                Rectangle().fill(AU.line).frame(height: 1)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(model.t("nat.plan.height")).font(.system(size: 11)).foregroundStyle(AU.text3)
+                Menu {
+                    Button(model.t("nat.plan.height_default", ["h": model.settings?.height ?? 1080])) { model.chooseHeight(nil, for: file.id) }
+                    Divider()
+                    ForEach([720, 1080, 1440, 2160], id: \.self) { h in
+                        Button("\(h)") { model.chooseHeight(h, for: file.id) }
+                    }
+                } label: {
+                    PopupLabel((plan.heightIsDefault ?? true) ? model.t("nat.plan.height_default", ["h": plan.height ?? 1080])
+                               : "\(plan.height ?? 1080)", width: 160)
+                }
+                .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.t("nat.plan.name")).font(.system(size: 11)).foregroundStyle(AU.text3)
+                Text(verbatim: plan.outputName ?? "").font(AUFont.numbers).foregroundStyle(AU.text)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.t("nat.plan.folder")).font(.system(size: 11)).foregroundStyle(AU.text3)
+                Text(model.t("nat.plan.next_to")).font(AUFont.numbers).foregroundStyle(AU.text)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 // MARK: - Action bar
 
 struct QueueActionBar: View {
     @Environment(AppModel.self) private var model
 
+    private var calibrationNote: String {
+        if let w = model.calibratedWhen {
+            return model.t("nat.queue.calibrated_note", ["when": model.relative(Date(timeIntervalSince1970: w))])
+        }
+        return model.t("nat.queue.factory_note")
+    }
+
     var body: some View {
         let n = model.files.filter { model.isTicked($0) }.count
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text("\(Text(model.localizer.tn("nat.queue.selected", n)).fontWeight(.semibold).foregroundStyle(AU.text)) · \(model.t("nat.queue.estimate_later"))")
-                    .font(.system(size: 13)).foregroundStyle(AU.text2)
-                Text(model.t("nat.queue.estimate_note")).font(.system(size: 12)).foregroundStyle(AU.text2)
+                HStack(spacing: 4) {
+                    Text("\(Text(model.localizer.tn("nat.queue.selected", n)).fontWeight(.semibold).foregroundStyle(AU.text)) · \(model.t("nat.queue.estimate", ["time": Fmt.span(model.selectionEstimate)]))")
+                        .font(.system(size: 13)).foregroundStyle(AU.text2)
+                    Image(systemName: "info.circle").font(.system(size: 10)).foregroundStyle(AU.text3)
+                        .help(model.t("nat.queue.estimate_help"))
+                }
+                Text(model.t("nat.queue.estimate_note") + " · " + calibrationNote).font(.system(size: 12)).foregroundStyle(AU.text2)
             }
             Spacer()
             Button { } label: { Label(model.t("nat.queue.start"), systemImage: "play.fill") }

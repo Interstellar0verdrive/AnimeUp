@@ -64,6 +64,7 @@ extension AppModel {
                 settings = s
                 localizer.setLanguage(s.language)
                 if key == "work_folder" || key == "disk_gb" { folders = try? await engine.foldersState() }
+                await refreshPlans()
             }
         }
     }
@@ -185,7 +186,10 @@ struct OutputSettings: View {
         guard let d = model.defaults else { return }
         let values: [String: any Sendable] = ["height": d.height, "crf": d.crf, "preset": d.preset, "dedup": d.dedup,
                                               "deep_analysis": d.deepAnalysis, "force": d.force]
-        Task { model.settings = (try? await model.engine.setSettings(values)) ?? model.settings }
+        Task {
+            model.settings = (try? await model.engine.setSettings(values)) ?? model.settings
+            await model.refreshPlans()
+        }
     }
 }
 

@@ -140,6 +140,17 @@ public actor EngineClient {
         if let keys { _ = try await raw("tools.install", params: ["keys": keys]) }
         else { _ = try await raw("tools.install") }
     }
+    public func plans(_ ids: [String]? = nil) async throws -> PlansReply {
+        if let ids { return try await call("plans.get", params: ["ids": ids]) }
+        return try await call("plans.get")
+    }
+    /// Model and/or height per file; pass `NSNull()` to go back to the default.
+    public func setFiles(_ ids: [String], model: (any Sendable)? = nil, height: (any Sendable)? = nil) async throws {
+        var params: [String: any Sendable] = ["ids": ids]
+        if let model { params["model"] = model }
+        if let height { params["height"] = height }
+        _ = try await raw("files.set", params: params)
+    }
     public func updatesState() async throws -> UpdatesState { try await call("updates.state") }
     public func checkUpdates() async throws -> UpdatesState { try await call("updates.check") }
 
