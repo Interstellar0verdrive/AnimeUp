@@ -492,7 +492,7 @@
   "nat.cmp.no_clip_to_pick": "Nessuna clip da scegliere",
   "nat.cmp.choose_another": "Scegli un altro file da provare.",
   "nat.cmp.too_short": "Dura {s} secondi: meno di una clip da 10 secondi. Scegli un file più lungo qui sopra; il suo modello si sceglie comunque nella Coda.",
-  "nat.cmp.short_file.uno": "Un file corto: trovata una sola clip.",
+  "nat.cmp.short_file.uno": "Un file corto: trovata solo {n} clip.",
   "nat.cmp.short_file.altri": "Un file corto: trovate solo {n} clip.",
   "nat.cmp.short_file_text": "Dura {d}, quindi non ci sono abbastanza momenti difficili per altre.",
   "nat.cmp.band0": "sotto 380p",
