@@ -52,7 +52,15 @@ final class Sidecar: @unchecked Sendable {
         posix_spawnattr_setpgroup(&attributes, 0)
         // CLOEXEC_DEFAULT: only the three descriptors above reach the child,
         // nothing else the app has open.
-        posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETSIGDEF))
+        // SETSIGMASK with an empty mask: the thread that spawns may block
+        // signals (Swift concurrency threads do), and a blocked SIGTERM or
+        // SIGUSR1 would be inherited by every job the engine starts: Stop
+        // and Stop All would do nothing.
+        posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_CLOEXEC_DEFAULT
+                                                    | POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK))
+        var noMask = sigset_t()
+        sigemptyset(&noMask)
+        posix_spawnattr_setsigmask(&attributes, &noMask)
         var defaults = sigset_t()
         sigemptyset(&defaults)
         sigaddset(&defaults, SIGPIPE)

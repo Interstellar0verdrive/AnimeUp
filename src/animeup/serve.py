@@ -631,6 +631,10 @@ def esegui() -> int:
     # I video finiti dell'app nativa vanno accanto agli originali (anche
     # nei piani mostrati, che devono dire lo stesso nome e la stessa cartella).
     os.environ.setdefault("ANIMEUP_ACCANTO", "1")
+    # Nessun segnale bloccato in eredita' (l'app che ci lancia puo' averne):
+    # le lavorazioni partono da qui, e Ferma / Ferma tutto vivono di segnali.
+    import signal as _segnali
+    _segnali.pthread_sigmask(_segnali.SIG_SETMASK, [])
     os.dup2(2, 1)
     sys.stdout = sys.stderr
 

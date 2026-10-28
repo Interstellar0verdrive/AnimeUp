@@ -106,6 +106,9 @@ enum DebugSnapshot {
                 render(CalibrationSheet().environment(model), width: 520, "\(base)-cal-stopped.png")
                 model.showCalibration = false
             }
+            for w in NSApp.windows {
+                log.info("window: \(type(of: w)) '\(w.title)' \(Int(w.frame.width))x\(Int(w.frame.height)) visible=\(w.isVisible) sheet=\(w.isSheet) content=\(String(describing: type(of: w.contentViewController ?? NSViewController())))")
+            }
             if env["ANIMEUP_SNAPSHOT_TABS"] == "1" {
                 model.localizer.setLanguage("it")
                 try? await Task.sleep(for: .seconds(1))

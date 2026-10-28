@@ -138,3 +138,33 @@ let python = repo.appendingPathComponent(".venv/bin/python").path
         #expect(FileManager.default.fileExists(atPath: dir.appendingPathComponent("engine.1.log").path))
     }
 }
+
+@Suite struct SignalMaskTests {
+    /// Jobs started by the engine must be stoppable: nothing blocked in the mask.
+    @Test func sidecarStartsWithNoBlockedSignals() async throws {
+        let code = try fakeCode("""
+        #!/bin/bash
+        exec /usr/bin/env python3 -u -c '
+        import json, sys, signal
+        for line in sys.stdin:
+            r = json.loads(line)
+            blocked = sorted(int(s) for s in signal.pthread_sigmask(signal.SIG_BLOCK, []))
+            print(json.dumps({"id": r["id"], "result": {"blocked": blocked}}), flush=True)
+        '
+        """)
+        // Block SIGTERM and SIGUSR1 on this thread, as a GUI thread might.
+        var set = sigset_t()
+        sigemptyset(&set)
+        sigaddset(&set, SIGTERM)
+        sigaddset(&set, SIGUSR1)
+        var old = sigset_t()
+        pthread_sigmask(SIG_BLOCK, &set, &old)
+        defer { pthread_sigmask(SIG_SETMASK, &old, nil) }
+        let client = EngineClient(configuration: EngineConfiguration(codeFolder: code, stateFolder: tempState()))
+        try await client.start()
+        struct R: Decodable, Sendable { var blocked: [Int] }
+        let r = try await client.call("hello", as: R.self)
+        #expect(r.blocked.isEmpty, "blocked signals in the engine: \(r.blocked)")
+        await client.stop()
+    }
+}
