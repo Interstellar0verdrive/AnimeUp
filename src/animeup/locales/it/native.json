@@ -577,5 +577,8 @@
   "nat.cal.measured": "Misurato · fotogrammi al secondo",
   "nat.cal.first_compare": "La prima calibrazione si confronta con i numeri di fabbrica.",
   "nat.cal.failed_text": "La prova «{step}» si è fermata con un errore.",
-  "nat.cal.nothing_saved": "Non si è salvato niente: resta in uso la calibrazione precedente."
+  "nat.cal.nothing_saved": "Non si è salvato niente: resta in uso la calibrazione precedente.",
+  "nat.side.update": "È disponibile AnimeUp v{version}",
+  "nat.side.whats_new": "Novità",
+  "nat.side.install": "Installa…"
 }

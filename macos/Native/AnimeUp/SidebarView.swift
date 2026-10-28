@@ -27,6 +27,8 @@ struct SidebarView: View {
                 .onTapGesture { model.showCalibration = true }
             } else if model.progress.queue.running {
                 QueueCard()
+            } else if let v = model.updates?.available {
+                UpdateCard(version: v)
             } else if model.activity.running, let name = model.activity.name {
                 ActivityCard(kind: model.t("nat.side.analysis"),
                              line: Text("\(model.t("nat.side.file_of", ["i": model.activity.index ?? 1, "n": model.activity.total ?? 1])) · \(name)"),
@@ -206,5 +208,32 @@ struct QueueCard: View {
                     .auButton(.secondary, .small, fullWidth: true)
             }
         }
+    }
+}
+
+
+/// DS4 "Update · notice": the yellow card when a newer version is out.
+struct UpdateCard: View {
+    @Environment(AppModel.self) private var model
+    var version: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(model.t("nat.side.update", ["version": version]), systemImage: "arrow.down.circle")
+                .labelStyle(SmallIconLabel()).font(.system(size: 12, weight: .semibold))
+            HStack(alignment: .firstTextBaseline) {
+                UnderlineLink(model.t("nat.side.whats_new"), tone: .yellow) { open() }
+                Spacer()
+                Button(model.t("nat.side.install")) { open() }.auButton(.notice, .small)
+            }
+        }
+        .foregroundStyle(AU.yellowText)
+        .padding(.horizontal, 12).padding(.vertical, 10)
+        .background(RoundedRectangle(cornerRadius: AU.Radius.card).fill(AU.yellowBg))
+        .overlay(RoundedRectangle(cornerRadius: AU.Radius.card).strokeBorder(AU.yellowLine))
+    }
+
+    private func open() {
+        NSWorkspace.shared.open(URL(string: model.updates?.url ?? "https://github.com/Interstellar0verdrive/AnimeUp/releases/latest")!)
     }
 }

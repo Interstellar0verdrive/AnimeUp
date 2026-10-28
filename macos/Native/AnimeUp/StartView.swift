@@ -192,7 +192,7 @@ struct YourVideosCard: View {
             CardTitle(model.t("nat.start.your_videos"), symbol: "film") {
                 Text(summary(files.count, length)).auSmall()
             }
-            ScrollView {
+            MaybeScroll {
                 VStack(spacing: 0) {
                     ForEach(Array(files.enumerated()), id: \.element.id) { i, f in
                         if i > 0 { Rectangle().fill(AU.line).frame(height: 1) }
@@ -217,7 +217,8 @@ struct YourVideosCard: View {
                 }
                 .padding(.vertical, 2)
             }
-            .frame(height: 150)
+            .frame(height: 150, alignment: .top)
+            .clipped()
             .mask(LinearGradient(stops: [.init(color: .black, location: 0.72), .init(color: .clear, location: 1)],
                                  startPoint: .top, endPoint: .bottom))
             .background(RoundedRectangle(cornerRadius: AU.Radius.field).fill(AU.inset))
@@ -516,7 +517,8 @@ struct HowABatchGoesCard: View {
             NumberedSteps([
                 .init(title: model.t("nat.how.cal"), detail: model.t("nat.how.cal_text"),
                       done: model.calibration?.isCalibrated ?? false),
-                .init(title: model.t("nat.how.add"), detail: model.t("nat.how.add_text")),
+                .init(title: model.t("nat.how.add"), detail: model.t("nat.how.add_text"),
+                      done: model.files.contains { $0.state == .ready }),
                 .init(title: model.t("nat.how.compare"), detail: model.t("nat.how.compare_text")),
                 .init(title: model.t("nat.how.queue"), detail: model.t("nat.how.queue_text")),
             ])

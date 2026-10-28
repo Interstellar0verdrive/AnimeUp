@@ -5871,6 +5871,21 @@ def _() -> None:
         assert {c["kind"] for c in clips} <= {"motion", "static", "dark", "bright"}
         assert Path(r["mp4"]).is_file() and r["mp4"].endswith(".mp4")
 
+@caso("elenco: una cartella non riporta in coda i video gia' finiti da AnimeUp")
+def _() -> None:
+    from animeup import elenco
+    from animeup.plan import output_name
+    nome = output_name("Ep1 [480p]", target_height=1080, scale=2, model_tag="cugan", crf=18, dedup=True) + ".mkv"
+    assert elenco.e_uscita(nome), nome
+    assert elenco.e_uscita(output_name("Ep1", target_height=720, scale=2, model_tag="realesr-animevideov3",
+                                       crf=16, preset="slow", etichetta="supersampling") + ".mkv")
+    assert not elenco.e_uscita("Ep1 [480p].mkv") and not elenco.e_uscita("Show [upscale].mkv")
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "Ep1 [480p].mkv").write_bytes(b"x")
+        (Path(tmp) / nome).write_bytes(b"x")
+        trovati = elenco.espandi([tmp], False)["files"]
+        assert [f.name for f in trovati] == ["Ep1 [480p].mkv"], trovati
+
 @caso("strumenti: lo scaricamento riprende da dove si era fermato")
 def _() -> None:
     import hashlib as _hl

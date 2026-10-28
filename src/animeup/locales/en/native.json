@@ -577,5 +577,8 @@
   "nat.cal.measured": "Measured · frames per second",
   "nat.cal.first_compare": "The first calibration compares with the factory numbers.",
   "nat.cal.failed_text": "The {step} test stopped with an error.",
-  "nat.cal.nothing_saved": "Nothing was saved: the previous calibration stays in use."
+  "nat.cal.nothing_saved": "Nothing was saved: the previous calibration stays in use.",
+  "nat.side.update": "AnimeUp v{version} is available",
+  "nat.side.whats_new": "What’s new",
+  "nat.side.install": "Install…"
 }

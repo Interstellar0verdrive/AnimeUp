@@ -267,7 +267,7 @@ enum DebugSnapshot {
         .frame(minHeight: 840, alignment: .top)
         .background(AU.bg)
         .environment(model)
-        .environment(\.colorScheme, .dark)
+        .environment(\.colorScheme, .dark).environment(\.auNoScroll, true)
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2
         if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
@@ -330,7 +330,7 @@ enum DebugSnapshot {
         .frame(width: 1360, height: 840, alignment: .top)
         .background(AU.bg)
         .environment(model)
-        .environment(\.colorScheme, .dark)
+        .environment(\.colorScheme, .dark).environment(\.auNoScroll, true)
         .environment(\.auNoScroll, true)
         render(view, width: 1360, path)
     }
@@ -354,7 +354,7 @@ enum DebugSnapshot {
         .frame(minHeight: 840, alignment: .top)
         .background(AU.bg)
         .environment(model)
-        .environment(\.colorScheme, .dark)
+        .environment(\.colorScheme, .dark).environment(\.auNoScroll, true)
         render(view, width: 1360, path)
     }
 

@@ -29,6 +29,15 @@ from .paths import PATHS
 
 ESTENSIONI = (".mkv", ".mp4", ".mov", ".avi", ".m4v", ".ts", ".webm")
 
+# I video finiti di AnimeUp, che stanno accanto agli originali: aggiungendo la
+# cartella non devono rientrare in coda (`plan.output_name`).
+import re as _re
+_USCITA = _re.compile(r" \[(upscale|supersampling) \d+p [^\]]* x\d+ crf\d+[^\]]*\]\.mkv$")
+
+
+def e_uscita(nome: str) -> bool:
+    return bool(_USCITA.search(nome))
+
 Evento = Callable[[str, dict], None]
 
 
@@ -66,13 +75,15 @@ def espandi(percorsi: list[str], sottocartelle: bool) -> dict:
                         if nome.startswith("."):
                             continue
                         f = Path(radice) / nome
+                        if e_uscita(nome):
+                            continue
                         if f.suffix.lower() in ESTENSIONI:
                             dentro.append(f.resolve())
                         else:
                             non_video += 1
             else:
                 for f in sorted(p.iterdir()):
-                    if f.name.startswith(".") or not f.is_file():
+                    if f.name.startswith(".") or not f.is_file() or e_uscita(f.name):
                         continue
                     if f.suffix.lower() in ESTENSIONI:
                         dentro.append(f.resolve())
