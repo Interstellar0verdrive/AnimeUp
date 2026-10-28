@@ -357,7 +357,8 @@ def _files_add(params: dict) -> dict:
     percorsi = params.get("paths")
     if not isinstance(percorsi, list) or not all(isinstance(p, str) for p in percorsi):
         raise ErroreMetodo("bad_params", "paths must be a list of strings")
-    return elenco().aggiungi(percorsi, bool(params.get("subfolders", False)))
+    return elenco().aggiungi(percorsi, bool(params.get("subfolders", False)),
+                             ripristina=bool(params.get("restore", False)))
 
 
 def _files_remove(params: dict) -> dict:

@@ -33,8 +33,8 @@
   "nat.add.open": "Apri video…",
   "nat.add.formats": "Formati",
   "nat.add.not_handled": "Non gestiti: video interlacciati o in telecine. AnimeUp lo dice quando un file lo è.",
-  "nat.add.received.uno": "{n} video ricevuto: la Coda arriva in una build successiva.",
-  "nat.add.received.altri": "{n} video ricevuti: la Coda arriva in una build successiva.",
+  "nat.add.received.uno": "{n} video aggiunto alla Coda.",
+  "nat.add.received.altri": "{n} video aggiunti alla Coda.",
   "nat.where.title": "Dove vanno i file",
   "nat.where.finished": "Video finiti",
   "nat.where.next_to": "Accanto agli originali",
@@ -592,5 +592,8 @@
   "nat.set.paused_title": "{name} è in pausa con altri valori.",
   "nat.set.paused_text": "È partito a {values}, e riprende con quelli.",
   "nat.set.paused_new": "I valori qui sotto valgono solo per i file nuovi.",
-  "nat.set.use_its_values": "Usa i suoi valori"
+  "nat.set.use_its_values": "Usa i suoi valori",
+  "nat.add.already_title.uno": "Quel video è già nella Coda.",
+  "nat.add.already_title.altri": "Quei {n} video sono già nella Coda.",
+  "nat.add.already_text": "Non è stato aggiunto nulla di nuovo. I video fatti da AnimeUp restano sempre fuori."
 }

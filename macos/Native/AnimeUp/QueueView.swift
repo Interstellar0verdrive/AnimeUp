@@ -160,7 +160,7 @@ struct QueueHeader: View {
     }
 
     private var tickState: TriCheckbox.State {
-        let ready = model.files.filter { $0.state == .ready }
+        let ready = model.files.filter { $0.state == .ready && !model.jobBlocksTick($0.id) }
         let n = ready.filter { model.isTicked($0) }.count
         if n == 0 { return .off }
         return n == ready.count ? .on : .mixed
@@ -287,7 +287,7 @@ struct QueueRow: View {
                 if model.unticked.contains(file.id) { model.unticked.remove(file.id) } else { model.unticked.insert(file.id) }
             }
             .frame(width: QueueColumns.check)
-            .disabled(file.state != .ready || model.progress.queue.running)
+            .disabled(file.state != .ready || model.progress.queue.running || model.jobBlocksTick(file.id))
             VStack(alignment: .leading, spacing: 5) {
                 Text(file.name).font(.system(size: 12.5, weight: .medium)).foregroundStyle(AU.text)
                     .lineLimit(1).truncationMode(.middle)

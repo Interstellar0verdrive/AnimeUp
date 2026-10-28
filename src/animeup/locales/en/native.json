@@ -33,8 +33,8 @@
   "nat.add.open": "Open Videos…",
   "nat.add.formats": "Formats",
   "nat.add.not_handled": "Not handled: interlaced or telecined video. AnimeUp says so when a file is one.",
-  "nat.add.received.uno": "{n} video received: the Queue arrives in a later build.",
-  "nat.add.received.altri": "{n} videos received: the Queue arrives in a later build.",
+  "nat.add.received.uno": "{n} video added to the Queue.",
+  "nat.add.received.altri": "{n} videos added to the Queue.",
   "nat.where.title": "Where files go",
   "nat.where.finished": "Finished videos",
   "nat.where.next_to": "Next to the originals",
@@ -592,5 +592,8 @@
   "nat.set.paused_title": "{name} is paused with other values.",
   "nat.set.paused_text": "It started at {values}, and it resumes with those.",
   "nat.set.paused_new": "The values below apply to new files only.",
-  "nat.set.use_its_values": "Use Its Values"
+  "nat.set.use_its_values": "Use Its Values",
+  "nat.add.already_title.uno": "That video is already in the Queue.",
+  "nat.add.already_title.altri": "Those {n} videos are already in the Queue.",
+  "nat.add.already_text": "Nothing new was added. Videos AnimeUp made itself are always left out."
 }

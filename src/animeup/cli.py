@@ -886,6 +886,7 @@ def _scrivi_esito(plan, result) -> None:
                 # «Mostra nel Finder» deve trovare il file dov'e' davvero.
                 "output_path": str(plan.output),
                 "secondi": round(result.seconds, 1),
+                "fasi": {k: round(v, 1) for k, v in (getattr(result, "fasi", None) or {}).items()},
                 "avvisi": [str(w) for w in result.warnings],
                 "difettosa": bool(result.difettosa),
                 "quando": time_.time(),

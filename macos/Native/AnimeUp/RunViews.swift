@@ -191,6 +191,13 @@ struct JobCompleted: View {
                 }
                 .buttonStyle(AUTintedButtonStyle(warnings.isEmpty ? .green : .yellow))
             }
+            if let st = job.stages, !st.isEmpty {
+                let parts = ["extract", "dedup", "upscale", "assemble"].compactMap { k in
+                    st[k].map { "\(model.stageName(k)) \(Fmt.elapsed($0))" }
+                }
+                Text(parts.joined(separator: "  ·  "))
+                    .font(.system(size: 11, design: .monospaced)).foregroundStyle(AU.text2)
+            }
             ForEach(warnings, id: \.self) { NoteView(.yellow, text: $0) }
         }
     }

@@ -431,6 +431,7 @@ def stato(voci: list[dict]) -> dict:
         elif e and e.get("output_path") and Path(str(e["output_path"])).exists() \
                 and float(e.get("quando") or 0) >= float(v.get("added") or 0):
             voce.update({"state": "done", "seconds": e.get("secondi"),
+                         "stages": e.get("fasi") or None,
                          "warnings": e.get("avvisi") or [], "defective": bool(e.get("difettosa")),
                          "output": e.get("output_path")})
         elif lav is not None:

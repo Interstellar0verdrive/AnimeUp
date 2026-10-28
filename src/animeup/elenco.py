@@ -243,9 +243,12 @@ class Elenco:
                 "index": len(ids) - len(da_fare) + 1, "total": len(ids)}
 
     # --- modifiche -----------------------------------------------------
-    def aggiungi(self, percorsi: list[str], sottocartelle: bool) -> dict:
+    def aggiungi(self, percorsi: list[str], sottocartelle: bool, ripristina: bool = False) -> dict:
+        """`ripristina` (Annulla di una rimozione): la voce torna com'era,
+        con la data d'ingresso e le scelte di prima, quindi anche "fatto"."""
         esito = espandi(percorsi, sottocartelle)
         nuovi, gia = [], 0
+        tolte = getattr(self, "_tolte", {})
         with self._lock:
             presenti = {v["id"] for v in self._voci}
             for f in esito["files"]:
@@ -254,6 +257,8 @@ class Elenco:
                     gia += 1
                     continue
                 voce = {"id": ident, "path": str(f), "added": time.time()}
+                if ripristina and ident in tolte:
+                    voce = {**tolte.pop(ident), "path": str(f)}
                 self._voci.append(voce)
                 presenti.add(ident)
                 nuovi.append(ident)
@@ -271,6 +276,9 @@ class Elenco:
         via = set(ids)
         with self._lock:
             prima = len(self._voci)
+            if not hasattr(self, "_tolte"):
+                self._tolte = {}
+            self._tolte.update({v["id"]: dict(v) for v in self._voci if v["id"] in via})
             self._voci = [v for v in self._voci if v["id"] not in via]
             self._coda = [i for i in self._coda if i not in via]
             tolti = prima - len(self._voci)

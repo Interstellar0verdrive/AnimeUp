@@ -124,8 +124,8 @@ public actor EngineClient {
     public func foldersState() async throws -> FoldersState { try await call("folders.state") }
     public func defaults() async throws -> EngineSettings { try await call("settings.defaults") }
     public func filesList() async throws -> FilesList { try await call("files.list") }
-    public func addFiles(_ paths: [String], subfolders: Bool) async throws -> AddResult {
-        try await call("files.add", params: ["paths": paths, "subfolders": subfolders])
+    public func addFiles(_ paths: [String], subfolders: Bool, restore: Bool = false) async throws -> AddResult {
+        try await call("files.add", params: ["paths": paths, "subfolders": subfolders, "restore": restore])
     }
     public func removeFiles(_ ids: [String]) async throws {
         _ = try await raw("files.remove", params: ["ids": ids])

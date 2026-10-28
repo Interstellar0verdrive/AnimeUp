@@ -64,6 +64,9 @@ class JobResult:
     # essere una nota sul sorgente e non impedisce di tenere il risultato, un
     # difetto invece rende il file inservibile e va trattato come un guasto.
     difetti: list[str] = field(default_factory=list)
+    # Secondi di ogni fase (extract, dedup, upscale, assemble), sommati sulle
+    # riprese; le pause ci sono dentro. Solo per il pannello "Job completed".
+    fasi: dict = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
@@ -606,6 +609,39 @@ class Job:
         except (OSError, TypeError, ValueError):
             pass
 
+    def _fase(self, chiave: str | None) -> None:
+        """Segna l'inizio di una fase e chiude quella prima (F6).
+
+        Solo per mostrare i tempi a lavoro finito: qualunque guasto qui si
+        ignora, la lavorazione non deve mai fermarsi per un orologio."""
+        try:
+            fasi = self.state.setdefault("durate", {})
+            adesso = time.time()
+            if not getattr(self, "_fasi_riprese", False):
+                # Una corsa interrotta lascia una fase aperta: il tempo fino
+                # al rilancio non e' lavoro, quindi si butta.
+                for v in fasi.values():
+                    if isinstance(v, dict):
+                        v.pop("da", None)
+                self._fasi_riprese = True
+            for k, v in fasi.items():
+                if isinstance(v, dict) and v.get("da") is not None and k != chiave:
+                    v["s"] = round(float(v.get("s") or 0) + max(0.0, adesso - float(v.pop("da"))), 1)
+            if chiave:
+                v = fasi.setdefault(chiave, {"s": 0.0})
+                v.setdefault("da", adesso)
+            self._save_state()
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _durate(self) -> dict:
+        self._fase(None)
+        try:
+            return {k: float(v.get("s") or 0) for k, v in (self.state.get("durate") or {}).items()
+                    if isinstance(v, dict)}
+        except (AttributeError, TypeError, ValueError):
+            return {}
+
     def _save_state(self) -> None:
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
         _scrivi_atomico(self.state_path, su_disco.dumps(self.state, indent=2))
@@ -818,6 +854,7 @@ class Job:
         # sorgente (misurato su 5 file di prova su 6). Confrontando con la
         # stima, ogni rilancio rifaceva l'estrazione all'infinito senza mai
         # avanzare.
+        self._fase("extract")
         p.say(t("mot.pipe.fase_estrazione"), t("mot.pipe.estrazione"))
         registrati = self.state.get("extracted", 0)
         sul_disco = sum(1 for _ in self.frames_dir.glob("*.png")) if self.frames_dir.is_dir() else 0
@@ -922,6 +959,7 @@ class Job:
                 residuo.unlink(missing_ok=True)
 
         prodotti: list[Path] = []
+        self._fase("upscale")
         for index, (start, stop) in enumerate(chunks):
             gia = fatti.get((start, stop))
             if gia is not None and _segmento_valido(gia, stop - start, self.paths):
@@ -948,6 +986,7 @@ class Job:
         # --- 4. assemblaggio ----------------------------------------------
         _registra()
 
+        self._fase("assemble")
         p.say(t("mot.pipe.fase_assemblaggio"), t("mot.pipe.assemblaggio"))
         # Il file resta col nome provvisorio finche' non e' verificato: un
         # Ferma fra la rinomina e i controlli lasciava in OUTPUT un file col
@@ -1001,6 +1040,7 @@ class Job:
             audit_violations=self.state.get("audit_violations", 0),
             warnings=warnings,
             difetti=difetti,
+            fasi=self._durate(),
         )
 
     # --- fasi -------------------------------------------------------------
@@ -1043,6 +1083,7 @@ class Job:
                     AttributeError, OSError, UnicodeDecodeError):
                 cache.unlink(missing_ok=True)
 
+        self._fase("dedup")
         p.say(t("mot.pipe.fase_deduplica"), t("mot.pipe.misura_differenze"))
         diffs = dd.measure_frame_differences(self.frames_dir, paths=self.paths,
                                              progresso=FILE_CONFRONTO)

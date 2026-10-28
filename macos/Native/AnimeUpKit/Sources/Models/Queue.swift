@@ -40,6 +40,8 @@ public struct QueueProgress: Codable, Sendable, Equatable {
         public var defective: Bool?
         public var output: String?
         public var recipe: Recipe?
+        /// Seconds per stage of a finished job (extract, dedup, upscale, assemble), when recorded.
+        public var stages: [String: Double]?
     }
 
     /// The values a job started with, where they differ from the settings now.

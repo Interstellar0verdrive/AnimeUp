@@ -4891,6 +4891,34 @@ def _() -> None:
     assert not errori, "\n".join(errori)
 
 
+@caso("elenco: Annulla dopo Rimuovi rimette la voce com'era, scelte e data comprese")
+def _() -> None:
+    """Un file finito, tolto e rimesso con Annulla, deve tornare "fatto": lo
+    stato fatto dipende dalla data d'ingresso, e una voce nuova la azzerava."""
+    import threading as _th
+    from animeup import elenco as el
+    with tempfile.TemporaryDirectory() as tmp:
+        video = Path(tmp).resolve() / "Ep1 [480p].mkv"
+        video.write_bytes(b"x")
+        e = object.__new__(el.Elenco)
+        e._lock = _th.RLock()
+        e._evento = lambda *a: None
+        e._scrivi = lambda: None
+        e._accoda = lambda *a, **k: None
+        e._coda, e._in_corso, e._iniziato, e._falliti = [], None, None, {}
+        e._profonde, e._rifare, e._thread = set(), set(), None
+        ident = el.id_di(video)
+        e._voci = [{"id": ident, "path": str(video), "added": 100.0, "model": "cugan", "height": 1440}]
+        e.togli([ident])
+        assert e.voci() == []
+        e.aggiungi([str(video)], False, ripristina=True)
+        v = e.voci()[0]
+        assert v["added"] == 100.0 and v["model"] == "cugan" and v["height"] == 1440, v
+        e.togli([ident])
+        e.aggiungi([str(video)], False)
+        assert e.voci()[0]["added"] > 100.0 and "model" not in e.voci()[0], "senza Annulla e' una voce nuova"
+
+
 @caso("coda: un file in pausa partito con altri valori li dice, in inglese")
 def _() -> None:
     """Le Impostazioni avvisano se un file interrotto o in pausa era partito

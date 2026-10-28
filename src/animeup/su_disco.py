@@ -39,6 +39,7 @@ VOCABOLARIO: dict[str, str] = {
     "installa_auto": "auto_install",
     # storico dei file (history.jsonl)
     "secondi": "seconds",
+    "fasi": "stages",
     "avvisi": "warnings",
     "difettosa": "defective",
     "quando": "when",

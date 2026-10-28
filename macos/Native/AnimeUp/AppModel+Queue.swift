@@ -102,6 +102,10 @@ extension AppModel {
                 } else if !result.added.isEmpty {
                     lastReceived = result.added.count
                     tab = .queue
+                } else if result.already > 0 {
+                    // Nothing new: say so instead of doing nothing (S4).
+                    alert = AppAlert(kind: .info(title: localizer.tn("nat.add.already_title", result.already),
+                                                 text: t("nat.add.already_text")))
                 }
             } catch {
                 log.error("files.add failed: \(String(describing: error))")
@@ -124,7 +128,11 @@ extension AppModel {
         let back = undoRemoved
         undoRemoved = []
         guard !back.isEmpty else { return }
-        add(back.map(\.url), subfolders: false)
+        Task {
+            _ = try? await engine.addFiles(back.map(\.url.path), subfolders: false, restore: true)
+            await refreshFiles()
+            await refreshPlans()
+        }
     }
 
     func reanalyse(_ ids: [String]?) {
@@ -148,7 +156,15 @@ extension AppModel {
 
     func file(_ id: String) -> QueueFile? { files.first { $0.id == id } }
 
-    func isTicked(_ f: QueueFile) -> Bool { f.state == .ready && !unticked.contains(f.id) }
+    /// Done files are skipped and interrupted ones have their own Resume (F6):
+    /// neither is ticked. Redoing a done file isn't supported yet.
+    func isTicked(_ f: QueueFile) -> Bool {
+        f.state == .ready && !unticked.contains(f.id) && !jobBlocksTick(f.id)
+    }
+    func jobBlocksTick(_ id: String) -> Bool {
+        guard let s = job(id)?.state else { return false }
+        return s == .done || s == .interrupted
+    }
 
     var analysingCount: Int { files.filter { $0.state == .analysing || $0.state == .queued }.count }
     var warningCount: Int { files.filter { !$0.warnings.isEmpty }.count }

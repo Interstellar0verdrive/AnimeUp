@@ -105,5 +105,8 @@ menus, the video player) show as placeholders in these images.
 - Calibration: step times show only for runs started with this version; an
   older run's checklist has no times. The repeated-frames row sits where the
   engine runs it (near the end), not second as on the board.
-- The finished-job sheet has no per-stage timings: the job files don't record
-  them yet.
+- Job completed shows per-stage times only for files processed with this
+  version; the times include any pause.
+- A done file can't be redone from the Queue yet: it stays unticked.
+- Warnings saved with a finished job keep the language they were written in.
+- Time estimates ran about 40% short on my short test clips.

@@ -38,6 +38,7 @@ extension AppModel {
         if let st = cmp.status, let id = st.request?.id, files.contains(where: { $0.id == id }), cmp.fileId == nil {
             cmp.fileId = id
             cmp.step = .results
+            applyCompareStatus(st)
             Task { await loadClips(scanIfEmpty: false) }
             return
         }
@@ -134,12 +135,20 @@ extension AppModel {
         let wasRunning = cmp.status?.running ?? false
         cmp.status = st
         if st.running, let id = st.request?.id, cmp.fileId == id { cmp.step = .results }
-        if wasRunning && !st.running {
+        // Results restored after a relaunch also need their clips and both sides.
+        if let r = st.request, r.id == cmp.fileId, cmp.selected.isEmpty {
+            cmp.selected = Set(r.clips.map(\.startFrame))
+        }
+        if !st.running {
             let keys = Set(st.results?.flatMap { $0.file.keys } ?? [])
-            if cmp.right.isEmpty || !keys.contains(cmp.right) {
-                cmp.right = st.request?.models.first(where: { keys.contains($0) }) ?? keys.first ?? ""
+            if !keys.isEmpty {
+                if cmp.right.isEmpty || !keys.contains(cmp.right) {
+                    cmp.right = st.request?.models.first(where: { keys.contains($0) }) ?? keys.first ?? ""
+                }
+                if !keys.contains(cmp.left) { cmp.left = keys.contains("original") ? "original" : (keys.first ?? "") }
             }
-            if !keys.contains(cmp.left) { cmp.left = keys.contains("original") ? "original" : (keys.first ?? "") }
+        }
+        if wasRunning && !st.running {
             notify(t("nat.cmp.note_done_title"), t("nat.cmp.note_done", ["name": file(st.request?.id ?? "")?.name ?? ""]))
         }
     }

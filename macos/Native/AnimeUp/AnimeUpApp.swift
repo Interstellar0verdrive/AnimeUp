@@ -17,6 +17,7 @@ struct AnimeUpApp: App {
                     model.start()
                     #if DEBUG
                     DebugSnapshot.scheduleIfAsked(model: model)
+                    DebugQA.scheduleIfAsked(model: model)
                     #endif
                 }
         }
