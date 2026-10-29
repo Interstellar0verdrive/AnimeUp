@@ -15,14 +15,14 @@ description: How to use AnimeUp 2.0, the native Mac app that upscales anime on y
   </div>
 </header>
 
-<div class="au-hero" tabindex="0" role="img" aria-label="Before and after: the same picture at 360p, plainly enlarged on the left and upscaled to 1080p by AnimeUp on the right. Drag to compare.">
+<div class="au-hero" tabindex="0" role="img" aria-label="Before and after: the same picture at 480p, plainly enlarged on the left and upscaled to 1080p by AnimeUp on the right. Drag to compare.">
   <img class="au-hero__pic" src="img/v2/hero-after.jpg" alt="">
   <span class="au-hero__clip"><img class="au-hero__pic" src="img/v2/hero-before.jpg" alt=""></span>
-  <span class="au-hero__line"><span class="au-hero__knob">‹›</span></span>
+  <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
   <img src="img/v2/hero-overlay.png" alt="">
   <button class="au-hero__zoom" type="button" title="Compare at 100%, one picture pixel per screen pixel">1:1</button>
 </div>
-<p class="au-hero__caption">Drag across the picture: a close-up of the same frame at 360p, plainly enlarged on the left, and upscaled by AnimeUp with Real-ESRGAN animevideov3 on the right. <b>1:1</b> shows the whole frame at full size.</p>
+<p class="au-hero__caption">Drag across the picture: a close-up of the same frame at 480p (DVD resolution), plainly enlarged on the left, and upscaled by AnimeUp with Real-ESRGAN animevideov3 on the right. <b>1:1</b> shows the whole frame at full size.</p>
 
 ## What AnimeUp is
 
@@ -132,7 +132,7 @@ Four steps, and only the first two are needed.
 
 ---
 
-<small>The cover picture was made for this guide, then shrunk to 360p and upscaled by AnimeUp. Other pictures show footage from
+<small>The cover picture was made for this guide, then shrunk to 480p and upscaled by AnimeUp. Other pictures show footage from
 [Morevna Episode 3](https://archive.org/details/morevna-ep3) (© Morevna
 Project, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/))
 and [Big Buck Bunny](https://peach.blender.org) (© 2008 Blender Foundation,

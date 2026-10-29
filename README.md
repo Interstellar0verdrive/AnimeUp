@@ -13,8 +13,8 @@ AnimeUp batch-upscales anime episodes to 1080p and beyond with
 Mac app: it analyses your sources, lets you compare models side by side on
 difficult clips, and runs long, resumable jobs, all on your Mac and offline.
 
-![The same picture at 360p, plainly enlarged on the left and upscaled to 1080p by AnimeUp on the right, with the divider sweeping across](docs/images/cover.webp)
-<sub>The same picture at 360p: plainly enlarged on the left, upscaled to 1080p by
+![The same picture at 480p, plainly enlarged on the left and upscaled to 1080p by AnimeUp on the right, with the divider sweeping across](docs/images/cover.webp)
+<sub>A close-up of the same picture at 480p, DVD resolution: plainly enlarged on the left, upscaled to 1080p by
 AnimeUp with Real-ESRGAN animevideov3 on the right. In the
 [user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/) you can drag
 the divider yourself, and see it at 1:1.</sub>
