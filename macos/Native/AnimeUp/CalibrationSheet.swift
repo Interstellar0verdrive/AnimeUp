@@ -2,17 +2,25 @@ import DesignSystem
 import Models
 import SwiftUI
 
-/// Boards K1 (before starting, running) and K2 (finished, failed).
+/// Boards K1 (before starting, running) and K2 (failed). A run that just
+/// finished shows the results sheet (K4) with the green check.
 struct CalibrationSheet: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
+        if let run = model.calRun, !run.running, run.state == "done", run.seen != true {
+            CalibrationDetailsSheet(finished: true)
+                .task(id: run.ended) { await model.loadCalibrationDetails() }
+        } else {
+            steps
+        }
+    }
+
+    private var steps: some View {
         let run = model.calRun
-        Group {
+        return Group {
             if let run, run.running {
                 running(run)
-            } else if let run, run.state == "done", run.seen != true {
-                finished(run)
             } else if let run, run.state == "failed" {
                 failed(run)
             } else {
@@ -20,17 +28,18 @@ struct CalibrationSheet: View {
             }
         }
         .padding(20)
-        .frame(width: 540)
-        .background(AU.bg)
+        // gaps.py SHEET: 560 pt with its 1 pt line; the sheet's own edge is that line here.
+        .frame(width: 558)
+        .background(AU.sheet)
     }
 
     private func titleRow(_ symbol: String, _ color: Color, _ title: String, sub: String? = nil, right: String? = nil, rightColor: Color = AU.text2) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Image(systemName: symbol).font(.system(size: 17)).foregroundStyle(color).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 3 }
-            Text(title).font(.system(size: 15, weight: .semibold))
-            if let sub { Text(sub).font(.system(size: 12)).foregroundStyle(AU.text2) }
+            Image(systemName: symbol).auFont(17).foregroundStyle(color).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 3 }
+            Text(title).auFont(15, .bold)
+            if let sub { Text(sub).auFont(12).foregroundStyle(AU.text2) }
             Spacer()
-            if let right { Text(right).font(.system(size: 12, design: .monospaced)).foregroundStyle(rightColor) }
+            if let right { Text(right).auFont(12, mono: true).foregroundStyle(rightColor) }
         }
     }
 
@@ -58,14 +67,13 @@ struct CalibrationSheet: View {
 
     private func tile(_ symbol: String, _ title: String, _ text: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: symbol).font(.system(size: 12)).foregroundStyle(AU.text2).padding(.bottom, 6)
-            Text(title).font(.system(size: 12, weight: .semibold))
+            Image(systemName: symbol).auFont(12).foregroundStyle(AU.text2).padding(.bottom, 6)
+            Text(title).auFont(12, .semibold)
             Text(text).auSmall().fixedSize(horizontal: false, vertical: true)
         }
-        .padding(12)
         .frame(maxWidth: .infinity, minHeight: 100, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 8).fill(AU.surface))
-        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(AU.line))
+        .auBox(RoundedRectangle(cornerRadius: 8), fill: AU.surface, line: AU.line,
+               padding: EdgeInsets(vertical: 12, horizontal: 12))
     }
 
     /// The board's rows: extraction, repeated frames, one per model with its
@@ -107,7 +115,7 @@ struct CalibrationSheet: View {
             let list = sc.joined(separator: ", ")
             out[k].title += " · " + list
         }
-        // Engine order: the repeated-frames scan runs last, so it stays there.
+        // Engine order: each model with its 1080p step, then x265 and the repeated-frames scan.
         out.sort { ($0.steps.first ?? 0) < ($1.steps.first ?? 0) }
         out.append(StepGroup(id: "save", title: saveTitle, steps: []))
         return out
@@ -137,7 +145,7 @@ struct CalibrationSheet: View {
                     if let f = failedAt, g.steps.contains(f) { return "failed" }
                     if finished { return "done" }
                     if g.steps.contains(index) { return "running" }
-                    // A model's 1080p step runs later: its row is done until then.
+                    // The engine runs a model's steps one after another: a row behind the index is done.
                     if g.steps.contains(where: { $0 < index }) { return "done" }
                     return "next"
                 }()
@@ -145,17 +153,17 @@ struct CalibrationSheet: View {
                     Group {
                         switch state {
                         case "done":
-                            Image(systemName: "checkmark").font(.system(size: 8, weight: .bold)).foregroundStyle(AU.greenText)
+                            Image(systemName: "checkmark").auFont(8, .bold).foregroundStyle(AU.greenText)
                                 .frame(width: 18, height: 18).overlay(Circle().strokeBorder(AU.greenLine))
                         case "running": Spinner(size: 17)
                         case "failed":
-                            Image(systemName: "xmark").font(.system(size: 7, weight: .bold)).foregroundStyle(AU.redText)
+                            Image(systemName: "xmark").auFont(7, .bold).foregroundStyle(AU.redText)
                                 .frame(width: 18, height: 18).overlay(Circle().strokeBorder(AU.redLine))
                         default: Circle().strokeBorder(AU.glassLine).frame(width: 18, height: 18)
                         }
                     }
                     .frame(width: 18)
-                    Text(g.title).font(.system(size: 12.5, weight: state == "running" || state == "failed" ? .semibold : .regular))
+                    Text(g.title).auFont(12.5, state == "running" || state == "failed" ? .semibold : .regular)
                         .foregroundStyle(state == "failed" ? AU.redText : state == "next" ? AU.text2 : AU.text)
                     Spacer()
                     if state == "running" {
@@ -164,7 +172,7 @@ struct CalibrationSheet: View {
                     }
                     if state == "failed" { StatusChip(model.t("nat.chip.stopped"), tone: .red) }
                     if state == "done", let d = duration(g) {
-                        Text(Fmt.elapsed(d)).font(.system(size: 11, design: .monospaced)).foregroundStyle(AU.text2)
+                        Text(Fmt.elapsed(d)).auFont(11, mono: true).foregroundStyle(AU.text2)
                     }
                 }
                 .padding(.horizontal, 14).frame(height: 34)
@@ -180,13 +188,15 @@ struct CalibrationSheet: View {
     private func running(_ run: CalibrationRun) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(model.t("nat.cal.title_running")).font(.system(size: 15, weight: .semibold))
+                Text(model.t("nat.cal.title_running")).auFont(15, .semibold)
                 let gs = Self.groups(run.steps, saveTitle: "")
                 Text(model.t("nat.cal.step_left", ["i": (gs.firstIndex { $0.steps.contains(run.index ?? 0) } ?? 0) + 1, "n": gs.count,
                                                    "t": Fmt.span(max(60, run.left ?? 60))]))
-                    .font(.system(size: 12)).foregroundStyle(AU.text2)
+                    .auFont(12).foregroundStyle(AU.text2)
                 Spacer()
-                Text("\(Int(((run.fraction ?? 0) * 100).rounded()))%").font(.system(size: 12, design: .monospaced)).foregroundStyle(AU.primaryText)
+                Text("\(Int(((run.fraction ?? 0) * 100).rounded()))%").auFont(12, mono: true).foregroundStyle(AU.primaryText)
+                    // Over the rows' right column (their times), not the box's edge.
+                    .padding(.trailing, 14)
             }
             checklist(run)
             HStack(spacing: 8) {
@@ -198,60 +208,6 @@ struct CalibrationSheet: View {
             }
             Text(model.t("nat.cal.close_note")).auSmall().fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    // K2, finished
-    private func finished(_ run: CalibrationRun) -> some View {
-        let rows = run.table.filter { $0.now != nil }
-        let factory = Dictionary(uniqueKeysWithValues: (model.calibration?.models ?? []).map { ($0.key, $0.factoryFps1080p) })
-        let changes = rows.compactMap { r -> Double? in
-            guard let n = r.now, let b = r.before ?? factory[r.key] ?? nil, b > 0 else { return nil }
-            return 1 - b / n          // how much shorter the estimates get
-        }
-        let mean = changes.isEmpty ? 0 : changes.reduce(0, +) / Double(changes.count)
-        let firstTime = rows.allSatisfy { $0.before == nil }
-        return VStack(alignment: .leading, spacing: 14) {
-            titleRow("checkmark.circle.fill", AU.green, model.t("nat.cal.title_done"),
-                     right: run.ended.flatMap { e in run.started.map { Fmt.span(max(60, e - $0)) } })
-            Text((mean >= 0 ? model.t("nat.cal.faster", ["pct": Int((abs(mean) * 100).rounded())])
-                  : model.t("nat.cal.slower", ["pct": Int((abs(mean) * 100).rounded())])) + "\n" + model.t("nat.cal.saved"))
-                .auSmall()
-            VStack(spacing: 0) {
-                HStack {
-                    Text(model.t("nat.cal.measured")).frame(maxWidth: .infinity, alignment: .leading)
-                    Text(model.t("nat.cal.before_col")).frame(width: 80, alignment: .trailing)
-                    Text(model.t("nat.cal.now_col")).frame(width: 80, alignment: .trailing)
-                    Text(model.t("nat.cal.change_col")).frame(width: 70, alignment: .trailing)
-                }
-                .auLabel().padding(.horizontal, 14).padding(.vertical, 8)
-                ForEach(rows) { r in
-                    let before = r.before ?? factory[r.key] ?? nil
-                    Rectangle().fill(AU.line).frame(height: 1)
-                    HStack {
-                        Text("\(model.shortModel(r.key)) · 2×").font(.system(size: 12)).frame(maxWidth: .infinity, alignment: .leading)
-                        Text(before.map { String(format: "%.1f", $0) } ?? "—").foregroundStyle(AU.text2).frame(width: 80, alignment: .trailing)
-                        Text(r.now.map { String(format: "%.1f", $0) } ?? "—").fontWeight(.semibold).frame(width: 80, alignment: .trailing)
-                        Text(change(before, r.now)).foregroundStyle((r.now ?? 0) >= (before ?? 0) ? AU.greenText : AU.redText)
-                            .frame(width: 70, alignment: .trailing)
-                    }
-                    .font(.system(size: 12, design: .monospaced))
-                    .padding(.horizontal, 14).frame(height: 28)
-                }
-            }
-            .background(RoundedRectangle(cornerRadius: 8).fill(AU.surface))
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(AU.line))
-            HStack {
-                if firstTime { Text(model.t("nat.cal.first_compare")).auSmall() }
-                Spacer()
-                Button(model.t("nat.cal.close")) { model.closeCalibration() }.auButton(.primary, .regular)
-                    .keyboardShortcut(.defaultAction)
-            }
-        }
-    }
-
-    private func change(_ b: Double?, _ n: Double?) -> String {
-        guard let b, let n, b > 0 else { return "—" }
-        return String(format: "%+.0f%%", (n / b - 1) * 100)
     }
 
     // K2, failed

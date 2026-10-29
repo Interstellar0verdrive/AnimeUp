@@ -38,6 +38,8 @@ public struct FilePlan: Codable, Sendable, Equatable {
     public var frames: Int?
     public var chunks: Int?
     public var chunkSize: Int?
+    /// More chunks than usual because the work disk is tight.
+    public var chunksTight: Bool?
     public var codec: String?
     public var pixFmt: String?
     public var crf: Int?
@@ -48,6 +50,8 @@ public struct FilePlan: Codable, Sendable, Equatable {
     public var dedupMeasured: Bool?
     public var outputName: String?
     public var outputFolder: String?
+    /// The folder is the source's own (the default); false when a folder was chosen.
+    public var outputNextToSource: Bool?
     public var peakDiskGb: Double?
     public var warnings: [String]?
     public var diskWarnings: [String]?

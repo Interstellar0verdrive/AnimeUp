@@ -11,8 +11,8 @@ struct StartView: View {
             // No scroll view while everything fits (the usual window size);
             // a scroll view only below that.
             ViewThatFits(in: .vertical) {
-                StartContent(minGrid: geo.size.height - StartContent.headerHeight)
-                ScrollView { StartContent(minGrid: 0) }
+                StartContent(fill: true)
+                ScrollView { StartContent(fill: false) }
             }
         }
         .ignoresSafeArea(edges: .top)
@@ -22,61 +22,79 @@ struct StartView: View {
 
 /// The title, the intro and the four cards.
 struct StartContent: View {
+    /// Below this content width the four cards go in one column.
+    static let oneColumnBelow: CGFloat = 920
     @Environment(AppModel.self) private var model
-    var minGrid: CGFloat
+    @Environment(\.auPageTop) private var pageTop
+    /// Stretch the cards to the window's height (when everything fits without scrolling).
+    var fill: Bool
+
+    @State private var oneColumn = false
 
     private var calibrated: Bool { model.calibration?.isCalibrated ?? false }
 
-    var body: some View { content(minGrid: minGrid) }
+    var body: some View { content }
 
-    /// Title, intro and paddings above and below the cards.
-    static let headerHeight: CGFloat = 28 + 29 + 6 + 40 + 18 + 24
-
-    private func content(minGrid: CGFloat) -> some View {
+    private var content: some View {
         VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(model.t(calibrated || model.status != .ready ? "nat.start.title" : "nat.start.welcome"))
-                    .auPageTitle()
-                // Two lines of similar length, the second slightly longer.
-                Text(model.t("nat.start.intro1") + "\n" + model.t("nat.start.intro2")).auBody()
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            PageHeader(model.t(calibrated || model.status != .ready ? "nat.start.title" : "nat.start.welcome"),
+                       model.t("nat.start.intro1"), model.t("nat.start.intro2"))
             if model.status == .ready {
-                GridLayout(gap: 14, leftShare: 1.15 / 2.15, minHeight: minGrid) {
+                GridLayout(gap: 14, leftShare: 1.15 / 2.15, fill: fill, oneColumnBelow: Self.oneColumnBelow) {
                     if model.files.isEmpty { AddVideosCard() } else { YourVideosCard() }
-                    WhereFilesGoCard()
+                    WhereFilesGoCard(oneColumn: oneColumn)
                     ThisMacCard()
                     HowABatchGoesCard()
                 }
             } else {
-                EngineStatusView().frame(minHeight: minGrid)
+                EngineStatusView().frame(maxHeight: fill ? .infinity : nil)
             }
         }
-        .padding(.top, 28)
+        .padding(.top, pageTop)
         .padding(.horizontal, 28)
-        .padding(.bottom, 24)
+        .onGeometryChange(for: Bool.self) { $0.size.width - 56 < Self.oneColumnBelow } action: { oneColumn = $0 }
+        .padding(.bottom, 28)
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
 }
 
-/// Two columns (1.15 : 1) and two rows of equal height, 14 pt apart.
+/// Two columns (1.15 : 1) and two rows of equal height, 14 pt apart; in a
+/// narrow window the cards go one under the other, at their own height.
 struct GridLayout: Layout {
     var gap: CGFloat
     var leftShare: CGFloat
-    /// Fill at least this height (the window), with two equal rows if they fit.
-    var minHeight: CGFloat
+    /// Take the height offered (what the window leaves under the title), with two
+    /// equal rows if they fit. Measured, never estimated: an estimate a few points
+    /// off made the page scroll by those few points.
+    var fill: Bool
+    /// Below this width the two columns would squeeze the cards' content.
+    var oneColumnBelow: CGFloat = 0
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let width = proposal.width ?? 900
+        if width < oneColumnBelow {
+            let heights = subviews.map { $0.sizeThatFits(ProposedViewSize(width: width, height: nil)).height }
+            return CGSize(width: width, height: heights.reduce(0, +) + gap * CGFloat(max(0, subviews.count - 1)))
+        }
         let (left, right) = widths(width)
         let rows = rowHeights(subviews, left: left, right: right)
         let natural = rows.0 + rows.1 + gap
-        let height = max(natural, minHeight)
+        let offered = proposal.height.flatMap { $0.isFinite ? $0 : nil } ?? 0
+        let height = fill ? max(natural, offered) : natural
         return CGSize(width: width, height: height)
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        if bounds.width < oneColumnBelow {
+            var y = bounds.minY
+            for view in subviews {
+                let h = view.sizeThatFits(ProposedViewSize(width: bounds.width, height: nil)).height
+                view.place(at: CGPoint(x: bounds.minX, y: y), proposal: ProposedViewSize(width: bounds.width, height: h))
+                y += h + gap
+            }
+            return
+        }
         let (left, right) = widths(bounds.width)
         let rows = rowHeights(subviews, left: left, right: right)
         var top = rows.0, bottom = rows.1
@@ -133,13 +151,9 @@ struct AddVideosCard: View {
                     ForEach(Self.formats, id: \.self) { StatusChip($0) }
                 }
                 if let n = model.lastReceived {
-                    Label(model.localizer.tn("nat.add.received", n), systemImage: "checkmark")
-                        .labelStyle(SmallIconLabel())
-                        .auSmall(AU.greenText)
+                    HintLine(text: model.localizer.tn("nat.add.received", n), symbol: "checkmark", color: AU.greenText)
                 } else {
-                    Label(model.t("nat.add.not_handled"), systemImage: "info.circle")
-                        .labelStyle(SmallIconLabel())
-                        .auSmall(AU.text3)
+                    HintLine(text: model.t("nat.add.not_handled"), symbol: "info.circle")
                 }
             }
         }
@@ -158,25 +172,45 @@ struct PopupLabel: View {
 
     var body: some View {
         HStack {
-            Text(title).font(.system(size: size, weight: size < 13 ? .medium : .regular)).foregroundStyle(AU.text).lineLimit(1)
+            Text(title).auFont(size, size < 13 ? .medium : .regular).foregroundStyle(AU.text).lineLimit(1)
             Spacer()
-            Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundStyle(AU.text2)
+            Image(systemName: "chevron.down").auFont(9, .semibold).foregroundStyle(AU.text2)
         }
         .padding(.leading, 12)
         .padding(.trailing, 10)
-        .frame(width: width, height: height)
+        // The width asked for, or down to 160 pt when its column is narrower.
+        .frame(minWidth: min(width, 160), idealWidth: width, maxWidth: width, minHeight: height, maxHeight: height)
         .background(RoundedRectangle(cornerRadius: AU.Radius.field).fill(AU.control))
         .overlay(RoundedRectangle(cornerRadius: AU.Radius.field).strokeBorder(AU.glassLine, lineWidth: 1))
         .contentShape(Rectangle())
     }
 }
 
+/// A small icon before a sentence that wraps, its lines balanced (a hint under
+/// a card's content): unlike `SmallIconLabel`, it never widens its card.
+struct HintLine: View {
+    var text: String
+    var symbol: String
+    var color: Color = AU.text3
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Image(systemName: symbol).auFont(11)
+            BalancedParagraph(text, style: AUFont.small)
+        }
+        .foregroundStyle(color)
+    }
+}
+
 struct SmallIconLabel: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 6) {
-            configuration.icon.font(.system(size: 11))
+            configuration.icon.auFont(11)
             configuration.title
         }
+        // A status label ("2 warnings") stays on one line; the text after it gives way.
+        .lineLimit(1)
+        .fixedSize()
     }
 }
 
@@ -194,26 +228,30 @@ struct YourVideosCard: View {
             }
             MaybeScroll {
                 VStack(spacing: 0) {
+                    // Lines between the rows and one under the last: with few files the
+                    // list ends with a line instead of running into the empty box.
                     ForEach(Array(files.enumerated()), id: \.element.id) { i, f in
                         if i > 0 { Rectangle().fill(AU.line).frame(height: 1) }
-                        Button { model.tab = .queue; model.expanded = f.id; model.panelTab = .analysis } label: {
+                        Button { model.tab = .queue; model.expanded = f.id; model.panelTabs[f.id] = .analysis } label: {
                             HStack(spacing: 8) {
                                 icon(f).frame(width: 16)
-                                Text(f.name).font(.system(size: 12, weight: .medium)).foregroundStyle(AU.text)
+                                Text(f.name).auFont(12, .medium).foregroundStyle(AU.text)
                                     .lineLimit(1).truncationMode(.middle)
                                 Spacer(minLength: 4)
                                 if !f.warnings.isEmpty {
                                     StatusChip(model.localizer.tn("nat.queue.n_warnings", f.warnings.count), tone: .yellow,
                                                symbol: "exclamationmark.triangle.fill")
                                 }
-                                Text(f.report.map { Fmt.clock($0.duration) } ?? "—").font(AUFont.smallNumbers)
+                                Text(f.report.map { Fmt.clock($0.duration) } ?? "—").auFont(AUFont.smallNumbers)
                                     .foregroundStyle(AU.textCode).frame(width: 50, alignment: .trailing)
                             }
                             .padding(.horizontal, 8).padding(.vertical, 5)
                             .contentShape(Rectangle())
+                            .auHover(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
+                    Rectangle().fill(AU.line).frame(height: 1)
                 }
                 .padding(.vertical, 2)
             }
@@ -224,18 +262,12 @@ struct YourVideosCard: View {
             .background(RoundedRectangle(cornerRadius: AU.Radius.field).fill(AU.inset))
             .overlay(RoundedRectangle(cornerRadius: AU.Radius.field).strokeBorder(AU.line))
             Text(model.t("nat.start.click_report")).auSmall(AU.text3).padding(.top, -6)
-            HStack(spacing: 10) {
-                Text(model.t("nat.start.drop_more")).auSmall()
-                Button { model.openVideos() } label: { Label(model.t("nat.queue.add"), systemImage: "plus") }
-                    .auButton(.secondary, .small)
-            }
-            .frame(maxWidth: .infinity, minHeight: 58, maxHeight: .infinity)
-            .overlay(RoundedRectangle(cornerRadius: AU.Radius.field)
-                .strokeBorder(AU.boxLine, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])))
-            .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                Task { @MainActor in model.add(await loadURLs(providers)) }
-                return true
-            }
+            // The drop area of the other pages (E0b, F0), side by side: the same look
+            // wherever more videos can be dropped.
+            DropZone(title: model.t("nat.empty.drop_more"), buttonTitle: model.t("nat.add.open"), primary: false,
+                     axis: .horizontal,
+                     onOpen: { model.openVideos() }, onDrop: { model.receive($0) })
+                .frame(maxHeight: .infinity)
             HStack(spacing: 8) {
                 Text(model.analysingCount > 0 ? model.t("nat.start.analysing_left", ["n": model.analysingCount])
                      : model.warningCount > 0 ? model.t("nat.start.all_analysed_warn") : model.t("nat.start.all_analysed"))
@@ -258,11 +290,15 @@ struct YourVideosCard: View {
 
     @ViewBuilder
     private func icon(_ f: QueueFile) -> some View {
+        // Grey: analysed, ready for the Queue; green only once its video is made (29 Oct).
+        let job = model.job(f.id)?.state
         switch f.state {
-        case .ready: Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(AU.greenText)
+        case .ready where job == .done: Image(systemName: "checkmark").auFont(10, .semibold).foregroundStyle(AU.greenText)
+        case .ready where job == .running || job == .paused: Spinner(size: 10)
+        case .ready: Image(systemName: "checkmark").auFont(10, .semibold).foregroundStyle(AU.text3)
         case .analysing: Spinner(size: 10)
         case .queued: Circle().strokeBorder(AU.glassLine).frame(width: 10, height: 10)
-        case .failed, .missing: Image(systemName: "exclamationmark.octagon.fill").font(.system(size: 10)).foregroundStyle(AU.redText)
+        case .failed, .missing: Image(systemName: "exclamationmark.octagon.fill").auFont(10).foregroundStyle(AU.redText)
         }
     }
 }
@@ -271,59 +307,100 @@ struct YourVideosCard: View {
 
 struct WhereFilesGoCard: View {
     @Environment(AppModel.self) private var model
+    /// The cards in one column: the card is short and wide, so the folders go side
+    /// by side. Beside another card (two columns) it stays a column, however wide.
+    var oneColumn = false
     @State private var space: Double = 0
     @State private var editing = false
+    @State private var wide = false
 
     var body: some View {
         Card(spacing: 22) {
             CardTitle(model.t("nat.where.title"), symbol: "folder").padding(.bottom, -6)
-            VStack(alignment: .leading, spacing: 6) {
-                Text(model.t("nat.where.finished")).auLabel()
-                Menu {
-                    Button(model.t("nat.where.next_to")) {}
-                } label: {
-                    PopupLabel(model.t("nat.where.next_to"))
-                }
-                .menuStyle(.button)
-                .buttonStyle(.plain)
-                .menuIndicator(.hidden)
-                .frame(width: 280)
-                Text(model.t("nat.where.or_pick")).auSmall()
-            }
-            VStack(alignment: .leading, spacing: 6) {
-                Text(model.t("nat.where.work")).auLabel()
-                HStack(spacing: 8) {
-                    PathField(model.folders.map { displayPath($0.workFolder) } ?? "—")
-                    Button(model.t("nat.btn.change")) { model.chooseWorkFolder() }.auButton(.secondary, .regular)
-                }
-                if let f = model.folders, !f.reachable {
-                    Text(model.t("nat.where.unreachable")).auSmall(AU.yellowText)
-                }
-            }
-            if let f = model.folders {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(model.t("nat.where.space")).auLabel()
-                        Spacer()
-                        Text("\(Text("\(Int(space)) GB").foregroundStyle(AU.text)) \(model.t("nat.where.of_free", ["free": SizeFormat.gb(f.freeGb)]))")
-                            .foregroundStyle(AU.text3)
-                            .font(AUFont.smallNumbers)
+            // A wide card in one column puts the two folders side by side instead of
+            // leaving the half beside the menu empty.
+            if wide && oneColumn {
+                // The space belongs to the work folder: in its column, right under it.
+                HStack(alignment: .top, spacing: 24) {
+                    finished.frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 22) {
+                        work
+                        spaceRow
                     }
-                    Slider(value: $space,
-                           in: Double(f.spaceMinGb)...Double(max(f.spaceMinGb + 1, f.spaceRuleGb)),
-                           step: 1) { editing = $0; if !$0 { model.setSpace(Int(space)) } }
-                        .controlSize(.small)
-                        .tint(AU.primary)
-                    Text(model.t("nat.where.space_note")).auSmall()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .onAppear { space = Double(model.settings?.diskGb ?? f.spaceSettingGb) }
-                .onChange(of: model.settings?.diskGb) { _, new in if !editing, let new { space = Double(new) } }
+            } else {
+                finished
+                work
+                spaceRow
             }
-            Spacer(minLength: 0)
-            Label(model.t("nat.where.settings"), systemImage: "gearshape")
-                .labelStyle(SmallIconLabel())
-                .auSmall(AU.text3)
+            // At the bottom when the row is taller than the card; right under the rest when
+            // the cards are in one column (a spacer would add a second 22 pt gap there).
+            HintLine(text: model.t("nat.where.settings"), symbol: "gearshape")
+                .frame(maxHeight: .infinity, alignment: .bottomLeading)
         }
+        .onGeometryChange(for: Bool.self) { $0.size.width >= 600 } action: { wide = $0 }
+    }
+
+    private var finished: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(model.t("nat.where.finished")).auLabel()
+            // The boards' 280 pt, about half the work folder's path field below.
+            FinishedFolderMenu(width: 280)
+            Text(model.t("nat.where.or_pick")).auSmall()
+        }
+    }
+
+    private var work: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(model.t("nat.where.work")).auLabel()
+            HStack(spacing: 8) {
+                PathField(model.folders.map { displayPath($0.workFolder) } ?? "—")
+                Button(model.t("nat.btn.change")) { model.chooseWorkFolder() }.auButton(.secondary, .regular)
+            }
+            if let f = model.folders, !f.reachable {
+                Text(model.t("nat.where.unreachable")).auSmall(AU.yellowText)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var spaceRow: some View {
+        if let f = model.folders, f.tooFull {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(model.t("nat.where.space")).auLabel()
+                HintLine(text: model.t("nat.where.too_full", ["free": SizeFormat.gb(f.freeGb), "volume": f.volume, "min": f.spaceMinGb]),
+                         symbol: "exclamationmark.triangle.fill", color: AU.yellowText)
+            }
+        } else if let f = model.folders, f.tight {
+            // Nothing to choose between 50 and 51 GB: say how full the disk is.
+            VStack(alignment: .leading, spacing: 6) {
+                Text(model.t("nat.where.space")).auLabel()
+                HintLine(text: tightText(f), symbol: "exclamationmark.triangle.fill", color: AU.yellowText)
+            }
+        } else if let f = model.folders {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(model.t("nat.where.space")).auLabel()
+                    Spacer()
+                    Text("\(Text("\(Int(space)) GB").foregroundStyle(AU.text)) \(model.t("nat.where.of_free", ["free": SizeFormat.gb(f.freeGb)]))")
+                        .foregroundStyle(AU.text3)
+                        .auFont(AUFont.smallNumbers)
+                }
+                AUSlider(value: Binding(get: { space }, set: { space = $0.rounded() }),
+                         in: Double(f.spaceMinGb)...Double(max(f.spaceMinGb + 1, f.spaceRuleGb))) {
+                    editing = $0; if !$0 { model.setSpace(Int(space)) }
+                }
+                BalancedParagraph(model.t("nat.where.space_note"), style: AUFont.small).foregroundStyle(AU.text2)
+            }
+            .onAppear { space = Double(model.settings?.diskGb ?? f.spaceSettingGb) }
+            .onChange(of: model.settings?.diskGb) { _, new in if !editing, let new { space = Double(new) } }
+        }
+    }
+
+    private func tightText(_ f: FoldersState) -> String {
+        model.t("nat.where.tight", ["free": SizeFormat.gb(f.freeGb), "use": f.spaceRuleGb,
+                                    "left": SizeFormat.gb(f.leftForSystemGb)])
     }
 
     /// "~/Movies/AnimeUp Jobs/" like the boards: home shortened, trailing slash.
@@ -344,8 +421,7 @@ struct ThisMacCard: View {
             CardTitle(model.t("nat.mac.title"), symbol: "gauge.medium")
             if let m = model.machine { ValueStrip(strip(m)) }
             calibration
-            Spacer(minLength: 0)
-            tools
+            tools.frame(maxHeight: .infinity, alignment: .bottomLeading)
         }
     }
 
@@ -367,7 +443,11 @@ struct ThisMacCard: View {
     @ViewBuilder
     private var calibration: some View {
         if let c = model.calibration {
-            if c.running {
+            let running = c.running || model.calRun?.running == true
+            if running && c.state == .done {
+                // Recalibrating: the numbers so far stay, the date gives way to the run.
+                speeds(c, running: true)
+            } else if running {
                 NoteView(.accent, text: model.t("nat.mac.running"))
             } else {
                 switch c.state {
@@ -391,27 +471,35 @@ struct ThisMacCard: View {
         }
     }
 
-    private func speeds(_ c: CalibrationState) -> some View {
-        // The three of board S2 (denoise leggero runs on the same network as
-        // no-denoise, at the same speed).
-        let rows = c.models.filter { $0.fps1080p != nil && $0.key != "cugan-denoise" }
+    private func speeds(_ c: CalibrationState, running: Bool = false) -> some View {
+        // Board K3: every model, by its full name.
+        let rows = c.models.filter { $0.fps1080p != nil }
         let top = max(1, (rows.compactMap(\.fps1080p).max() ?? 1) * 1.06)
         return VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
                 Text(model.t("nat.mac.cal_label")).auLabel()
-                StatusChip(model.t("nat.mac.cal_chip", ["when": c.date.map(model.relative) ?? ""]),
-                           tone: .green, symbol: "checkmark")
+                if running {
+                    // As in the sidebar: a spinner and "In progress" in place of the date.
+                    // Reopens the calibration sheet, closed while the run went on.
+                    StatusLink(model.t("nat.side.cal_running"), tone: .accent, size: 11, busy: true) {
+                        model.showCalibration = true
+                    }
+                } else {
+                    StatusLink(c.date.map(model.dateTime) ?? "", size: 11, help: model.t("nat.cald.open_help")) {
+                        model.openCalibrationDetails()
+                    }
+                }
                 Spacer()
-                Text(model.t("nat.mac.speed_note")).font(.system(size: 11)).foregroundStyle(AU.text3)
+                Text(model.t("nat.mac.speed_note")).auFont(11).foregroundStyle(AU.text3)
             }
             .padding(.bottom, 2)
             ForEach(rows) { row in
                 HStack(spacing: 10) {
-                    Text(shortName(row)).font(.system(size: 12)).foregroundStyle(AU.text)
-                        .lineLimit(1).frame(width: 140, alignment: .leading)
+                    Text(fullName(row)).auFont(12).foregroundStyle(AU.text)
+                        .lineLimit(1).frame(width: 170, alignment: .leading)
                     AUBar((row.fps1080p ?? 0) / top, height: 6)
                     Text(model.t("nat.mac.fps", ["fps": String(format: "%.1f", row.fps1080p ?? 0)]))
-                        .font(AUFont.smallNumbers).foregroundStyle(AU.textCode)
+                        .auFont(AUFont.smallNumbers).foregroundStyle(AU.textCode)
                         .frame(width: 64, alignment: .trailing)
                 }
                 .frame(height: 17)
@@ -420,14 +508,10 @@ struct ThisMacCard: View {
         .padding(.top, 6)
     }
 
-    /// The model's short name in the app's language (the engine answers in
-    /// its own): the catalog label without "Real-ESRGAN " / "Real-".
-    private func shortName(_ row: CalibrationState.ModelSpeed) -> String {
+    /// The model's full name in the app's language (the engine answers in its own).
+    private func fullName(_ row: CalibrationState.ModelSpeed) -> String {
         let key = "mot.modello.\(row.key).label"
-        guard model.localizer.has(key) else { return row.short }
-        let label = model.t(key)
-        return label.hasPrefix("Real-ESRGAN ") ? String(label.dropFirst(12))
-            : label.hasPrefix("Real-") ? String(label.dropFirst(5)) : label
+        return model.localizer.has(key) ? model.t(key) : row.label
     }
 
     private struct ToolRow: Identifiable {
@@ -483,10 +567,10 @@ struct ThisMacCard: View {
                         Text(row.name).foregroundStyle(AU.text).frame(width: 110, alignment: .leading)
                         Text(row.detail).foregroundStyle(AU.text2).lineLimit(1)
                         Spacer(minLength: 6)
-                        Text(row.version).font(AUFont.smallNumbers)
+                        Text(row.version).auFont(AUFont.smallNumbers)
                             .foregroundStyle(row.state == .missing ? AU.redText : AU.text3)
                     }
-                    .font(.system(size: 12))
+                    .auFont(12)
                     .help(row.help ?? "")
                 }
             }
@@ -497,11 +581,11 @@ struct ThisMacCard: View {
     private func icon(_ state: ToolRow.State) -> some View {
         switch state {
         case .verified:
-            Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(AU.greenText)
+            Image(systemName: "checkmark").auFont(10, .semibold).foregroundStyle(AU.greenText)
         case .unverified:
-            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 10)).foregroundStyle(AU.yellow)
+            Image(systemName: "exclamationmark.triangle.fill").auFont(10).foregroundStyle(AU.yellow)
         case .missing:
-            Image(systemName: "exclamationmark.octagon.fill").font(.system(size: 10)).foregroundStyle(AU.redText)
+            Image(systemName: "exclamationmark.octagon.fill").auFont(10).foregroundStyle(AU.redText)
         }
     }
 }
@@ -510,6 +594,13 @@ struct ThisMacCard: View {
 
 struct HowABatchGoesCard: View {
     @Environment(AppModel.self) private var model
+    @State private var layout = Layout.plain
+
+    /// By the card's width: the steps alone (a narrow column), each with its drawing
+    /// at the right (board S1c), or side by side with the drawing above (one column).
+    enum Layout { case plain, art, row }
+
+    static func layout(_ width: CGFloat) -> Layout { width >= 820 ? .row : width >= 520 ? .art : .plain }
 
     var body: some View {
         Card {
@@ -519,10 +610,14 @@ struct HowABatchGoesCard: View {
                       done: model.calibration?.isCalibrated ?? false),
                 .init(title: model.t("nat.how.add"), detail: model.t("nat.how.add_text"),
                       done: model.files.contains { $0.state == .ready }),
-                .init(title: model.t("nat.how.compare"), detail: model.t("nat.how.compare_text")),
-                .init(title: model.t("nat.how.queue"), detail: model.t("nat.how.queue_text")),
-            ])
+                // Compare is optional: done once a test has its results, never in the way when skipped.
+                .init(title: model.t("nat.how.compare"), detail: model.t("nat.how.compare_text"),
+                      done: model.compareHasResults),
+                .init(title: model.t("nat.how.queue"), detail: model.t("nat.how.queue_text"),
+                      done: model.files.contains { model.job($0.id)?.state == .done }),
+            ], inRow: layout == .row, art: layout == .plain ? nil : { AnyView(StepOutline(index: $0)) })
             .frame(maxHeight: .infinity)
         }
+        .onGeometryChange(for: Layout.self) { Self.layout($0.size.width) } action: { layout = $0 }
     }
 }

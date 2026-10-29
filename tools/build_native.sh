@@ -22,5 +22,5 @@ ditto "$APP" "$OUT/AnimeUp.app"
 codesign --force --deep --sign - "$OUT/AnimeUp.app"
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$OUT/AnimeUp.app/Contents/Info.plist")"
 find "$OUT/AnimeUp.app" \( -name '._*' -o -name .DS_Store \) -delete
-(cd "$OUT" && rm -f "AnimeUp-v$VERSION-native.zip" && ditto -c -k --norsrc --noextattr --noacl --keepParent AnimeUp.app "AnimeUp-v$VERSION-native.zip")
-echo "built $OUT/AnimeUp.app and $OUT/AnimeUp-v$VERSION-native.zip"
+(cd "$OUT" && rm -f "AnimeUp-v$VERSION-macos-app.zip" && ditto -c -k --norsrc --noextattr --noacl --keepParent AnimeUp.app "AnimeUp-v$VERSION-macos-app.zip")
+echo "built $OUT/AnimeUp.app and $OUT/AnimeUp-v$VERSION-macos-app.zip"

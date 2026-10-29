@@ -121,7 +121,6 @@ enum DebugSnapshot {
             if env["ANIMEUP_SNAPSHOT_K2"] == "1" {
                 model.calRun = try? await model.engine.calibrationRun()
                 render(CalibrationSheet().environment(model), width: 520, "\(base)-cal-results.png")
-                render(SettingsPage(tab: .calibration).environment(model), width: 640, "\(base)-settings-calibration.png")
                 renderComposite(model, "\(base)-start-calibrated.png")
             }
             if let name = env["ANIMEUP_SNAPSHOT_QUICKRUN"], let f = model.files.first(where: { $0.name.contains(name) }) {
@@ -267,7 +266,7 @@ enum DebugSnapshot {
                 .background(RoundedRectangle(cornerRadius: 16).fill(AU.side)
                     .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(AU.glassLine)))
                 .padding([.leading, .vertical], 8)
-            StartContent(minGrid: 840 - StartContent.headerHeight)
+            StartContent(fill: true).frame(height: 840)
         }
         .frame(width: 1360, alignment: .top)
         .frame(minHeight: 840, alignment: .top)

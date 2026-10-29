@@ -48,6 +48,10 @@ public enum AU {
     public static let side = Color(dark: "rgba(30,33,38,.78)", light: "rgba(236,238,241,.82)")
     public static let surface = Color(dark: "#16181B", light: "#FFFFFF")
     public static let raised = Color(dark: "#1C1F23", light: "#EEF0F2")
+    /// Sheets and alerts (boards SHEET, K1, K2, O4, C5). Light value to be drawn with the light screens.
+    public static let sheet = Color(dark: "#22252A", light: "#FFFFFF")
+    /// AnimeUp's own alerts (boards O1–O3, edge.py `alert()`). Light value to be drawn with the light screens.
+    public static let alert = Color(dark: "#26292E", light: "#FFFFFF")
     public static let surfaceHover = Color(dark: "#1C1F23", light: "#F3F4F6")
     public static let inset = Color(dark: "rgba(0,0,0,.25)", light: "rgba(0,0,0,.04)")
     public static let control = Color(dark: "#1C1F23", light: "#FFFFFF")
@@ -117,39 +121,41 @@ public enum AU {
 /// The eight text styles of DS1: SF Pro and SF Mono, whole points.
 public enum AUFont {
     /// Page title · 24 bold, −1 % tracking (use `.auPageTitle()` for the tracking).
-    public static let pageTitle = Font.system(size: 24, weight: .bold)
+    public static let pageTitle = AUTextStyle(24, .bold)
     /// Section title · 15 semibold (card titles).
-    public static let sectionTitle = Font.system(size: 15, weight: .semibold)
+    public static let sectionTitle = AUTextStyle(15, .semibold)
     /// File name · 12 medium.
-    public static let fileName = Font.system(size: 12, weight: .medium)
-    /// Body · 13 regular, line height 1.5.
-    public static let body = Font.system(size: 13)
+    public static let fileName = AUTextStyle(12, .medium)
+    /// Body · 13 regular, line height 1.5 (`.p`).
+    public static let body = AUTextStyle(13, leading: 1.5)
     /// Callout · 12 regular.
-    public static let callout = Font.system(size: 12)
+    public static let callout = AUTextStyle(12)
+    /// Small paragraph · 12 regular, line height 1.45 (`.sm`).
+    public static let small = AUTextStyle(12, leading: 1.45)
     /// Label · 11 semibold, tertiary.
-    public static let label = Font.system(size: 11, weight: .semibold)
+    public static let label = AUTextStyle(11, .semibold)
     /// Numbers · 12 mono.
-    public static let numbers = Font.system(size: 12, design: .monospaced)
+    public static let numbers = AUTextStyle(12, mono: true)
     /// Small numbers · 11 mono.
-    public static let smallNumbers = Font.system(size: 11, design: .monospaced)
+    public static let smallNumbers = AUTextStyle(11, mono: true)
 }
 
 extension View {
     public func auPageTitle() -> some View {
-        font(AUFont.pageTitle).tracking(-0.24).foregroundStyle(AU.text)
+        auFont(AUFont.pageTitle).tracking(-0.24).foregroundStyle(AU.text)
     }
 
     /// Body text with the boards' 1.5 line height.
     public func auBody(_ color: Color = AU.text2) -> some View {
-        font(AUFont.body).lineSpacing(3.5).foregroundStyle(color)
+        auFont(AUFont.body).foregroundStyle(color)
     }
 
     /// The small paragraph style of the cards (12, line height 1.45).
     public func auSmall(_ color: Color = AU.text2) -> some View {
-        font(AUFont.callout).lineSpacing(3).foregroundStyle(color)
+        auFont(AUFont.small).foregroundStyle(color)
     }
 
     public func auLabel(_ color: Color = AU.text3) -> some View {
-        font(AUFont.label).foregroundStyle(color)
+        auFont(AUFont.label).foregroundStyle(color)
     }
 }

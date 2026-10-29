@@ -12,6 +12,8 @@ import SwiftUI
 enum DebugQA {
     static func scheduleIfAsked(model: AppModel) {
         let env = ProcessInfo.processInfo.environment
+        if let sheet = env["ANIMEUP_SHOW"], !sheet.isEmpty { show(sheet, model) }
+        if let file = env["ANIMEUP_COMMANDS"], !file.isEmpty { watchCommands(URL(fileURLWithPath: file), model) }
         guard let scenario = env["ANIMEUP_QA"], let base = env["ANIMEUP_SNAPSHOT"] else { return }
         Task { @MainActor in
             for _ in 0..<120 where model.status != .ready { try? await Task.sleep(for: .milliseconds(500)) }
@@ -33,6 +35,103 @@ enum DebugQA {
             }
             note("QA \(scenario) end")
         }
+    }
+
+    /// `ANIMEUP_SHOW=finished|cal-intro|cal-done|use-many`: opens that sheet in
+    /// the real window with saved data, to check it against its board.
+    static func show(_ sheet: String, _ model: AppModel) {
+        Task { @MainActor in
+            for _ in 0..<120 where model.status != .ready { try? await Task.sleep(for: .milliseconds(500)) }
+            try? await Task.sleep(for: .seconds(1))
+            switch sheet {
+            case "finished":
+                if let r = try? await model.engine.lastLaunch() { model.finished = r.launch }
+                model.showFinished = true
+            case "cal-intro":
+                model.calRun = nil
+                model.showCalibration = true
+            case "cal-done":
+                var done = try? await model.engine.calibrationRun()
+                done?.seen = nil; done?.state = "done"; done?.running = false
+                model.calRun = done
+                model.showCalibration = true
+            case "use-many":
+                model.tab = .compare
+                try? await Task.sleep(for: .seconds(1))
+                model.cmp.useKey = "cugan"
+                model.cmp.showUseMany = true
+            case "alert-stop": model.confirmStopAll()
+            case "alert-error": model.alert = AppAlert(kind: .error(title: model.t("nat.run.error_title"),
+                                                                    text: "The work folder isn’t reachable: USB_1TB was disconnected."))
+            case "alert-close": AlertBuilder.present(AppAlert(kind: .closeNotice), model: model)
+            case "alert-disk": AlertBuilder.present(AppAlert(kind: .diskMissing(volume: "USB_1TB")), model: model)
+            case "alert-move": AlertBuilder.present(AppAlert(kind: .moveWithInterrupted(url: URL(fileURLWithPath: "/tmp"), count: 2)), model: model)
+            case "alert-info": model.alert = AppAlert(kind: .info(title: "Those 5 videos are already in the Queue.",
+                                                                  text: "Nothing new was added. Videos AnimeUp made itself are always left out."))
+            default: note("ANIMEUP_SHOW: unknown sheet")
+            }
+        }
+    }
+
+    /// `ANIMEUP_COMMANDS=<file>`: the app reads that file every half second, runs
+    /// each line as a command and empties it; what happened goes to `<file>.out`.
+    /// Lets the dev app be tested from the shell, without menus, panels or the
+    /// screen: the same model methods the buttons and menus call.
+    ///   tab start|compare|queue · add <path> · remove-all · finished <path>|next · start · stop-all
+    ///   work <path> · show <sheet> · sidebar · lang en|it · state
+    static func watchCommands(_ file: URL, _ model: AppModel) {
+        let out = file.appendingPathExtension("out")
+        Task { @MainActor in
+            while true {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard let text = try? String(contentsOf: file, encoding: .utf8), !text.isEmpty else { continue }
+                try? "".write(to: file, atomically: true, encoding: .utf8)
+                for line in text.split(separator: "\n").map(String.init) where !line.trimmingCharacters(in: .whitespaces).isEmpty {
+                    let reply = await run(line, model)
+                    note("command \(line) → \(reply)")
+                    let entry = "\(line)\t\(reply)\n"
+                    if let h = try? FileHandle(forWritingTo: out) { h.seekToEndOfFile(); h.write(Data(entry.utf8)); try? h.close() }
+                    else { try? entry.write(to: out, atomically: true, encoding: .utf8) }
+                }
+            }
+        }
+    }
+
+    private static func run(_ line: String, _ model: AppModel) async -> String {
+        let parts = line.split(separator: " ", maxSplits: 1).map(String.init)
+        let arg = parts.count > 1 ? parts[1].trimmingCharacters(in: .whitespaces) : ""
+        switch parts[0] {
+        case "tab":
+            guard let t = ["start": Tab.start, "compare": .compare, "queue": .queue][arg] else { return "unknown tab" }
+            model.tab = t
+        case "add": model.add([URL(fileURLWithPath: arg)])
+        case "remove-all": model.removeWithUndo(Set(model.files.map(\.id)))
+        case "finished": model.setFinishedFolder(arg == "next" ? nil : URL(fileURLWithPath: arg))
+        case "work": model.setWorkFolder(URL(fileURLWithPath: arg))
+        case "show": show(arg, model)
+        case "sidebar": model.toggleSidebar()
+        case "lang": model.setLanguage(arg)
+        case "open":
+            // open processing|analysis: every row's drawer on that tab.
+            for f in model.files {
+                model.openRows.insert(f.id)
+                model.panelTabs[f.id] = PanelTab(rawValue: arg) ?? .processing
+            }
+        case "start": model.startQueue()
+        case "close-sheet": model.markFinishedSeen()
+        // model <key>: every file; resume: every interrupted file.
+        case "model": model.chooseModel(arg, for: model.files.map(\.id))
+        case "resume": for f in model.files where model.job(f.id)?.state == .interrupted { model.command("job.resume", id: f.id) }
+        // redo|overwrite|cancel-redo: on every finished file (F6d, F6e).
+        case "redo": for f in model.files where model.job(f.id)?.state == .done { model.startRedo(f.id) }
+        case "overwrite": for f in model.files where model.redoNeedsAnswer(f.id) { model.confirmOverwrite(f.id) }
+        case "cancel-redo": for id in model.redo { model.cancelRedo(id) }
+        case "stop-all": model.stoppedByUser = true; model.command("queue.stopAll")
+        case "state": break
+        default: return "unknown command"
+        }
+        try? await Task.sleep(for: .seconds(1))
+        return "ok · tab \(model.tab) · \(model.files.count) files · finished \(model.folders?.finishedFolder ?? "next to the originals")"
     }
 
     static func note(_ s: String) { log.info("QA: " + s) }
@@ -191,7 +290,7 @@ enum DebugQA {
     static func italian(_ model: AppModel, _ base: String) async {
         func completed(_ lang: String) {
             if let f = model.files.first(where: { $0.name.contains("Part 4") }), let j = model.job(f.id), j.state == .done {
-                DebugSnapshot.render(JobCompleted(file: f, job: j).environment(model).padding(20).background(AU.bg), width: 900, "\(base)-completed-\(lang).png")
+                DebugSnapshot.render(JobOutcome(file: f, job: j).environment(model).padding(20).background(AU.bg), width: 900, "\(base)-completed-\(lang).png")
             }
         }
         completed("en")

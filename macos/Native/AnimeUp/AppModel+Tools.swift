@@ -1,3 +1,4 @@
+import DesignSystem
 import AppKit
 import Engine
 import Models
@@ -135,7 +136,8 @@ extension AppModel {
     }
 }
 
-/// Resizes the main window between the tools window (T1) and the app.
+/// Resizes the main window between the tools window (T1) and the app, centred
+/// on the screen it is on and always inside that screen's visible area.
 @MainActor
 enum WindowSizer {
     static var main: NSWindow? {
@@ -143,22 +145,57 @@ enum WindowSizer {
     }
 
     static func toTools() {
-        guard let w = main else { return }
-        w.minSize = NSSize(width: 600, height: 360)
-        resize(w, to: NSSize(width: 600, height: 380))
+        place(NSSize(width: 600, height: 380), min: NSSize(width: 600, height: 360))
     }
 
     static func toMain() {
-        guard let w = main else { return }
-        resize(w, to: NSSize(width: 1360, height: 840))
-        w.minSize = NSSize(width: 1100, height: 720)
+        place(NSSize(width: 1360, height: 840), min: AUChrome.minWindow)
     }
 
-    private static func resize(_ w: NSWindow, to size: NSSize) {
-        var frame = w.frameRect(forContentRect: NSRect(origin: .zero, size: size))
-        let screen = w.screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        frame.origin.x = screen.midX - frame.width / 2
-        frame.origin.y = screen.midY - frame.height / 2
-        w.setFrame(frame, display: true, animate: true)
+    /// On the next turn of the run loop: by then the window is on a screen and
+    /// AppKit has applied its own first frame, which would otherwise win.
+    private static func place(_ size: NSSize, min: NSSize) {
+        DispatchQueue.main.async {
+            guard let w = main, let screen = w.screen ?? NSScreen.main else { return }
+            let area = screen.visibleFrame
+            w.minSize = min
+            var frame = w.frameRect(forContentRect: NSRect(origin: .zero, size: size))
+            frame.size.width = Swift.min(frame.width, area.width)
+            frame.size.height = Swift.min(frame.height, area.height)
+            frame.origin = NSPoint(x: (area.midX - frame.width / 2).rounded(), y: (area.midY - frame.height / 2).rounded())
+            w.setFrame(frame, display: true, animate: w.isVisible)
+        }
+    }
+}
+
+extension AppModel {
+    /// AnimeUp › Check for Updates… and the sidebar footer: asks GitHub now and
+    /// always answers, in AnimeUp's own alert. (Sparkle replaces this later.)
+    func checkForUpdates() {
+        guard !checkingUpdates else { return }
+        checkingUpdates = true
+        Task {
+            let state = try? await engine.checkUpdates()
+            if let state { updates = state }
+            checkingUpdates = false
+            if let v = state?.available {
+                let alert = AUAlert(icon: .update, tone: .accent, title: t("nat.set.update_available", ["version": v]),
+                                    text: t("nat.upd.available_text"))
+                alert.button(t("nat.upd.download"), role: .primary)
+                alert.button(t("nat.upd.later"), cancel: true)
+                if alert.runModal() == 0 {
+                    NSWorkspace.shared.open(URL(string: state?.url ?? "https://github.com/Interstellar0verdrive/AnimeUp/releases/latest")!)
+                }
+            } else if let state, state.result != "error" {
+                let alert = AUAlert(icon: .info, tone: .accent, title: t("nat.set.up_to_date", ["version": Self.appVersion]),
+                                    text: t("nat.upd.latest_text"))
+                alert.button(t("nat.btn.ok"), role: .primary)
+                alert.runModal()
+            } else {
+                let alert = AUAlert(icon: .error, tone: .red, title: t("nat.upd.error_title"), text: t("nat.upd.error_text"))
+                alert.button(t("nat.btn.ok"), role: .primary)
+                alert.runModal()
+            }
+        }
     }
 }

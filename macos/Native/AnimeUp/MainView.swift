@@ -5,7 +5,7 @@ import SwiftUI
 struct MainView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
-    @State private var columns = NavigationSplitViewVisibility.all
+    @State private var lightsAnchor: CGRect?
 
     var body: some View {
         Group {
@@ -20,34 +20,77 @@ struct MainView: View {
         .sheet(isPresented: Binding(get: { model.showCalibration }, set: { if !$0 { model.closeCalibration() } })) {
             CalibrationSheet().environment(model).preferredColorScheme(.dark)
         }
-        .sheet(isPresented: Binding(get: { model.showFinished && !model.showCalibration },
+        .sheet(isPresented: Binding(get: { model.showCalibrationDetails }, set: { model.showCalibrationDetails = $0 })) {
+            CalibrationDetailsSheet().environment(model).preferredColorScheme(.dark)
+        }
+        .sheet(isPresented: Binding(get: { model.showFinished && !model.showCalibration && !model.showCalibrationDetails },
                                     set: { if !$0 { model.markFinishedSeen() } })) {
             FinishedSheet().environment(model).preferredColorScheme(.dark)
         }
-        .alert(item: Binding(get: { model.alert }, set: { model.alert = $0 })) { alert in
+        .onChange(of: model.alert?.id) {
+            guard let alert = model.alert else { return }
             log.info("alert: \(alert)")
-            return AlertBuilder.build(alert, model: model)
+            // After this update: the alert runs its own modal loop.
+            DispatchQueue.main.async {
+                model.alert = nil
+                AlertBuilder.present(alert, model: model)
+            }
         }
     }
 
+    /// The boards' frame: the sidebar panel and the page on `bg`. Below
+    /// `AUChrome.collapseBelow` the sidebar folds away and the top bar (board N1)
+    /// takes its place; in a wide window it can also be hidden from View.
     private var split: some View {
-        NavigationSplitView(columnVisibility: $columns) {
-            SidebarView()
-                .navigationSplitViewColumnWidth(min: 236, ideal: 236, max: 280)
-                .toolbar(removing: .sidebarToggle)
-        } detail: {
-            ZStack {
-                AU.bg.ignoresSafeArea()
-                switch model.tab {
-                case .start: StartView()
-                case .compare: CompareView()
-                case .queue: QueueView()
+        GeometryReader { g in
+            let narrow = g.size.width < AUChrome.collapseBelow
+            let inline = !narrow && (model.sidebarChoice ?? true)
+            HStack(spacing: 0) {
+                if inline {
+                    sidebar.transition(.move(edge: .leading).combined(with: .opacity))
+                }
+                VStack(spacing: 0) {
+                    if !inline { TopBar(canShowSidebar: !narrow) }
+                    page.environment(\.auPageTop, inline ? 28 : 17).overlay(alignment: .top) {
+                        // What scrolls under the top bar fades into it. At rest the page's
+                        // own top padding is under the fade, so nothing shows.
+                        if !inline {
+                            LinearGradient(colors: [AU.bg, AU.bg.opacity(0)], startPoint: .top, endPoint: .bottom)
+                                .frame(height: 18)
+                                .allowsHitTesting(false)
+                        }
+                    }
                 }
             }
-            .toolbar(.hidden, for: .windowToolbar)
+            .onChange(of: narrow, initial: true) { _, now in model.sidebarNarrow = now }
+            .onChange(of: inline, initial: true) { _, now in model.sidebarShown = now }
         }
-        .navigationSplitViewStyle(.balanced)
-        .frame(minWidth: 1100, minHeight: 720)
+        .background(AU.bg)
+        .ignoresSafeArea()
+        .background(WindowChrome(anchor: lightsAnchor, onClose: { model.windowClosed() }))
+        .onPreferenceChange(TrafficLightsAnchor.self) { lightsAnchor = $0 }
+        .animation(.easeOut(duration: 0.2), value: model.sidebarChoice)
+        .frame(minWidth: AUChrome.minWindow.width, minHeight: AUChrome.minWindow.height)
+    }
+
+    private var sidebar: some View {
+        SidebarView().padding([.leading, .top, .bottom], AUChrome.sidebarInset)
+    }
+
+    private var page: some View {
+        ZStack {
+            switch model.tab {
+            case .start: StartView()
+            case .compare: CompareView()
+            case .queue: QueueView()
+            }
+        }
+        // The page never sets the window's height: a wrapped text measured at
+        // a narrow width would otherwise make the frame taller than the window.
+        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+        // Pages reach up under the title bar; with the sidebar folded, the top bar
+        // sits there instead, and a scrolled page must not slide under it.
+        .clipped()
     }
 }
 
@@ -66,7 +109,7 @@ struct PlaceholderView: View {
         .padding(.top, 28)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .overlay {
-            Image(systemName: symbol).font(.system(size: 64, weight: .ultraLight)).foregroundStyle(AU.line)
+            Image(systemName: symbol).auFont(64, .ultraLight).foregroundStyle(AU.line)
         }
     }
 }

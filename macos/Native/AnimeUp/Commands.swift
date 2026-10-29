@@ -9,14 +9,20 @@ struct AppCommands: Commands {
 
     var body: some Commands {
         // ⌘Q also when a sheet is open: close the sheets first, then quit
-        // (the O1 alert still comes when a job runs).
+        // (the O2 alert still comes when a job runs).
         CommandGroup(replacing: .appTermination) {
             Button(model.t("nat.menu.quit")) { model.quitApp() }
                 .keyboardShortcut("q", modifiers: .command)
         }
+        // About with the project's link under the version (the standard panel's credits).
+        CommandGroup(replacing: .appInfo) {
+            Button { model.showAbout() } label: { Label(model.t("nat.menu.about"), systemImage: "info.circle") }
+        }
         CommandGroup(after: .appInfo) {
-            Button(model.t("nat.menu.check_updates")) { model.checkForUpdates() }
-            Button(model.t("nat.menu.calibrate")) { model.calibrate() }
+            Button { model.checkForUpdates() } label: {
+                Label(model.t("nat.menu.check_updates"), systemImage: "arrow.down.circle")
+            }
+            Button { model.calibrate() } label: { Label(model.t("nat.menu.calibrate"), systemImage: "gauge.medium") }
                 .disabled(model.calRun?.running == true)
         }
         CommandGroup(replacing: .newItem) {
@@ -38,6 +44,12 @@ struct AppCommands: Commands {
             Button(model.t("nat.tab.start")) { model.tab = .start }.keyboardShortcut("1", modifiers: .command)
             Button(model.t("nat.tab.compare")) { model.tab = .compare }.keyboardShortcut("2", modifiers: .command)
             Button(model.t("nat.tab.queue")) { model.tab = .queue }.keyboardShortcut("3", modifiers: .command)
+            Divider()
+            Button(model.t(model.sidebarShown ? "nat.menu.hide_sidebar" : "nat.menu.show_sidebar")) {
+                model.toggleSidebar()
+            }
+            .keyboardShortcut("s", modifiers: [.control, .command])
+            .disabled(model.sidebarNarrow)
             Divider()
         }
         CommandMenu(model.t("nat.tab.queue")) {

@@ -10,7 +10,7 @@ public struct SnapSlider<Value: Hashable>: View {
     @Environment(\.isEnabled) private var enabled
     @State private var dragging: Int?
 
-    public init(values: [Value], selection: Binding<Value>, width: CGFloat = 236,
+    public init(values: [Value], selection: Binding<Value>, width: CGFloat = 250,
                 label: @escaping (Value) -> String) {
         self.values = values
         self._selection = selection
@@ -29,10 +29,12 @@ public struct SnapSlider<Value: Hashable>: View {
                 Capsule().fill(AU.primary)
                     .frame(width: usable * CGFloat(index) / CGFloat(steps), height: 4)
                     .padding(.leading, 8)
+                // edge.py `snap()`: 6 pt dots ringed in the surface colour.
                 ForEach(values.indices, id: \.self) { i in
-                    Circle().fill(i <= index ? AU.primary : AU.trackSoft)
-                        .frame(width: 5, height: 5)
-                        .offset(x: 8 + usable * CGFloat(i) / CGFloat(steps) - 2.5)
+                    Circle().fill(i <= index ? AU.primary : AU.track)
+                        .frame(width: 6, height: 6)
+                        .overlay(Circle().stroke(AU.surface, lineWidth: 1.5).padding(-0.75))
+                        .offset(x: 8 + usable * CGFloat(i) / CGFloat(steps) - 3)
                 }
                 Circle().fill(.white)
                     .frame(width: 16, height: 16)
@@ -51,14 +53,16 @@ public struct SnapSlider<Value: Hashable>: View {
                     if let d = dragging, values.indices.contains(d) { selection = values[d] }
                     dragging = nil
                 })
+            // Labels under the track's ends (not the control's): the first starts
+            // at the first dot, the last ends at the last one, the rest are centred.
             ZStack(alignment: .leading) {
                 ForEach(values.indices, id: \.self) { i in
                     Text(label(values[i]))
-                        .font(.system(size: 10, weight: i == index ? .bold : .regular, design: .monospaced))
+                        .auFont(9.5, mono: true)
                         .foregroundStyle(i == index ? AU.text : AU.text3)
                         .fixedSize()
                         .frame(width: 60, alignment: i == 0 ? .leading : i == values.count - 1 ? .trailing : .center)
-                        .offset(x: i == 0 ? 0 : i == values.count - 1 ? width - 60
+                        .offset(x: i == 0 ? 8 : i == values.count - 1 ? width - 8 - 60
                                 : 8 + usable * CGFloat(i) / CGFloat(steps) - 30)
                 }
             }
@@ -81,7 +85,8 @@ public struct SettingsGroup<Content: View>: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        // edge.py `group()`: label 6 pt above a border-box of rows.
+        VStack(alignment: .leading, spacing: 6) {
             if let title { Text(title).auLabel().padding(.leading, 4) }
             Group(subviews: content()) { subviews in
                 VStack(spacing: 0) {
@@ -91,14 +96,14 @@ public struct SettingsGroup<Content: View>: View {
                     }
                 }
             }
-                .background(RoundedRectangle(cornerRadius: AU.Radius.card).fill(AU.surface))
-                .overlay(RoundedRectangle(cornerRadius: AU.Radius.card).strokeBorder(AU.line))
+            .auBox(RoundedRectangle(cornerRadius: AU.Radius.card), fill: AU.surface, line: AU.line)
         }
     }
 }
 
-/// One settings row: title, description ending in the accent "Default: …",
-/// and the control on the right.
+/// One settings row: title, description, the default on a line of its own
+/// (on every row that has one: the description's size and leading, tertiary, no icon — information,
+/// not a control), and the control on the right.
 public struct SettingsRow<Control: View>: View {
     var title: String
     var description: String?
@@ -116,11 +121,16 @@ public struct SettingsRow<Control: View>: View {
     public var body: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 13, weight: .medium)).foregroundStyle(AU.text)
-                if description != nil || defaultText != nil {
-                    Text(describe)
-                        .font(.system(size: 12)).lineSpacing(3)
+                Text(title).auFont(13).foregroundStyle(AU.text)
+                if let description {
+                    Text(description).auFont(AUFont.small).foregroundStyle(AU.text2)
                         .fixedSize(horizontal: false, vertical: true)
+                }
+                if let defaultText {
+                    // The description's leading, no gap of its own: one block of text.
+                    Text(defaultText).auFont(AUFont.small).foregroundStyle(AU.text3.opacity(0.7))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, -2)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -128,17 +138,6 @@ public struct SettingsRow<Control: View>: View {
         }
         .padding(.vertical, 11)
         .padding(.horizontal, 14)
-    }
-
-    private var describe: AttributedString {
-        var out = AttributedString(description ?? "")
-        out.foregroundColor = AU.text2
-        if let defaultText {
-            var d = AttributedString((description == nil ? "" : " ") + defaultText)
-            d.foregroundColor = AU.primaryText
-            out += d
-        }
-        return out
     }
 }
 
@@ -157,12 +156,18 @@ public struct CapsuleSegments<Value: Hashable>: View {
             ForEach(options.indices, id: \.self) { i in
                 let on = options[i].0 == selection
                 Button { selection = options[i].0 } label: {
-                    Text(options[i].1).font(.system(size: 12, weight: on ? .medium : .regular))
+                    // The medium width held in place: choosing doesn't nudge the segments.
+                    ZStack {
+                        Text(options[i].1).auControlFont(12, .medium).hidden()
+                        Text(options[i].1).auControlFont(12, on ? .medium : .regular)
+                    }
                         .foregroundStyle(on ? AU.text : AU.text2)
                         .padding(.horizontal, 14).padding(.vertical, 3)
                         .background(Capsule().fill(on ? AU.segOn : .clear)
                             .shadow(color: .black.opacity(on ? 0.4 : 0), radius: 1, y: 1))
                         .contentShape(Capsule())
+                        // The other segment lights up under the pointer, like every clickable surface.
+                        .auHover(Capsule(), enabled: !on)
                 }
                 .buttonStyle(.plain)
             }
@@ -170,5 +175,51 @@ public struct CapsuleSegments<Value: Hashable>: View {
         .padding(2)
         .background(Capsule().fill(AU.glass))
         .overlay(Capsule().strokeBorder(AU.glassLine))
+    }
+}
+
+/// The boards' continuous slider (screens.py Start "Space AnimeUp may use there",
+/// compare.py player): 4 pt track, accent fill, white knob (16 pt, or 12 under a player).
+public struct AUSlider: View {
+    @Binding var value: Double
+    var range: ClosedRange<Double>
+    var knob: CGFloat
+    var onEditingChanged: (Bool) -> Void
+    @Environment(\.isEnabled) private var enabled
+    @State private var dragging = false
+
+    public init(value: Binding<Double>, in range: ClosedRange<Double>, knob: CGFloat = 16,
+                onEditingChanged: @escaping (Bool) -> Void = { _ in }) {
+        self._value = value
+        self.range = range
+        self.knob = knob
+        self.onEditingChanged = onEditingChanged
+    }
+
+    public var body: some View {
+        GeometryReader { g in
+            let span = max(range.upperBound - range.lowerBound, .ulpOfOne)
+            let f = min(max((value - range.lowerBound) / span, 0), 1)
+            let w = g.size.width
+            ZStack(alignment: .leading) {
+                Capsule().fill(AU.trackSoft).frame(height: 4)
+                Capsule().fill(AU.primary).frame(width: max(0, w * f), height: 4)
+                Circle().fill(.white)
+                    .frame(width: knob, height: knob)
+                    .shadow(color: .black.opacity(0.45), radius: 1.5, y: 1)
+                    .offset(x: min(max(w * f - knob / 2, 0), w - knob))
+            }
+            .frame(height: g.size.height)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { d in
+                    guard enabled else { return }
+                    if !dragging { dragging = true; onEditingChanged(true) }
+                    value = range.lowerBound + min(max(d.location.x / max(w, 1), 0), 1) * span
+                }
+                .onEnded { _ in dragging = false; onEditingChanged(false) })
+        }
+        .frame(height: max(knob, 16))
+        .opacity(enabled ? 1 : 0.4)
     }
 }

@@ -18,7 +18,7 @@ struct ToolsSetupView: View {
                 Image(nsImage: NSApp.applicationIconImage)
                     .resizable().frame(width: 64, height: 64)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(model.t("nat.start.welcome")).font(.system(size: 17, weight: .bold)).foregroundStyle(AU.text)
+                    Text(model.t("nat.start.welcome")).auFont(17, .bold).foregroundStyle(AU.text)
                     Text(model.t("nat.tools.intro1", ["mb": totalMB]) + "\n" + model.t("nat.tools.intro2"))
                         .auSmall().fixedSize(horizontal: false, vertical: true)
                 }
@@ -33,10 +33,10 @@ struct ToolsSetupView: View {
                 let totals = model.toolsTotals
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(model.t("nat.tools.downloading", ["i": totals.index, "n": totals.count]))
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(AU.text)
+                        .auFont(13, .semibold).foregroundStyle(AU.text)
                     Text(model.t("nat.tools.progress", ["done": totals.done / 1_000_000,
                                                         "total": totals.total / 1_000_000]) + timeLeft(totals))
-                        .font(.system(size: 12)).foregroundStyle(AU.text2)
+                        .auFont(12).foregroundStyle(AU.text2)
                 }
             }
             rows
@@ -103,7 +103,7 @@ struct ToolsSetupView: View {
         return HStack(spacing: 10) {
             icon(row.state)
             Text("\(name(row.key)) \(version(row.key)) · \(detail(row.key))")
-                .font(.system(size: 12.5, weight: running || isFailed ? .semibold : .regular))
+                .auFont(12.5, running || isFailed ? .semibold : .regular)
                 .foregroundStyle(isFailed ? AU.redText : running ? AU.text : row.state == .done ? AU.text : AU.text2)
                 .lineLimit(1)
             Spacer(minLength: 8)
@@ -112,7 +112,7 @@ struct ToolsSetupView: View {
             }
             if isFailed { StatusChip(model.t("nat.chip.stopped"), tone: .red) }
             Text("\(ToolsSetupState.sizesMB[row.key] ?? 0) MB")
-                .font(AUFont.smallNumbers).foregroundStyle(AU.text3)
+                .auFont(AUFont.smallNumbers).foregroundStyle(AU.text3)
                 .frame(width: 44, alignment: .trailing)
         }
         .padding(.horizontal, 14)
@@ -124,13 +124,13 @@ struct ToolsSetupView: View {
     private func icon(_ state: ToolProgress.State) -> some View {
         switch state {
         case .done:
-            Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundStyle(AU.greenText)
+            Image(systemName: "checkmark").auFont(9, .bold).foregroundStyle(AU.greenText)
                 .frame(width: 18, height: 18).background(Circle().fill(AU.greenBg))
                 .overlay(Circle().strokeBorder(AU.greenLine))
         case .running:
             Spinner(size: 16).frame(width: 18, height: 18)
         case .failed:
-            Image(systemName: "xmark").font(.system(size: 8, weight: .bold)).foregroundStyle(AU.redText)
+            Image(systemName: "xmark").auFont(8, .bold).foregroundStyle(AU.redText)
                 .frame(width: 18, height: 18).overlay(Circle().strokeBorder(AU.redLine))
         case .waiting:
             Circle().strokeBorder(AU.glassLine).frame(width: 18, height: 18)

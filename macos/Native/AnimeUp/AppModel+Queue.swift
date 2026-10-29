@@ -4,7 +4,7 @@ import Models
 
 enum PanelTab: String { case analysis, processing }
 
-/// Native alerts the app shows (boards O2, O6).
+/// Alerts the app shows (boards O1–O3).
 struct AppAlert: Identifiable, CustomStringConvertible {
     var description: String { "\(kind)" }
     enum Kind {
@@ -13,6 +13,13 @@ struct AppAlert: Identifiable, CustomStringConvertible {
         case workInsideFinished(folder: String)
         case changeAfterQueue
         case info(title: String, text: String)
+        case error(title: String, text: String)
+        /// O3: the main window closed while something runs.
+        case closeNotice
+        /// O1: the disk holding the work folder went away.
+        case diskMissing(volume: String)
+        /// O2: a new work folder while interrupted files keep their work in the old one.
+        case moveWithInterrupted(url: URL, count: Int)
     }
     let id = UUID()
     var kind: Kind
@@ -28,7 +35,7 @@ extension AppModel {
         activity = list.activity
         unticked = unticked.intersection(ids)
         selection = selection.intersection(ids)
-        if let e = expanded, !ids.contains(e) { expanded = nil }
+        openRows = openRows.intersection(ids)
         await refreshPlans()
     }
 
@@ -66,17 +73,29 @@ extension AppModel {
         }
     }
 
+    /// What "Same for all" would cost with `key`: every file it applies to, in seconds.
+    func sameForAllEstimate(_ key: String) -> Double? {
+        let times = files.filter { $0.state == .ready }
+            .compactMap { plans[$0.id]?.option(key) }
+            .filter { $0.unreachable == nil }
+            .compactMap(\.estimate)
+        return times.isEmpty ? nil : times.reduce(0, +)
+    }
+
     /// Ticked files' estimate, in seconds.
     var selectionEstimate: Double {
         files.filter { isTicked($0) }.compactMap { plans[$0.id]?.estimate }.reduce(0, +)
     }
 
     /// Short model name: catalog label without "Real-ESRGAN " / "Real-".
-    func shortModel(_ key: String) -> String {
+    /// "animevideov3", "CUGAN no-denoise"; `compact` drops the family too
+    /// ("no-denoise"), for tight columns such as "Model now → after".
+    func shortModel(_ key: String, compact: Bool = false) -> String {
         let k = "mot.modello.\(key).label"
         let label = localizer.has(k) ? t(k) : key
-        return label.hasPrefix("Real-ESRGAN ") ? String(label.dropFirst(12))
+        let short = label.hasPrefix("Real-ESRGAN ") ? String(label.dropFirst(12))
             : label.hasPrefix("Real-") ? String(label.dropFirst(5)) : label
+        return compact && short.hasPrefix("CUGAN ") ? String(short.dropFirst(6)) : short
     }
 
     func scheduleFilesRefresh() {
@@ -100,8 +119,9 @@ extension AppModel {
                     alert = AppAlert(kind: .noVideos(folder: empty, subfoldersIncluded: include,
                                                      paths: urls.map(\.path)))
                 } else if !result.added.isEmpty {
+                    // The page stays: Start shows "Your videos", Compare its analysis note,
+                    // the Queue its new rows. The Queue is one click away.
                     lastReceived = result.added.count
-                    tab = .queue
                 } else if result.already > 0 {
                     // Nothing new: say so instead of doing nothing (S4).
                     alert = AppAlert(kind: .info(title: localizer.tn("nat.add.already_title", result.already),
@@ -156,20 +176,67 @@ extension AppModel {
 
     func file(_ id: String) -> QueueFile? { files.first { $0.id == id } }
 
-    /// Done files are skipped and interrupted ones have their own Resume (F6):
-    /// neither is ticked. Redoing a done file isn't supported yet.
+    /// Done files are skipped unless redone, and interrupted ones have their own
+    /// Resume (F6): neither is ticked. A redo that would overwrite waits for an answer (F6e).
     func isTicked(_ f: QueueFile) -> Bool {
         f.state == .ready && !unticked.contains(f.id) && !jobBlocksTick(f.id)
     }
     func jobBlocksTick(_ id: String) -> Bool {
         guard let s = job(id)?.state else { return false }
-        return s == .done || s == .interrupted
+        if s == .done { return !isRedo(id) || redoNeedsAnswer(id) }
+        return s == .interrupted
     }
+
+    // MARK: Redo (F6d, F6e)
+
+    /// A finished file put back in the Queue.
+    func isRedo(_ id: String) -> Bool { redo.contains(id) && job(id)?.state == .done }
+
+    /// The plan's video is the one already made: same folder, same name.
+    func redoOverwrites(_ id: String) -> Bool {
+        guard let made = job(id)?.output, let p = plan(id), let name = p.outputName else { return false }
+        let folder = p.outputNextToSource == false ? p.outputFolder : file(id).map { ($0.path as NSString).deletingLastPathComponent }
+        guard let folder else { return false }
+        return URL(fileURLWithPath: folder).appendingPathComponent(name).standardizedFileURL.path
+            == URL(fileURLWithPath: made).standardizedFileURL.path
+    }
+
+    func redoNeedsAnswer(_ id: String) -> Bool { isRedo(id) && redoOverwrites(id) && !redoConfirmed.contains(id) }
+
+    func startRedo(_ id: String) {
+        redo.insert(id); redoConfirmed.remove(id); unticked.remove(id)
+        panelTabs[id] = .processing
+    }
+
+    func cancelRedo(_ id: String) { redo.remove(id); redoConfirmed.remove(id) }
+
+    func confirmOverwrite(_ id: String) { redoConfirmed.insert(id); unticked.remove(id) }
 
     var analysingCount: Int { files.filter { $0.state == .analysing || $0.state == .queued }.count }
     var warningCount: Int { files.filter { !$0.warnings.isEmpty }.count }
 
     /// "5 files · 1 analysing" for the sidebar.
+    /// The Compare tab's second line follows the test (boards C1–C4): its step, or its progress.
+    var compareSubtitle: String {
+        if let st = cmp.status, st.running == true {
+            return t("nat.tab.compare_testing", ["pct": Int(((st.quota ?? 0) * 100).rounded())])
+        }
+        if compareFiles.isEmpty { return t("nat.tab.compare_sub") }
+        switch cmp.step {
+        case .clips: return t("nat.tab.compare_step1")
+        case .models: return t("nat.tab.compare_step2")
+        case .results: return t("nat.tab.compare_results")
+        }
+    }
+
+    /// A test has finished and its results are on the page (Compare, step 3).
+    var compareHasResults: Bool {
+        !compareFiles.isEmpty && cmp.step == .results && cmp.status?.running != true
+    }
+
+    /// Start is done once this Mac is calibrated and videos are in (the tick on boards C1–F7).
+    var startDone: Bool { (calibration?.isCalibrated ?? false) && !files.isEmpty }
+
     var queueSubtitle: String {
         if files.isEmpty { return t("nat.tab.queue_sub") }
         if progress.queue.running {
@@ -223,7 +290,30 @@ extension AppModel {
             alert = AppAlert(kind: .workInsideFinished(folder: url.lastPathComponent))
             return
         }
+        // O2: interrupted files can only be resumed from the folder that holds their work.
+        let interrupted = progress.files.values.filter { $0.state == .interrupted }.count
+        if interrupted > 0, url.standardizedFileURL.path != folders.map({ URL(fileURLWithPath: $0.workFolder).standardizedFileURL.path }) {
+            alert = AppAlert(kind: .moveWithInterrupted(url: url, count: interrupted))
+            return
+        }
         setWorkFolder(url)
+    }
+
+    /// O3: closing the window while a job or a test runs says it keeps going,
+    /// until "Don't Show Again". Shown right away: the window's views are gone.
+    func windowClosed() {
+        guard jobRunning || cmp.status?.running == true,
+              !UserDefaults.standard.bool(forKey: Self.closeNoticeOffKey) else { return }
+        DispatchQueue.main.async { AlertBuilder.present(AppAlert(kind: .closeNotice), model: self) }
+    }
+    static let closeNoticeOffKey = "closeNoticeOff"
+
+    /// O1: the work disk went missing, or is missing at launch while work waits on it.
+    func checkWorkDisk(was old: FoldersState?) {
+        guard let f = folders, !f.reachable else { return }
+        let lost = old?.reachable == true
+        let waiting = progress.queue.running || progress.files.values.contains { $0.state == .interrupted }
+        if lost || (old == nil && waiting) { alert = AppAlert(kind: .diskMissing(volume: f.volume)) }
     }
 }
 

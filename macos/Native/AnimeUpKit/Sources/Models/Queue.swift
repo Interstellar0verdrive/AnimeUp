@@ -32,12 +32,25 @@ public struct QueueProgress: Codable, Sendable, Equatable {
         public var framesTotal: Int?
         public var fps: Double?
         public var left: Double?
+        /// Extraction and repeated frames: what is left of that step, not of the file.
+        public var stepLeft: Double?
+        /// A chunk passing through x265 (between chunks, or the last one), and how far.
+        /// How many runs a finished file took (interrupted and resumed).
+        public var runs: Int?
+        /// When the job started: the app counts the elapsed time from it, second by second.
+        public var started: Double?
+        /// When the current step started (its earlier runs counted): the step's elapsed time.
+        public var stepStarted: Double?
+        public var encoding: Bool?
+        public var encodeFraction: Double?
         public var elapsed: Double?
         public var pausedSince: Double?
         public var log: String?
         public var seconds: Double?
         public var warnings: [String]?
         public var defective: Bool?
+        /// The queued file the engine is preparing: launched, no work folder yet.
+        public var starting: Bool?
         public var output: String?
         public var recipe: Recipe?
         /// Seconds per stage of a finished job (extract, dedup, upscale, assemble), when recorded.

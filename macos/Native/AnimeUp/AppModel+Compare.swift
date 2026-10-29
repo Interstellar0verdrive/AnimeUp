@@ -114,7 +114,7 @@ extension AppModel {
             } catch EngineError.remote(let code, _) where code == "gpu_busy" {
                 alert = AppAlert(kind: .info(title: t("nat.cmp.gpu_busy_title"), text: t("nat.cmp.gpu_busy_text")))
             } catch {
-                alert = AppAlert(kind: .info(title: t("nat.run.error_title"), text: String(describing: error)))
+                alert = AppAlert(kind: .error(title: t("nat.run.error_title"), text: String(describing: error)))
             }
         }
     }
@@ -125,7 +125,7 @@ extension AppModel {
         Task {
             do {
                 try await engine.compareStart(id, clips: r.clips.map(\.startFrame), models: r.models, reference: r.reference)
-            } catch { alert = AppAlert(kind: .info(title: t("nat.run.error_title"), text: String(describing: error))) }
+            } catch { alert = AppAlert(kind: .error(title: t("nat.run.error_title"), text: String(describing: error))) }
         }
     }
 
@@ -155,5 +155,12 @@ extension AppModel {
 
     func useModel(_ key: String, for ids: [String]) {
         chooseModel(key, for: ids)
+    }
+
+    /// Seconds left in the running test, from its pace so far (whole-test fraction).
+    var compareLeft: Double? {
+        guard let st = cmp.status, st.running, let q = st.quota, q > 0.03, let start = st.started else { return nil }
+        let spent = Date().timeIntervalSince1970 - start
+        return max(0, spent * (1 - q) / q)
     }
 }

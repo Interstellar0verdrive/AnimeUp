@@ -120,6 +120,7 @@ public actor EngineClient {
     }
     public func machineInfo() async throws -> MachineInfo { try await call("machine.info") }
     public func calibrationState() async throws -> CalibrationState { try await call("calibration.state") }
+    public func calibrationDetails() async throws -> CalibrationDetails { try await call("calibration.details") }
     public func toolsStatus() async throws -> ToolsStatus { try await call("tools.status") }
     public func foldersState() async throws -> FoldersState { try await call("folders.state") }
     public func defaults() async throws -> EngineSettings { try await call("settings.defaults") }
@@ -152,7 +153,10 @@ public actor EngineClient {
         _ = try await raw("files.set", params: params)
     }
     public func queueStatus() async throws -> QueueProgress { try await call("queue.status") }
-    public func queueStart(_ ids: [String]) async throws { _ = try await raw("queue.start", params: ["ids": ids]) }
+    /// `overwrite`: files redone with the name of the video already made (Redo, confirmed).
+    public func queueStart(_ ids: [String], overwrite: [String] = []) async throws {
+        _ = try await raw("queue.start", params: ["ids": ids, "overwrite": overwrite])
+    }
     public func queueCommand(_ method: String, id: String? = nil) async throws {
         if let id { _ = try await raw(method, params: ["id": id]) } else { _ = try await raw(method) }
     }

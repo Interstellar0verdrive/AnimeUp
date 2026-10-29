@@ -77,6 +77,42 @@ public struct MachineInfo: Codable, Sendable, Equatable {
 }
 
 /// `calibration.state`.
+/// `calibration.details`: every calibration of this Mac (newest first) and the
+/// factory numbers, as the results sheet shows them (board K4).
+public struct CalibrationDetails: Codable, Sendable, Equatable {
+    public struct Model: Codable, Sendable, Equatable {
+        public var key: String
+        /// Frames per second on a 540p source, by scale ("2", "3", "4").
+        public var fps: [String: Double?]
+        /// Scales not measured: they use the speed of the same network's model.
+        public var borrowed: [Int]
+        /// Frames per second on a 1080p source, at 2x.
+        public var bigFps: Double?
+        /// The upscaling time of the reference episode.
+        public var episodeSeconds: Double?
+    }
+
+    public struct Entry: Codable, Sendable, Equatable, Identifiable {
+        public var id: String
+        public var when: Double?
+        public var version: String?
+        public var models: [Model]
+        public var extractionFps: Double?
+        public var dedupFps: Double?
+        public var encodingFps: Double?
+        public var saveThreads: Int?
+
+        public var date: Date? { when.map { Date(timeIntervalSince1970: $0) } }
+        public var isFactory: Bool { when == nil }
+        public func model(_ key: String) -> Model? { models.first { $0.key == key } }
+    }
+
+    public var calibrations: [Entry]
+    public var factory: Entry
+    public var episodeHeight: Int
+    public var episodeMinutes: Int
+}
+
 public struct CalibrationState: Codable, Sendable, Equatable {
     public enum State: String, Codable, Sendable {
         case done
@@ -147,6 +183,8 @@ public struct ToolsStatus: Codable, Sendable, Equatable {
 /// `folders.state`.
 public struct FoldersState: Codable, Sendable, Equatable {
     public var workFolder: String
+    /// nil: next to the originals.
+    public var finishedFolder: String?
     public var workFolderDefault: String
     public var isDefault: Bool
     public var exists: Bool
@@ -157,6 +195,20 @@ public struct FoldersState: Codable, Sendable, Equatable {
     public var spaceRuleGb: Int
     public var spaceMinGb: Int
     public var spaceSettingGb: Int
+
+    /// Less free than the space slider's minimum: there is no limit worth
+    /// choosing (the engine still puts the slider's top at minimum + 1, which
+    /// read "51 GB of 48 GB free").
+    public var tooFull: Bool { reachable && freeGb < Double(spaceMinGb) }
+
+    /// Enough to work, but the prudent ceiling (85% of the free space, or all
+    /// of it but 40 GB) fell under the minimum and was raised to minimum + 1:
+    /// a slider from 50 to 51 has nothing to choose. The app says how close
+    /// to full the disk is instead.
+    public var tight: Bool { reachable && !tooFull && spaceRuleGb <= spaceMinGb + 1 }
+
+    /// What stays free for the system when a job takes all it may.
+    public var leftForSystemGb: Double { max(0, freeGb - Double(spaceRuleGb)) }
 }
 
 /// Formats sizes the way the boards do: "263 GB", "1 TB".

@@ -25,7 +25,6 @@ struct AnimeUpApp: App {
         .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
         .commands {
-            SidebarCommands()
             AppCommands(model: model)
         }
 

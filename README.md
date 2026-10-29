@@ -1,6 +1,6 @@
 # AnimeUp
 
-<img src="macos/icon/AnimeUp-Dark-1024.png" alt="AnimeUp icon" width="128" align="right">
+<img src="macos/Native/AnimeUp/AnimeUp.icon/Assets/AnimeUp-Dark-1024.png" alt="AnimeUp icon" width="128" align="right">
 
 [![tests](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml/badge.svg)](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml)
 [![latest release](https://img.shields.io/github/v/release/Interstellar0verdrive/AnimeUp)](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest)
@@ -9,126 +9,100 @@
 AnimeUp batch-upscales anime episodes to 1080p and beyond with
 [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) and
 [Real-CUGAN](https://github.com/bilibili/ailab/tree/main/Real-CUGAN)
-(ncnn-vulkan builds, running on the Mac GPU through Metal). It comes with a
-browser UI for analysing your sources, comparing models side by side on
-difficult clips, and running long, resumable jobs.
-
-Everything lives in one folder: Python, dependencies, binaries and models.
-No Homebrew and no system Python are needed. Copy the folder to another Mac
-and it works the same way there.
+(ncnn-vulkan builds, running on the Mac GPU through Metal). It's a native
+Mac app: it analyses your sources, lets you compare models side by side on
+difficult clips, and runs long, resumable jobs, all on your Mac and offline.
 
 ![A 360p frame upscaled to 1080p: plain upscale on the left, Real-ESRGAN animevideov3 on the right](docs/images/before-after.png)
 <sub>1:1 crop of a 360p source upscaled to 1080p: plain upscale (left) vs.
-Real-ESRGAN animevideov3 (right), as shown in AnimeUp's Compare tab. Footage:
+Real-ESRGAN animevideov3 (right). Footage:
 [Morevna Episode 3](https://archive.org/details/morevna-ep3), © Morevna
 Project, CC BY-SA 3.0.</sub>
 
-> **Language note:** the user interface is available in English and Italian
-> (selectable in the sidebar; English by default). The in-depth docs are the
-> [user guide](docs/guide/index.md) and the [tuning notes](docs/TUNING.md);
-> Italian versions are in [docs/it/](docs/it/)
-> ([LEGGIMI.md](docs/it/LEGGIMI.md), [TARATURE.md](docs/it/TARATURE.md)).
+> **2.0 is a new app.** AnimeUp 2.0 replaces the browser interface of 1.x
+> with a native macOS app. The [user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)
+> still describes 1.x and is being rewritten; the technical articles and the
+> [tuning notes](docs/TUNING.md) are still accurate. The app is in English and
+> Italian (Settings › General).
 
 ---
 
 ## Features
 
 - **Never degrades the source before the model sees it.** Frames are
-  extracted at full quality, and the files in `INPUT/` are only ever read.
+  extracted at full quality, and your source files are only ever read.
 - **Proper source analysis.** Resolution, frame rate, interlacing and telecine,
-  truncated files and odd formats are detected before a job starts, so they
-  don't cause a crash halfway through.
-- **Model comparison on real footage.** AnimeUp finds difficult 10-second
-  clips in your episode (dark, bright, static, fast motion) and renders them
-  with each model. You can then compare 1:1 crops and pick by eye.
-- **Model recommendation by source resolution.** Below ~380p Real-ESRGAN
-  animevideov3 wins. Above ~560p Real-CUGAN no-denoise wins. In between,
-  the UI tells you what to check.
+  truncated files and odd formats are detected as soon as a video enters the
+  Queue, so they don't cause a crash halfway through.
+- **Model comparison on real footage.** AnimeUp finds difficult clips in your
+  episode (dark, bright, static, fast motion), renders them with each model
+  and shows them in a split player, fitted to the window or at 1:1.
+- **Four models, picked for you.** Real-ESRGAN animevideov3, Real-CUGAN
+  denoise leggero, no-denoise and conservative. Each file gets the model that
+  suits its resolution, and you can change it per file or for all of them.
 - **Deduplication.** Anime is often animated "on twos" or "on threes".
   Repeated frames are upscaled only once, which measured nearly 2× faster.
 - **Chunked, resumable jobs.** Work is saved one chunk at a time. A crash,
-  a closed lid or a `kill` loses at most the current chunk. **Resume** always
-  reuses the original parameters.
+  a closed lid or a quit loses at most the current chunk, and **Resume**
+  always reuses the original parameters.
 - **Faithful output.** HEVC 10-bit (x265, CRF 18 `slower` by default) with
   **all original tracks remuxed**: audio, subtitles, chapters and attachments,
   fansub fonts included.
-- **Honest time estimates.** Estimates are calibrated on *your* Mac
-  (`./animeup calibrate`) and include the encoding passes, not just the
-  upscale.
+- **Honest time estimates.** A ten-minute calibration times every model on
+  *your* Mac, at 480p and 1080p, and the results stay to compare with the next
+  calibration.
 
 ## Requirements
 
 - A Mac with **Apple Silicon** (M1 or later)
-- Developed and tested on macOS 26 (Tahoe)
-- An internet connection **on the first launch only**. AnimeUp downloads a
-  private Python runtime and FFmpeg into its own folder, then works offline.
+- **macOS 26** (Tahoe) or later
+- An internet connection **on the first launch only**. AnimeUp downloads
+  Python and its video tools, then works offline.
 - Disk space: upscaling extracts frames to disk, and a single episode can
-  temporarily take tens of GB. The UI shows the space it needs and lets you
-  set a cap.
+  temporarily take tens of GB. AnimeUp shows the space each file needs and
+  lets you set a cap.
 
 ## How it works
 
-0. **Calibrate** *(optional, recommended on first launch)*: in the sidebar,
-   **Calibration → Run now** times this Mac on a sample clip for about ten
-   minutes, so every time estimate is based on your hardware instead of
-   factory figures. See [Calibrate your Mac](docs/guide/02-calibration.md).
-1. **Copy** your episodes (`.mkv`, `.mp4`, …) into `INPUT/`.
-2. **Sources**: check the analysis of each file (resolution, frame rate,
-   warnings). Click a row to expand it.
+1. **Calibrate** once (about ten minutes, with the GPU idle), so every time
+   estimate is based on your hardware. Start shows the measured speed of
+   every model; click the calibration date for the full results.
+2. **Add videos**: drop files or whole folders on the window, or use ⌘O.
+   Each one is analysed as it arrives in the **Queue**: open a row for the
+   full report.
+3. **Compare** (recommended for the first episode of a series): pick the
+   clips AnimeUp found, pick the models, and compare the results in the split
+   player. Use the model you like for this file, or for several at once.
+4. **Start the Queue.** The GPU runs one file at a time. Each row shows its
+   four steps (Extraction, Repeated frames, Upscale, Assemble), speed and time
+   left. Pause, Stop and Resume whenever you need.
+5. **Finished videos** go next to the originals, or in a folder of your
+   choice, under their original name plus the parameters, for example
+   `Episode 01 [upscale 1080p cugan x3 crf18 dd].mkv`. A summary, a
+   notification and the Dock icon tell you when the queue is done.
 
-   ![Sources tab: four files analysed, one row expanded with timing, image and track details](docs/images/sources.png)
-
-3. **Compare** (recommended for the first episode of a series): AnimeUp
-   recommends a model for the file's resolution, finds difficult clips (dark,
-   bright, static, fast motion), renders them with the models you pick and
-   shows the results side by side, with 1:1 crops and one-click
-   [video-compare](#optional-video-compare).
-
-   ![Compare tab: the eight difficult clips found in the episode, two of them selected](docs/images/clips.png)
-
-4. **Processing**: tick the files, confirm the suggested model and start the
-   job. The GPU runs one job at a time. Progress, fps and the remaining time
-   appear on each file's row.
-
-   ![Processing tab: a job running, with its phase, progress and the time left for the whole queue](docs/images/running.png)
-
-5. The finished files appear in `OUTPUT/` under their original name plus the
-   parameters, for example
-   `Episode 01 [upscale 1080p cugan x3 crf18 dd].mkv`. A summary sums up the
-   whole queue at the end.
-6. **To quit**, click **Close AnimeUp** at the bottom of the sidebar. Running
-   jobs keep going even if you close the browser or the Terminal. You'll find
-   them again on the next launch.
-
-The interface is in English and Italian: switch with **Language · Lingua** at
-the top of the sidebar. More screenshots and every detail are in the
-[user guide](docs/guide/index.md).
+Closing the window doesn't stop a running job: it goes on in the background,
+and clicking the Dock icon brings the window back. **⌘Q** quits and stops the
+job, which you can resume later, losing at most the chunk in progress.
 
 ### Folders
 
-AnimeUp works with two folders you choose, and keeps its own data apart.
-
 | Where | What it's for |
 |---|---|
-| **Videos to process** (`INPUT/`) | Your source episodes. Never modified. |
-| **Finished videos** (`OUTPUT/`) | Finished files, plus `logs/` (one log per file) and `JOBS/` (jobs in progress or interrupted, one subfolder per episode; it deletes itself when its job finishes cleanly). Jobs can take tens of GB, so this folder should be on a disk with room. |
-| AnimeUp's data | `records/` (job history, launches, settings, calibration), `cache/` (source analysis, Compare clips: safe to delete), `bin/` (FFmpeg, the ncnn upscalers, the models and uv). |
-
-In the app the two folders default to `~/Movies/AnimeUp/INPUT` and
-`~/Movies/AnimeUp/OUTPUT`, and AnimeUp's data lives in
-`~/Library/Application Support/AnimeUp`. In the portable folder everything
-sits inside the AnimeUp folder. File names and their contents are in English
-whatever the interface language. Upgrading from 1.5 moves the old layout
-(`registri/`, `anteprime/`, `JOBS/` at the top) automatically on first
-launch; interrupted jobs stay resumable.
+| **Your videos** | Wherever they are. AnimeUp only reads them. |
+| **Finished videos** | Next to the originals by default, or a folder you pick (Start › Where files go). |
+| **Work files** | `~/Movies/AnimeUp Jobs` by default: jobs in progress or interrupted, one subfolder per file, deleted when a file finishes. They can take tens of GB, so pick a disk with room. |
+| AnimeUp's data | `~/Library/Application Support/AnimeUp 2`: the video tools, Python, settings, calibration history and the job records. |
 
 ### Command line
 
+The engine is also a command-line program, inside the portable folder (and the
+source tree):
+
 ```bash
-./animeup ui              # web UI (port 8899; --port N to change it)
 ./animeup analyze FILE    # analyse a source
 ./animeup plan FILE       # show what would be done, without doing it
-./animeup run FILE        # run a job from the terminal (same pipeline as the UI)
+./animeup run FILE        # run a job from the terminal (same pipeline as the app)
 ./animeup calibrate       # calibrate time estimates on this Mac (~10 min)
 ./animeup doctor          # check that the folder is self-contained
 ./animeup setup           # (re)download missing binaries and models
@@ -141,65 +115,47 @@ via GitHub Actions.
 
 ## Installation
 
-### Option A: the app (recommended)
+### The app (recommended)
 
 1. Download `AnimeUp-<version>-macos-app.zip` from the
    [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest),
-   unzip it and **drag `AnimeUp.app` into your Applications folder**. (Run
-   from Downloads, macOS starts an unapproved app from a temporary read-only
-   copy.)
+   unzip it and **drag `AnimeUp.app` into your Applications folder**.
 2. Open it. The first time, macOS refuses because AnimeUp isn't signed by an
-   identified developer (the project has no paid Apple Developer account).
-   Open **System Settings → Privacy & Security**, scroll down to the message
-   about AnimeUp and click **Open Anyway**, then confirm. You only do this
-   once. (On recent macOS versions right-click → Open no longer bypasses
-   this.)
-3. A small window says *Preparing AnimeUp…* while it sets up a private
-   Python runtime (about a minute, once). Then the welcome page asks to
-   download its video tools (FFmpeg 9.0.2 and the upscaling engines, about
-   180 MB, from pinned official releases verified by checksum). After that it
-   works offline.
-4. Copy your episodes into **`~/Movies/AnimeUp/INPUT`**; finished videos go
-   to **`~/Movies/AnimeUp/OUTPUT`**. You can choose other folders, external
-   drives included, in the sidebar or from the empty Sources page; each
-   stays chosen until you change it. AnimeUp's own tools and environment
-   live in `~/Library/Application Support/AnimeUp` (about 1 GB).
+   identified developer (I don't have a paid Apple Developer account). Open
+   **System Settings → Privacy & Security**, scroll down to the message about
+   AnimeUp and click **Open Anyway**, then confirm. You only do this once.
+3. A window lists the tools AnimeUp downloads: FFmpeg, Real-ESRGAN,
+   Real-CUGAN and Python (about 220 MB, from pinned official releases, each
+   verified by checksum). After that it works offline.
 
-Closing the window doesn't quit AnimeUp: running jobs keep going in the
-background, and clicking the Dock icon brings the window back. **⌘Q** quits;
-if a job is running it asks first, then stops it (you can resume it later,
-losing at most the chunk in progress). AnimeUp checks for a new release every time it
-starts (you can turn this off); when there is one, click **Install update** in the
-sidebar: the app downloads it from GitHub, verifies it against the checksum
-published with the release, replaces itself and restarts, with no need to
-approve it again in Privacy & Security. Your data and settings are untouched.
+AnimeUp checks GitHub for a new release when it starts (you can turn this off
+in Settings › Updates) and tells you when there is one.
 
-### Option B: the portable folder
+**Coming from 1.x?** From 1.6.1 or later, **Install update** in the sidebar
+installs 2.0 in place of the old app. 2.0 keeps its own data in
+`~/Library/Application Support/AnimeUp 2`, so it downloads its tools again and
+asks you to calibrate once. Your 1.x data isn't touched, and jobs interrupted
+in 1.x can only be resumed from 1.x.
 
-`AnimeUp-<version>-macos-arm64.zip` is the same program as a self-contained
-folder, handy to keep on an external drive or to use from the Terminal.
+### The portable folder (command line)
 
-1. Unzip it anywhere and double-click **`Start AnimeUp.command`**. If macOS blocks it, use **System Settings → Privacy & Security
-   → Open Anyway** as above, or run once in Terminal:
+`AnimeUp-<version>-macos-arm64.zip` is the engine as a self-contained folder,
+used from the Terminal. Unzip it anywhere, then:
 
-   ```bash
-   xattr -dr com.apple.quarantine ~/Downloads/AnimeUp
-   ```
+```bash
+xattr -dr com.apple.quarantine ~/Downloads/AnimeUp   # once, if macOS blocks it
+cd ~/Downloads/AnimeUp
+./animeup setup     # downloads Python and FFmpeg into the folder, once
+./animeup run FILE
+```
 
-2. A Terminal window opens: it sets up Python inside the folder and asks to
-   download FFmpeg (once). Keep it open while you use AnimeUp: it's the
-   server.
-3. The interface opens in your browser at <http://localhost:8899>. It's only
-   reachable from this Mac; `./animeup ui --network` also lets other devices on
-   your network open it.
-
-### Option C: from source
+### From source
 
 ```bash
 git clone https://github.com/Interstellar0verdrive/AnimeUp.git
 cd AnimeUp
 ./animeup setup     # downloads FFmpeg, Real-ESRGAN, Real-CUGAN and the models into bin/
-./animeup ui
+tools/build_native.sh    # builds AnimeUp.app into dist/native (needs Xcode 26)
 ```
 
 The launcher also fetches [uv](https://github.com/astral-sh/uv), the tool
@@ -208,50 +164,24 @@ third-party download comes from a pinned official release and is verified
 with SHA256, FFmpeg included (release 9.0.2), and FFmpeg is also checked
 for the encoders and filters AnimeUp needs.
 
-### Optional: video-compare
-
-The Compare tab has buttons that open two renders side by side in
-[video-compare](https://github.com/pixop/video-compare), a split-screen
-player that lets you compare them in motion rather than as still crops.
-It isn't bundled: it's GPL-2.0, and there is no self-contained macOS build.
-Install it with [Homebrew](https://brew.sh) if you want it:
-
-```bash
-brew install video-compare
-```
-
-Without it, AnimeUp opens the two files in [IINA](https://iina.io) if
-that is installed. Everything else works the same either way.
-
 ## Uninstalling
 
-**The app.** Quit AnimeUp (⌘Q), then delete:
-
-- `AnimeUp.app` from Applications;
-- `~/Library/Application Support/AnimeUp`: its tools, Python environment,
-  history, settings and calibration (about 1 GB);
-- `~/Library/Caches/io.github.interstellar0verdrive.animeup`,
-  `~/Library/WebKit/io.github.interstellar0verdrive.animeup` and
-  `~/Library/HTTPStorages/io.github.interstellar0verdrive.animeup`: what the
-  app's window stores, like any Mac app showing web content.
-
-To reach `~/Library` in Finder, choose **Go → Go to Folder…** (⇧⌘G) and type
-the path. Or, in Terminal:
+Quit AnimeUp (⌘Q), then delete `AnimeUp.app` from Applications and
+`~/Library/Application Support/AnimeUp 2` (its tools, Python, settings and
+calibration). To reach `~/Library` in Finder, choose **Go → Go to Folder…**
+(⇧⌘G) and type the path. Or, in Terminal:
 
 ```bash
-rm -rf /Applications/AnimeUp.app "$HOME/Library/Application Support/AnimeUp" \
-  "$HOME/Library/Caches/io.github.interstellar0verdrive.animeup" \
-  "$HOME/Library/WebKit/io.github.interstellar0verdrive.animeup" \
-  "$HOME/Library/HTTPStorages/io.github.interstellar0verdrive.animeup"
+rm -rf /Applications/AnimeUp.app "$HOME/Library/Application Support/AnimeUp 2"
 ```
 
-Your videos are left alone: `~/Movies/AnimeUp` (or the folders you chose)
-holds your sources, the finished videos and any interrupted job in
-`OUTPUT/JOBS`, which can be large. Delete what you no longer need.
+Your videos are left alone. The work folder (`~/Movies/AnimeUp Jobs`, or the
+one you chose) may still hold interrupted jobs, which can be large: delete
+what you no longer need. If you used 1.x, its data is in
+`~/Library/Application Support/AnimeUp` and `~/Movies/AnimeUp`.
 
-**The portable folder.** Quit the Terminal window that runs it, take out of
-`INPUT/` and `OUTPUT/` the videos you want to keep, and delete the folder:
-everything AnimeUp installed is inside it.
+The portable folder keeps everything inside itself: take out the videos you
+want to keep and delete the folder.
 
 ## Why FFmpeg isn't bundled
 
@@ -305,16 +235,13 @@ thanks to all of them.
 | [MoltenVK](https://github.com/KhronosGroup/MoltenVK) | Vulkan-on-Metal layer linked into both binaries | Apache-2.0 ([text](LICENSES/MoltenVK.txt)) |
 | [FFmpeg](https://ffmpeg.org) 9.0.2, static macOS build by [Martin Riedl](https://ffmpeg.martin-riedl.de) | Decoding, analysis, encoding (x265), remuxing. **Downloaded on first launch, not distributed.** | GPLv3 for this build |
 | [uv](https://github.com/astral-sh/uv) by Astral | Self-contained Python runtime and dependencies | MIT / Apache-2.0 ([MIT](LICENSES/uv-MIT.txt), [Apache](LICENSES/uv-APACHE.txt)) |
-| [video-compare](https://github.com/pixop/video-compare) by Pixop | Optional side-by-side player for the Compare tab. **Not distributed**: installed separately by the user. | GPL-2.0 |
-| [IINA](https://iina.io) | Optional fallback player for the Compare tab. **Not distributed.** | GPL-3.0 |
-| [Streamlit](https://github.com/streamlit/streamlit) | Web UI | Apache-2.0 |
 | [Typer](https://github.com/fastapi/typer) | Command-line interface | MIT |
+| [Inter](https://github.com/rsms/inter) by Rasmus Andersson | Font attached to the synthetic test clips (`tests/fonts/`) | SIL OFL 1.1 ([text](LICENSES/Inter-OFL.txt)) |
+| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | Font attached to the synthetic test clips (`tests/fonts/`) | SIL OFL 1.1 ([text](LICENSES/JetBrainsMono-OFL.txt)) |
 | [Rich](https://github.com/Textualize/rich) | Terminal output | MIT |
 | [Pillow](https://github.com/python-pillow/Pillow) | Image handling | MIT-CMU |
-| [Inter](https://github.com/rsms/inter) by Rasmus Andersson | UI typeface | SIL OFL 1.1 ([text](LICENSES/Inter-OFL.txt)) |
-| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | UI monospace typeface | SIL OFL 1.1 ([text](LICENSES/JetBrainsMono-OFL.txt)) |
 | [Big Buck Bunny](https://peach.blender.org) © 2008 Blender Foundation | 20-second sample clip in `samples/`, used for calibration | CC BY 3.0 |
-| [Morevna Episode 3](https://archive.org/details/morevna-ep3) © Morevna Project | Footage in the screenshots and the before/after image in `docs/images/`, which are therefore CC BY-SA 3.0 as well | CC BY-SA 3.0 |
+| [Morevna Episode 3](https://archive.org/details/morevna-ep3) © Morevna Project | Footage in the before/after image and the screenshots in `docs/images/`, which are therefore CC BY-SA 3.0 as well | CC BY-SA 3.0 |
 
 Python dependencies are installed by uv from PyPI on first launch and are
 not part of this repository.

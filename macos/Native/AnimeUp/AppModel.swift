@@ -56,8 +56,20 @@ final class AppModel {
     var machine: MachineInfo?
     var calibration: CalibrationState?
     var tools: ToolsStatus?
-    var folders: FoldersState?
+    var folders: FoldersState? { didSet { if folders != oldValue { checkWorkDisk(was: oldValue) } } }
     var tab: Tab = .start
+    /// The sidebar as the person set it from View, in a wide window; nil keeps it shown.
+    var sidebarChoice: Bool?
+    /// The window is narrower than `AUChrome.collapseBelow`: no sidebar, the top bar instead.
+    var sidebarNarrow = false
+    /// Whether the sidebar is on screen now (set by the window frame).
+    var sidebarShown = true
+
+    /// View › Show/Hide Sidebar and the top bar's button; a narrow window has no sidebar.
+    func toggleSidebar() {
+        guard !sidebarNarrow else { return }
+        sidebarChoice = !sidebarShown
+    }
 
     // Queue (M3)
     var files: [QueueFile] = []
@@ -65,10 +77,28 @@ final class AppModel {
     /// Rows the user unticked (the checkbox column): every analysed file
     /// is ticked unless it's here.
     var unticked: Set<String> = []
+    /// Finished files put back in the Queue with Redo (F6d), and those whose new video
+    /// replaces the one made, once the user said Overwrite (F6e).
+    var redo: Set<String> = []
+    var redoConfirmed: Set<String> = []
     /// Selected rows (List selection: context menu, ⌫).
     var selection: Set<String> = []
-    var expanded: String?
-    var panelTab: PanelTab = .analysis
+    /// The Queue rows whose drawer is open: as many as you like.
+    var openRows: Set<String> = []
+    /// Opening a row from elsewhere (Start, Compare, the sidebar) adds it to the open
+    /// ones; nil closes them all.
+    var expanded: String? {
+        get { openRows.first }
+        set { if let id = newValue { openRows.insert(id) } else { openRows = [] } }
+    }
+    /// Each open drawer's tab; a row not listed opens on the first, Processing.
+    var panelTabs: [String: PanelTab] = [:]
+    /// Debug snapshots set it for every row at once.
+    var panelTab: PanelTab {
+        get { panelTabs.values.first ?? .processing }
+        set { for id in files.map(\.id) { panelTabs[id] = newValue } }
+    }
+    func panelTab(for id: String) -> PanelTab { panelTabs[id] ?? .processing }
     var alert: AppAlert?
     var undoRemoved: [QueueFile] = []
     // Compare (M8–M9)
@@ -77,7 +107,12 @@ final class AppModel {
     var progress = QueueProgress()
     var calRun: CalibrationRun?
     var showCalibration = false
+    /// Board K4: the calibration results sheet, and what it shows.
+    var showCalibrationDetails = false
+    var calDetails: CalibrationDetails?
     var finished: [String: JSONValue]?
+    /// The person stopped the queue (Stop, Stop All): its end needs no summary unless something finished or failed.
+    var stoppedByUser = false
     var showFinished = false
     @ObservationIgnored var lastJobStates: [String: QueueProgress.Job.State] = [:]
     // Plans (M4)
@@ -132,6 +167,13 @@ final class AppModel {
         prepareToolsWindowIfFirstLaunch()
         Task { await listen() }
         Task { await launch() }
+        // A disk coming or going changes where the work folder stands (O1).
+        let center = NSWorkspace.shared.notificationCenter
+        for name in [NSWorkspace.didMountNotification, NSWorkspace.didUnmountNotification] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.refreshFolders() }
+            }
+        }
     }
 
     private func launch() async {
@@ -177,6 +219,7 @@ final class AppModel {
             self.tools = tools
             self.folders = folders
             localizer.setLanguage(settings.language)
+            followLanguage(settings.language)
             defaults = try? await engine.defaults()
             updates = try? await engine.updatesState()
             await refreshFiles()
@@ -201,6 +244,7 @@ final class AppModel {
                 if let s = try? event.decode(EngineSettings.self) {
                     settings = s
                     localizer.setLanguage(s.language)
+                    followLanguage(s.language)
                 }
             case "engine.started":
                 enginePID = await engine.pid
@@ -259,7 +303,28 @@ final class AppModel {
 
     func setLanguage(_ code: String) {
         localizer.setLanguage(code)
+        followLanguage(code)
         Task { settings = try? await engine.setSettings(["language": code]) }
+    }
+
+    /// macOS names its own menu items (About, Services, Hide…) in the app's language
+    /// from the next launch on: AnimeUp's choice, not only the system's.
+    func followLanguage(_ code: String) {
+        if UserDefaults.standard.stringArray(forKey: "AppleLanguages")?.first != code {
+            UserDefaults.standard.set([code], forKey: "AppleLanguages")
+        }
+    }
+
+    /// The standard About panel, with a link to the project under the version.
+    func showAbout() {
+        let link = "https://github.com/Interstellar0verdrive/AnimeUp"
+        let credits = NSMutableAttributedString(string: "github.com/Interstellar0verdrive/AnimeUp", attributes: [
+            .link: URL(string: link)!, .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+        ])
+        let centred = NSMutableParagraphStyle(); centred.alignment = .center
+        credits.addAttribute(.paragraphStyle, value: centred, range: NSRange(location: 0, length: credits.length))
+        NSApp.orderFrontStandardAboutPanel(options: [.credits: credits])
+        NSApp.activate()
     }
 
     func setWorkFolder(_ url: URL) {
@@ -269,13 +334,30 @@ final class AppModel {
         }
     }
 
+    /// nil puts finished videos next to the originals again.
+    func setFinishedFolder(_ url: URL?) {
+        Task {
+            settings = try? await engine.setSettings(["finished_folder": url?.path ?? ""])
+            folders = try? await engine.foldersState()
+        }
+    }
+
+    func chooseFinishedFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.message = t("nat.where.pick_finished")
+        if let folder = folders?.finishedFolder { panel.directoryURL = URL(fileURLWithPath: folder) }
+        if panel.runModal() == .OK, let url = panel.url { setFinishedFolder(url) }
+    }
+
     func setSpace(_ gb: Int) {
         Task { settings = try? await engine.setSettings(["disk_gb": gb]) }
     }
 
-    func checkForUpdates() {
-        log.info("Check for updates pressed (Sparkle: later milestone)")
-    }
+    /// The sidebar footer's button is spinning while this runs.
+    var checkingUpdates = false
 
     func receive(_ urls: [URL]) { add(urls) }
 
@@ -309,6 +391,16 @@ final class AppModel {
         guard let data = try? Data(contentsOf: file),
               let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
         return dict["language"] as? String
+    }
+
+    /// "29 Oct 2026 at 00:58", in the app's language.
+    func dateTime(_ date: Date) -> String {
+        date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(Locale(identifier: localizer.language)))
+    }
+
+    /// "29 Oct 2026".
+    func dateOnly(_ date: Date) -> String {
+        date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(Locale(identifier: localizer.language)))
     }
 
     func relative(_ date: Date) -> String {

@@ -1,4 +1,5 @@
 import AppKit
+import DesignSystem
 import Engine
 import Models
 import UserNotifications
@@ -32,15 +33,19 @@ extension AppModel {
     /// The first queued file of the run (it starts after the rest between files).
     var nextQueuedId: String? { (progress.queue.ids ?? []).first { job($0)?.state == .queued } }
 
-    var queueTicked: [String] { files.filter { isTicked($0) && job($0.id)?.state != .done }.map(\.id) }
+    var queueTicked: [String] { files.filter { isTicked($0) && (job($0.id)?.state != .done || isRedo($0.id)) }.map(\.id) }
 
     // MARK: commands
 
     func startQueue() {
         let ids = queueTicked
         guard !ids.isEmpty else { return }
+        stoppedByUser = false
+        // A confirmed redo replaces its video; once launched, the file is no longer "to redo".
+        let overwrite = ids.filter { isRedo($0) && redoOverwrites($0) }
+        redo.subtract(ids); redoConfirmed.subtract(ids)
         Task {
-            do { try await engine.queueStart(ids) } catch { show(error) }
+            do { try await engine.queueStart(ids, overwrite: overwrite) } catch { show(error) }
             if let p = try? await engine.queueStatus() { applyProgress(p) }
         }
     }
@@ -58,57 +63,64 @@ extension AppModel {
         if case EngineError.remote(let code, let message) = error {
             text = code == "busy" ? t(message == "calibrating" ? "nat.run.busy_calibrating" : "nat.run.busy") : message
         }
-        alert = AppAlert(kind: .info(title: t("nat.run.error_title"), text: text))
+        alert = AppAlert(kind: .error(title: t("nat.run.error_title"), text: text))
     }
 
-    /// Stop on a row: "Stop this file?" (O1), with Stop All when others follow.
+    /// Stop on a row: "Stop this file?" (O1, red alerts), with Stop All when others follow.
+    /// Alerts opened by a button wait for the click to finish: a modal loop started
+    /// inside the button's own gesture left AppKit tracking that click, and the
+    /// alert's buttons never got theirs (Stop, Stop All, Discard did nothing, 29 Oct).
+    private func afterClick(_ show: @escaping () -> Void) {
+        DispatchQueue.main.async(execute: show)
+    }
+
     func confirmStop(_ id: String) {
+        afterClick { [self] in presentStop(id) }
+    }
+
+    private func presentStop(_ id: String) {
         let others = (progress.queue.ids ?? []).filter { $0 != id && job($0)?.state == .queued }
-        let a = NSAlert()
-        a.alertStyle = .warning
-        a.messageText = t("nat.run.stop_title")
-        a.informativeText = t("nat.run.stop_text")
-        let stop = a.addButton(withTitle: t("nat.run.stop"))
-        stop.hasDestructiveAction = true
-        if !others.isEmpty { a.addButton(withTitle: t("nat.run.stop_all")) }
-        a.addButton(withTitle: t("nat.btn.cancel"))
+        let a = AUAlert(icon: .stopFile, tone: .red, title: t("nat.run.stop_title"), text: t("nat.run.stop_text"))
+        a.button(t("nat.run.stop"), role: .destructiveSolid)
+        if !others.isEmpty { a.button(t("nat.run.stop_all")) }
+        a.button(t("nat.btn.cancel"))
         switch a.runModal() {
-        case .alertFirstButtonReturn: command("queue.stop", id: id)
-        case .alertSecondButtonReturn where !others.isEmpty: command("queue.stopAll")
+        case 0: stoppedByUser = true; command("queue.stop", id: id)
+        case 1 where !others.isEmpty: stoppedByUser = true; command("queue.stopAll")
         default: break
         }
     }
 
     func confirmStopAll() {
-        let a = NSAlert()
-        a.alertStyle = .warning
-        a.messageText = t("nat.run.stopall_title")
-        a.informativeText = t("nat.run.stopall_text")
-        a.addButton(withTitle: t("nat.run.stop_all")).hasDestructiveAction = true
-        a.addButton(withTitle: t("nat.btn.cancel"))
-        if a.runModal() == .alertFirstButtonReturn { command("queue.stopAll") }
+        afterClick { [self] in presentStopAll() }
+    }
+
+    private func presentStopAll() {
+        let a = AUAlert(icon: .stopAll, tone: .red, title: t("nat.run.stopall_title"), text: t("nat.run.stopall_text"))
+        a.button(t("nat.run.stop_all"), role: .destructiveSolid)
+        a.button(t("nat.btn.cancel"))
+        if a.runModal() == 0 { stoppedByUser = true; command("queue.stopAll") }
     }
 
     func confirmDiscard(_ id: String) {
-        let a = NSAlert()
-        a.alertStyle = .warning
-        a.messageText = t("nat.run.discard_title", ["name": file(id)?.name ?? ""])
-        a.informativeText = t("nat.run.discard_text")
-        a.addButton(withTitle: t("nat.run.discard")).hasDestructiveAction = true
-        a.addButton(withTitle: t("nat.btn.cancel"))
-        if a.runModal() == .alertFirstButtonReturn { command("job.discard", id: id) }
+        afterClick { [self] in presentDiscard(id) }
     }
 
-    /// ⌘Q while a job runs (O1): it stops now and can be resumed.
+    private func presentDiscard(_ id: String) {
+        let a = AUAlert(icon: .discard, tone: .red,
+                        title: t("nat.run.discard_title", ["name": file(id)?.name ?? ""]), text: t("nat.run.discard_text"))
+        a.button(t("nat.run.discard"), role: .destructiveSolid)
+        a.button(t("nat.btn.cancel"))
+        if a.runModal() == 0 { command("job.discard", id: id) }
+    }
+
+    /// ⌘Q while a job runs (O2, yellow alerts): it stops now and can be resumed.
     func confirmQuitWhileRunning() -> Bool {
         log.info("quit requested while the queue runs")
-        let a = NSAlert()
-        a.alertStyle = .warning
-        a.messageText = t("nat.run.quit_title")
-        a.informativeText = t("nat.run.quit_text")
-        a.addButton(withTitle: t("nat.run.quit")).hasDestructiveAction = true
-        a.addButton(withTitle: t("nat.btn.cancel"))
-        guard a.runModal() == .alertFirstButtonReturn else { return false }
+        let a = AUAlert(icon: .quit, tone: .yellow, title: t("nat.run.quit_title"), text: t("nat.run.quit_text"))
+        a.button(t("nat.run.quit"), role: .destructiveSolid)
+        a.button(t("nat.btn.cancel"))
+        guard a.runModal() == 0 else { return false }
         // Synchronously enough: the engine signals the group before we go.
         let sem = DispatchSemaphore(value: 0)
         Task.detached { [engine] in
@@ -120,9 +132,10 @@ extension AppModel {
     }
 
     func quitApp() {
-        let sheetOpen = showFinished || showCalibration || cmp.showUseMany
+        let sheetOpen = showFinished || showCalibration || showCalibrationDetails || cmp.showUseMany
         showFinished = false
         showCalibration = false
+        showCalibrationDetails = false
         cmp.showUseMany = false
         for w in NSApp.windows { if let sheet = w.attachedSheet { w.endSheet(sheet) } }
         DispatchQueue.main.asyncAfter(deadline: .now() + (sheetOpen ? 0.35 : 0)) { NSApp.terminate(nil) }
@@ -133,13 +146,24 @@ extension AppModel {
     func queueFinished(_ launch: [String: JSONValue]?) {
         guard let launch else { return }
         finished = launch
-        showFinished = true
-        tab = .queue
+        // Stopped on purpose with nothing finished or failed: the Queue already shows
+        // the interrupted rows; no summary now, nor at the next launch.
+        if stoppedByUser && !Self.finishedOrFailed(launch) {
+            markFinishedSeen()
+        } else {
+            showFinished = true
+            tab = .queue
+        }
         let ok = launch["succeeded"]?.array.count ?? 0
         let failed = (launch["failed"]?.array.count ?? 0) + (launch["interrupted"]?.array.count ?? 0)
         notify(t("nat.note.queue_done_title"),
                failed == 0 ? localizer.tn("nat.note.queue_done", ok) : t("nat.note.queue_done_some", ["ok": ok, "failed": failed]))
         Task { await refreshFiles() }
+    }
+
+    /// A queue's end is worth a summary when a file finished or failed (not just stopped).
+    static func finishedOrFailed(_ launch: [String: JSONValue]) -> Bool {
+        ["succeeded", "failed", "defective_outputs"].contains { !(launch[$0]?.array ?? []).isEmpty }
     }
 
     func markFinishedSeen() {
@@ -155,7 +179,7 @@ extension AppModel {
             if let r = try? await engine.lastLaunch(), let launch = r.launch,
                let label = launch["launch"]?.string,
                UserDefaults.standard.string(forKey: "finishedSeen") != label,
-               !progress.queue.running,
+               !progress.queue.running, Self.finishedOrFailed(launch),
                (launch["ended"]?.number ?? 0) > Date().timeIntervalSince1970 - 7 * 86400 {
                 finished = launch
                 showFinished = true
@@ -190,11 +214,12 @@ extension AppModel {
 
     func calibrate() {
         if progress.queue.running {
-            let a = NSAlert()
-            a.messageText = t("nat.cal.after_queue_title")
-            a.informativeText = t("nat.cal.after_queue_text")
-            a.addButton(withTitle: t("nat.btn.ok"))
-            a.runModal()
+            afterClick { [self] in
+                let a = AUAlert(icon: .calibrateLater, tone: .yellow, title: t("nat.cal.after_queue_title"),
+                                text: t("nat.cal.after_queue_text"))
+                a.button(t("nat.btn.ok"), role: .primary)
+                a.runModal()
+            }
             return
         }
         showCalibration = true
@@ -216,6 +241,21 @@ extension AppModel {
         }
     }
 
+    /// Board K3's link: every number of the calibrations of this Mac (K4).
+    func openCalibrationDetails() {
+        Task {
+            do {
+                calDetails = try await engine.calibrationDetails()
+                showCalibrationDetails = true
+            } catch { show(error) }
+        }
+    }
+
+    /// The results of the run that just finished, for the calibration sheet.
+    func loadCalibrationDetails() async {
+        if let d = try? await engine.calibrationDetails() { calDetails = d }
+    }
+
     func closeCalibration() {
         showCalibration = false
         if let r = calRun, !r.running, r.state == "done" || r.state == "failed" {
@@ -224,7 +264,7 @@ extension AppModel {
     }
 }
 
-/// O3: progress bar and badge on the Dock icon while the queue runs.
+/// O5: progress bar and badge on the Dock icon while the queue runs.
 @MainActor
 enum DockProgress {
     static func update(_ model: AppModel) {

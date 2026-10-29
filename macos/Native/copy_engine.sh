@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Copies the engine (the Python program) into the app bundle, like
-# tools/build_app.sh: Contents/Resources/AnimeUp/ gets the files tracked by
-# git, minus tests, docs, design, CI, the macOS sources and the data folders.
+# Copies the engine (the Python program) into the app bundle:
+# Contents/Resources/AnimeUp/ gets the files tracked by git, minus tests,
+# docs, design, CI, the macOS sources and the data folders.
 # Python itself is not bundled: the launcher downloads it with uv on the
 # first launch, into the state folder.
 #
@@ -22,7 +22,7 @@ git -C "$REPO" ls-files -z | while IFS= read -r -d '' f; do
   case "$f" in
     tests/*|docs/*|design/*|.github/*|macos/*|tools/*|overrides/*) continue ;;
     INPUT/*|OUTPUT/*|bin/*) continue ;;
-    .gitignore|.gitattributes|"Start AnimeUp.command"|mkdocs.yml|requirements-docs.txt) continue ;;
+    .gitignore|.gitattributes|mkdocs.yml|requirements-docs.txt) continue ;;
   esac
   [[ -e "$REPO/$f" ]] || continue
   printf '%s\0' "$f"

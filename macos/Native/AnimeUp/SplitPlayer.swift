@@ -13,6 +13,8 @@ final class SplitPlayerController: ObservableObject {
     @Published var time: Double = 0
     @Published var duration: Double = 0
     @Published var oneToOne = false
+    /// Where the split is, 0…1 across the picture.
+    @Published var split: CGFloat = 0.5
     private var observer: Any?
 
     init() {
@@ -37,11 +39,23 @@ final class SplitPlayerController: ObservableObject {
 
     func load(left l: URL?, right r: URL?) {
         let t = left.currentTime()
-        left.replaceCurrentItem(with: l.map { AVPlayerItem(url: $0) })
-        right.replaceCurrentItem(with: r.map { AVPlayerItem(url: $0) })
-        left.seek(to: t, toleranceBefore: .zero, toleranceAfter: .zero)
-        right.seek(to: t, toleranceBefore: .zero, toleranceAfter: .zero)
-        if playing { left.play(); right.play() }
+        let items = (l.map { AVPlayerItem(url: $0) }, r.map { AVPlayerItem(url: $0) })
+        left.replaceCurrentItem(with: items.0)
+        right.replaceCurrentItem(with: items.1)
+        // Show the frame and the length before anything plays: wait for the clip,
+        // then seek both players (a paused player draws nothing until it seeks).
+        Task { @MainActor in
+            if let d = try? await (items.0 ?? items.1)?.asset.load(.duration), d.seconds.isFinite { duration = d.seconds }
+            for item in [items.0, items.1].compactMap({ $0 }) {
+                for await status in item.publisher(for: \.status).values where status != .unknown { break }
+            }
+            // A seek to where the player already is decodes nothing: start a hair after 0.
+            let at = t.seconds.isFinite && t.seconds > 0 ? t : CMTime(value: 1, timescale: 600)
+            await left.seek(to: at, toleranceBefore: .zero, toleranceAfter: .zero)
+            await right.seek(to: at, toleranceBefore: .zero, toleranceAfter: .zero)
+            time = at.seconds
+            if playing { left.play(); right.play() }
+        }
     }
 
     func toggle() {
@@ -76,10 +90,12 @@ struct SplitPlayerView: NSViewRepresentable {
         let rightLayer: AVPlayerLayer
         let mask = CALayer()
         let line = CALayer()
+        let controller: SplitPlayerController
         var split: CGFloat = 0.5 { didSet { needsLayout = true } }
         var oneToOne = false
 
         init(controller: SplitPlayerController) {
+            self.controller = controller
             leftLayer = AVPlayerLayer(player: controller.left)
             rightLayer = AVPlayerLayer(player: controller.right)
             super.init(frame: .zero)
@@ -90,7 +106,11 @@ struct SplitPlayerView: NSViewRepresentable {
             layer?.addSublayer(rightLayer)
             mask.backgroundColor = NSColor.black.cgColor
             rightLayer.mask = mask
-            line.backgroundColor = NSColor.white.withAlphaComponent(0.85).cgColor
+            line.backgroundColor = NSColor.white.cgColor
+            line.shadowColor = NSColor.black.cgColor
+            line.shadowOpacity = 0.5
+            line.shadowRadius = 4
+            line.shadowOffset = .zero
             layer?.addSublayer(line)
         }
 
@@ -106,6 +126,7 @@ struct SplitPlayerView: NSViewRepresentable {
         override func mouseMoved(with event: NSEvent) {
             let p = convert(event.locationInWindow, from: nil)
             split = min(1, max(0, p.x / max(1, bounds.width)))
+            controller.split = split
         }
 
         override func layout() {
@@ -128,8 +149,36 @@ struct SplitPlayerView: NSViewRepresentable {
             _ = inRight
             mask.frame = CGRect(x: x - rightLayer.frame.minX, y: -rightLayer.frame.minY,
                                 width: bounds.width, height: bounds.height + 2 * abs(rightLayer.frame.minY))
-            line.frame = CGRect(x: x - 0.5, y: 0, width: 1, height: bounds.height)
+            line.frame = CGRect(x: x - 1, y: 0, width: 2, height: bounds.height)
             CATransaction.commit()
         }
+    }
+}
+
+/// The split's handle and the L / R corner tags, drawn over the picture as
+/// on board C4: a 28 pt white knob on the line, tags 10 pt in from the corners.
+struct SplitPlayerChrome: View {
+    @ObservedObject var controller: SplitPlayerController
+
+    var body: some View {
+        GeometryReader { g in
+            ZStack {
+                Text(verbatim: "‹ ›").auFont(11, .bold).foregroundStyle(Color(red: 0.086, green: 0.094, blue: 0.106))
+                    .frame(width: 28, height: 28)
+                    .background(Circle().fill(.white).shadow(color: .black.opacity(0.4), radius: 4, y: 2))
+                    .position(x: g.size.width * controller.split, y: g.size.height / 2)
+                corner("L").position(x: 10 + 9, y: g.size.height - 10 - 7.5)
+                corner("R").position(x: g.size.width - 10 - 9, y: g.size.height - 10 - 7.5)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func corner(_ side: String) -> some View {
+        Text(side).auFont(10.5, .semibold, mono: true).foregroundStyle(.white)
+            .padding(.horizontal, 6).padding(.vertical, 1)
+            .background(RoundedRectangle(cornerRadius: 4).fill(.black.opacity(0.6)))
+            .overlay(RoundedRectangle(cornerRadius: 4).stroke(.white.opacity(0.25), lineWidth: 1))
+            .fixedSize()
     }
 }

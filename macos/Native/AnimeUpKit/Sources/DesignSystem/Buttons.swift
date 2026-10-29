@@ -66,14 +66,15 @@ struct AUButtonBody: View {
     var body: some View {
         configuration.label
             .labelStyle(AULabelStyle(iconSize: size.iconSize, iconOnly: iconOnly))
-            .font(.system(size: size.fontSize, weight: weight))
+            .auControlFont(size.fontSize, weight)
             .foregroundStyle(foreground)
             .lineLimit(1)
-            .padding(.horizontal, iconOnly ? 0 : (role == .plain ? 6 : size.padding))
-            .frame(width: iconOnly ? size.height : nil, height: size.height)
+            // A button label never truncates: the row around it gives way instead.
+            .fixedSize()
+            .frame(width: iconOnly ? size.height - 2 : nil, height: size.height - 2)
             .frame(maxWidth: fullWidth ? .infinity : nil)
-            .background(Capsule().fill(fill))
-            .overlay(Capsule().strokeBorder(border, lineWidth: 1))
+            .auBox(Capsule(), fill: fill, line: border,
+                   padding: EdgeInsets(vertical: 0, horizontal: iconOnly ? 0 : (role == .plain ? 6 : size.padding)))
             .contentShape(Capsule())
             .opacity(enabled ? 1 : 0.4)
             .onHover { hover = $0 }
@@ -125,9 +126,9 @@ struct AULabelStyle: LabelStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 5) {
-            configuration.icon.font(.system(size: iconSize, weight: .medium))
+            configuration.icon.auFont(iconSize, .medium)
             if !iconOnly {
-                configuration.title.offset(y: -1)
+                configuration.title
             }
         }
     }
@@ -147,12 +148,11 @@ public struct AUTintedButtonStyle: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .labelStyle(AULabelStyle(iconSize: size.iconSize, iconOnly: false))
-            .font(.system(size: size.fontSize, weight: .medium))
+            .auControlFont(size.fontSize, .medium)
             .foregroundStyle(tone.text)
-            .padding(.horizontal, size.padding)
-            .frame(height: size.height)
-            .background(Capsule().fill(tone.tint))
-            .overlay(Capsule().strokeBorder(tone.line, lineWidth: 1))
+            .frame(height: size.height - 2)
+            .auBox(Capsule(), fill: tone.tint, line: tone.line, padding: EdgeInsets(vertical: 0, horizontal: size.padding))
+            .auHover(Capsule())
             .opacity(configuration.isPressed ? 0.8 : 1)
             .contentShape(Capsule())
     }
