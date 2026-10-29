@@ -5038,6 +5038,9 @@ def _serve(righe: list[str], stato: Path, codice: str | None = None,
     env = {**os.environ, "ANIMEUP_STATO": str(stato),
            "ANIMEUP_WORK": str(stato / "Jobs"),
            "PYTHONPATH": str(ROOT / "src"), **(ambiente or {})}
+    # Lo stato nuovo ha bin/ vuoto: gli strumenti sono quelli della cartella,
+    # come nell'app dopo il primo avvio (la portatile senza Homebrew falliva).
+    env["PATH"] = os.pathsep.join([str(ROOT / "bin"), env.get("PATH", "")])
     env.pop("ANIMEUP_LANG", None)
     comando = ([sys.executable, "-c", codice] if codice
                else [sys.executable, "-m", "animeup.cli", "serve"])
