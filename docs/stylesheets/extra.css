@@ -1618,6 +1618,23 @@
   clip-path: inset(0 calc(100% - var(--pos)) 0 0);
 }
 
+/* The cover frames the face and the town at 2×: the whole scene at the column's width hides the
+   difference. 1:1 still opens the whole picture. */
+.md-typeset .au-hero img.au-hero__pic {
+  inset: auto;
+  left: -37.5%;
+  top: -22.2%;
+  width: 200%;
+  max-width: none;
+  height: auto;
+}
+
+.md-typeset .au-hero .au-hero__clip {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 calc(100% - var(--pos)) 0 0);
+}
+
 .md-typeset .au-hero .au-hero__line {
   position: absolute;
   top: 0;

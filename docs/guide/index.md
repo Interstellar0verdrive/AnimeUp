@@ -16,13 +16,13 @@ description: How to use AnimeUp 2.0, the native Mac app that upscales anime on y
 </header>
 
 <div class="au-hero" tabindex="0" role="img" aria-label="Before and after: the same picture at 360p, plainly enlarged on the left and upscaled to 1080p by AnimeUp on the right. Drag to compare.">
-  <img src="img/v2/hero-after.jpg" alt="">
-  <img class="au-hero__before" src="img/v2/hero-before.jpg" alt="">
+  <img class="au-hero__pic" src="img/v2/hero-after.jpg" alt="">
+  <span class="au-hero__clip"><img class="au-hero__pic" src="img/v2/hero-before.jpg" alt=""></span>
   <span class="au-hero__line"><span class="au-hero__knob">‹›</span></span>
   <img src="img/v2/hero-overlay.png" alt="">
   <button class="au-hero__zoom" type="button" title="Compare at 100%, one picture pixel per screen pixel">1:1</button>
 </div>
-<p class="au-hero__caption">Drag across the picture: the same frame at 360p, plainly enlarged on the left, and upscaled by AnimeUp with Real-ESRGAN animevideov3 on the right.</p>
+<p class="au-hero__caption">Drag across the picture: a close-up of the same frame at 360p, plainly enlarged on the left, and upscaled by AnimeUp with Real-ESRGAN animevideov3 on the right. <b>1:1</b> shows the whole frame at full size.</p>
 
 ## What AnimeUp is
 

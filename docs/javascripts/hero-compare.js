@@ -67,7 +67,7 @@
   // 1:1 in an overlay: the same comparison with one picture pixel per screen pixel,
   // panned by scrolling when it's larger than the window. Esc, the button or a click outside closes it.
   function openFull(hero) {
-    var imgs = hero.querySelectorAll("img");
+    var imgs = hero.querySelectorAll("img.au-hero__pic");
     var after = imgs[0].currentSrc || imgs[0].src, before = imgs[1].currentSrc || imgs[1].src;
     var w = imgs[0].naturalWidth / (window.devicePixelRatio || 1);
     var h = imgs[0].naturalHeight / (window.devicePixelRatio || 1);
