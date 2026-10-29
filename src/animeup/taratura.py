@@ -34,6 +34,7 @@ import subprocess
 import time
 from pathlib import Path
 
+from . import __version__
 from .i18n import t
 from .models import CATALOG
 from . import su_disco
@@ -187,6 +188,26 @@ def _combinazioni_grandi() -> list[tuple]:
             if 2 in modello.scales]
 
 
+def _sequenza() -> list[tuple]:
+    """Le misure di upscale nell'ordine del giro: ogni modello fa le sue
+    scale e subito dopo la sua misura a 1080p, cosi' chi guarda vede un
+    modello finire una volta sola. Ogni voce: (grande, chiave, modello, scala)."""
+    grandi = {chiave: (chiave, modello, scala)
+              for chiave, modello, scala in _combinazioni_grandi()}
+    fuori: list[tuple] = []
+    for chiave in CATALOG:
+        fuori += [(False, k, modello, scala)
+                  for k, modello, scala in _combinazioni() if k == chiave]
+        if chiave in grandi:
+            fuori.append((True, *grandi[chiave]))
+    return fuori
+
+
+def _nome_upscale(grande: bool, modello, scala: int) -> str:
+    chiave = "mot.taratura.tappa_upscale_grande" if grande else "mot.taratura.tappa_upscale"
+    return t(chiave, modello=modello.label, scala=scala)
+
+
 def _misura_clip(p: Paths, sorgente: Path) -> tuple[int, int, int]:
     """Larghezza, altezza e fotogrammi del clip campione."""
     esito = subprocess.run(
@@ -209,10 +230,8 @@ def nomi_tappe() -> list[str]:
     taratura gia' in corso.
     """
     nomi = [t("mot.taratura.tappa_estrazione"), t("mot.taratura.tappa_salvataggio")]
-    nomi += [t("mot.taratura.tappa_upscale", modello=modello.short, scala=scala)
-             for _k, modello, scala in _combinazioni()]
-    nomi += [t("mot.taratura.tappa_upscale_grande", modello=modello.short, scala=scala)
-             for _k, modello, scala in _combinazioni_grandi()]
+    nomi += [_nome_upscale(grande, modello, scala)
+             for grande, _k, modello, scala in _sequenza()]
     return nomi + [t("mot.taratura.tappa_codifica"), t("mot.taratura.tappa_scansione")]
 
 
@@ -244,22 +263,15 @@ def preventivo(paths: Paths | None = None, *,
     tappe.append((t("mot.taratura.tappa_salvataggio"),
                   _quante_prove * FOTOGRAMMI_SALVATAGGIO
                   * src_mpx / float(_ritmo_prova)))
-    for chiave, modello, scala in _combinazioni():
-        ritmo = (nota.get("mpxs", {}).get(chiave, {}).get(str(scala))
-                 or modello.throughput.get(
-                     scala, min(modello.throughput.values())))
-        tappe.append((t("mot.taratura.tappa_upscale", modello=modello.short,
-                        scala=scala),
-                      n_previsto * src_mpx / float(ritmo)))
     mpx_grande = LATO_GRANDE[0] * LATO_GRANDE[1] / 1_000_000
-    for chiave, modello, scala in _combinazioni_grandi():
-        ritmo = (nota.get("mpxs_grande", {}).get(chiave, {}).get(str(scala))
+    for grande, chiave, modello, scala in _sequenza():
+        ritmo = ((grande and nota.get("mpxs_grande", {}).get(chiave, {}).get(str(scala)))
                  or nota.get("mpxs", {}).get(chiave, {}).get(str(scala))
                  or modello.throughput.get(
                      scala, min(modello.throughput.values())))
-        tappe.append((t("mot.taratura.tappa_upscale_grande", modello=modello.short,
-                        scala=scala),
-                      min(FOTOGRAMMI_GRANDI, n_previsto) * mpx_grande / float(ritmo)))
+        quanto = (min(FOTOGRAMMI_GRANDI, n_previsto) * mpx_grande if grande
+                  else n_previsto * src_mpx)
+        tappe.append((_nome_upscale(grande, modello, scala), quanto / float(ritmo)))
     tappe.append((t("mot.taratura.tappa_codifica"),
                   n_previsto / float(nota.get("codifica_fps") or 8.0)))
     tappe.append((t("mot.taratura.tappa_scansione"),
@@ -329,6 +341,25 @@ def carica(paths: Paths | None = None, *, macchina: str | None = None) -> dict |
     if isinstance(vecchia, dict) and not vecchia.get("id"):
         return {**vecchia, "vecchia": True}
     return None
+
+
+# Quante calibrazioni passate tiene ogni Mac, oltre all'attuale.
+STORICO_MASSIMO = 12
+
+
+def storico(paths: Paths | None = None) -> list[dict]:
+    """Le calibrazioni di questo Mac, la piu' recente prima: l'attuale
+    (`carica`) e quelle che ha sostituito."""
+    p = paths or PATHS
+    attuale = carica(p)
+    if attuale is None:
+        return []
+    try:
+        dati = su_disco.leggi(_file(p))
+        passate = (dati.get("storico") or {}).get(macchina_id()) or []
+    except (OSError, ValueError, AttributeError):
+        passate = []
+    return [attuale] + [v for v in passate if isinstance(v, dict)]
 
 
 def di_altro_mac(paths: Paths | None = None) -> str | None:
@@ -691,11 +722,37 @@ def _scegli_salvataggio(prove: list[dict], riferimento: list[str] | None) -> int
     return migliore
 
 
+def salva(voce: dict, p: Paths) -> None:
+    """Scrive la voce di questo Mac; quella che sostituisce va nello storico."""
+    try:
+        dati = su_disco.leggi(_file(p))
+    except (OSError, ValueError):
+        dati = {}
+    dati.setdefault("versione", 1)
+    macchine = dati.setdefault("macchine", {})
+    # La voce che questa sostituisce passa nello storico del Mac: i dettagli
+    # della calibrazione si confrontano con una qualunque di quelle passate.
+    # Anche la voce vecchia di questo chip, senza impronta.
+    sostituita = macchine.get(macchina_id())
+    vecchia = macchine.get(chip())
+    if isinstance(vecchia, dict) and not vecchia.get("id"):
+        macchine.pop(chip(), None)
+        sostituita = sostituita or vecchia
+    if isinstance(sostituita, dict):
+        passate = dati.setdefault("storico", {}).setdefault(macchina_id(), [])
+        passate.insert(0, sostituita)
+        del passate[STORICO_MASSIMO:]
+    macchine[macchina_id()] = voce
+    p.logs.mkdir(parents=True, exist_ok=True)
+    provvisorio = _file(p).with_suffix(".json.tmp")
+    provvisorio.write_text(su_disco.dumps(dati, indent=2))
+    provvisorio.replace(_file(p))
+
+
 def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
     """Il giro vero e proprio. Chiamalo solo da `esegui`, che tiene la
     guardia e ripulisce la cartella di lavoro in ogni caso."""
 
-    combinazioni = _combinazioni()
     larghezza, altezza, _ = _misura_clip(p, sorgente)
     src_mpx = larghezza * altezza / 1_000_000
     costi = [costo for _, costo in preventivo(p, clip=sorgente)]
@@ -766,12 +823,46 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
         p, frames, lavoro,
         parziale=lambda q: _dentro(t("mot.taratura.tappa_salvataggio"), q))
 
-    # --- 3. upscale: ogni combinazione modello x scala ----------------------
+    # I fotogrammi 1080p della seconda misura, pronti prima dei modelli:
+    # lo stesso campione portato a 1920x1080. La GPU rende di piu' sui
+    # fotogrammi grandi, e proporzionare la misura del 480p sbagliava di
+    # quasi il doppio sui sorgenti 1080p (vedi l'intestazione).
+    grandi = lavoro / "grandi"
+    grandi.mkdir()
+    subprocess.run(
+        [str(p.ffmpeg.path), "-hide_banner", "-v", "error", "-nostdin", "-y",
+         "-framerate", "30", "-i", str(campione / "%08d.png"),
+         "-frames:v", str(FOTOGRAMMI_GRANDI),
+         "-vf", f"scale={LATO_GRANDE[0]}:{LATO_GRANDE[1]}:flags=lanczos",
+         "-pix_fmt", "rgb24", "-c:v", "png", "-pred", "mixed",
+         str(grandi / "%08d.png")],
+        check=True, capture_output=True,
+    )
+    n_grandi = sum(1 for _ in grandi.glob("*.png"))
+    mpx_grande = LATO_GRANDE[0] * LATO_GRANDE[1] / 1_000_000
+
+    # --- 3. upscale: ogni modello alle sue scale, poi a 1080p ---------------
 
     mpxs: dict[str, dict[str, float]] = {}
+    mpxs_grande: dict[str, dict[str, float]] = {}
     cartella_per_codifica: Path | None = None
-    for chiave, modello, scala in combinazioni:
-        _di(t("mot.taratura.tappa_upscale", modello=modello.short, scala=scala))
+    for grande, chiave, modello, scala in _sequenza():
+        _di(_nome_upscale(grande, modello, scala))
+        if grande:
+            # La scala 2 sui fotogrammi grandi: l'unica che un sorgente
+            # grande usa davvero.
+            if not n_grandi:
+                continue
+            dst = lavoro / f"grande-{chiave}-x{scala}"
+            inizio = time.monotonic()
+            upscale_dir(grandi, dst, scale=scala, model=modello, paths=p,
+                        jobs=f"2:2:{salvataggio}")
+            durata = time.monotonic() - inizio
+            if sum(1 for _ in dst.glob("*.png")) >= n_grandi:
+                ritmo = _ritmo_da_mtime(dst, durata)
+                mpxs_grande.setdefault(chiave, {})[str(scala)] = round(ritmo * mpx_grande, 3)
+            shutil.rmtree(dst, ignore_errors=True)
+            continue
         dst = lavoro / f"up-{chiave}-x{scala}"
         inizio = time.monotonic()
         upscale_dir(campione, dst, scale=scala, model=modello, paths=p,
@@ -792,38 +883,6 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
             cartella_per_codifica = dst
         else:
             shutil.rmtree(dst, ignore_errors=True)
-
-    # --- 3b. upscale a 1080p: la scala 2 sui fotogrammi grandi -------------
-    # Lo stesso campione portato a 1920x1080: la GPU rende di piu' sui
-    # fotogrammi grandi, e proporzionare la misura del 480p sbagliava di
-    # quasi il doppio sui sorgenti 1080p (vedi l'intestazione).
-    grandi = lavoro / "grandi"
-    grandi.mkdir()
-    subprocess.run(
-        [str(p.ffmpeg.path), "-hide_banner", "-v", "error", "-nostdin", "-y",
-         "-framerate", "30", "-i", str(campione / "%08d.png"),
-         "-frames:v", str(FOTOGRAMMI_GRANDI),
-         "-vf", f"scale={LATO_GRANDE[0]}:{LATO_GRANDE[1]}:flags=lanczos",
-         "-pix_fmt", "rgb24", "-c:v", "png", "-pred", "mixed",
-         str(grandi / "%08d.png")],
-        check=True, capture_output=True,
-    )
-    n_grandi = sum(1 for _ in grandi.glob("*.png"))
-    mpx_grande = LATO_GRANDE[0] * LATO_GRANDE[1] / 1_000_000
-    mpxs_grande: dict[str, dict[str, float]] = {}
-    for chiave, modello, scala in _combinazioni_grandi():
-        _di(t("mot.taratura.tappa_upscale_grande", modello=modello.short, scala=scala))
-        if not n_grandi:
-            continue
-        dst = lavoro / f"grande-{chiave}-x{scala}"
-        inizio = time.monotonic()
-        upscale_dir(grandi, dst, scale=scala, model=modello, paths=p,
-                    jobs=f"2:2:{salvataggio}")
-        durata = time.monotonic() - inizio
-        if sum(1 for _ in dst.glob("*.png")) >= n_grandi:
-            ritmo = _ritmo_da_mtime(dst, durata)
-            mpxs_grande.setdefault(chiave, {})[str(scala)] = round(ritmo * mpx_grande, 3)
-        shutil.rmtree(dst, ignore_errors=True)
     shutil.rmtree(grandi, ignore_errors=True)
 
     # --- 4. codifica: x265 coi parametri di produzione, uscita 1080p --------
@@ -886,23 +945,11 @@ def _giro(p: Paths, sorgente: Path, lavoro: Path, avanzamento) -> dict:
         # cui esce: chi rilegge il file deve poter rifare il ragionamento.
         "jobs_salvataggio": salvataggio,
         "prove_salvataggio": prove_salvataggio,
+        # La versione che l'ha fatta: i dettagli la mostrano accanto alla data.
+        "versione": __version__,
     }
 
-    try:
-        dati = su_disco.leggi(_file(p))
-    except (OSError, ValueError):
-        dati = {}
-    dati.setdefault("versione", 1)
-    macchine = dati.setdefault("macchine", {})
-    # La voce vecchia di questo chip, senza impronta, la sostituisce questa.
-    vecchia = macchine.get(chip())
-    if isinstance(vecchia, dict) and not vecchia.get("id"):
-        macchine.pop(chip(), None)
-    macchine[macchina_id()] = voce
-    p.logs.mkdir(parents=True, exist_ok=True)
-    provvisorio = _file(p).with_suffix(".json.tmp")
-    provvisorio.write_text(su_disco.dumps(dati, indent=2))
-    provvisorio.replace(_file(p))
+    salva(voce, p)
 
     return voce
 

@@ -222,8 +222,8 @@ def upscale_dir(
         ultimo, da_quando = -1, time.monotonic()
         while not stop.wait(2.0):
             fatti = sum(1 for _ in dst.glob("*.png"))
-            # La callback è di chi ci chiama (una barra di rich, un widget di
-            # Streamlit) e viene invocata da un thread non principale: se
+            # La callback è di chi ci chiama (una barra di rich, il motore
+            # dell'app) e viene invocata da un thread non principale: se
             # solleva — console chiusa, tubo rotto, server caduto — il thread
             # moriva alla prima iterazione e con lui il rilevatore di stallo,
             # in silenzio. Il progresso è un di più; la sorveglianza no.

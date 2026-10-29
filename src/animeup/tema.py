@@ -10,7 +10,7 @@ i colori che servono velati hanno anche la terna RGB.
 
 La scelta dell'utente (Sistema / Scuro / Chiaro) decide quali blocchi
 scrivere: Scuro e Chiaro ne scrivono uno, Sistema li scrive tutti e due e
-lascia scegliere a `prefers-color-scheme`, come fa Streamlit col suo tema.
+lascia scegliere a `prefers-color-scheme`.
 """
 
 from __future__ import annotations
@@ -158,7 +158,3 @@ def css(scelta: str) -> str:
     return (f":root {{ {_blocco(0)} }}\n"
             f"@media (prefers-color-scheme: light) {{ :root {{ {_blocco(1)} }} }}")
 
-
-def streamlit(scelta: str) -> str:
-    """Il nome che Streamlit da' allo stesso tema nel browser."""
-    return {SCURO: "Dark", CHIARO: "Light"}.get(scelta, "System")

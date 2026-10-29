@@ -29,7 +29,8 @@ def _paths_lavoro():
     return p
 
 
-def piano(percorso: Path, cfg: dict, *, modello: str | None, altezza: int | None) -> dict:
+def piano(percorso: Path, cfg: dict, *, modello: str | None, altezza: int | None,
+          cartella_finiti: str | None = None) -> dict:
     report = library.cached_report(percorso)
     if report is None:
         return {"ready": False}
@@ -41,7 +42,7 @@ def piano(percorso: Path, cfg: dict, *, modello: str | None, altezza: int | None
     def costruisci(chiave: str):
         return build_plan(report, target_height=h_uscita, crf=cfg["crf"], preset=cfg["preset"],
                           peak_disk_gb=cfg["disco"], dedup=cfg["dedup"], denoise=cfg["denoise"],
-                          forza=cfg["forza"], model_key=chiave, paths=p,
+                          forza=cfg["forza"], model_key=chiave, paths=p, cartella_finiti=cartella_finiti or "",
                           dedup_nota=report.dedup_campione if cfg["dedup"] else None)
 
     modelli = []
@@ -82,6 +83,7 @@ def piano(percorso: Path, cfg: dict, *, modello: str | None, altezza: int | None
         "frames": pl.frames,
         "chunks": pl.chunks,
         "chunk_size": pl.chunk_size,
+        "chunks_tight": pl.blocchi_stretti,
         "codec": pl.encoding.codec,
         "pix_fmt": pl.encoding.pix_fmt,
         "crf": pl.encoding.crf,
@@ -91,7 +93,8 @@ def piano(percorso: Path, cfg: dict, *, modello: str | None, altezza: int | None
         "dedup_ratio": pl.dedup.expected_ratio,
         "dedup_measured": pl.dedup.misurata or report.dedup_campione is not None,
         "output_name": pl.output.name,
-        "output_folder": str(percorso.parent),
+        "output_folder": str(pl.output.parent),
+        "output_next_to_source": pl.output.parent == percorso.parent,
         "peak_disk_gb": round(pl.est_peak_disk_gb, 1),
         "warnings": list(pl.warnings),
         "disk_warnings": list(pl.avvisi_disco),
@@ -106,7 +109,7 @@ def piani(voci: list[dict]) -> dict:
     for v in voci:
         try:
             fuori[v["id"]] = piano(Path(v["path"]), cfg, modello=v.get("model"),
-                                   altezza=v.get("height"))
+                                   altezza=v.get("height"), cartella_finiti=v.get("finished_folder"))
         except Exception as exc:  # noqa: BLE001 - un file non deve far cadere gli altri
             fuori[v["id"]] = {"ready": True, "error": f"{type(exc).__name__}: {exc}", "models": []}
     voce_tar = taratura.carica()

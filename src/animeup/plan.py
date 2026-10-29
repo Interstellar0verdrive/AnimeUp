@@ -242,6 +242,9 @@ class Plan:
     # per un file gia' partito conterebbero anche il disco occupato dal
     # lavoro stesso, e l'interfaccia li tace (vedi `disk_warnings`).
     avvisi_disco: list[str] = field(default_factory=list)
+    # Piu' blocchi del solito perche' lo spazio e' stretto: l'interfaccia
+    # colora la Divisione solo in questo caso (29/10).
+    blocchi_stretti: bool = False
     # Ritmi delle fasi fuori GPU: di fabbrica, oppure misurati da
     # `./animeup calibrate` su questa macchina. Vivono nel piano perché le
     # proprieta' di stima non hanno accesso ai Paths.
@@ -795,6 +798,7 @@ def build_plan(
     model_key: str | None = None,
     paths: Paths | None = None,
     dedup_nota: float | None = None,
+    cartella_finiti: str | None = None,
 ) -> Plan:
     """Costruisce il piano di lavorazione per un sorgente già analizzato.
 
@@ -1047,8 +1051,14 @@ def build_plan(
     # L'app nativa (2.0) mette i video finiti accanto agli originali:
     # ANIMEUP_ACCANTO=1. Lo spazio e i file di lavoro restano su OUTPUT, che
     # per lei e' la cartella di lavoro.
-    cartella_uscita = (report.path.parent if os.environ.get("ANIMEUP_ACCANTO") == "1"
-                       else p.output)
+    # Ogni file ha la sua cartella per il video finito, fissata quando e' entrato
+    # in Coda (`cartella_finiti`; per la CLI lanciata dalla Coda, ANIMEUP_FINITI):
+    # vuota, accanto all'originale.
+    if os.environ.get("ANIMEUP_ACCANTO") == "1":
+        scelta = cartella_finiti if cartella_finiti is not None else os.environ.get("ANIMEUP_FINITI", "")
+        cartella_uscita = Path(scelta) if scelta else report.path.parent
+    else:
+        cartella_uscita = p.output
     return Plan(
         source=report,
         output=cartella_uscita / f"{name}.mkv",
@@ -1076,6 +1086,8 @@ def build_plan(
         recommendation=suggestion,
         warnings=warnings,
         avvisi_disco=avvisi_disco,
+        blocchi_stretti=bool(incomprimibile <= float(peak_disk_gb) and disponibile < TETTO_BLOCCO_GB
+                             and chunks > BLOCCHI_MINIMI),
         fps_estrazione=float((voce_taratura or {}).get("estrazione_fps")
                              or 60.0),
         fps_codifica=float((voce_taratura or {}).get("codifica_fps")

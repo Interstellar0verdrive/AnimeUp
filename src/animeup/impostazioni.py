@@ -1,10 +1,8 @@
 """Le preferenze dell'utente: valori di fabbrica, sanificazione, lettura e
 scrittura di `records/settings.json`.
 
-Stavano dentro `ui/app.py`, dove solo Streamlit poteva usarle. L'app nativa
-(2.0) le chiede al motore (`animeup serve`), quindi vivono qui e l'interfaccia
-web le importa: una regola sola per tutte e due, invece di due copie che
-prima o poi divergono.
+Stavano dentro l'interfaccia web della 1.x. L'app nativa (2.0) le chiede al
+motore (`animeup serve`), quindi vivono qui: una regola sola, nel motore.
 
 Le chiavi sono quelle italiane del codice; su disco vanno in inglese, e la
 traduzione la fa `su_disco` sul confine.
@@ -78,6 +76,8 @@ SOLO_NATIVE = {
     # La cartella dei file di lavoro; None = quella di fabbrica (vedi
     # `cartella_lavoro_predefinita`).
     "cartella_lavoro": None,
+    # Dove vanno i video finiti; None = accanto agli originali.
+    "cartella_finiti": None,
     # Notifiche di macOS e avanzamento sull'icona del Dock.
     "notifiche": True,
     "dock": True,
@@ -205,9 +205,10 @@ def native_pulite(dati: object) -> dict:
     """Le chiavi solo native, controllate come le altre."""
     puliti = dict(SOLO_NATIVE)
     if isinstance(dati, dict):
-        cartella = dati.get("cartella_lavoro")
-        if isinstance(cartella, str) and cartella.startswith("/"):
-            puliti["cartella_lavoro"] = cartella
+        for chiave in ("cartella_lavoro", "cartella_finiti"):
+            cartella = dati.get(chiave)
+            if isinstance(cartella, str) and cartella.startswith("/"):
+                puliti[chiave] = cartella
         for chiave, fabbrica in SOLO_NATIVE.items():
             if isinstance(fabbrica, bool) and isinstance(dati.get(chiave), bool):
                 puliti[chiave] = dati[chiave]
@@ -217,6 +218,12 @@ def native_pulite(dati: object) -> dict:
 def cartella_lavoro() -> Path:
     scelta = native_pulite(_leggi_grezzo())["cartella_lavoro"]
     return Path(scelta) if scelta else cartella_lavoro_predefinita()
+
+
+def cartella_finiti() -> Path | None:
+    """La cartella scelta per i video finiti, o None: accanto agli originali."""
+    scelta = native_pulite(_leggi_grezzo())["cartella_finiti"]
+    return Path(scelta) if scelta else None
 
 
 def carica_native() -> dict:
@@ -243,6 +250,13 @@ def aggiorna_native(cambi: dict) -> dict:
     native = native_pulite(unito)
     cartella = Path(native["cartella_lavoro"]) if native["cartella_lavoro"] \
         else cartella_lavoro_predefinita()
+    # Cambiata la cartella di lavoro (e magari il disco), lo spazio riparte dal
+    # massimo che la regola concede LI': quello scelto per il disco di prima
+    # non dice niente di questo. Se lo stesso cambio porta anche lo spazio,
+    # vince quello.
+    prima = native_pulite(grezzo)["cartella_lavoro"]
+    if "disco" not in cambi and (prima or None) != (native["cartella_lavoro"] or None):
+        unito["disco"] = tetto_spazio(cartella)[0]
     puliti = pulite(unito, cartella)
     PATHS.impostazioni.parent.mkdir(parents=True, exist_ok=True)
     PATHS.impostazioni.write_text(su_disco.dumps({**puliti, **native}, indent=2))

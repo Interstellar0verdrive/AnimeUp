@@ -54,7 +54,8 @@ def _piano(voce: dict):
     if report is None:
         raise ValueError("not analysed yet")
     cfg = impostazioni.carica_native()
-    pl = piani.piano(Path(voce["path"]), cfg, modello=voce.get("model"), altezza=voce.get("height"))
+    pl = piani.piano(Path(voce["path"]), cfg, modello=voce.get("model"), altezza=voce.get("height"),
+                     cartella_finiti=voce.get("finished_folder"))
     modello = pl.get("model")
     if not modello:
         raise ValueError(pl.get("error") or "no plan")
@@ -143,7 +144,8 @@ def modelli(voce: dict, scelti: list[int] | None) -> dict:
     from .models import recommend
     plan, cfg, modello = _piano(voce)
     report = plan.source
-    pl = piani.piano(Path(voce["path"]), cfg, modello=voce.get("model"), altezza=voce.get("height"))
+    pl = piani.piano(Path(voce["path"]), cfg, modello=voce.get("model"), altezza=voce.get("height"),
+                     cartella_finiti=voce.get("finished_folder"))
     trovati = preview.leggi_deposito(plan, 2, preview.DEFAULT_SECONDS, PATHS)
     scelte = [c for c in trovati if scelti is None or c.start_frame in scelti]
     consiglio = recommend(report.geometry.display_height)

@@ -597,6 +597,10 @@ class Job:
     def _segna_tempo_speso(self, secondi: float) -> None:
         if not isinstance(self.state, dict) or not self.state:
             return                      # mai caricato: non c'è nulla da sommare
+        # Il passo in corso alla fermata si chiude qui, col suo tempo: buttarlo
+        # alla ripresa perdeva la corsa interrotta, e a lavoro finito i passi
+        # sommavano meno del totale (29/10: Upscale 4:25 su 14:43).
+        self._fase(None)
         try:
             self.state["secondi_spesi"] = round(
                 float(self.state.get("secondi_spesi") or 0) + secondi, 1)

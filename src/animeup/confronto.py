@@ -1,10 +1,10 @@
 """Il confronto delle clip in un processo suo, come le lavorazioni.
 
-Prima le clip si elaboravano dentro la pagina: Streamlit riesegue lo script
-a ogni clic, e qualunque interazione (un clic, un ricaricamento, la finestra
-chiusa) uccideva il giro a meta'. Ora la pagina scrive la richiesta e lancia
-`animeup compare`, che lavora staccato dalla sessione e racconta a che punto
-e' in `stato.json`; la pagina si limita a rileggerlo.
+Nella 1.x le clip si elaboravano dentro la pagina web, e qualunque
+interazione (un clic, un ricaricamento, la finestra chiusa) uccideva il giro
+a meta'. Ora chi lo chiede scrive la richiesta e lancia `animeup compare`, che
+lavora staccato e racconta a che punto e' in `status.json`; chi l'ha chiesto
+si limita a rileggerlo.
 
 Un confronto alla volta. Tutto vive in `cache/compare/`:
 

@@ -484,10 +484,8 @@ def animation(plan: Plan, candidate: Candidate, dest: Path, *, width: int = 360,
     `filter_complex`, ffmpeg continua a decodificare fino alla fine del file:
     misurati 35.7 secondi per due secondi e mezzo di spezzone, contro 1.1.
 
-    Il ciclo lo mette Streamlit: non con l'attributo `loop` del tag (che
-    infatti resta falso, e a guardare solo il DOM si conclude il contrario)
-    ma con un ascoltatore sull'evento `ended` che riporta indietro il tempo e
-    riparte. Quindi qui basta un giro solo dello spezzone.
+    Il ciclo lo mette chi lo riproduce: qui basta un giro solo dello
+    spezzone.
     """
     p = paths or PATHS
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -672,8 +670,8 @@ def render(
         if not any(frames.glob("*.png")):
             return result
 
-        # Toccare una spunta mentre il Confronto lavora fa ripartire lo
-        # script di Streamlit, e il giro muore a meta' (successo). La
+        # Nella 1.x toccare una spunta mentre il Confronto lavorava faceva
+        # ripartire la pagina web, e il giro moriva a meta' (successo). La
         # difesa e' rendere il giro RIPRENDIBILE: ogni variante si scrive
         # in modo atomico (temp + rename: se il file esiste, e' intero) e
         # le varianti gia' prodotte con questi parametri si riusano dopo

@@ -225,6 +225,8 @@ def run_cmd(
         help=t("cli.run.catena_inizio"))] = 0,
     lancio: Annotated[str, typer.Option("--launch", hidden=True,
         help=t("cli.run.lancio"))] = "",
+    sovrascrivi: Annotated[bool, typer.Option("--overwrite", hidden=True,
+        help=t("cli.run.sovrascrivi"))] = False,
 ) -> None:
     """Esegue la lavorazione completa."""
     from . import taratura as taratura_
@@ -294,7 +296,11 @@ def run_cmd(
     gia_lavorato = pausa_prima
     # `uscita_esiste` e non `output.exists()`: riconosce anche il nome
     # che il file aveva prima della distinzione upscale/supersampling.
-    da_fare = [p for p in plans if not p.uscita_esiste]
+    # `--overwrite` (Rifai nell'app, confermato dall'utente): il video gia'
+    # fatto non fa saltare il file, e il nuovo prende il suo posto.
+    def gia_fatto(p) -> bool:
+        return p.uscita_esiste and not sovrascrivi
+    da_fare = [p for p in plans if not gia_fatto(p)]
     # Le pause fra un file e l'altro sono tempo che passa davvero, e il
     # totale a schermo le ignorava: con dieci file e cinque minuti di
     # respiro sono quarantacinque minuti che il marcatore di catena contava
@@ -367,7 +373,7 @@ def run_cmd(
     numero = catena_inizio
     try:
         for indice, plan in enumerate(plans):
-            if plan.uscita_esiste:
+            if gia_fatto(plan):
                 dire(t("cli.run.gia_presente", nome=plan.output.name), "dim")
                 continue
 
@@ -376,7 +382,7 @@ def run_cmd(
             # il prossimo, e quanti ne restano.
             numero += 1
             _scrivi_catena(numero, totale_catena, plan,
-                           [p for p in plans[indice:] if not p.uscita_esiste],
+                           [p for p in plans[indice:] if not gia_fatto(p)],
                            programma=plans, pausa_minuti=pausa,
                            # La pausa di QUESTO file non è ancora stata
                            # fatta: il marcatore si scrive prima (due righe
@@ -655,77 +661,12 @@ def test() -> None:
     raise typer.Exit(esito.returncode)
 
 
-@app.command(help=t("cli.ui.aiuto"))
-def ui(
-    porta: Annotated[int, typer.Option("--port", help=t("cli.ui.porta"))] = 8899,
-    rete: Annotated[bool, typer.Option("--network", help=t("cli.ui.rete"))] = False,
-    senza_browser: Annotated[bool, typer.Option("--no-browser", help=t("cli.ui.senza_browser"))] = False,
-) -> None:
-    """Apre l'interfaccia nel browser.
-
-    Esisteva ed era raggiungibile solo sapendo a memoria la riga di streamlit:
-    su un secondo Mac significava non trovarla affatto.
-    """
-    import os
-
-    # L'interfaccia sta accanto al CODICE. Cercandola sotto `PATHS.root` non si
-    # trovava quando l'utente punta ANIMEUP_ROOT a una cartella di soli dati —
-    # configurazione che il lanciatore sostiene apposta.
-    codice = Path(__file__).resolve().parents[2]
-    app_py = codice / "ui" / "app.py"
-    if not app_py.is_file():
-        dire(t("cli.ui.non_trovata", percorso=app_py), "red")
-        raise typer.Exit(1)
-
-    # Una porta già occupata quasi sempre significa una sessione VECCHIA
-    # rimasta aperta, e va detto invece di lasciar fallire streamlit con un
-    # messaggio suo. Il caso è insidioso perché Streamlit ricarica solo
-    # `ui/app.py`: i moduli importati restano quelli caricati all'avvio,
-    # quindi una sessione di ore prima mostra errori su codice che nel
-    # frattempo è cambiato — ed è successo davvero.
-    import socket
-    with socket.socket() as s:
-        s.settimeout(0.4)
-        occupata = s.connect_ex(("127.0.0.1", porta)) == 0
-    if occupata:
-        dire(t("cli.ui.occupata", porta=porta), "yellow")
-        dire(t("cli.ui.vecchia"), "yellow")
-        console.print(f"\n  [bold]lsof -ti :{porta} | xargs kill[/bold]\n")
-        dire(t("cli.ui.altra_porta", comando=f"./animeup ui --port {porta + 1}"),
-             "dim")
-        raise typer.Exit(1)
-
-    console.print(t("cli.ui.indirizzo",
-                    url=f"[bold]http://localhost:{porta}[/bold]"))
-    # Si SOSTITUISCE il processo invece di generarne uno figlio: con un figlio,
-    # un SIGTERM al padre lo lasciava vivo e in ascolto sulla porta, e il
-    # riavvio successivo falliva. Senza padre non ci sono orfani.
-    os.environ["ANIMEUP_ROOT"] = str(PATHS.root)
-    # Streamlit legge il tema da `.streamlit/` nella cartella CORRENTE: si
-    # parte da quella del programma, da qualunque posto si sia lanciati (l'app
-    # per macOS non parte da li').
-    os.chdir(codice)
-    os.execv(sys.executable, [
-        sys.executable, "-m", "streamlit", "run", str(app_py),
-        "--server.port", str(porta),
-        "--server.headless", "true" if senza_browser else "false",
-        # Di fabbrica solo da questo Mac: prima il server rispondeva anche
-        # agli altri dispositivi della rete, cioe' chiunque in casa (o in un
-        # wifi pubblico) poteva avviare e fermare lavorazioni.
-        "--server.address", "0.0.0.0" if rete else "127.0.0.1",
-        "--browser.gatherUsageStats", "false",
-        # Niente barra da sviluppatore di Streamlit («Deploy», menu): per chi
-        # usa AnimeUp sono pulsanti che non portano da nessuna parte.
-        "--client.toolbarMode", "minimal",
-    ])
-
-
 @app.command(name="compare", hidden=True, help=t("cli.compare.aiuto"))
 def compare() -> None:
     """Il confronto delle clip chiesto dall'interfaccia (vedi `confronto`).
 
-    Nascosto: lo lancia la pagina Confronto, staccato dalla sessione, cosi'
-    un clic o un ricaricamento non lo interrompono piu'.
+    Nascosto: lo lancia `confronto` come processo staccato, cosi' chi lo ha
+    chiesto puo' chiudersi senza interromperlo.
     """
     from . import confronto
     from .processi import tieni_sveglio

@@ -110,6 +110,7 @@
   "cli.run.pausa_prima": "Rest BEFORE the first file too: the interface uses it for the commands after the first one in a chain.",
   "cli.run.catena_totale": "How many files the whole chain has (for the interface's \"file N of M\"): the UI passes it when it splits a launch into several commands. 0 = only this command's files.",
   "cli.run.catena_inizio": "How many files of the chain come BEFORE this command.",
+  "cli.run.sovrascrivi": "Overwrite videos already made instead of skipping them (Redo in the app).",
   "cli.run.lancio": "Label shared by all the commands of one launch: it's used to put the summary back together when the interface splits a queue into several commands. Empty = a standalone command.",
   "cli.run.di_cui_pause": ", including {pause} of breaks between files",
   "cli.run.saltati.uno": "{n} already done, won't be redone",

@@ -16,6 +16,7 @@ deduplica inclusi.
 from __future__ import annotations
 
 import json
+import os
 import re
 import time
 from dataclasses import dataclass
@@ -38,6 +39,15 @@ _MODELLI_LEGGIBILI = (
     ("conservative", "cugan-conservative"),
     ("no-denoise", "cugan"),
 )
+
+
+def _nato(file: Path) -> float | None:
+    """Quando il file e' stato creato (macOS lo sa), o None."""
+    try:
+        st = file.stat()
+    except OSError:
+        return None
+    return getattr(st, "st_birthtime", None) or st.st_ctime
 
 
 def _frazione_pacchetti(file: Path, su_totale: int) -> float | None:
@@ -93,6 +103,9 @@ class StatoLavoro:
     # "codifica" (l'ultimo blocco sta passando in x265) oppure "montaggio"
     # (il file finale .inlavorazione sta crescendo in OUTPUT). Vuoto altrove.
     sottopasso: str = ""
+    # Quando e' nato il segmento in scrittura: l'inizio della codifica in
+    # corso, per dire quanto le manca dalla sua percentuale (29/10).
+    codifica_da: float | None = None
 
     @property
     def frazione(self) -> float:
@@ -124,8 +137,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
         if not lock.is_file() or not _processo_vivo(lock):
             return None
         frames_dir = cartella / "frames"
-        estratti = (sum(1 for f in frames_dir.glob("*.png"))
-                    if frames_dir.is_dir() else 0)
+        estratti = _conta_png(frames_dir)
         nome = _CODA_DIR.sub("", cartella.name)
         # Il totale sta nella ricetta (parametri.json), scritta PRIMA che
         # l'estrazione parta: senza, "5632 fotogrammi estratti" non dice
@@ -216,6 +228,13 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
         fase = "elaborazione"
     elif estratti and totale and estratti < totale:
         fase, fatti = "estrazione", estratti
+    elif not estratti:
+        # `extracted` si registra solo a estrazione FINITA, ma state.json
+        # esiste da subito (i tempi delle fasi lo salvano all'avvio): senza
+        # questo ramo un'estrazione di minuti compariva come «upscale 0 di
+        # 33.325» (segnalato dall'utente). I PNG in frames/ sono il vero
+        # avanzamento, come nel ramo senza state.json.
+        fase, fatti = "estrazione", _conta_png(cartella / "frames")
     elif (cartella / FILE_CONFRONTO).is_file() and not (cartella / "dedup.json").is_file():
         # Fra estrazione e upscale: ffmpeg confronta ogni fotogramma col
         # precedente per trovare quelli ripetuti. Minuti di CPU a GPU ferma
@@ -238,9 +257,9 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
     # filesystem permette di DIRLO invece di sembrare rotti.
     if fase == "elaborazione":
         for dentro in cartella.glob("chunk*-in"):
-            n_in = sum(1 for _ in dentro.glob("*.png"))
+            n_in = _conta_png(dentro)
             su = cartella / (dentro.name[:-3] + "-up")
-            if n_in and sum(1 for _ in su.glob("*.png")) >= n_in:
+            if n_in and _conta_png(su) >= n_in:
                 fase = "codifica blocco"
                 break
 
@@ -257,7 +276,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
     registro = _registro_di(nome, logs)
 
     b_fatti = b_tot = b_n = b_tutti = 0
-    if blocco and totale and fatti < totale and fase != "deduplica":
+    if blocco and totale and fatti < totale and fase not in ("deduplica", "estrazione"):
         b_n = n_segmenti + 1
         b_tutti = -(-totale // blocco)          # arrotonda in su
         b_tot = min(blocco, totale - fine_segmenti)
@@ -269,12 +288,14 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
     # dall'utente, e coerente col principio "nessun numero inventato".
     codifica = 0.0
     sottopasso = ""
+    codifica_da = None
     if fase == "codifica blocco" and b_tot:
         in_scrittura = (cartella / "segments" /
                         f"seg{fine_segmenti:08d}-{fine_segmenti + b_tot:08d}.mkv")
         frazione = _frazione_pacchetti(in_scrittura, b_tot)
         if frazione is not None:
             codifica = frazione
+        codifica_da = _nato(in_scrittura)
 
     # La fase finale ha due sottopassi, entrambi misurabili con la stessa
     # tecnica dei pacchetti contati (chiesta dall'utente: "anche in codifica
@@ -308,6 +329,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
             frazione = _frazione_pacchetti(in_scrittura, resto)
             if frazione is not None:
                 codifica = frazione
+            codifica_da = _nato(in_scrittura)
         else:
             sottopasso = "montaggio"
     return StatoLavoro(cartella=cartella, nome=nome, sorgente=sorgente,
@@ -318,7 +340,7 @@ def _leggi(cartella: Path, logs: Path) -> StatoLavoro | None:
                        blocco_fatti=b_fatti, blocco_totale=b_tot,
                        blocco_n=b_n, blocchi_totali=b_tutti, blocco_dim=blocco,
                        codifica_frazione=codifica,
-                       sottopasso=sottopasso)
+                       sottopasso=sottopasso, codifica_da=codifica_da)
 
 
 def _registro_di(nome: str, logs: Path) -> Path | None:
@@ -339,6 +361,20 @@ def _registro_di(nome: str, logs: Path) -> Path | None:
         return None
     candidati.sort(key=lambda f: f.stat().st_mtime, reverse=True)
     return candidati[0] if candidati else None
+
+
+def _conta_png(cartella: Path) -> int:
+    """Quanti PNG ha una cartella, senza costruire un Path per ciascuno.
+
+    Durante l'estrazione `frames/` arriva a decine di migliaia di file, spesso
+    su un disco esterno: col glob ogni giro dell'elenco costava secondi, e il
+    motore restava indietro al punto che l'app sembrava ferma (successo).
+    """
+    try:
+        with os.scandir(cartella) as voci:
+            return sum(1 for v in voci if v.name.endswith(".png"))
+    except OSError:
+        return 0
 
 
 def _normalizza(testo: str) -> str:
@@ -539,6 +575,34 @@ def residuo_coda(catena: dict | None, resto_file: float | None,
     ora = adesso if adesso is not None else time.time()
     passato = max(0.0, ora - (_numero(catena.get("scritto")) or ora))
     return (resta_min - passato, resta_max - passato)
+
+
+def fine_ferma(prima: dict | None, centro: float, mezzo: float, adesso: float,
+               chiave: object = None) -> dict:
+    """L'ora di fine da MOSTRARE: {"fine", "mezzo", "quando", "chiave"}.
+
+    La stima nuova arriva a ogni giro (circa un secondo) e il ritmo misurato
+    oscilla: l'ora di fine saltava di qualche minuto ogni secondo e sembrava
+    inaffidabile (29/10). Si tiene quella mostrata finche' la nuova non se ne
+    allontana davvero:
+
+    - uno scarto piccolo (sotto il minuto, o il 3% di quanto manca) non la
+      cambia mai;
+    - uno scarto vero la cambia, ma al massimo una volta al minuto;
+    - uno scarto grande (dieci minuti, o il 15% di quanto manca: un file
+      finito prima, un passo molto piu' lento) la cambia subito.
+
+    `chiave` identifica la coda: una coda nuova riparte dalla sua stima.
+    """
+    if (not isinstance(prima, dict) or prima.get("chiave") != chiave
+            or not isinstance(prima.get("fine"), (int, float))):
+        return {"fine": centro, "mezzo": mezzo, "quando": adesso, "chiave": chiave}
+    resta = max(0.0, centro - adesso)
+    scarto = abs(centro - prima["fine"])
+    passato = adesso - float(prima.get("quando") or 0)
+    if scarto >= max(600.0, 0.15 * resta) or (scarto >= max(60.0, 0.03 * resta) and passato >= 60):
+        return {"fine": centro, "mezzo": mezzo, "quando": adesso, "chiave": chiave}
+    return prima
 
 
 def dedup_esatta(cartella: Path) -> tuple[float, int] | None:

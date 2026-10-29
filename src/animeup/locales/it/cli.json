@@ -110,6 +110,7 @@
   "cli.run.pausa_prima": "Riposa anche PRIMA del primo file: lo usa l'interfaccia per i comandi successivi al primo di una catena.",
   "cli.run.catena_totale": "Quanti file conta l'intera catena (per il \"file N di M\" dell'interfaccia): lo passa la UI quando spezza il lancio in più comandi. 0 = solo i file di questo comando.",
   "cli.run.catena_inizio": "Quanti file della catena vengono PRIMA di questo comando.",
+  "cli.run.sovrascrivi": "Sovrascrive i video già fatti invece di saltarli (Rifai nell'app).",
   "cli.run.lancio": "Etichetta comune a tutti i comandi di uno stesso lancio: serve a rimettere insieme il resoconto quando l'interfaccia spezza una coda in più comandi. Vuota = comando a sè.",
   "cli.run.di_cui_pause": ", di cui {pause} di pause fra un file e l'altro",
   "cli.run.saltati.uno": "{n} già presente, non verrà rifatto",

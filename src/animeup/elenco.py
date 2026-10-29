@@ -6,7 +6,7 @@ restano dove sono. L'elenco vive nello stato (`records/files.json`): id,
 percorso e ordine. Le analisi restano nella cache di sempre
 (`library.cached_report`), quindi un file gia' analizzato non si rifa'.
 
-La coda delle analisi era `Analizzatore` dentro `ui/app.py`: qui e' del
+La coda delle analisi era `Analizzatore` nell'interfaccia web della 1.x: qui e' del
 motore, gira in un thread, un file alla volta (ogni analisi decodifica il
 video per intero: due insieme si rubano il disco e non finiscono prima), e
 racconta cosa fa con degli eventi (`file.added`, `analysis.started`,
@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 from typing import Callable
 
-from . import library
+from . import impostazioni, library
 from .i18n import t
 from .paths import PATHS
 
@@ -177,6 +177,10 @@ class Elenco:
                     voce["model"] = v["model"]
                 if v.get("height") in (720, 1080, 1440, 2160):
                     voce["height"] = v["height"]
+                # La cartella dei video finiti scelta quando il file e' entrato
+                # (senza: accanto all'originale, come prima che si potesse scegliere).
+                if isinstance(v.get("finished_folder"), str) and v["finished_folder"].startswith("/"):
+                    voce["finished_folder"] = v["finished_folder"]
                 fuori.append(voce)
         return fuori
 
@@ -192,7 +196,8 @@ class Elenco:
         p = Path(voce["path"])
         fuori: dict = {"id": voce["id"], "path": voce["path"], "name": p.name,
                        "added": voce["added"], "dedup_unmeasurable": bool(voce.get("no_dedup")),
-                       "model": voce.get("model"), "height": voce.get("height")}
+                       "model": voce.get("model"), "height": voce.get("height"),
+                       "finished_folder": voce.get("finished_folder")}
         try:
             fuori["size"] = p.stat().st_size
             esiste = True
@@ -257,6 +262,9 @@ class Elenco:
                     gia += 1
                     continue
                 voce = {"id": ident, "path": str(f), "added": time.time()}
+                # Come HandBrake: la destinazione si fissa all'ingresso in Coda.
+                if finiti := impostazioni.cartella_finiti():
+                    voce["finished_folder"] = str(finiti)
                 if ripristina and ident in tolte:
                     voce = {**tolte.pop(ident), "path": str(f)}
                 self._voci.append(voce)

@@ -1,7 +1,7 @@
 """La coda delle lavorazioni per l'app nativa: avvio, stato, pausa, stop.
 
-Era dentro `ui/app.py` (`_avvia`, `_riprendi`, `_ferma`, `_pausa`). La
-lavorazione resta quella di sempre: un `animeup run` staccato (una shell con
+Era dentro l'interfaccia web della 1.x (`_avvia`, `_riprendi`, `_ferma`,
+`_pausa`). La lavorazione resta quella di sempre: un `animeup run` staccato (una shell con
 un comando per gruppo di modello e altezza, in sequenza), che sopravvive
 all'app. Qui si lancia, si legge (con `monitor`) e si comanda con i segnali e
 i marcatori che la CLI conosce:
@@ -90,24 +90,27 @@ def avvia(voci: list[dict], *, ricetta: dict | None = None) -> dict:
         cfg = {**cfg, **{k: ricetta[k] for k in ("altezza", "crf", "preset", "disco",
                                                   "dedup", "denoise", "forza") if k in ricetta}}
     from . import piani
-    gruppi: dict[tuple[str, int], list[dict]] = {}
+    gruppi: dict[tuple[str, int, str, bool], list[dict]] = {}
     for v in voci:
         if ricetta and ricetta.get("modello"):
             modello = ricetta["modello"]
         else:
-            pl = piani.piano(Path(v["path"]), cfg, modello=v.get("model"), altezza=v.get("height"))
+            pl = piani.piano(Path(v["path"]), cfg, modello=v.get("model"), altezza=v.get("height"),
+                             cartella_finiti=v.get("finished_folder"))
             modello = pl.get("model")
             if not modello:
                 raise ErroreCoda("no_plan", pl.get("error") or Path(v["path"]).name)
         altezza = (ricetta or {}).get("altezza") or v.get("height") or cfg["altezza"]
-        gruppi.setdefault((modello, int(altezza)), []).append(v)
+        # Un gruppo per cartella dei video finiti: ogni file va dove diceva quando e' entrato in Coda.
+        # E uno a parte per i file da rifare sovrascrivendo il video fatto (Rifai, confermato).
+        gruppi.setdefault((modello, int(altezza), v.get("finished_folder") or "", bool(v.get("overwrite"))), []).append(v)
 
     lanciatore = code_root() / "animeup"
     totale = sum(len(g) for g in gruppi.values())
     etichetta = f"{int(time.time())}-{os.getpid()}"
     comandi, precedenti = [], 0
-    for (modello, altezza), gruppo in gruppi.items():
-        c = [str(lanciatore), "run", "--yes", "--launch", etichetta,
+    for (modello, altezza, finiti, sovrascrivi), gruppo in gruppi.items():
+        c = ["env", f"ANIMEUP_FINITI={finiti}", str(lanciatore), "run", "--yes", "--launch", etichetta,
              "--height", str(altezza), "--crf", str(cfg["crf"]), "--preset", cfg["preset"],
              "--model", modello, "--disk", str(cfg["disco"])]
         if not cfg["dedup"]:
@@ -122,6 +125,8 @@ def avvia(voci: list[dict], *, ricetta: dict | None = None) -> dict:
             c.append("--denoise")
         if cfg.get("forza"):
             c.append("--force")
+        if sovrascrivi:
+            c.append("--overwrite")
         precedenti += len(gruppo)
         c += [v["path"] for v in gruppo]
         comandi.append(" ".join(shlex.quote(a) for a in c))
@@ -154,6 +159,10 @@ def riprendi(voce: dict) -> dict:
             ricetta = su_disco.leggi(lav.cartella / "parameters.json")
         except (OSError, ValueError):
             ricetta = {}
+    # Riprendere un lavoro vuol dire finirlo: se il suo video esiste gia' e' un
+    # Rifai fermato a meta', e il nuovo prende il suo posto come era stato deciso.
+    if lav is not None:
+        voce = {**voce, "overwrite": True}
     return avvia([voce], ricetta=ricetta if isinstance(ricetta, dict) else None)
 
 
@@ -353,10 +362,13 @@ def _norm(nome: str) -> str:
     return monitor._normalizza(Path(nome).stem)
 
 
-def _lavoro_di(voce: dict):
+def _lavoro_di(voce: dict, lavori: list | None = None):
+    """Il lavoro di una voce. `lavori`: una lettura di WORK gia' fatta, da
+    passare quando si guardano piu' voci di fila — rileggere tutte le cartelle
+    per ogni riga, durante un'estrazione, bloccava il motore per secondi."""
     nome = Path(voce["path"]).name
     chiave = _norm(nome)
-    for lav in monitor.lavori(paths_lavoro()):
+    for lav in (lavori if lavori is not None else monitor.lavori(paths_lavoro(), recente=1.0)):
         if lav.sorgente and lav.sorgente == nome:
             return lav
         if _norm(lav.nome) == chiave:
@@ -364,14 +376,25 @@ def _lavoro_di(voce: dict):
     return None
 
 
-# Quote della barra per fase (come la barra a pezzi dei board): estrazione,
-# fotogrammi ripetuti, upscale (diviso in blocchi), montaggio.
-QUOTE = {"extract": 0.04, "dedup": 0.02, "upscale": 0.90, "assemble": 0.04}
+# Quanto pesa ogni passo sul tempo del file, misurato su lavorazioni vere (29/10:
+# estrazione 2,7%, ripetuti 1,3%, upscale con le codifiche 96%, montaggio un secondo). L'app li scrive nei testi; la barra a pezzi ha
+# larghezze sue, piu' leggibili (RunStages.widths).
+QUOTE = {"extract": 0.03, "dedup": 0.02, "upscale": 0.94, "assemble": 0.01}
 FASI = {"estrazione": "extract", "deduplica": "dedup", "elaborazione": "upscale",
         "codifica blocco": "upscale", "codifica finale": "assemble"}
 
 
+def _codifica_finale(lav) -> bool:
+    """L'ultimo blocco che passa in x265: e' il suo turno di codifica, come quelli
+    fra un blocco e l'altro, e si conta nell'Upscale. Il Montaggio e' solo
+    l'unione dei segmenti (29/10: un file da un blocco restava al 99% per
+    tutta la codifica)."""
+    return lav.fase == "codifica finale" and lav.sottopasso == "codifica"
+
+
 def _frazione(lav) -> tuple[str, float]:
+    if _codifica_finale(lav):
+        return "upscale", QUOTE["extract"] + QUOTE["dedup"] + QUOTE["upscale"]
     fase = FASI.get(lav.fase, "upscale")
     f = lav.frazione
     if fase == "extract":
@@ -382,6 +405,50 @@ def _frazione(lav) -> tuple[str, float]:
         return fase, QUOTE["extract"] + QUOTE["dedup"] + QUOTE["upscale"] * f
     sub = lav.codifica_frazione if lav.sottopasso != "montaggio" else 0.5 + 0.5 * f
     return fase, 1 - QUOTE["assemble"] + QUOTE["assemble"] * min(1.0, max(0.0, sub))
+
+
+# L'ora di fine mostrata, tenuta ferma tra un giro e l'altro (monitor.fine_ferma).
+_fine: dict | None = None
+
+
+def _str(percorso: Path | None) -> str | None:
+    return str(percorso) if percorso else None
+
+
+def _inizio_passo(lav, fase: str, adesso: float) -> float | None:
+    """Da quando corre il passo in corso, contando le corse precedenti: l'app
+    ne ricava il tempo trascorso del passo, secondo per secondo."""
+    try:
+        durate = su_disco.leggi(lav.cartella / "state.json").get("durate") or {}
+    except (OSError, ValueError, AttributeError):
+        return None
+    passo = durate.get(fase) if isinstance(durate, dict) else None
+    if not isinstance(passo, dict) or passo.get("da") is None:
+        return None
+    try:
+        return float(passo["da"]) - float(passo.get("s") or 0)
+    except (TypeError, ValueError):
+        return None
+
+
+def _ripreso_dopo(lav, esito: dict) -> bool:
+    """Un lavoro interrotto nato DOPO il video fatto (Rifai fermato a meta'):
+    il file e' interrotto e riprendibile, non fatto, anche se il video
+    vecchio c'e' ancora (29/10: tornava «fatto» e il lavoro spariva)."""
+    if lav is None:
+        return False
+    try:
+        nato = (lav.cartella / "parameters.json").stat().st_mtime
+    except OSError:
+        return False
+    return nato > float(esito.get("quando") or 0)
+
+
+def _da_rifare(voce: dict, esito: dict, lancio: dict, vivo: bool) -> bool:
+    """Un file finito rimesso in Coda (Rifai) e lanciato DOPO il suo esito:
+    finche' non tocca a lui e' in coda, non fatto."""
+    return bool(vivo and voce["id"] in (lancio.get("ids") or [])
+                and float(lancio.get("started") or 0) > float(esito.get("quando") or 0))
 
 
 def stato(voci: list[dict]) -> dict:
@@ -404,36 +471,70 @@ def stato(voci: list[dict]) -> dict:
     live = None
     for v in voci:
         nome = Path(v["path"]).name
-        lav = _lavoro_di(v)
+        lav = _lavoro_di(v, lavori)
         e = esiti.get(monitor._normalizza(nome))
         voce: dict = {"id": v["id"]}
         if lav is not None and lav.vivo:
             fase, frazione = _frazione(lav)
             sosp = monitor.sospeso(lav)
             ritmo = monitor.andatura(_campioni.get(lav.cartella.name, [])) or _ritmo_semplice(lav, fase, sosp, adesso)
-            resto = monitor.tempo_che_resta(
-                lav.fatti, lav.totale, ritmo, blocchi_totali=lav.blocchi_totali,
-                blocco_n=lav.blocco_n, blocco_totale=lav.blocco_dim or lav.blocco_totale,
-                turno=monitor.turno_misurato(_stati, lav.cartella.name)) if fase == "upscale" else None
+            # Con almeno un blocco finito in questa corsa vale la sua durata
+            # mediana, come in 1.6 (`monitor.ritmo_blocchi`): il ritmo dell'ultimo
+            # minuto sbanda di ore e tace nei turni di codifica, e la riga
+            # perdeva il tempo che resta (29/10).
+            misura = monitor.ritmo_blocchi(lav.cartella) if fase == "upscale" and lav.totale else None
+            if misura is not None:
+                resto = monitor.resto_da_blocchi(misura, lav.totale, adesso, lav.blocco_dim)
+            else:
+                resto = monitor.tempo_che_resta(
+                    lav.fatti, lav.totale, ritmo, blocchi_totali=lav.blocchi_totali,
+                    blocco_n=lav.blocco_n, blocco_totale=lav.blocco_dim or lav.blocco_totale,
+                    turno=monitor.turno_misurato(_stati, lav.cartella.name)) if fase == "upscale" else None
+            # Estrazione e fotogrammi ripetuti hanno un ritmo e un totale
+            # misurati, ma non dicono quanto resta al FILE (`left` regge anche
+            # l'ora di fine della coda): si dice quanto resta al passo.
+            passo = ((lav.totale - lav.fatti) / ritmo
+                     if fase in ("extract", "dedup") and ritmo and lav.totale > lav.fatti else None)
+            # Un turno di codifica: blocco e percentuale veri. Per l'ultimo, se i blocchi
+            # finiti non dicono gia' quanto resta, lo dice la percentuale dal suo inizio.
+            codifica = lav.fase == "codifica blocco" or _codifica_finale(lav)
+            blocchi = lav.blocchi_totali or (-(-lav.totale // lav.blocco_dim) if lav.blocco_dim else 0)
+            if _codifica_finale(lav) and not resto and lav.codifica_da and lav.codifica_frazione > 0.03:
+                speso = max(0.0, adesso - lav.codifica_da)
+                resto = speso * (1 - lav.codifica_frazione) / lav.codifica_frazione
             voce.update({
                 "state": "paused" if sosp else "running",
                 "stage": fase, "fraction": round(frazione, 4),
-                "chunk": lav.blocco_n, "chunks": lav.blocchi_totali,
+                "chunk": blocchi if _codifica_finale(lav) else lav.blocco_n, "chunks": blocchi,
+                "encoding": codifica or None,
+                "encode_fraction": round(lav.codifica_frazione, 3) if codifica else None,
                 "chunk_done": lav.blocco_fatti, "chunk_total": lav.blocco_totale,
                 "frames_done": lav.fatti, "frames_total": lav.totale,
                 "fps": round(ritmo, 2) if ritmo else None,
                 "left": round(resto) if resto else None,
+                # Il passo in corso: quanto gli manca (l'upscale, codifiche comprese, e'
+                # quasi tutto il file) e da quando corre, sommando le corse (29/10).
+                "step_left": round(passo) if passo else (round(resto) if fase == "upscale" and resto else None),
+                "step_started": _inizio_passo(lav, fase, adesso),
                 "elapsed": round(max(0, adesso - (lav.avviato or adesso))),
+                # L'app conta i secondi da qui: dal giro del motore saltavano (29/10).
+                "started": lav.avviato,
                 "paused_since": (sosp or {}).get("da"),
                 "log": str(lav.registro) if lav.registro else None,
             })
             live = voce
         elif e and e.get("output_path") and Path(str(e["output_path"])).exists() \
-                and float(e.get("quando") or 0) >= float(v.get("added") or 0):
+                and float(e.get("quando") or 0) >= float(v.get("added") or 0) \
+                and not _da_rifare(v, e, lancio, lancio_vivo) \
+                and not _ripreso_dopo(lav, e):
             voce.update({"state": "done", "seconds": e.get("secondi"),
+                         # Le corse: un file ripreso somma il lavoro di tutte (pipeline).
+                         "runs": int(e.get("riprese") or 1),
                          "stages": e.get("fasi") or None,
                          "warnings": e.get("avvisi") or [], "defective": bool(e.get("difettosa")),
-                         "output": e.get("output_path")})
+                         "output": e.get("output_path"),
+                         # Il log porta il nome del video fatto, e resta dopo la fine (F6: Log).
+                         "log": _str(monitor._registro_di(Path(str(e["output_path"])).stem, p.job_logs))})
         elif lav is not None:
             voce.update({"state": "interrupted", "fraction": round(_frazione(lav)[1], 4),
                          "stage": FASI.get(lav.fase, "upscale"),
@@ -445,6 +546,19 @@ def stato(voci: list[dict]) -> dict:
             continue
         file_stati[v["id"]] = voce
 
+    # Fra il lancio e il lucchetto (avvio, lettura del sorgente, piano) il
+    # file che sta per partire non ha ancora una cartella: «in coda» lo
+    # faceva sembrare fermo per secondi (segnalato dall'utente). Il primo
+    # della lista ancora da fare, a lancio vivo e senza pausa fra i file,
+    # è quello che si sta preparando.
+    if lancio_vivo and live is None and riposo is None:
+        for i in lancio.get("ids") or []:
+            st = file_stati.get(i, {}).get("state")
+            if st == "queued":
+                file_stati[i]["starting"] = True
+            if st not in ("done", "interrupted"):
+                break
+
     in_corso = lancio_vivo or catena is not None or riposo is not None
     coda: dict = {"running": in_corso, "paused": bool(live and live.get("state") == "paused")}
     if in_corso:
@@ -455,8 +569,14 @@ def stato(voci: list[dict]) -> dict:
                      "ids": ids, "started": lancio.get("started")})
         residuo = monitor.residuo_coda(catena, live.get("left") if live else None, adesso)
         if residuo:
-            coda["left_min"], coda["left_max"] = max(0, residuo[0]), max(0, residuo[1])
-            coda["finish"] = adesso + max(0, (residuo[0] + residuo[1]) / 2)
+            # Fine e durate dall'ora tenuta ferma, cosi' scorrono con l'orologio invece di saltare.
+            global _fine
+            _fine = monitor.fine_ferma(_fine, adesso + max(0, (residuo[0] + residuo[1]) / 2),
+                                       max(0, (residuo[1] - residuo[0]) / 2), adesso,
+                                       chiave=lancio.get("started"))
+            coda["finish"] = _fine["fine"]
+            coda["left_min"] = max(0, _fine["fine"] - _fine["mezzo"] - adesso)
+            coda["left_max"] = max(0, _fine["fine"] + _fine["mezzo"] - adesso)
         if riposo:
             coda["resting_until"] = riposo[0]
     return {"queue": coda, "files": file_stati, "now": adesso}
@@ -482,8 +602,9 @@ def _ricetta(lav) -> dict | None:
 
 def sospeso_diverso(voci: list[dict]) -> dict | None:
     """Il primo file interrotto (o in pausa) partito con valori diversi."""
+    lavori = monitor.lavori(paths_lavoro(), recente=1.0)
     for v in voci:
-        lav = _lavoro_di(v)
+        lav = _lavoro_di(v, lavori)
         if lav is None or (lav.vivo and not monitor.sospeso(lav)):
             continue
         r = _ricetta(lav)

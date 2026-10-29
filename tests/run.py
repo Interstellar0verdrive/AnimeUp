@@ -742,19 +742,17 @@ def _() -> None:
         assert vecchio not in aiuto, f"{vecchio} ancora nell'aiuto"
 
 
-@caso("l'interfaccia non lancia due lavorazioni in parallelo")
+@caso("la coda non lancia due lavorazioni in parallelo")
 def _() -> None:
     """Un lotto con due modelli diversi faceva partire due `Popen` senza mai
     attendere: ognuna vedeva tutto il disco libero e insieme lo riempivano,
     contendendosi per giunta la stessa GPU."""
     import inspect
-    sorgente = (ROOT / "ui" / "app.py").read_text()
-    inizio = sorgente.index("def _avvia(")
-    corpo = sorgente[inizio:sorgente.index("\ndef ", inizio + 1)]
+    from animeup import coda
+    corpo = inspect.getsource(coda.avvia)
     assert corpo.count("Popen") == 1, \
-        "_avvia fa ancora una Popen per gruppo invece di accodarli"
+        "avvia fa ancora una Popen per gruppo invece di accodarli"
     assert '"; ".join' in corpo, "i gruppi non vengono messi in sequenza"
-    del inspect
 
 
 @caso("lo spazio impegnato da un'altra lavorazione viene contato")
@@ -1395,6 +1393,45 @@ def _() -> None:
         assert monitor.lavori(paths) == [], "un lucchetto morto genera righe"
 
 
+@caso("il monitoraggio vede l'estrazione anche con state.json già scritto")
+def _() -> None:
+    """I tempi delle fasi salvano state.json all'AVVIO dell'estrazione, ma
+    `extracted` arriva solo alla fine: la riga diceva «upscale del blocco 1,
+    0 di 33.325» mentre ffmpeg estraeva da minuti (successo davvero)."""
+    import json
+    import subprocess as sp
+
+    from animeup import monitor
+    from animeup.paths import Paths
+
+    with tempfile.TemporaryDirectory() as t:
+        paths = Paths(Path(t))
+        firma = ("ep.mkv|123||-fps_mode cfr -r 24/1|1000|up2x-no-denoise|2"
+                 "|1920|1080|x|y|slower|k|True|24/1")
+        d = paths.work / "ep 2026-01-01 abcdef01"
+        (d / "frames").mkdir(parents=True)
+        for n in range(1, 6):
+            (d / "frames" / f"{n:08d}.png").write_bytes(b"")
+        (d / "state.json").write_text(json.dumps(
+            {"signature": firma, "segments": [], "chunk": 300,
+             "durate": {"extract": {"s": 0.0, "da": 1.0}}}))
+        figlio = sp.Popen([sys.executable, "-c", "import time; time.sleep(30)", "animeup-finto"])
+        (d / "running.lock").write_text(str(figlio.pid))
+
+        lav = monitor.lavori(paths)[0]
+        assert lav.fase == "estrazione", lav.fase
+        assert (lav.fatti, lav.totale) == (5, 1000), (lav.fatti, lav.totale)
+        assert lav.blocco_n == 0, "durante l'estrazione non c'è un blocco in corso"
+
+        # A estrazione registrata si passa oltre (qui: upscale da iniziare).
+        (d / "state.json").write_text(json.dumps(
+            {"signature": firma, "segments": [], "chunk": 300, "extracted": 1000}))
+        assert monitor.lavori(paths)[0].fase == "elaborazione"
+
+        figlio.terminate()
+        figlio.wait()
+
+
 @caso("la pausa fra due file si dichiara su disco e scade da sola")
 def _() -> None:
     """Durante la pausa (`--pause`) nessun lucchetto esiste, ma la catena è
@@ -2018,60 +2055,6 @@ def _ordine_delle_stime():
 #  Lo stato di una riga di Lavorazione (audit del 2026-08-10)
 # ===========================================================================
 
-@caso("nessuna riga di Lavorazione può dire due cose diverse su se stessa")
-def _stato_riga_coerente():
-    """La tabella di verità delle quattro condizioni, ricostruita dal
-    sorgente dell'interfaccia e verificata riga per riga.
-
-    Ogni combinazione deve dare una chip, dei pulsanti e una decisione sulla
-    coda che non si contraddicono. Il difetto trovato: la riga diceva
-    "interrotto" con Riprendi e Scarta mentre la barra diceva "già lavorato,
-    per ora viene saltato", perché lo stesso giudizio era scritto in due
-    punti lontani con due condizioni diverse.
-    """
-    sorgente = (ROOT / "ui" / "app.py").read_text()
-    # Una variabile SOLA per il giudizio, usata da entrambe le meta'.
-    assert "gia_prodotta = archiviata and not interrotto" in sorgente
-    assert "risulta_fatta = fatta or gia_prodotta" in sorgente
-    assert sorgente.count("if gia_prodotta and chiave not in rifai_comunque") == 1
-    assert "archiviata and chiave not in rifai_comunque" not in sorgente
-    # Un'uscita difettosa non e' lavoro archiviato (la pagella si scrive lo
-    # stesso, col nome dell'uscita BUONA, mentre il file e' un .DEFECTIVE).
-    assert 'not esito.get("difettosa")' in sorgente
-    assert "elif difettosa:" in sorgente
-    # Riprendi senza referto leggeva `piano.model_key` su None.
-    assert "disabled=(gpu_occupata or piano is None" in sorgente
-    # Sulla riga conclusa con la cartella rimasta c'e' lo Scarta, mai il
-    # Riprendi: quello resta legato a `interrotto and not concluso`.
-    assert "if interrotto and (not concluso or scarta_in_conferma):" in sorgente
-
-    def stato(uscita, pagella, difetto, interrotto):
-        fatta = uscita
-        archiviata = pagella and not difetto
-        gia_prodotta = archiviata and not interrotto
-        risulta = fatta or gia_prodotta
-        rotta = pagella and difetto and not fatta
-        concluso = interrotto and fatta
-        chip = ("da rifare" if (rotta and not risulta) else
-                "fatto" if risulta else
-                "interrotto" if interrotto else "giudizio")
-        pulsanti = interrotto and not concluso
-        in_coda = (not fatta) and not gia_prodotta
-        # Le tre contraddizioni possibili.
-        assert not (chip == "interrotto" and not in_coda), "interrotto ma saltato"
-        assert not (chip == "fatto" and pulsanti), "fatto ma con Riprendi"
-        assert not (chip == "da rifare" and not in_coda), "da rifare ma saltato"
-
-    for uscita in (0, 1):
-        for pagella in (0, 1):
-            for difetto in (0, 1):
-                for interrotto in (0, 1):
-                    if difetto and not pagella:
-                        continue      # un difetto implica una pagella
-                    stato(uscita, pagella, difetto, interrotto)
-
-
-
 # ===========================================================================
 #  I thread di salvataggio, misurati per macchina (voce 28)
 # ===========================================================================
@@ -2315,6 +2298,64 @@ def _prova_thread_intera():
             taratura.salvataggio_predefinito()), per_thread
 
 
+@caso("una calibrazione nuova tiene le passate nello storico")
+def _() -> None:
+    """I dettagli della calibrazione si confrontano con una qualunque di
+    quelle fatte prima su questo Mac: salvarne una nuova non le butta."""
+    import json
+
+    from animeup import serve, taratura
+    from animeup.paths import Paths
+
+    with tempfile.TemporaryDirectory() as t_:
+        paths = Paths(Path(t_))
+        paths.logs.mkdir(parents=True)
+        mia = lambda q, v: {"quando": q, "mpxs": {"cugan": {"2": v}}, "id": taratura.macchina_id(),
+                            "chip": taratura.chip()}
+        # Una voce di prima dell'1.6.8, senza impronta, passa anche lei.
+        paths.taratura.write_text(json.dumps({"versione": 1, "macchine": {
+            taratura.chip(): {"quando": 1, "mpxs": {"cugan": {"2": 0.9}}}}}))
+        for q in range(2, 2 + taratura.STORICO_MASSIMO + 3):
+            taratura.salva(mia(q, 1.0 + q / 100), paths)
+        tutte = taratura.storico(paths)
+        assert [v["quando"] for v in tutte[:3]] == [16, 15, 14], [v["quando"] for v in tutte]
+        assert len(tutte) == 1 + taratura.STORICO_MASSIMO, len(tutte)
+        from animeup import su_disco
+        assert taratura.chip() not in su_disco.leggi(paths.taratura)["macchine"]
+
+        # Conservative non misurato a 3x e 4x: preso in prestito, non zero.
+        voce = serve._calibrazione_voce({"quando": 5, "mpxs": {"cugan": {"2": 1.0, "3": 0.9, "4": 0.8},
+                                                               "cugan-conservative": {"2": 1.0}}})
+        cons = next(m for m in voce["models"] if m["key"] == "cugan-conservative")
+        assert cons["borrowed"] == [3, 4] and set(cons["fps"]) == {"2"}, cons
+        assert cons["episode_seconds"], cons
+
+
+@caso("cambiare cartella di lavoro riporta lo spazio al massimo della regola")
+def _() -> None:
+    """Lo spazio scelto vale per il disco su cui era: spostata la cartella su
+    un disco con piu' (o meno) spazio, riparte dal tetto della regola li'.
+    Prima restava il numero vecchio — 51 GB su 277 liberi."""
+    from unittest import mock
+
+    from animeup import impostazioni
+    from animeup.paths import Paths
+
+    with tempfile.TemporaryDirectory() as t_:
+        piccolo, grande = Path(t_) / "piccolo", Path(t_) / "grande"
+        piccolo.mkdir(); grande.mkdir()
+        liberi = {str(piccolo): 59, str(grande): 277}
+        with mock.patch.object(impostazioni, "PATHS", Paths(Path(t_) / "stato")), \
+             mock.patch.object(impostazioni, "gb_liberi", lambda p: liberi.get(str(p), 500)):
+            impostazioni.aggiorna_native({"cartella_lavoro": str(piccolo)})
+            assert impostazioni.aggiorna_native({})["disco"] == impostazioni.MINIMO_SPAZIO_GB + 1
+            fatto = impostazioni.aggiorna_native({"cartella_lavoro": str(grande)})
+            assert fatto["disco"] == min(int(277 * 0.85), 277 - 40), fatto["disco"]
+            # Lo spazio scelto a mano resta finche' la cartella non cambia.
+            assert impostazioni.aggiorna_native({"disco": 120})["disco"] == 120
+            assert impostazioni.aggiorna_native({"lingua": "it"})["disco"] == 120
+
+
 @caso("la taratura prevede anche il passo dei thread di salvataggio")
 def _preventivo_col_passo_nuovo():
     from animeup import taratura
@@ -2406,8 +2447,8 @@ def _etichetta_del_lancio():
     assert (sorgente.index("etichetta = lancio or")
             < sorgente.index("if not plans:")), "identita' troppo tardi"
 
-    interfaccia = (ROOT / "ui" / "app.py").read_text()
-    assert '"--launch", etichetta_lancio' in interfaccia
+    from animeup import coda
+    assert '"--launch", etichetta' in inspect.getsource(coda.avvia)
 
 
 @caso("il tempo bruciato da un file fallito non diventa una pausa")
@@ -2900,6 +2941,11 @@ def _tempo_dai_blocchi_finiti():
         assert monitor.ritmo_blocchi(Path(t)) is None
     # arrivati oltre il totale non si promette tempo negativo
     assert monitor.tempo_che_resta(2100, 2000, 4.0) == 0.0
+    # e l'app 2.0 lo usa: il motore nativo l'aveva perso, e la riga restava
+    # senza tempo che resta nei turni di codifica (29/10)
+    sorgente = (ROOT / "src" / "animeup" / "coda.py").read_text()
+    assert "monitor.ritmo_blocchi(lav.cartella)" in sorgente and "monitor.resto_da_blocchi(" in sorgente, (
+        "coda.stato non calcola il tempo che resta dai blocchi finiti")
 
 
 @caso("il tempo che resta arriva a fine file, non a fine upscale")
@@ -2968,52 +3014,6 @@ def _turno_da_taratura():
     assert monitor.turno_da_taratura(810, 1920, 1080, 0.0) > 0
 
 
-@caso("il link della taratura vive DENTRO la sua riga di sidebar")
-def _taratura_nella_sidebar():
-    """Il pulsante che apre la taratura e' posizionato dal CSS a destra
-    della riga "Taratura", e quel CSS e' agganciato a
-    `[data-testid="stSidebar"]`: se la chiamata esce dal contenitore della
-    riga, il pulsante finisce in cima all'area principale, orfano della sua
-    etichetta, e chi cerca la taratura non la trova piu'.
-
-    E' successo davvero: una de-indentazione di quattro spazi durante un
-    lavoro sul CSS lo ha spostato, e ci e' voluto un giorno e la
-    segnalazione dell'utente per accorgersene — nessun test guardava dove
-    finiscono gli elementi.
-
-    Si verifica sull'ALBERO SINTATTICO, non sul testo: cosi' non passa una
-    riscrittura che sposta la chiamata mantenendo le stesse parole."""
-    import ast
-
-    albero = ast.parse((ROOT / "ui" / "app.py").read_text())
-
-    def chiave(nodo):
-        """La stringa passata come `key=` a questa chiamata, se c'e'."""
-        for kw in getattr(nodo, "keywords", []):
-            if kw.arg == "key" and isinstance(kw.value, ast.Constant):
-                return kw.value.value
-        return None
-
-    def contiene_bottone(nodo):
-        return any(isinstance(n, ast.Call) and chiave(n) == "apriTaratura"
-                   for n in ast.walk(nodo))
-
-    dentro = False
-    for nodo in ast.walk(albero):
-        if not isinstance(nodo, ast.With):
-            continue
-        # il `with` che apre il contenitore della riga della taratura
-        apre_la_riga = any(
-            isinstance(e.context_expr, ast.Call)
-            and chiave(e.context_expr) == "cTarRiga"
-            for e in nodo.items)
-        if apre_la_riga and contiene_bottone(nodo):
-            dentro = True
-            break
-    assert dentro, ("il pulsante della taratura non sta dentro il contenitore "
-                    "cTarRiga: finira' nell'area principale")
-
-
 @caso("la griglia dei thread di salvataggio arriva fino ai core della macchina")
 def _candidati_salvataggio():
     """Provare solo 2, 4, 6, 8 bastava sul Mac mini, dove il ritmo e' piatto
@@ -3053,38 +3053,6 @@ def _candidati_salvataggio():
     sorgente = (ROOT / "src" / "animeup" / "taratura.py").read_text()
     assert sorgente.count("candidati_salvataggio()") >= 2, sorgente.count(
         "candidati_salvataggio()")
-
-
-@caso("l'elenco dei sorgenti ha una cache sola, col tempo che dichiara")
-def _cache_dei_sorgenti():
-    """`load_library` aveva DUE `@st.cache_data` impilati, 30 secondi sopra
-    8: quello esterno catturava il risultato di quello interno, quindi il
-    tempo vero era 30 e un file appena messo in INPUT si faceva aspettare
-    quattro volte il tempo dichiarato nel commento.
-
-    Si verifica sull'albero sintattico, cosi' non basta riscrivere la riga
-    con altre parole per aggirarlo."""
-    import ast
-
-    albero = ast.parse((ROOT / "ui" / "app.py").read_text())
-    trovata = None
-    for nodo in ast.walk(albero):
-        if isinstance(nodo, ast.FunctionDef) and nodo.name == "load_library":
-            trovata = nodo
-            break
-    assert trovata is not None, "load_library non c'e' piu'"
-
-    cache = []
-    for d in trovata.decorator_list:
-        f = d.func if isinstance(d, ast.Call) else d
-        if isinstance(f, ast.Attribute) and f.attr.startswith("cache_"):
-            cache.append(d)
-    assert len(cache) == 1, f"{len(cache)} decoratori di cache impilati"
-    ttl = next((kw.value.value for kw in cache[0].keywords
-                if kw.arg == "ttl" and isinstance(kw.value, ast.Constant)), None)
-    # Corto per forza: e' il tempo massimo che un file nuovo in INPUT puo'
-    # restare invisibile a chi lo ha appena copiato.
-    assert ttl is not None and 0 < ttl <= 15, f"ttl {ttl}"
 
 
 @caso("un file gia' letto non viene riletto a ogni scansione")
@@ -3150,47 +3118,10 @@ def _scan_non_rilegge():
             library._METADATI.clear()
 
 
-@caso("«Consigliato per ciascuno» applica davvero il consigliato")
-def _consigliato_per_ciascuno():
-    """Era il RITIRO della scelta: ogni riga tornava al suo "vero", che su un
-    file gia' convertito e' il modello della pagella. Su una serie lavorata
-    ieri con animevideov3 il comando non cambiava niente — prometteva il
-    consigliato e restituiva lo storico.
-
-    Si verifica sull'albero sintattico che il ramo "auto" SCRIVA il modello
-    consigliato, invece di limitarsi a togliere il file dall'insieme delle
-    scelte."""
-    import ast
-
-    sorgente = (ROOT / "ui" / "app.py").read_text()
-    albero = ast.parse(sorgente)
-    fn = next((n for n in ast.walk(albero)
-               if isinstance(n, ast.FunctionDef)
-               and n.name == "_applica_modello_tutti"), None)
-    assert fn is not None, "_applica_modello_tutti non c'e' piu'"
-
-    # il ramo che confronta la scelta con "auto"
-    ramo = None
-    for nodo in ast.walk(fn):
-        if not isinstance(nodo, ast.If):
-            continue
-        for c in ast.walk(nodo.test):
-            if isinstance(c, ast.Constant) and c.value == "auto":
-                ramo = nodo
-                break
-        if ramo is not None:
-            break
-    assert ramo is not None, "il ramo 'auto' non c'e' piu'"
-
-    corpo = "".join(ast.dump(n) for n in ramo.body)
-    assert "recommend" in corpo, (
-        "il ramo 'auto' non chiama recommend: promette il consigliato e "
-        "restituisce altro")
-    # e non si limita a togliere dalla lista delle scelte
-    assert "discard" not in corpo or "add" in corpo, corpo[:200]
-
-    # il consigliato per un 720p e' CUGAN, non animevideov3: e' il caso da
-    # cui e' nata la segnalazione
+@caso("il consigliato per un 720p e' CUGAN, per un 400p animevideov3")
+def _consigliato_per_altezza():
+    """Il caso da cui e' nata la segnalazione su «Consigliato per ciascuno»:
+    su una serie a 720p il consigliato e' CUGAN, non animevideov3."""
     from animeup.models import recommend
     assert recommend(720).model == "cugan", recommend(720).model
     assert recommend(400).model == "animevideov3", recommend(400).model
@@ -3228,7 +3159,7 @@ def _quando_finisce():
 
 @caso("la versione e' scritta in un posto solo, e le due copie coincidono")
 def _versione_coerente():
-    """Il numero vive in `animeup.__version__`: CLI e interfaccia lo leggono
+    """Il numero vive in `animeup.__version__`: CLI e motore lo leggono
     da li'. `pyproject.toml` pero' ne tiene una copia sua, che e' l'unica che
     puo' divergere — ed e' proprio quella che finisce nel pacchetto."""
     import animeup
@@ -3237,79 +3168,6 @@ def _versione_coerente():
     riga = next(r for r in testo.splitlines() if r.startswith("version"))
     dichiarata = riga.split("=", 1)[1].strip().strip('"')
     assert dichiarata == animeup.__version__, (dichiarata, animeup.__version__)
-    # e nessuno se la riscrive a mano da qualche parte
-    interfaccia = (ROOT / "ui" / "app.py").read_text()
-    assert "from animeup import __version__" in interfaccia
-    assert f'v{animeup.__version__}"' not in interfaccia, "versione scritta a mano"
-
-
-@caso("l'interfaccia delega a monitor la finestra del ritmo")
-def _interfaccia_usa_la_funzione():
-    interfaccia = (ROOT / "ui" / "app.py").read_text()
-    assert "monitor.aggiorna_campioni(" in interfaccia
-    # e non tiene piu' una sua copia della regola
-    assert "del serie[:-30]" not in interfaccia
-
-
-@caso("nessun posizionamento ancorato: i due motori non lo fanno uguale")
-def _niente_ancoraggio():
-    """L'ancoraggio CSS (`anchor-name`, `position-anchor`, `anchor()`) e'
-    stato tolto del tutto, e non per gusto: misurato dentro Safari 26.6 con
-    gli Apple Events, su venti fumetti undici finivano al posto giusto e
-    NOVE a seicento pixel di distanza, piantati rispetto alla finestra. Su
-    Chrome gli stessi venti erano tutti a scarto zero.
-
-    Nessuna guardia `@supports` puo' separare i due casi: Safari dichiara di
-    supportare tutte e sette le proprieta' dell'ancoraggio, e infatti la
-    guardia irrobustita non cambio' niente.
-
-    Il ripiego — posizione assoluta e meta' larghezza di spostamento — e'
-    stato misurato a scarto ZERO in entrambi i motori. Costa il taglio dei
-    fumetti delle righe in cima all'area che scorre; in cambio nessun
-    fumetto finisce dall'altra parte dello schermo.
-
-    Se qualcuno rimette l'ancoraggio, questo test glielo ricorda."""
-    import re
-
-    css = (ROOT / "ui" / "app.py").read_text()
-    vive = []
-    for riga in css.splitlines():
-        nuda = riga.strip()
-        if nuda.startswith(("*", "/*", "#")):
-            continue                      # i commenti raccontano la storia
-        if re.search(r"(anchor-name:|position-anchor:|anchor\(|anchor-center)", nuda):
-            vive.append(nuda[:70])
-    assert not vive, ("e' tornato il posizionamento ancorato, che su Safari "
-                      f"sbaglia di seicento pixel: {vive[:3]}")
-
-
-@caso("la scheda del modello dichiara che il suo tempo e' di SOLO upscale")
-def _scheda_modello_dice_solo_upscale():
-    """Sulla scheda di ogni modello il numero e' `fotogrammi / velocita`:
-    il solo ingrandimento, senza deduplica, codifica e turni fra i blocchi.
-    Il riquadro sopra, «EPISODIO INTERO», mostra invece il totale.
-
-    Diceva «per l'intero file» in tutti e due i posti. A 1080p la differenza
-    e' piccola — 11m contro 13m — e passa inosservata; a 1440p diventa 11m
-    contro 20m, e chi legge pensa a un errore dell'app.
-
-    Il test lega la formula alla frase: se qualcuno cambia il calcolo per
-    farci stare il totale, la frase va cambiata con lui."""
-    import re
-
-    testo = (ROOT / "ui" / "app.py").read_text()
-    i = testo.index("plan.frames / velocita")
-    # La frase sta nel catalogo: qui si lega la formula alla sua chiave.
-    intorno = testo[i - 200:i + 200]
-    assert 't("conf.velocita"' in intorno, (
-        "la scheda del modello non usa piu' la frase del solo upscale")
-    frase = i18n.catalogo("it")["conf.velocita"]
-    assert "solo upscale" in frase and "upscale only" in i18n.catalogo("en")["conf.velocita"], (
-        "la scheda del modello e' tornata a dire qualcosa d'altro: quel "
-        "numero e' il solo upscale e deve dirlo")
-    assert "per l'intero file" not in frase, (
-        "«per l'intero file» sulla scheda: e' la stessa frase del riquadro "
-        "EPISODIO INTERO, che pero' mostra il TOTALE")
 
 
 @caso("un avviso non tiene su disco la cartella di lavoro, un difetto si'")
@@ -3598,11 +3456,10 @@ def _dedup_nota_stringe_la_forchetta():
         "piu' distinguerla da una previsione, e il fumetto direbbe che la "
         "durata dipende da qualcosa che invece e' gia' noto")
 
-    # E l'interfaccia deve passarglielo davvero, altrimenti il parametro
+    # E il motore deve passarglielo davvero, altrimenti il parametro
     # esiste e non lo usa nessuno.
-    app = (ROOT / "ui" / "app.py").read_text()
-    assert "dedup_nota=nota" in app, "plan_for non passa la deduplica misurata"
-    assert "dedup_esatta" in app, "l'interfaccia non legge la mappa vera"
+    piani = (ROOT / "src" / "animeup" / "piani.py").read_text()
+    assert "dedup_nota=" in piani, "il piano dell'app non riceve la deduplica misurata"
 
     # Una deduplica misurata pari a ZERO — un file senza un solo fotogramma
     # ripetuto — e' un numero falso in Python: senza il controllo esplicito
@@ -3653,12 +3510,7 @@ def _fascia_impara():
     diceva il numero giusto."""
     from animeup import monitor
 
-    app = (ROOT / "ui" / "app.py").read_text()
-    assert "def _resto_misurato(" in app, (
-        "il conto del residuo misurato non e' piu' in un posto solo: riga e "
-        "fascia possono divergere sullo stesso file")
-
-    # e la CLI deve dichiarare la quota del file corrente, altrimenti non
+    # La CLI deve dichiarare la quota del file corrente, altrimenti non
     # c'e' niente da sostituire
     cli = (ROOT / "src" / "animeup" / "cli.py").read_text()
     for campo in ('"file_min"', '"file_max"'):
@@ -3699,22 +3551,6 @@ def _fascia_impara():
     for misura in (0, 1, 3000, 99999, -50):
         mn, mx = monitor.residuo_coda(marcatore, misura, adesso)
         assert mn <= mx, f"forchetta rovesciata con misura {misura}"
-
-    # La fascia deve prendere il lavoro vivo PER NOME e solo nelle fasi in
-    # cui il ritmo misura l'upscale: in estrazione il «restano» e' il tempo
-    # per finire di estrarre, e letto come tempo del file toglie ore.
-    assert 'l.sorgente == catena_ora.get("file")' in app, (
-        "la fascia prende il primo lavoro vivo che capita, non quello della "
-        "catena")
-    assert "l.fase in monitor.UNITA_UPSCALE" in app, (
-        "la fascia userebbe il ritmo dell'estrazione come se fosse quello "
-        "dell'upscale")
-    # E finche' non si e' cronometrato un turno di codifica la misura non
-    # copre i turni che restano: nel primo blocco la fascia prometterebbe
-    # una ventina di minuti in meno del vero.
-    assert "misurabile = (" in app and "turno_misurato(_stati" in app, (
-        "la fascia sostituisce la stima anche quando la misura non conta "
-        "ancora i turni di codifica")
 
 
 @caso("la correzione si prende dai file che durano quanto questo")
@@ -3809,54 +3645,6 @@ def _senza_deduplica_regge():
     assert "if not plan.dedup.enabled:" in fonte, (
         "la mappa di deduplica viene costruita anche a deduplica spenta")
 
-    # Nel resoconto, uno ZERO misurato non deve sparire: sparendo diventa
-    # indistinguibile da «deduplica spenta», che scrive `null`.
-    app = (ROOT / "ui" / "app.py").read_text()
-    assert 'lancio.get("dedup_medio") is not None' in app, (
-        "una deduplica misurata allo zero sparisce dal resoconto e si "
-        "confonde con la deduplica spenta")
-
-
-@caso("la barra della riga non torna mai indietro")
-def _barra_monotona():
-    """In fase 3 i fotogrammi sono tutti fatti, quindi una barra guidata dal
-    loro conteggio e' piena mentre il testo accanto dice «26%»: due misure
-    diverse una sopra l'altra (segnalato dall'utente il 12/08).
-
-    La cura non puo' pero' far CROLLARE la barra entrando in fase 3, che e'
-    peggio del difetto: la prima versione di `_riempimento` la portava dal
-    100% al 13%. Le prime due fasi si fermano al 90%, l'ultimo decimo e'
-    della codifica finale e del montaggio."""
-    app = (ROOT / "ui" / "app.py").read_text()
-    assert "def _riempimento(" in app, (
-        "sparita la funzione che decide il riempimento della barra")
-    assert "_riempimento(lav) * 100" in app, (
-        "la barra e' tornata a seguire i soli fotogrammi: in fase 3 sara' "
-        "piena mentre il testo dice un quarto")
-
-    # il conto, eseguito: deve crescere e non scendere mai
-    class L:
-        def __init__(s, fase, fr, cf, sp):
-            s.fase, s.frazione, s.codifica_frazione, s.sottopasso = fase, fr, cf, sp
-
-    def riemp(l):
-        if l.fase != "codifica finale":
-            return l.frazione * 0.9
-        q = max(0.0, min(1.0, l.codifica_frazione))
-        d = 0.5 + q / 2 if l.sottopasso == "montaggio" else q / 2
-        return 0.9 + d * 0.1
-
-    seq = [L("estrazione", 0.3, 0, ""), L("elaborazione", 0.5, 0, ""),
-           L("elaborazione", 1.0, 0, ""), L("codifica finale", 1.0, 0.0, "codifica"),
-           L("codifica finale", 1.0, 0.26, "codifica"),
-           L("codifica finale", 1.0, 1.0, "codifica"),
-           L("codifica finale", 1.0, 0.4, "montaggio"),
-           L("codifica finale", 1.0, 1.0, "montaggio")]
-    valori = [riemp(l) for l in seq]
-    assert valori == sorted(valori), f"la barra torna indietro: {valori}"
-    assert abs(valori[-1] - 1.0) < 1e-9, "a lavoro finito la barra non e' piena"
-    assert valori[2] == 0.9, "l'upscale finito deve fermarsi al 90%"
-
 
 @caso("a parita' di altezza si chiama supersampling, e il vecchio nome vale")
 def _supersampling_nel_nome():
@@ -3865,8 +3653,8 @@ def _supersampling_nel_nome():
     notare dall'utente il 12/08).
 
     La parte delicata non e' la parola, e' la MIGRAZIONE: l'app riconosce
-    «gia' fatto» dal nome del file, in quattro punti nella CLI e due
-    nell'interfaccia. Cambiando etichetta senza compatibilita', un file
+    «gia' fatto» dal nome del file, in piu' punti della CLI e del
+    motore. Cambiando etichetta senza compatibilita', un file
     prodotto ieri risulterebbe da rifare — e su questi tempi vuol dire dieci
     ore buttate per una parola."""
     from animeup.plan import output_name
@@ -3889,8 +3677,9 @@ def _supersampling_nel_nome():
     # (La prima versione di questa asserzione falliva sui propri commenti,
     # per la seconda volta in una giornata.)
     import ast as _ast
-    for relativo in ("src/animeup/cli.py", "ui/app.py"):
-        albero = _ast.parse((ROOT / relativo).read_text())
+    for percorso in sorted((ROOT / "src" / "animeup").glob("*.py")):
+        relativo = percorso.relative_to(ROOT)
+        albero = _ast.parse(percorso.read_text())
         for n in _ast.walk(albero):
             if (isinstance(n, _ast.Call)
                     and isinstance(n.func, _ast.Attribute)
@@ -3901,9 +3690,6 @@ def _supersampling_nel_nome():
                     f"{relativo}:{n.lineno} decide «gia' fatto» dal solo "
                     f"nome nuovo: i file gia' prodotti risulterebbero da "
                     f"rifare")
-    app = (ROOT / "ui" / "app.py").read_text()
-    assert 'esito.get("output") in {u.name for u in piano.uscite_note}' in app, (
-        "la pagella non si aggancia piu' a un'uscita col nome vecchio")
 
 
 @caso("la deduplica attesa si misura sul file, non si indovina dai fratelli")
@@ -4006,7 +3792,7 @@ def _interruttori_ricordati():
     from animeup import impostazioni
 
     # Le regole stanno nel motore (`animeup.impostazioni`), che le serve
-    # all'interfaccia web e all'app nativa.
+    # all'app nativa.
     fonte = (ROOT / "src" / "animeup" / "impostazioni.py").read_text()
     albero = _ast.parse(fonte)
     fn = next(n for n in albero.body
@@ -4034,11 +3820,6 @@ def _interruttori_ricordati():
                 assert fuori[chiave] is valore, (
                     f"l'interruttore «{chiave}» salvato a {valore} torna "
                     f"{fuori[chiave]}: l'app non ricorda quello che si e' scelto")
-
-    # E l'interfaccia web non ne ha una copia sua: usa quelle del motore.
-    app = (ROOT / "ui" / "app.py").read_text()
-    assert "_IMPOSTAZIONI_DEFAULT = impostazioni.PREDEFINITE" in app
-    assert "return impostazioni.pulite(dati, PATHS.output)" in app
 
 
 @caso("la regola dello spazio si comporta bene su ogni disco")
@@ -4075,186 +3856,6 @@ def _regola_spazio_si_comporta():
     assert pieno == 100 - 40, (
         "su un disco quasi pieno non comanda piu' il margine di 40 GB: "
         "l'85% lascerebbe al sistema molto meno del dovuto")
-
-
-@caso("un pulsante dentro un fragment che scrive in sessione deve rilanciare")
-def _pulsanti_nei_fragment_rilanciano():
-    """La voce 83, e la regola che la generalizza.
-
-    «Avvia la lavorazione» vive dentro `_fascia_viva`, che e' un fragment.
-    Un click dentro un fragment riesegue SOLO il fragment: il rimedio in
-    fondo al corpo (`pop("appena_avviata")` -> `st.rerun()`) non veniva
-    raggiunto mai. Senza giro principale `armato` restava falso, il fragment
-    rinasceva con `run_every=None`, e nessuno guardava piu' il disco: la
-    pagina restava allo stato PRE-lancio per tutta la lavorazione, col
-    riquadro verde ancora a schermo perche' nessun giro l'aveva cancellato.
-
-    Riprodotto in banco di prova il 12/08 con un fragment finto: dopo il
-    click il corpo principale non veniva eseguito nemmeno una volta.
-
-    La regola: se un pulsante dentro un fragment scrive in sessione, quello
-    che ha scritto serve a QUALCUNO FUORI — e fuori nessuno girera' se non
-    lo si chiede esplicitamente."""
-    import ast as _ast
-
-    albero = _ast.parse((ROOT / "ui" / "app.py").read_text())
-    frammenti = [n for n in _ast.walk(albero)
-                 if isinstance(n, (_ast.FunctionDef, _ast.AsyncFunctionDef))
-                 and any("fragment" in _ast.unparse(d) for d in n.decorator_list)]
-    assert frammenti, ("nessun fragment in ui/app.py: o e' stato tolto, o "
-                       "questo test non sta piu' guardando niente")
-
-    colpevoli = []
-    for f in frammenti:
-        for nodo in _ast.walk(f):
-            if not isinstance(nodo, _ast.If):
-                continue
-            if "st.button" not in _ast.unparse(nodo.test):
-                continue
-            corpo = "\n".join(_ast.unparse(s) for s in nodo.body)
-            if "st.session_state[" in corpo and "st.rerun" not in corpo:
-                colpevoli.append((nodo.lineno,
-                                  _ast.unparse(nodo.test)[:60]))
-
-    assert not colpevoli, (
-        "dentro un fragment ci sono pulsanti che scrivono in sessione senza "
-        "chiedere un giro completo: cio' che scrivono non lo leggera' nessuno "
-        "e la pagina restera' ferma allo stato di prima (voce 83). "
-        + "; ".join(f"riga {r}: {e}" for r, e in colpevoli))
-
-
-@caso("la tabella degli indicatori regge anche le misure mancanti")
-def _tabella_indicatori_disegna():
-    """Il pezzo di pagina che disegna i numeri, eseguito davvero.
-
-    Non e' teoria: una riga sbagliata qui ha gia' ucciso la pagina con un
-    `NameError` a confronto finito. E ora un indicatore puo' valere `None`
-    — «non misurato» — che moltiplicato per 100 fa esplodere tutto.
-
-    `ui/app.py` non si puo' importare (eseguirebbe l'intera pagina), quindi
-    si estrae dall'ALBERO la funzione e la si esegue con un `st` finto."""
-    import ast as _ast
-
-    sorgente = (ROOT / "ui" / "app.py").read_text()
-    albero = _ast.parse(sorgente)
-    voluti = ("_tabella_confronto", "_spiega_indicatori")
-    pezzi = [n for n in albero.body
-             if (isinstance(n, _ast.FunctionDef) and n.name in voluti)
-             or (isinstance(n, _ast.Assign)
-                 and any(getattr(b, "id", None) in voluti for b in n.targets))]
-    assert len(pezzi) == 2, f"non trovo {voluti} in ui/app.py: {len(pezzi)}"
-
-    uscita: list[str] = []
-
-    class _St:
-        @staticmethod
-        def markdown(html, **_k):
-            uscita.append(html)
-
-    ambiente = {"st": _St, "esc": lambda s: str(s),
-                "stima_hm": lambda s: f"{s:.0f}s", "t": i18n.t,
-                "_icona_perche": lambda testo: f"<span title='{testo}'></span>"}
-    exec(compile(_ast.Module(body=pezzi, type_ignores=[]), "app", "exec"),
-         ambiente)
-    tabella = ambiente["_tabella_confronto"]
-
-    def _righe(*metriche):
-        return [{"nome": f"m{i}", "secondi": 10.0 + i, "intero": 100.0,
-                 "metriche": q} for i, q in enumerate(metriche)]
-
-    # 1. Entrambi gli indicatori: due colonne e due spiegazioni.
-    uscita.clear()
-    tabella(_righe((1.0, 1.0), (2.5, 3.0)), (0.3, "misurata"))
-    tutto = "".join(uscita)
-    assert "dettaglio fine" in tutto.lower() and "rumore nelle aree piatte" in tutto.lower()
-    assert "250%" in tutto and "300%" in tutto, (
-        f"i rapporti non finiscono in tabella: {tutto[-400:]}")
-    assert "Dettaglio fine</b>" in tutto and "Rumore nelle aree piatte</b>" in tutto
-
-    # 2. Rumore non misurabile su NESSUNO: la colonna sparisce del tutto,
-    #    e con lei la sua spiegazione — ma il dettaglio resta.
-    uscita.clear()
-    tabella(_righe((1.0, None), (2.5, None)), (0.0, "spenta"))
-    tutto = "".join(uscita)
-    assert "dettaglio fine" in tutto.lower(), (
-        "sparito anche il dettaglio fine: era il difetto di partenza, un "
-        "indicatore mancante che si portava via l'altro")
-    assert "rumore nelle aree piatte" not in tutto.lower(), (
-        "resta una colonna di trattini per una misura che non esiste")
-    assert "Rumore nelle aree piatte</b>" not in tutto, (
-        "si spiega come leggere una colonna che non viene mostrata")
-
-    # 3. Nessuna delle due misure, per nessuno: degli indicatori non si
-    #    disegna proprio niente. Non e' il caso 2: qui la tupla c'e' ed e'
-    #    piena di `None`, quindi il controllo "ha metriche?" la fa passare.
-    uscita.clear()
-    tabella(_righe((None, None), (None, None)), None)
-    tutto = "".join(uscita)
-    assert "<th>dettaglio fine</th>" not in tutto.lower(), (
-        "si disegna la tabella degli indicatori senza un solo numero "
-        f"da mettere sotto: {tutto[-300:]}")
-    assert "non disponibili" in tutto, (
-        "gli indicatori spariscono senza dire perche': chi guarda va a "
-        "cercare un difetto dove non c'e'")
-    assert "aree abbastanza uniformi" in tutto, (
-        "col riferimento presente la causa e' il fotogramma, e va detta")
-
-    # 3-bis. Stesso vuoto, ma perche' manca il riferimento: causa diversa,
-    #        spiegazione diversa.
-    uscita.clear()
-    tabella(_righe(None, None), None, riferimento=False)
-    tutto = "".join(uscita)
-    assert "originale ingrandito" in tutto, (
-        "senza il riferimento non si spiega che e' quello a mancare")
-
-    # 3-ter. Un modello misurato e uno no: chi manca resta in tabella con un
-    #        trattino, non sparisce lasciando due tabelle di lunghezza diversa.
-    uscita.clear()
-    tabella([{"nome": "primo", "secondi": 10.0, "intero": 100.0,
-              "metriche": (1.8, 2.6)},
-             {"nome": "secondo", "secondi": 14.0, "intero": 140.0,
-              "metriche": None}], None)
-    # Gli indicatori vengono dopo la tabella dei tempi, come barre.
-    corpo = "".join(uscita).split("</table>")[-1]
-    assert "secondo" in corpo, (
-        "il modello senza misure sparisce dagli indicatori: la tabella esce "
-        "piu' corta di quella dei tempi e nessuno dice perche'")
-    assert "—" in corpo, "manca il trattino di «non misurato»"
-
-    # 3-quater. E al punto di CHIAMATA il flag deve venire dai dati: una
-    #           costante li' dentro renderebbe la spiegazione sempre sbagliata
-    #           in uno dei due casi, senza che nessun test se ne accorga
-    #           (sfuggita alla prima prova di mutazione).
-    chiamate = [n for n in _ast.walk(albero)
-                if isinstance(n, _ast.Call)
-                and getattr(n.func, "id", None) == "_tabella_confronto"]
-    assert chiamate, "non trovo la chiamata a _tabella_confronto"
-    for c in chiamate:
-        arg = next((k.value for k in c.keywords if k.arg == "riferimento"), None)
-        assert arg is not None, (
-            "la tabella viene chiamata senza dire se il riferimento c'e': "
-            "si affida al valore di comodo della firma")
-        assert not isinstance(arg, _ast.Constant), (
-            "il flag del riferimento e' una costante al punto di chiamata: "
-            "la spiegazione del perche' mancano gli indicatori sarebbe "
-            "sempre sbagliata in uno dei due casi")
-
-    # 3-quinquies. Tupla piu' corta del numero di indicatori: capita se un
-    #              giorno se ne aggiunge uno e in sessione restano misure
-    #              vecchie. Deve uscire un trattino, non un IndexError che
-    #              porta giu' la pagina.
-    uscita.clear()
-    tabella([{"nome": "corto", "secondi": 10.0, "intero": 100.0,
-              "metriche": (1.5,)}], None)
-    tutto = "".join(uscita)
-    assert "150%" in tutto, "il valore presente nella tupla corta non compare"
-
-    # 4. Misto: chi ce l'ha mostra il numero, chi no un trattino.
-    uscita.clear()
-    tabella(_righe((1.0, 1.0), (2.5, None)), None)
-    tutto = "".join(uscita)
-    assert "—" in tutto, "la misura mancante non e' segnalata"
-    assert "100%" in tutto, "sparito il numero di chi la misura ce l'ha"
 
 
 @caso("il rumore nelle aree piatte si misura anche sull'anime")
@@ -4416,46 +4017,9 @@ def _deposito_tutti_i_lotti():
         "il filtro non distingue i nuovi dai gia' visti dentro lo stesso lotto")
 
 
-@caso("la testata resta appiccicata in cima, e la linea arriva ai bordi")
-def _testata_sticky_e_linea_intera():
-    """Due cose che devono valere INSIEME, e la seconda ha rotto la prima.
-
-    La linea sotto le schede non arrivava ai bordi su una finestra larga
-    (misurato: 105 px scoperti a sinistra, 115 a destra a 1920). Per
-    ancorare l'elemento che la disegna avevo aggiunto `position: relative`
-    al contenitore — che pero' sovrascrive il `position: sticky` dichiarato
-    poche righe sopra, e la testata ha smesso di restare in cima. Notato
-    dall'utente in dieci secondi.
-
-    `sticky` e' gia' una posizione e fa da contenitore a un figlio assoluto:
-    quel `relative` non serviva proprio."""
-    app = (ROOT / "ui" / "app.py").read_text()
-    # Si parte dal `top:` delle schede, non dal selettore: quel selettore
-    # compare DUE volte (una in una lista con la fascia del marchio) e
-    # partendo da li' si finisce nella regola sbagliata, senza lo sticky.
-    # (45px da quando il marchio sopra le schede non c'e' piu'.)
-    blocco = app[app.index("position: sticky; top: 45px; z-index: 25"):]
-    blocco = blocco[:blocco.index("}}") + 2]
-    # Via i commenti PRIMA di cercare: dentro c'e' scritto perche' certe
-    # dichiarazioni non vanno messe, e cercandole nel testo grezzo si
-    # trovano le spiegazioni invece del codice. E' il terzo test in una
-    # giornata che inciampa nei propri commenti: qui si toglie e basta.
-    import re as _re
-    blocco = _re.sub(r"/\*.*?\*/", "", blocco, flags=_re.S)
-
-    assert "position: sticky" in blocco, "la fascia delle schede non e' piu' sticky"
-    assert "position: relative" not in blocco, (
-        "e' tornato un `position: relative` dopo lo `sticky`: lo sovrascrive "
-        "e la testata smette di restare in cima")
-    assert "box-shadow: -400px" in blocco, (
-        "sparite le ombre laterali: la linea torna larga quanto il contenuto")
-    assert "border-bottom" not in blocco, (
-        "e' tornato il bordo, che si ferma al box e non puo' arrivare ai bordi")
-
-
-@caso("nessun nome non definito nell'interfaccia e nei moduli")
+@caso("nessun nome non definito nei moduli")
 def _niente_nomi_fantasma():
-    """Un `NameError` in un ramo che gira solo dentro il browser.
+    """Un `NameError` in un ramo che gira di rado.
 
     Successo il 12/08: cambiando un ciclo da `for k, sec in ...` a
     `for k in ...` e' rimasto un `sec` dentro la comprehension. La pagina
@@ -4463,8 +4027,7 @@ def _niente_nomi_fantasma():
     guardano il TESTO del sorgente, e quel codice si esegue solo dopo aver
     generato uno spezzone.
 
-    Qui si compila il modulo (senza eseguirlo: importarlo farebbe partire
-    Streamlit) e si cercano i nomi che il compilatore risolve come GLOBALI
+    Qui si compila il modulo (senza eseguirlo) e si cercano i nomi che il compilatore risolve come GLOBALI
     ma che nel modulo non esistono. E' esattamente la forma che prende una
     variabile rimasta orfana dopo una modifica.
     """
@@ -4472,10 +4035,13 @@ def _niente_nomi_fantasma():
     import builtins
     import dis
 
-    for relativo in ("ui/app.py", "src/animeup/plan.py",
+    for relativo in ("src/animeup/plan.py",
                      "src/animeup/monitor.py", "src/animeup/preview.py",
                      "src/animeup/storico.py", "src/animeup/cli.py",
-                     "src/animeup/pipeline.py"):
+                     "src/animeup/pipeline.py", "src/animeup/serve.py",
+                     "src/animeup/coda.py", "src/animeup/elenco.py",
+                     "src/animeup/impostazioni.py", "src/animeup/confronto.py",
+                     "src/animeup/piani.py", "src/animeup/prova.py"):
         percorso = ROOT / relativo
         sorgente = percorso.read_text()
         albero = ast.parse(sorgente)
@@ -4549,14 +4115,10 @@ def _spezzoni_sparsi():
     assert "|r{REGOLA_SCELTA}" in fonte, (
         "la versione della regola non entra nella firma della cassa")
 
-    # e l'interfaccia deve passare le posizioni gia' viste
-    app = (ROOT / "ui" / "app.py").read_text()
-    assert "escludi=gia_visti" in app, (
+    # e il motore deve passare le posizioni gia' viste
+    prova = (ROOT / "src" / "animeup" / "prova.py").read_text()
+    assert "escludi=" in prova, (
         "il secondo lotto non esclude le posizioni gia' mostrate")
-    assert 't("conf.trova_altri"), key="trovaAltri"' in app, (
-        "il pulsante non dice piu' che cerchera' spezzoni DIVERSI")
-    assert i18n.catalogo("it")["conf.trova_altri"] == "Trova altri 8 spezzoni", (
-        "il pulsante non dice piu' che cerchera' spezzoni DIVERSI")
 
 
 @caso("il confronto ha un ordine solo, e gli indicatori si sanno leggere")
@@ -4574,7 +4136,6 @@ def _confronto_ordine_e_indicatori():
     # una chiave sconosciuta non deve sparire dal confronto
     assert preview.ordine_lettura({"pippo": 1, "cugan": 1}) == ["cugan", "pippo"]
 
-    app = (ROOT / "ui" / "app.py").read_text()
     # Le frasi stanno nel catalogo italiano, non piu' nel codice.
     testi = "\n".join(i18n.catalogo("it").values())
     for pezzo in ("Dettaglio fine", "Rumore nelle aree piatte",
@@ -4595,13 +4156,6 @@ def _confronto_ordine_e_indicatori():
     assert "* (1 - quota[0])" in motore, (
         "la proiezione sull'episodio intero non moltiplica piu' per la "
         "quota di deduplica: torna a promettere ore che non servono")
-    # Si cerca il TESTO RESO, non la frase in generale: il commento del
-    # codice cita quello vecchio per spiegare perche' e' stato tolto, ed e'
-    # giusto che resti. (Colto dalla prova di mutazione: la prima versione
-    # di questa asserzione falliva sul proprio commento.)
-    assert "a questo ritmo (stima senza" not in app, (
-        "e' tornata la proiezione che ignora la deduplica: su un file al "
-        "33% sbagliava di quattro ore e mezza")
 
     # E gli indicatori vanno calcolati DOVE i fotogrammi ci sono gia'.
     # Sull'ALBERO e non sul testo: la prima versione confrontava la riga
@@ -4762,15 +4316,6 @@ def _spazio_predefinito_e_una_regola():
         "la sanificazione riparte dai valori di fabbrica grezzi, dove "
         "`disco` non ha ancora un numero")
 
-    # Nessun 40 residuo dove si parla di spazio nella pagina: era la stringa
-    # mostrata a schermo come predefinito, e il ripiego della sessione non
-    # seminata.
-    pagina = (ROOT / "ui" / "app.py").read_text()
-    assert 'predefinito=f"40 GB' not in pagina, (
-        "il fumetto annuncia ancora 40 GB come predefinito")
-    assert 'st.session_state.get("w_disco", 40)' not in pagina, (
-        "il ripiego del cursore e' ancora 40")
-
     # E la regola dev'essere quella: piu' prudente fra 85% e libero-40.
     fonte = app[app.index("def tetto_spazio"):]
     fonte = fonte[:fonte.index("\n\n\n")]
@@ -4798,7 +4343,7 @@ def _chiavi_usate() -> set[str]:
     """Le chiavi passate a `t`/`tn` come letterali, in tutto il codice."""
     import ast
     usate: set[str] = set()
-    for f in [ROOT / "ui" / "app.py", *(ROOT / "src" / "animeup").glob("*.py")]:
+    for f in (ROOT / "src" / "animeup").glob("*.py"):
         for nodo in ast.walk(ast.parse(f.read_text())):
             if not (isinstance(nodo, ast.Call) and isinstance(nodo.func, ast.Name)
                     and nodo.func.id in ("t", "tn") and nodo.args
@@ -4838,13 +4383,8 @@ def _() -> None:
     e' peggio, perche' nessuno se ne accorge prima di averla vista."""
     from animeup.probe import FieldMode
     from animeup.preview import Kind
-    import ast
-    sezioni = ast.literal_eval(next(
-        r.split("=", 1)[1] for r in (ROOT / "ui" / "app.py").read_text().splitlines()
-        if r.startswith("SEZIONI = ")))
-    # Le chiavi composte a runtime: le schede e i valori degli enum.
+    # Le chiavi composte a runtime: i valori degli enum.
     attese = (_chiavi_usate()
-              | {f"tab.{s}" for s in sezioni}
               | {f"enum.ritmo.{v.value}" for v in Timebase}
               | {f"enum.campi.{v.value}" for v in FieldMode}
               | {f"conf.tipo.{v.value}" for v in Kind})
@@ -4861,7 +4401,7 @@ def _() -> None:
     import string
     voci = i18n.catalogo(i18n.PREDEFINITA)
     errori = []
-    for f in [ROOT / "ui" / "app.py", *(ROOT / "src" / "animeup").glob("*.py")]:
+    for f in (ROOT / "src" / "animeup").glob("*.py"):
         for nodo in ast.walk(ast.parse(f.read_text())):
             if not (isinstance(nodo, ast.Call) and isinstance(nodo.func, ast.Name)
                     and nodo.func.id in ("t", "tn") and nodo.args
@@ -4933,7 +4473,7 @@ def _() -> None:
             {"altezza": 1440, "crf": 16, "preset": "slower", "modello": "cugan"}))
         lav = SimpleNamespace(cartella=cartella, vivo=False)
         vecchi = (coda._lavoro_di, impostazioni.carica_native)
-        coda._lavoro_di = lambda v: lav
+        coda._lavoro_di = lambda v, *_: lav
         impostazioni.carica_native = lambda: {"altezza": 1080, "crf": 16, "preset": "slower"}
         try:
             r = coda.sospeso_diverso([{"id": "a", "path": "/x/Ep1.mkv"}])
@@ -4969,45 +4509,10 @@ def _() -> None:
         assert p.work == (radice / "OUTPUT" / "JOBS").resolve(), p.work
 
 
-@caso("i colori stanno solo in tema.py: nell'interfaccia nessun colore scritto a mano")
-def _() -> None:
-    """Prima erano 117 colori sparsi nel CSS: cambiarne uno voleva dire
-    cercarlo in venti posti, e un tema chiaro era impensabile. Ora il CSS usa
-    solo variabili, e le variabili nascono da `tema.py`."""
-    import re as _re
-    app = (ROOT / "ui" / "app.py").read_text()
-    # Le entita' HTML (&#9888;) non sono colori.
-    trovati = [m.group(0) for m in _re.finditer(
-        r"(?<!&)#[0-9A-Fa-f]{6}\b|(?<!&)#[0-9A-Fa-f]{3}\b|rgba?\(\s*\d+\s*,", app)]
-    assert not trovati, f"colori scritti a mano nell'interfaccia: {trovati[:5]}"
-
-
-@caso("Streamlit e il CSS usano gli stessi colori, in tutti e due i temi")
-def _() -> None:
-    import tomllib
-    from animeup import tema
-    cfg = tomllib.loads((ROOT / ".streamlit" / "config.toml").read_text())
-    for i, nome in enumerate(("dark", "light")):
-        sezione = cfg["theme"][nome]
-        attesi = {"primaryColor": "primaryStrong", "backgroundColor": "bg",
-                  "secondaryBackgroundColor": "surface", "textColor": "textPrimary",
-                  "borderColor": "borderColor", "linkColor": "primaryText",
-                  "greenColor": "green", "yellowColor": "yellow", "redColor": "red"}
-        for chiave, token in attesi.items():
-            assert sezione[chiave].upper() == tema.TOKEN[token][i].upper(), (
-                f"{nome}.{chiave} = {sezione[chiave]}, ma {token} vale "
-                f"{tema.TOKEN[token][i]}")
-        laterale = sezione["sidebar"]
-        assert laterale["backgroundColor"].upper() == tema.TOKEN["sidebar"][i].upper()
-    assert "prefers-color-scheme: light" in tema.css(tema.SISTEMA)
-    assert "prefers-color-scheme" not in tema.css(tema.SCURO)
-    assert tema.streamlit(tema.CHIARO) == "Light" and tema.streamlit("boh") == "System"
-
-
 @caso("il confronto in un processo suo: uno alla volta, e chi muore risulta interrotto")
 def _() -> None:
     """Il confronto girava dentro la pagina e un clic lo uccideva. Ora gira
-    staccato: la pagina deve capire se e' vivo, rifiutarne un secondo, e non
+    staccato: il motore deve capire se e' vivo, rifiutarne un secondo, e non
     credere vivo per sempre un processo morto (Mac spento a meta')."""
     import json as _json
     from animeup import confronto
@@ -5030,9 +4535,6 @@ def _() -> None:
         assert confronto.ferma(p) is False, "fermato un confronto che non c'e'"
         (c / "status.json").write_text("{rotto")
         assert confronto.stato(p) is None
-    app = (ROOT / "ui" / "app.py").read_text()
-    assert "conf.fragile" not in app and "def _genera(" not in app, \
-        "il confronto gira ancora dentro la pagina"
 
 
 @caso("la disposizione di prima della 1.6 passa a quella nuova senza perdere niente")
@@ -5212,15 +4714,6 @@ def _() -> None:
         assert chiave in lanciatore, chiave
 
 
-@caso("l'interfaccia di fabbrica risponde solo da questo Mac")
-def _() -> None:
-    """Il server ascoltava su tutte le interfacce: chiunque sulla stessa rete
-    poteva avviare e fermare lavorazioni. Ora serve --network per aprirlo."""
-    cli = (ROOT / "src" / "animeup" / "cli.py").read_text()
-    assert '"--server.address", "0.0.0.0" if rete else "127.0.0.1"' in cli
-    assert 'typer.Option("--network"' in cli
-
-
 @caso("la lingua salvata torna al riavvio, e una sconosciuta non rompe niente")
 def _() -> None:
     import json as _json
@@ -5260,32 +4753,11 @@ def _() -> None:
     assert i18n.t("tab.Sorgenti") == "Sorgenti"
 
 
-def _app_pezzi(*nomi: str) -> list:
-    """Le funzioni (e le costanti) di ui/app.py coi nomi dati, pronte per
-    `exec`: l'app intera non si importa fuori da Streamlit."""
-    import ast as _ast
-    albero = _ast.parse((ROOT / "ui" / "app.py").read_text())
-    pezzi = [n for n in albero.body
-             if (isinstance(n, _ast.FunctionDef) and n.name in nomi)
-             or (isinstance(n, _ast.Assign)
-                 and any(getattr(b, "id", None) in nomi for b in n.targets))]
-    assert len(pezzi) == len(nomi), f"non trovo tutti {nomi} in ui/app.py"
-    return pezzi
-
-
-def _esegui_app(pezzi: list, ambiente: dict) -> dict:
-    import ast as _ast
-    exec(compile(_ast.Module(body=pezzi, type_ignores=[]), "app", "exec"),
-         ambiente)
-    return ambiente
-
-
-@caso("con una taratura in corso Avvia e Riprendi non partono")
+@caso("con una taratura in corso la coda non parte")
 def _() -> None:
     """Le due cose si dividerebbero la GPU e la taratura salverebbe numeri
     falsi. La taratura rifiutava gia' di partire durante una lavorazione;
     il contrario no: `taratura.in_corso()` non veniva mai guardato."""
-    import ast as _ast
     import types as _types
     from animeup import taratura
 
@@ -5311,55 +4783,81 @@ def _() -> None:
             estraneo.kill()
             finto.kill()
 
-    # 2. `_avvia` si ferma PRIMA di lanciare qualunque cosa.
-    class _Lanciato(Exception):
-        pass
+    # 2. La coda si ferma PRIMA di lanciare qualunque cosa.
+    from unittest import mock
+    from animeup import coda
 
     def _vietato(*_a, **_k):
-        raise _Lanciato()
+        raise AssertionError("oltre la guardia della taratura")
 
-    errori: list[str] = []
-    stato = {"tarando": True}
-    ambiente = _esegui_app(_app_pezzi("_avvia", "_riprendi"), {
-        "taratura": _types.SimpleNamespace(in_corso=lambda: stato["tarando"]),
-        "monitor": _types.SimpleNamespace(lancio_vivo=lambda: False,
-                                          catena=lambda: None, pausa=lambda: None),
-        "st": _types.SimpleNamespace(error=lambda m, **_k: errori.append(m)),
-        "t": i18n.t,
-        # Oltre la guardia la prima cosa che si tocca e' il registro: se ci
-        # si arriva, la guardia non ha fermato niente.
-        "PATHS": type("Registri", (), {
-            "registro_coda": property(lambda _s: _vietato())})(),
-        "_leggi_parametri": lambda _c: {},
-        "Path": Path,
-    })
-    assert ambiente["_avvia"]([], {}) is False, "Avvia e' partito durante la taratura"
-    assert ambiente["_riprendi"](None, None, {}) is False, \
-        "Riprendi e' partito durante la taratura"
-    assert errori and all("calibrazione" in e for e in errori), errori
-    stato["tarando"] = False
-    try:
-        ambiente["_avvia"]([], {})
-    except _Lanciato:
-        pass
-    else:
-        raise AssertionError("senza taratura la guardia blocca lo stesso")
+    with mock.patch.object(coda, "paths_lavoro", lambda: None), \
+            mock.patch.object(coda.taratura, "in_corso", lambda *_a: True), \
+            mock.patch.object(coda.monitor, "lancio_vivo", _vietato), \
+            mock.patch.object(coda.subprocess, "Popen", _vietato):
+        assert coda.occupata() == "calibrating"
+        try:
+            coda.avvia([{"id": "x", "path": "/x/a.mkv"}])
+        except coda.ErroreCoda as e:
+            assert e.codice == "busy" and str(e) == "calibrating", (e.codice, e)
+        else:
+            raise AssertionError("Avvia e' partito durante la taratura")
 
-    # 3. I pulsanti sono spenti, non solo la funzione che chiamano.
-    albero = _ast.parse((ROOT / "ui" / "app.py").read_text())
-    spenti = set()
-    for n in _ast.walk(albero):
-        if not (isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)
-                and n.func.attr == "button" and n.args
-                and isinstance(n.args[0], _ast.Call)
-                and isinstance(n.args[0].args[0], _ast.Constant)):
-            continue
-        disab = next((k.value for k in n.keywords if k.arg == "disabled"), None)
-        if disab is not None and any(isinstance(x, _ast.Name) and x.id == "tarando"
-                                     for x in _ast.walk(disab)):
-            spenti.add(n.args[0].args[0].value)
-    assert {"lavb.avvia", "lavb.riprendi"} <= spenti, \
-        f"pulsanti spenti durante la taratura: {sorted(spenti)}"
+
+@caso("in estrazione la riga dice quanto manca al passo, non al file")
+def _() -> None:
+    """La riga dava il trascorso ma non quanto manca: `left` vale per il FILE
+    e regge l'ora di fine della coda, in estrazione non si conosce. Il passo
+    invece ha ritmo e totale misurati (domanda dell'utente)."""
+    import json
+    import subprocess as sp
+    from unittest import mock
+
+    from animeup import coda
+    from animeup.paths import Paths
+
+    with tempfile.TemporaryDirectory() as t:
+        paths = Paths(Path(t))
+        firma = ("ep.mkv|123||-fps_mode cfr -r 24/1|1000|up2x-no-denoise|2"
+                 "|1920|1080|x|y|slower|k|True|24/1")
+        d = paths.work / "ep 2026-01-01 abcdef01"
+        (d / "frames").mkdir(parents=True)
+        for n in range(1, 201):
+            (d / "frames" / f"{n:08d}.png").write_bytes(b"")
+        (d / "state.json").write_text(json.dumps({"signature": firma, "segments": [], "chunk": 300}))
+        figlio = sp.Popen([sys.executable, "-c", "import time; time.sleep(30)", "animeup-finto"])
+        (d / "running.lock").write_text(str(figlio.pid))
+        try:
+            with mock.patch.object(coda, "paths_lavoro", lambda: paths), \
+                    mock.patch.object(coda.monitor, "andatura", lambda *_a: 40.0):
+                v = coda.stato([{"id": "a", "path": "/x/ep.mkv"}])["files"]["a"]
+        finally:
+            figlio.terminate()
+            figlio.wait()
+        assert v["stage"] == "extract", v
+        assert v["step_left"] == 20, v          # (1000 - 200) / 40
+        assert v["left"] is None, "il resto del FILE in estrazione non si conosce"
+
+
+@caso("il file che sta per partire si dice in preparazione, non in coda")
+def _() -> None:
+    """Fra il lancio e il lucchetto il file non ha cartella: la riga diceva
+    «in coda» per secondi, e sembrava fermo (successo davvero)."""
+    import json
+    from unittest import mock
+
+    from animeup import coda
+    from animeup.paths import Paths
+
+    with tempfile.TemporaryDirectory() as t:
+        paths = Paths(Path(t))
+        paths.work.mkdir(parents=True, exist_ok=True)
+        (paths.work / ".launch").write_text(json.dumps({"ids": ["a", "b"]}))
+        voci = [{"id": "a", "path": "/x/a.mkv"}, {"id": "b", "path": "/x/b.mkv"}]
+        with mock.patch.object(coda, "paths_lavoro", lambda: paths), \
+                mock.patch.object(coda.monitor, "lancio_vivo", lambda *_a: True):
+            f = coda.stato(voci)["files"]
+        assert f["a"].get("starting") is True, f["a"]
+        assert f["b"]["state"] == "queued" and not f["b"].get("starting"), f["b"]
 
 
 @caso("una riga conclusa con la cartella rimasta in JOBS si puo' scartare")
@@ -5368,7 +4866,6 @@ def _() -> None:
     controllo», ma gli avvisi non trattengono piu' la cartella (solo i
     difetti, e allora l'uscita diventa .DEFECTIVE). E non aveva Scarta: quei
     GB non si liberavano dall'interfaccia."""
-    import ast as _ast
     from animeup.pipeline import JobResult
     # Il presupposto dell'etichetta: un avviso non trattiene la cartella.
     campi = {f: None for f in JobResult.__dataclass_fields__}
@@ -5382,48 +4879,6 @@ def _() -> None:
         assert "JOBS" in testo and i18n.t("lavb.scarta") in testo, testo
         assert not any(p in testo.lower() for p in ("warning", "avvis")), testo
     i18n.imposta("it")
-
-    albero = _ast.parse((ROOT / "ui" / "app.py").read_text())
-    trovato = False
-    for n in _ast.walk(albero):
-        if not (isinstance(n, _ast.BoolOp) and isinstance(n.op, _ast.And)):
-            continue
-        nomi = [v.id for v in n.values if isinstance(v, _ast.Name)]
-        pulsanti = [v for v in n.values if isinstance(v, _ast.Call)
-                    and getattr(v.func, "attr", "") == "button"
-                    and _ast.dump(v.args[0]).count("lavb.scarta")]
-        if "concluso" in nomi and pulsanti:
-            trovato = True
-    assert trovato, "nessuno Scarta sulle righe concluse con la cartella in JOBS"
-
-
-@caso("lo spazio su disco non conta come differenza col file sospeso")
-def _() -> None:
-    """Si ricalcola a ogni avvio, quindi non coincideva mai con quello
-    salvato: l'avviso in sidebar scattava per lui e basta, e «Riporta la
-    sidebar…» rimetteva uno spazio vecchio."""
-    import ast as _ast
-    pezzi = _app_pezzi("_IMPOSTAZIONI_DEFAULT", "_FUORI_DAL_CONFRONTO",
-                       "_diversi_dal_sospeso", "_ripristina_parametri")
-    stato: dict = {}
-
-    class _St:
-        session_state = stato
-
-    from animeup import impostazioni
-    ambiente = _esegui_app(pezzi, {"st": _St, "impostazioni": impostazioni,
-                                   "_impostazioni_pulite": lambda r: dict(r)})
-    fabbrica = ambiente["_IMPOSTAZIONI_DEFAULT"]
-    assert "disco" in fabbrica, "lo spazio non e' piu' un'impostazione?"
-    diversi = ambiente["_diversi_dal_sospeso"]
-    attuali = dict(fabbrica, disco=120)
-    assert diversi(dict(fabbrica, disco=80), attuali) == [], \
-        "solo lo spazio e' diverso, eppure scatta l'avviso"
-    altro = 20 if fabbrica["crf"] != 20 else 21
-    assert diversi(dict(fabbrica, disco=80, crf=altro), attuali) == ["crf"]
-    ambiente["_ripristina_parametri"](dict(fabbrica, disco=80, crf=altro))
-    assert "w_disco" not in stato, "il ripristino rimette uno spazio vecchio"
-    assert stato.get("w_crf") == altro, "il ripristino non rimette piu' il CRF"
 
 
 @caso("gli avvisi su telecine e interlacciato non promettono una correzione")
@@ -5450,7 +4905,6 @@ def _() -> None:
     import dataclasses
     from animeup.models import altezza_minima
     from animeup.plan import PlanError
-    from animeup.models import ALTEZZA_INCERTA, CLEAN_SOURCE_MIN_HEIGHT
 
     # 1. La soglia coincide con quella del piano, al pixel.
     r = probe_source(CAMPIONI / "clip20s.mkv", with_fields=False)
@@ -5469,23 +4923,6 @@ def _() -> None:
             assert arriva == (h >= minimo), \
                 f"{h}p -> {uscita}p: piano {arriva}, soglia {minimo}"
 
-    # 2. La regola segue l'altezza d'uscita.
-    ambiente = _esegui_app(_app_pezzi("perche_generale"), {
-        "t": i18n.t, "altezza_minima": altezza_minima,
-        "ALTEZZA_INCERTA": ALTEZZA_INCERTA,
-        "CLEAN_SOURCE_MIN_HEIGHT": CLEAN_SOURCE_MIN_HEIGHT, "CATALOG": CATALOG})
-    regola = ambiente["perche_generale"]
-
-    def mezzo(*a, **k):
-        return regola(*a, **k)[1]
-
-    assert mezzo(720)[2] == i18n.t("conf.pg.mezzo_modello"), mezzo(720)
-    a1080 = mezzo(1080)
-    assert "540" in a1080[2] and "540" in a1080[3], a1080
-    assert mezzo(1080, forza=True)[2] == i18n.t("conf.pg.mezzo_modello")
-    a1440 = mezzo(1440)
-    assert a1440[1] == "verde" and a1440[2] == CATALOG["animevideov3"].label, a1440
-
 
 @caso("le chip della fascia dei Sorgenti dicono cosa contano")
 def _() -> None:
@@ -5499,29 +4936,6 @@ def _() -> None:
     assert str(CLEAN_SOURCE_MIN_HEIGHT) in i18n.t(
         "src.sotto_soglia", n=3, soglia=CLEAN_SOURCE_MIN_HEIGHT)
     i18n.imposta("it")
-    app = (ROOT / "ui" / "app.py").read_text()
-    assert "tn('src.file_con_avvisi', con_avvisi)" in app, \
-        "la chip della fascia non usa piu' il conteggio dei file"
-
-
-@caso("con la sidebar congelata ogni interruttore e' spento davvero")
-def _() -> None:
-    """«Analisi approfondita» era solo ingrigito dal CSS: raggiungibile da
-    tastiera mentre gli altri erano `disabled`."""
-    import ast as _ast
-    albero = _ast.parse((ROOT / "ui" / "app.py").read_text())
-    senza = []
-    for n in _ast.walk(albero):
-        if not (isinstance(n, _ast.Call) and getattr(n.func, "attr", "") == "toggle"):
-            continue
-        chiave = next((k.value.value for k in n.keywords if k.arg == "key"
-                       and isinstance(k.value, _ast.Constant)), "")
-        if not chiave.startswith("w_"):
-            continue
-        if not any(k.arg == "disabled" and _ast.dump(k.value).count("congelata")
-                   for k in n.keywords):
-            senza.append(chiave)
-    assert not senza, f"interruttori non spenti con la sidebar congelata: {senza}"
 
 
 @caso("un sorgente dal nome lunghissimo ha un nome d'uscita valido")
@@ -6001,6 +5415,110 @@ def _() -> None:
         server.shutdown()
 
 
+@caso("l'ora di fine della coda non salta a ogni secondo")
+def _() -> None:
+    """La stima nuova arriva ogni secondo e l'ora di fine cambiava di
+    qualche minuto ogni volta: sembrava inaffidabile (29/10)."""
+    from animeup import monitor
+
+    t0 = 100_000.0
+    f = monitor.fine_ferma(None, t0 + 3600, 300, t0, chiave="L1")
+    assert f["fine"] == t0 + 3600
+
+    # Oscillazioni di qualche minuto, ogni secondo per un minuto: resta ferma.
+    for s in range(1, 60):
+        f = monitor.fine_ferma(f, t0 + 3600 + (150 if s % 2 else -150), 300, t0 + s, chiave="L1")
+        assert f["fine"] == t0 + 3600, (s, f)
+
+    # Lo stesso scarto dopo un minuto: cambia, e non di nuovo per un altro minuto.
+    f = monitor.fine_ferma(f, t0 + 3750, 300, t0 + 61, chiave="L1")
+    assert f["fine"] == t0 + 3750, f
+    f = monitor.fine_ferma(f, t0 + 3950, 300, t0 + 70, chiave="L1")
+    assert f["fine"] == t0 + 3750, "due cambi nello stesso minuto"
+
+    # Sotto il minuto non cambia mai, nemmeno dopo tanto.
+    f = monitor.fine_ferma(f, t0 + 3790, 300, t0 + 500, chiave="L1")
+    assert f["fine"] == t0 + 3750, f
+
+    # Uno scarto grande vale subito.
+    f = monitor.fine_ferma(f, t0 + 5000, 300, t0 + 501, chiave="L1")
+    assert f["fine"] == t0 + 5000, f
+
+    # Una coda nuova riparte dalla sua stima.
+    f = monitor.fine_ferma(f, t0 + 9000, 10, t0 + 502, chiave="L2")
+    assert f["fine"] == t0 + 9000 and f["mezzo"] == 10, f
+
+
+@caso("Rifai: il file rimesso in coda e' in coda, e sovrascrive solo se confermato")
+def _() -> None:
+    """Un file finito rimesso in Coda (Rifai, F6d/F6e): finche' non tocca a lui
+    deve dire «in coda», non «fatto»; e il video gia' fatto si sovrascrive solo
+    per i file che l'utente ha confermato (`--overwrite`, un gruppo a parte)."""
+    import inspect
+    import json
+    from unittest import mock
+
+    from animeup import cli, coda
+    from animeup.paths import Paths
+
+    esito = {"quando": 1000.0}
+    assert coda._da_rifare({"id": "a"}, esito, {"ids": ["a"], "started": 2000.0}, True)
+    assert not coda._da_rifare({"id": "a"}, esito, {"ids": ["a"], "started": 500.0}, True), "lancio vecchio"
+    assert not coda._da_rifare({"id": "a"}, esito, {"ids": ["b"], "started": 2000.0}, True), "non nel lancio"
+    assert not coda._da_rifare({"id": "a"}, esito, {"ids": ["a"], "started": 2000.0}, False), "lancio finito"
+
+    with tempfile.TemporaryDirectory() as t:
+        paths = Paths(Path(t))
+        paths.work.mkdir(parents=True, exist_ok=True)
+        fatto = Path(t) / "ep [upscale].mkv"
+        fatto.write_bytes(b"x")
+        (paths.work / ".launch").write_text(json.dumps({"ids": ["a"], "started": 2000.0, "total": 1}))
+        e = {"output_path": str(fatto), "quando": 1000.0}
+        with mock.patch.object(coda, "paths_lavoro", lambda: paths), \
+                mock.patch.object(coda.monitor, "lavori", lambda *_a: []), \
+                mock.patch.object(coda.monitor, "esiti", lambda *_a: {coda.monitor._normalizza("ep.mkv"): e}), \
+                mock.patch.object(coda.monitor, "lancio_vivo", lambda *_a: True):
+            v = coda.stato([{"id": "a", "path": "/x/ep.mkv", "added": 10}])["files"]["a"]
+        assert v["state"] == "queued", v
+
+    corpo = inspect.getsource(coda.avvia)
+    assert 'bool(v.get("overwrite"))' in corpo and '"--overwrite"' in corpo, "avvia non passa --overwrite"
+    run = inspect.getsource(cli.run_cmd)
+    assert "--overwrite" in run and "gia_fatto" in run and "if plan.uscita_esiste" not in run, (
+        "run salta ancora i file gia' fatti anche con --overwrite")
+
+
+@caso("la codifica dell'ultimo blocco si conta nell'Upscale, non nel Montaggio")
+def _() -> None:
+    """Un file da un blocco restava al 99% per tutta la codifica, detta
+    «Codifica e montaggio» e senza tempo che resta (29/10)."""
+    from types import SimpleNamespace
+    from animeup import coda
+    lav = SimpleNamespace(fase="codifica finale", sottopasso="codifica", frazione=1.0, codifica_frazione=0.4)
+    fase, f = coda._frazione(lav)
+    assert fase == "upscale" and abs(f - (1 - coda.QUOTE["assemble"])) < 1e-9, (fase, f)
+    lav.sottopasso = "montaggio"
+    fase, f = coda._frazione(lav)
+    assert fase == "assemble", fase
+
+
+@caso("un Rifai fermato a meta' resta interrotto e si riprende sovrascrivendo")
+def _() -> None:
+    """Fermato un Rifai, il video vecchio c'e' ancora: il file tornava «fatto»
+    e il lavoro interrotto spariva, senza modo di riprenderlo (29/10)."""
+    import inspect
+    from types import SimpleNamespace
+    from animeup import coda
+    with tempfile.TemporaryDirectory() as t:
+        c = Path(t)
+        (c / "parameters.json").write_text("{}")
+        lav = SimpleNamespace(cartella=c)
+        assert coda._ripreso_dopo(lav, {"quando": 0}), "lavoro piu' recente del video: interrotto"
+        assert not coda._ripreso_dopo(lav, {"quando": 9e12}), "lavoro piu' vecchio: il video conta"
+        assert not coda._ripreso_dopo(None, {"quando": 0})
+    assert '"overwrite": True' in inspect.getsource(coda.riprendi), "Riprendi non sovrascrive il video del Rifai"
+
+
 def main() -> int:
     if SINTETICI:
         # Detto a schermo: un verde sui sintetici non e' un verde sui veri.
@@ -6057,3 +5575,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+

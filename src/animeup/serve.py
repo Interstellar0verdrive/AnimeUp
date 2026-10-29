@@ -187,6 +187,91 @@ def _calibration_state(_params: dict) -> dict:
     }
 
 
+# The calibration results sheet (K4): every measurement of every calibration
+# of this Mac, and the factory numbers, all as frames per second.
+_EPISODIO_FOTOGRAMMI = 24 * 60 * 24      # a 24-minute episode
+_EPISODIO_ALTEZZA = 480                 # 480p, to 1080p
+
+
+def _fps_uscita(mpxs, _scala: int = 2) -> float | None:
+    """Mpx/s at the model's input into frames per second on a 540p source,
+    at any scale: the unit of Start's This Mac card, where 2x is 1080p out."""
+    try:
+        v = float(mpxs)
+    except (TypeError, ValueError):
+        return None
+    return round(v / _MPX_540, 2) if v > 0 else None
+
+
+def _calibrazione_voce(voce: dict | None) -> dict:
+    """One calibration (or the factory numbers, with `voce` None), as the sheet shows it."""
+    from . import taratura
+    from .models import CATALOG, STESSA_RETE
+
+    mpxs = (voce or {}).get("mpxs") or {}
+    grandi = (voce or {}).get("mpxs_grande") or {}
+    mpx_grande = 1920 * 1080 / 1_000_000
+    src_mpx = _EPISODIO_ALTEZZA * 16 / 9 * _EPISODIO_ALTEZZA / 1_000_000
+    modelli = []
+    for chiave, modello in CATALOG.items():
+        def misura(scala: int):
+            if voce is None:
+                return modello.throughput.get(scala)
+            return (mpxs.get(chiave) or {}).get(str(scala))
+        fps, presi = {}, []
+        for scala in modello.scales:
+            v = misura(scala)
+            if v is None and voce is not None and chiave in STESSA_RETE:
+                presi.append(scala)
+                continue
+            fps[str(scala)] = _fps_uscita(v, scala)
+        if voce is None:
+            grande = modello.throughput.get(2)
+        else:
+            grande = (grandi.get(chiave) or {}).get("2")
+        # The episode: the smallest scale that reaches 1080p (or the largest),
+        # at this calibration's speed; a borrowed scale uses its parent's.
+        scala_ep = next((k for k in sorted(modello.scales) if _EPISODIO_ALTEZZA * k >= 1080), max(modello.scales))
+        ritmo = misura(scala_ep)
+        if ritmo is None and chiave in STESSA_RETE:
+            ritmo = (mpxs.get(STESSA_RETE[chiave]) or {}).get(str(scala_ep))
+        try:
+            episodio = round(_EPISODIO_FOTOGRAMMI * src_mpx / float(ritmo)) if ritmo else None
+        except (TypeError, ValueError, ZeroDivisionError):
+            episodio = None
+        modelli.append({
+            "key": chiave,
+            "fps": fps,
+            "borrowed": presi,
+            "big_fps": round(float(grande) / mpx_grande, 2) if grande else None,
+            "episode_seconds": episodio,
+        })
+    if voce is None:
+        return {"id": "factory", "when": None, "version": None, "models": modelli,
+                "extraction_fps": 60.0, "dedup_fps": 200.0, "encoding_fps": 8.0,
+                "save_threads": taratura.salvataggio_predefinito()}
+    return {
+        "id": str(voce.get("quando") or ""),
+        "when": float(voce["quando"]) if voce.get("quando") else None,
+        "version": voce.get("versione"),
+        "models": modelli,
+        "extraction_fps": voce.get("estrazione_fps"),
+        "dedup_fps": voce.get("scansione_fps"),
+        "encoding_fps": voce.get("codifica_fps"),
+        "save_threads": voce.get("jobs_salvataggio"),
+    }
+
+
+def _calibration_details(_params: dict) -> dict:
+    from . import taratura
+    return {
+        "calibrations": [_calibrazione_voce(v) for v in taratura.storico()],
+        "factory": _calibrazione_voce(None),
+        "episode_height": _EPISODIO_ALTEZZA,
+        "episode_minutes": _EPISODIO_FOTOGRAMMI // (24 * 60),
+    }
+
+
 def _tools_status(_params: dict) -> dict:
     from . import setup
 
@@ -257,6 +342,7 @@ def _folders_state(_params: dict) -> dict:
     tetto, _ = impostazioni.tetto_spazio(lavoro)
     return {
         "work_folder": str(lavoro),
+        "finished_folder": str(f) if (f := impostazioni.cartella_finiti()) else None,
         "work_folder_default": str(predefinita),
         "is_default": lavoro == predefinita,
         "exists": lavoro.is_dir(),
@@ -427,7 +513,10 @@ def _comando(funzione, *args) -> dict:
 
 def _queue_start(params: dict) -> dict:
     ids = _ids(params)
-    voci = [v for v in elenco().voci() if v["id"] in set(ids)]
+    # `overwrite`: i file rifatti con lo stesso nome, confermati dall'utente (Rifai).
+    sovrascrivi = set(params.get("overwrite") or [])
+    voci = [{**v, "overwrite": True} if v["id"] in sovrascrivi else v
+            for v in elenco().voci() if v["id"] in set(ids)]
     voci.sort(key=lambda v: ids.index(v["id"]))
     return _comando(_coda().avvia, voci)
 
@@ -604,6 +693,7 @@ METODI: dict[str, Callable[[dict], dict]] = {
     "settings.set": _settings_set,
     "machine.info": _machine_info,
     "calibration.state": _calibration_state,
+    "calibration.details": _calibration_details,
     "tools.status": _tools_status,
     "folders.state": _folders_state,
     "settings.defaults": _settings_defaults,
