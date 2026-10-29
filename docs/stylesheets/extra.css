@@ -1587,3 +1587,185 @@
     max-width: 14rem;
   }
 }
+
+/* The cover: a before/after comparison like the app's Compare player. --pos is the divider. */
+.md-typeset .au-hero {
+  --pos: 50%;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  margin: 1.2rem 0 1.6rem;
+  border-radius: 0.8rem;
+  overflow: hidden;
+  cursor: ew-resize;
+  touch-action: pan-y;
+  user-select: none;
+  background: #0d0f13;
+  box-shadow: 0 0 0 1px var(--animeup-border), 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.md-typeset .au-hero img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  pointer-events: none;
+}
+
+.md-typeset .au-hero .au-hero__before {
+  clip-path: inset(0 calc(100% - var(--pos)) 0 0);
+}
+
+.md-typeset .au-hero .au-hero__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--pos) - 1px);
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 12px rgba(42, 201, 222, 0.9);
+  pointer-events: none;
+}
+
+.md-typeset .au-hero .au-hero__knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin: -1.1rem 0 0 -1.1rem;
+  border-radius: 50%;
+  background: #fff;
+  color: #0d1015;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 0.9rem/1 -apple-system, BlinkMacSystemFont, sans-serif;
+  box-shadow: 0 0 0 4px rgba(42, 201, 222, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.md-typeset .au-hero:focus-visible {
+  outline: 2px solid var(--animeup-accent);
+  outline-offset: 3px;
+}
+
+.md-typeset .au-hero__caption {
+  margin-top: -0.9rem;
+  font-size: 0.7rem;
+  color: var(--animeup-muted);
+}
+
+.md-typeset .au-hero .au-hero__zoom {
+  position: absolute;
+  left: 0.7rem;
+  bottom: 0.7rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(10, 12, 16, 0.72);
+  color: #fff;
+  font: 600 0.62rem/1.2 ui-monospace, "SF Mono", Menlo, monospace;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+  cursor: zoom-in;
+}
+
+.md-typeset .au-hero .au-hero__zoom:hover {
+  background: var(--animeup-accent);
+  color: #0d1015;
+}
+
+/* 1:1 overlay */
+.au-full {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgba(6, 8, 11, 0.94);
+}
+
+.au-full__scroll {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  display: flex;
+  padding: 3rem;
+  box-sizing: border-box;
+}
+
+.au-full .au-full__pic {
+  --pos: 50%;
+  position: relative;
+  flex: none;
+  margin: auto;
+  cursor: ew-resize;
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.au-full .au-full__pic img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: auto;
+}
+
+.au-full .au-hero__before {
+  clip-path: inset(0 calc(100% - var(--pos)) 0 0);
+}
+
+.au-full .au-hero__line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--pos) - 1px);
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 12px rgba(42, 201, 222, 0.9);
+  pointer-events: none;
+}
+
+.au-full .au-hero__knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border-radius: 50%;
+  background: #fff;
+  color: #0d1015;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 15px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+  box-shadow: 0 0 0 4px rgba(42, 201, 222, 0.45);
+}
+
+.au-full__tag {
+  position: fixed;
+  top: 1rem;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font: 600 12px -apple-system, BlinkMacSystemFont, sans-serif;
+  pointer-events: none;
+}
+
+.au-full__tag--l { left: 1rem; background: rgba(10, 12, 16, 0.8); color: #fff; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2); }
+.au-full__tag--r { right: 4rem; background: #2ac9de; color: #0d1015; }
+
+.au-full__close {
+  position: fixed;
+  top: 0.8rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font: 400 1.3rem/1 -apple-system, sans-serif;
+  cursor: pointer;
+}

@@ -95,6 +95,7 @@ extra_javascript:
   - javascripts/search-expand.js
   - javascripts/toc-current.js
   - javascripts/model-wipe.js
+  - javascripts/hero-compare.js
 
 extra:
   generator: false

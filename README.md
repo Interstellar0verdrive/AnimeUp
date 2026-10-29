@@ -13,11 +13,11 @@ AnimeUp batch-upscales anime episodes to 1080p and beyond with
 Mac app: it analyses your sources, lets you compare models side by side on
 difficult clips, and runs long, resumable jobs, all on your Mac and offline.
 
-![A 360p frame upscaled to 1080p: plain upscale on the left, Real-ESRGAN animevideov3 on the right](docs/images/before-after.png)
-<sub>1:1 crop of a 360p source upscaled to 1080p: plain upscale (left) vs.
-Real-ESRGAN animevideov3 (right). Footage:
-[Morevna Episode 3](https://archive.org/details/morevna-ep3), © Morevna
-Project, CC BY-SA 3.0.</sub>
+![The same picture at 360p, plainly enlarged on the left and upscaled to 1080p by AnimeUp on the right, with the divider sweeping across](docs/images/cover.webp)
+<sub>The same picture at 360p: plainly enlarged on the left, upscaled to 1080p by
+AnimeUp with Real-ESRGAN animevideov3 on the right. In the
+[user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/) you can drag
+the divider yourself, and see it at 1:1.</sub>
 
 ![The AnimeUp window while a queue runs](docs/guide/img/v2/GuideWindow.png)
 
@@ -218,8 +218,8 @@ source code.
 Releases up to and including 1.6.7 were published under the MIT License, and
 copies of those releases keep it. From 1.6.8 on, AnimeUp is GPL-3.0-or-later.
 
-Third-party components keep their own licences (see below). The images in
-`docs/images/` contain frames from Morevna Episode 3 and are licensed
+Third-party components keep their own licences (see below). The guide's
+model studies contain frames from Morevna Episode 3 and are licensed
 CC BY-SA 3.0, like the footage.
 
 ## Credits & third-party licenses
@@ -243,7 +243,7 @@ thanks to all of them.
 | [Rich](https://github.com/Textualize/rich) | Terminal output | MIT |
 | [Pillow](https://github.com/python-pillow/Pillow) | Image handling | MIT-CMU |
 | [Big Buck Bunny](https://peach.blender.org) © 2008 Blender Foundation | 20-second sample clip in `samples/`, used for calibration | CC BY 3.0 |
-| [Morevna Episode 3](https://archive.org/details/morevna-ep3) © Morevna Project | Footage in the before/after image and the screenshots in `docs/images/`, which are therefore CC BY-SA 3.0 as well | CC BY-SA 3.0 |
+| [Morevna Episode 3](https://archive.org/details/morevna-ep3) © Morevna Project | Footage in the guide's model studies and screenshots, which are therefore CC BY-SA 3.0 as well | CC BY-SA 3.0 |
 
 Python dependencies are installed by uv from PyPI on first launch and are
 not part of this repository.
