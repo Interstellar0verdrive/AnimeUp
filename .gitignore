@@ -31,7 +31,7 @@ _WIP/
 Screenshots/
 RIPRENDI_QUI.md
 
-# --- app build output (tools/build_app.sh) ---
+# --- app build output (tools/build_native.sh) ---
 dist/
 .migration.lock
 

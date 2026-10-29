@@ -3,7 +3,7 @@
 I campioni veri (`_WIP/_TESTING/`) sono rip di anime con tracce fansub: non si
 possono pubblicare, quindi su un clone pulito e in CI non ci sono. Qui si
 ricostruiscono con ffmpeg — sorgenti lavfi, audio sinusoidale, sottotitoli
-.ass scritti al volo, font OFL presi da `ui/static/` — ripetendo SOLO le
+.ass scritti al volo, font OFL presi da `tests/fonts/` — ripetendo SOLO le
 proprieta' su cui i casi poggiano: codec, profilo, formato pixel, geometria e
 SAR, timebase del contenitore, framerate misurato e quello DICHIARATO (due
 campioni dichiarano 29.97 e sono 23.976 e 24), tag colore, tracce audio,
@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CARTELLA = ROOT / "tests" / ".fixtures"
-FONT = ROOT / "ui" / "static"
+FONT = ROOT / "tests" / "fonts"
 
 # L'animazione "in due": ogni disegno resta per due fotogrammi, come negli
 # anime veri. Si genera a meta' ritmo e `fps` raddoppia i fotogrammi.

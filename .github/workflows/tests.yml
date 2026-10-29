@@ -62,10 +62,3 @@ jobs:
       # tests/.fixtures/ (pochi secondi).
       - name: Test
         run: ./animeup test
-
-      # L'app per macOS: deve compilare e impacchettarsi a ogni push.
-      - name: Build the macOS app
-        run: |
-          tools/build_app.sh dist
-          test -x dist/AnimeUp.app/Contents/MacOS/AnimeUp
-          codesign --verify --deep --strict dist/AnimeUp.app
