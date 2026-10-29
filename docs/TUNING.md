@@ -3,8 +3,8 @@
 *Italian version: [it/TARATURE.md](it/TARATURE.md)*
 
 This tool contains around twenty constants derived from measurements. The
-measurements come from **two series and sixteen files**: Koyomimonogatari
-(720p Hi444PP) and The Qwaser of Stigmata (400p and 288p). That's a narrow
+measurements come from **two series and sixteen files**: one at 720p
+(Hi444PP) and one at 400p and 288p. That's a narrow
 sample, and it's worth knowing where this could hurt.
 
 The distinction that matters is not "how accurate is it" but **what happens

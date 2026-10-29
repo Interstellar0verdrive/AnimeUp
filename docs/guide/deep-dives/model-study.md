@@ -1162,7 +1162,7 @@ The NC-SA models are allowed in a free program: Adore's author states that free 
 The second needs `realesrgan-ncnn-vulkan` rebuilt against a complete, current ncnn, with frame sizes aligned to multiples of 4, then a reproducible, signed build and a new checksum in setup. It's worth it only if Real-CUGAN's halos are a real problem on your 720p and 1080p sources; Real-CUGAN conservative already softens them.
 
 !!! tip "Seeing the halos on your own files"
-    The halos show most on sharp dark outlines over flat, bright colour, at 560 lines and above. Run [05. Compare](../05-compare.md) on such a clip and look at the outlines in the Real-CUGAN no-denoise version at 2× or 3× zoom, then in Real-CUGAN conservative. If you can't see them while the video plays, today's models are already the right choice for you.
+    The halos show most on sharp dark outlines over flat, bright colour, at 560 lines and above. Run [Compare](../06-compare.md) on such a clip and look at the outlines in the Real-CUGAN no-denoise version at 2× or 3× zoom, then in Real-CUGAN conservative. If you can't see them while the video plays, today's models are already the right choice for you.
 
 ## Credits
 

@@ -1,7 +1,8 @@
 # AnimeUp user guide
 
-The user guide has moved to **[docs/guide/](guide/index.md)**: one chapter
-per step and per tab, from installation and calibration to every option of
-the Sources, Compare and Processing tabs.
+The user guide is in **[docs/guide/](guide/index.md)**: installing, the
+interface at a glance, then one chapter per page of the app (Start, Queue,
+Compare, Settings), and an appendix with the model studies and the design
+study behind 2.0.
 
 The Italian notes are in [docs/it/](it/).

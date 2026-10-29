@@ -1,111 +1,77 @@
 ---
 title: Troubleshooting
-description: Symptoms, what they mean and how to fix them, from installation to finished files.
+description: Symptoms, what they mean and how to fix them, from the first launch to finished videos.
 ---
 
 <span class="eyebrow">Reference · Troubleshooting</span>
 
 # Troubleshooting
 
-Find the symptom, read what it means, apply the fix. Nothing on this page can damage your sources: AnimeUp only ever reads the files in `INPUT/`.
+Find the symptom, read what it means, apply the fix. Nothing on this page can damage your videos: AnimeUp only reads the originals.
 
 !!! tip "Where the details are"
-    When a job fails, the full story is in `registri/`: `lavorazione.log` for the jobs started from the interface, plus one `.log` per file. The `.log` files are diagnostic only and can be deleted at any time; the other files in `registri/` are data (see [07. Output files and folders](../07-output-and-folders.md)).
+    Every processed file has its log: **Show Log** in its drawer, or `logs/` in the work folder. AnimeUp's own log opens with **Help › Open Log in Console**. **Help › Report a Problem…** opens a new issue on GitHub.
 
-## Installing and launching
-
-| Symptom | What it means | What to do |
-|---|---|---|
-| macOS says `Avvia AnimeUp.command` can't be opened | Gatekeeper blocks scripts from unidentified developers the first time. | **System Settings → Privacy & Security → Open Anyway**, or run `xattr -dr com.apple.quarantine` on the AnimeUp folder. See [01. Install](../01-install.md#get-past-gatekeeper). |
-| `ERROR: setting up the environment failed.` | The first launch couldn't download Python and the dependencies. | Connect to the Internet and launch again. It's needed once per Mac (and after moving the folder, if the environment needs repairing). |
-| `ERROR: bin/uv is missing, there's no uv in the PATH and the download failed.` | The tool that builds the Python environment couldn't be found or downloaded. | Check the connection and launch again, or install uv once with the command printed in the message; AnimeUp then copies it into `bin/`. |
-| `Cancelled. Without these binaries no job can start.` | You answered no to the FFmpeg download. | Run `./animeup setup` and answer `y`. |
-| `Binary 'ffmpeg' not found in … or on the PATH.` (or another tool) | A tool is missing from `bin/`. | `./animeup setup`. |
-| The sidebar shows **N system dependencies** or **The folder isn't self-contained** | Some tools come from the system (Homebrew, for example) instead of `bin/`. Works here, not on another Mac. | `./animeup setup`, then `./animeup doctor`. |
-| `doctor` shows **can't run**, **not responding** or **no response** | The binary is there but broken: truncated, wrong architecture, or the execute permission was lost while copying. | `chmod +x bin/*`, then `./animeup setup`. |
-| `setup` says `unexpected checksum` | The downloaded archive isn't the one AnimeUp was verified with; it was discarded. | Try again later. If it persists, follow the manual fallback the message prints. |
-| `setup` says the ffmpeg build is `NOT static` or `incomplete`, or reports an unexpected checksum | The downloaded file isn't the pinned FFmpeg 9.0.2 build (a damaged download, or the file changed on the server); it is discarded. | Try again; if it persists, download the file by hand as the message explains and check its SHA256. |
-| `Architecture … isn't handled automatically` | You're not on Apple Silicon. | AnimeUp supports Apple Silicon Macs only. |
-
-## The interface
+## Installing and the first launch
 
 | Symptom | What it means | What to do |
 |---|---|---|
-| `Port 8899 is already in use: another interface is open.` | An AnimeUp interface (maybe an old one) is still running. | Double-click the launcher: if AnimeUp is running it just opens the browser. To restart it, `lsof -ti :8899 \| xargs kill`, then launch again. Or `./animeup ui --porta 8900`. |
-| The browser shows "connection refused" at `localhost:8899` | The server isn't running: the Terminal window was closed, or **Close AnimeUp** was clicked. | Double-click **Avvia AnimeUp.command** again. Running jobs weren't affected. |
-| The interface behaves oddly after an update | An interface left open from before the update keeps the old code in memory. | Close it (**Close AnimeUp**, or `lsof -ti :8899 \| xargs kill`) and launch again. |
-| The sidebar controls are greyed out with *Settings are locked while a job is running…* | By design: the queue keeps the parameters it started with. | Wait for the queue to finish, or **Stop all**. See [03. The interface](../03-interface.md). |
-| *There's a paused file that was started with different parameters…* | An interrupted file will resume with its own settings, not the sidebar's. | Nothing, if that's what you want. Otherwise click **Reset the sidebar to the paused file's parameters**, or discard the job to redo it with new ones. |
-| *Factory estimates: use "Run now"…* under the estimate | This Mac has never been calibrated. | [02. Calibrate your Mac](../02-calibration.md). |
+| macOS says AnimeUp can't be opened | AnimeUp isn't signed with an Apple Developer ID. | **System Settings › Privacy & Security › Open Anyway**. See [01. Install](../01-install.md#install-the-app). |
+| The video tools window says **The download stopped** | The connection dropped. | **Try Again**: it picks up from where it stopped. |
+| A tool **arrived damaged, so it was set aside** | The download didn't match its published checksum. | **Try Again**. If it keeps happening, check the connection (a proxy or captive portal can alter downloads). |
+| **The engine didn't start** | AnimeUp's background engine couldn't start, or stopped several times in a row. | **Show Log** says why. Quit and reopen AnimeUp; if it persists, report it with the log. |
+| The tools window comes back on its own | A tool went missing, or no longer matches its checksum. | Let it download that tool again. |
 
-## Sources
-
-| Symptom | What it means | What to do |
-|---|---|---|
-| *No videos in INPUT* | Nothing AnimeUp recognises in `INPUT/`. | Copy `.mkv`, `.mp4`, `.mov`, `.avi`, `.m4v`, `.ts` or `.webm` files into `INPUT/`. |
-| *File probably truncated…* | The video stops before the duration the container declares. | The output would end there too. Get a complete copy of the file if you can. |
-| *Interlaced content…* or *3:2 telecine detected…* | AnimeUp doesn't deinterlace or inverse-telecine. It flags the file but doesn't refuse it: processed as it is, the combing lines end up upscaled in the output. | Prepare it with a dedicated tool, then put the result back in `INPUT/`. |
-| *No usable video track* | The file has no video AnimeUp can read. | Check the file in a player; it can't be processed. |
-| A file changed but its analysis didn't | Results are saved by file name. | **Re-analyse** on its row, or **Re-analyse all**. |
-
-More warnings, and what each means, are in [04. Sources](../04-sources.md).
-
-## Compare
+## Adding videos
 
 | Symptom | What it means | What to do |
 |---|---|---|
-| Processing the clips stopped halfway | Any click, or leaving the page, interrupts the Compare renders. | Click **Process the clips** again: it picks up where it left off and keeps the clips already done. |
-| *no comparison tool found. Install video-compare with: brew install video-compare* | Neither video-compare nor IINA is installed. | Install one of them, or judge with the 1:1 crops in the page. Everything else works without them. |
-| Previews with green or pink blocks | An old cache from a file that was corrupted on seek. | Delete that episode's subfolder in `anteprime/` and generate the clips again. |
-| *There are no more clips different enough…* | The file is short, or very uniform. | Work with the clips already found. |
+| **No videos in "folder"** | Nothing AnimeUp recognises in that folder. | **Look in Subfolders**, or check the files' format. |
+| **That video is already in the Queue** | Adding the same file twice changes nothing. Videos AnimeUp made itself are always left out. | Nothing to do. |
+| A file says **can't be processed** | It's interlaced or telecined, unreadable, or has no video track. Its Source tab says which. | Prepare it with a dedicated tool (deinterlacing, inverse telecine), then add the result. |
+| A note says the file is **probably truncated** | The video stops before the duration its container declares. | The output would stop there too: get a complete copy if you can. |
+| A file changed but its report didn't | Reports are kept per file. | **Re-analyse** on its row (⌘R). |
+| **The file is no longer where it was added from** | It was moved or renamed, or its disk is disconnected. | Put it back, or remove it and add it again. |
+
+## Folders and disks
+
+| Symptom | What it means | What to do |
+|---|---|---|
+| **AnimeUp can't write in "folder"** | macOS doesn't allow changes there. | Pick another folder, or check its permissions in the Finder (Get Info). |
+| **Work files need a folder of their own** | The work folder is inside the finished videos' folder. | Pick one outside it, so cleaning up never touches a finished video. |
+| **The work disk isn't connected** | The disk with the work folder was disconnected. | Connect it: the queue waits, nothing is lost. |
+| A note says the disk is **nearly full** or **too full** | Work files need tens of GB. | Free some space, or choose a work folder on another disk. |
+| A file waits before starting | It would go past **Space AnimeUp may use there**. | Free some space, or raise the limit in Start or Settings › Folders. |
+| A plan says **Tight on space: more chunks** | The space per file is lower than ideal. | Nothing: it's only a bit slower. More space means fewer chunks. |
 
 ## Processing
 
 | Symptom | What it means | What to do |
 |---|---|---|
-| **Start processing** is disabled | A job, a queue or the pause between files is active, or nothing is selected. | One job at a time: wait, or **Stop all**. |
-| A row says **cannot be processed** or **upscale too small** | The output height isn't a real upscale of this file (below 1.25×), or it's already larger. | Raise **Output height**, or turn on **Allow upscales below the minimum** if you really want it. |
-| *… can't reach 1080p* on a model | That model's largest scale doesn't get there from this source. | Pick another model, or lower the output height. |
-| *not enough space: about N GB needed, M GB free…* | The job wouldn't fit on the disk, so it didn't start. | Free up space, lower the output height, or lower **Max disk space per file** (more, smaller chunks). |
-| *another job on this file is already running (folder …)* | A lock file says this file is being processed. | If nothing is really running, the lock belongs to a dead process and clears itself on the next run; if it persists, delete `in-corso.lock` in that folder of `JOBS/`. |
-| *the model hung: no new frame for 15 minutes… It was stopped.* | The upscaler stopped producing frames. | Run it again: the job resumes where it left off. |
-| *ffmpeg hasn't responded for 6 hours: stopped.* | Encoding froze, often because the disk disappeared. | Check that the disk is still connected, then resume. |
-| *The job didn't start (exit code N). More details in the log: …* | The command behind the job failed right away. | Read the log it names. |
-| A row stays **interrupted** | Stopped, crashed, or the Mac slept or shut down. | **Resume** continues with the original parameters; **Discard** throws the partial work away. See [06. Processing](../06-processing.md). |
-| A row says **needs redoing**, or `OUTPUT/` contains a `.PARZIALE.mkv` | The final checks found a defect, so the output was set aside instead of keeping its proper name. | Run the file again: it's redone. |
-| A file marked **done** asks to be redone | It was processed, but its output is no longer in `OUTPUT/` (moved or archived). | Confirm only if you want it again. |
-| `JOBS/` takes a lot of space | A job is half-finished, or a finished job left its work folder behind. | Resume or **Discard** it: finished rows with a leftover folder have their own **Discard**. |
-| Estimates are far from the real time | Uncalibrated Mac, or the first files of a new kind of material. | Calibrate (see below). Estimates also learn from every finished file. |
+| **Start Processing** is greyed out | Nothing is ticked, a queue is already running, or a calibration is using the GPU. | Tick some files, or wait. |
+| A model says it **can't reach** the output height | That model only exists at 2×, which isn't enough from this source. | Pick another model, or lower this file's height. |
+| A row says **interrupted** | The file was stopped, AnimeUp was quit, or the Mac shut down. | **Resume** continues from the chunk it was in; **Discard** throws the work away. |
+| A file **failed** | The upscaler or the encoder stopped with an error. Its outcome says where. | Open its log; tick it to try again. If it fails at the same point, report it with the log. |
+| A `….DEFECTIVE.mkv` appears next to the originals | The final checks found a problem (frames, size, audio), so the video was set aside. | Process the file again. |
+| The work folder takes a lot of space | Interrupted files keep their work, or **Keep everything** is on. | Resume or **Discard** interrupted files; check Settings › Folders. |
+| Estimates are far from the real time | The Mac isn't calibrated, or the material is unusual. | [Calibrate](../03-calibration.md). Estimates also learn from every finished file. |
 
-### Stopping a job without the interface
+## Compare
 
-The job runs as a separate process, so it carries on even with the interface closed. To stop it from Terminal:
-
-```bash
-kill $(cat "JOBS/<job folder>/in-corso.lock")
-```
-
-The file stays resumable. To shut down the interface itself when nothing else works: `lsof -ti :8899 | xargs kill`.
+| Symptom | What it means | What to do |
+|---|---|---|
+| **The GPU is busy with the processing queue** | The test waits for the queue. | Wait, or **Pause the Queue**. |
+| **The test stopped** | It was stopped, or a version failed. | **Render the Rest** fills the gaps; what finished stays. |
+| **No clips to test in this file** | Nothing in it stands out, or it's shorter than one clip. | Pick another file; this file's model can still be chosen in the Queue. |
+| A model is **not available for this file** | It only exists at 2× and can't reach the output height. | Lower this file's output height to try it. |
 
 ## Calibration
 
 | Symptom | What it means | What to do |
 |---|---|---|
-| **Run now** / **Redo** is greyed out | A job, a queue or the pause between files is active. | Wait, or **Stop all** in Processing. |
-| *A job is running: the timer would be measuring a busy GPU…* | Same, seen from inside the window. | **Stop all**, then reopen the window. |
-| `./animeup taratura` says *A job is running: stop everything from the interface…* | Same, from the command line. | Stop the queue, then run it again. |
-| *Calibration interrupted: sample clip missing…* | `campioni/bbb-480p.mkv` was deleted. | Restore the `campioni/` folder from the release or the repository. |
-| *Calibration interrupted: a calibration is already running on this machine…* | A previous run is still going in the background. | Wait a few minutes; the sidebar date changes when it's saved. |
-| *Calibration interrupted: … produced N of 180 frames — measurement unreliable* | An upscaler didn't finish its batch. | Check the free space, close other apps, try again. |
-| The sidebar still says **Never** after calibrating | The run didn't finish (the interface was closed during it), or the folder is on a Mac with a different chip. | Run it again and leave AnimeUp alone until **done**. |
-| The new numbers are much lower than before | Something else was using the GPU or CPU during the run, or a laptop was on battery. | Close other apps, plug in, and **Redo**. |
-
-The full story is in [02. Calibrate your Mac](../02-calibration.md).
-
-## Still stuck?
-
-- Run `./animeup doctor` and check every row says **vendored** and **runs**.
-- Look at the end of the relevant `.log` in `registri/`.
-- The reasoning behind every threshold mentioned here is in the [tuning notes](../../TUNING.md).
+| **Calibrate after the queue** | Timing the models while the queue uses the GPU would give wrong numbers. | Calibrate when the queue finishes. |
+| **Calibration didn't finish** | One step stopped with an error. Nothing was saved. | Close other apps and try again. |
+| The new numbers are much lower than before | Something else used the GPU or CPU, or a laptop ran on battery. | Close other apps, plug in, calibrate again. |
+| The sidebar says **From another Mac** | The settings folder was copied from a different Mac. | Calibrate this one. |
 
 [Next: How a job works inside →](../deep-dives/how-it-works.md)

@@ -1,8 +1,8 @@
 # AnimeUp — numeri tarati: su cosa, e cosa succede se sbagliano
 
 Questo strumento contiene una ventina di costanti ricavate da misure. Le misure
-vengono da **due serie e sedici file**: Koyomimonogatari (720p Hi444PP) e The
-Qwaser of Stigmata (400p e 288p). È un campione stretto, e vale la pena sapere
+vengono da **due serie e sedici file**: una a 720p (Hi444PP) e una a 400p e
+288p. È un campione stretto, e vale la pena sapere
 dove questo può fare male.
 
 La distinzione che conta non è "quanto è precisa" ma **cosa succede se è

@@ -10,22 +10,26 @@ exclude_docs: |
 
 nav:
   - Home: guide/index.md
-  - 01. Install and first launch: guide/01-install.md
-  - 02. Calibrate your Mac: guide/02-calibration.md
-  - 03. The interface and its settings: guide/03-interface.md
-  - '04. Sources: check your files': guide/04-sources.md
-  - '05. Compare: choose the model by eye': guide/05-compare.md
-  - '06. Processing: run, monitor, stop and resume': guide/06-processing.md
-  - 07. Output files and folders: guide/07-output-and-folders.md
+  - Overview:
+      - 01. Install and first launch: guide/01-install.md
+      - 02. The interface at a glance: guide/02-interface.md
+  - Using AnimeUp:
+      - 03. Calibrate your Mac: guide/03-calibration.md
+      - 04. Start: guide/04-start.md
+      - 05. The Queue: guide/05-queue.md
+      - 06. Compare: guide/06-compare.md
+      - 07. Settings: guide/07-settings.md
+      - 08. Files and folders: guide/08-files-and-folders.md
   - Reference:
-      - Command-line reference: guide/reference/command-line.md
+      - Command line: guide/reference/command-line.md
       - Troubleshooting: guide/reference/troubleshooting.md
-  - Deep dives:
+  - Appendix:
       - How a job works inside: guide/deep-dives/how-it-works.md
       - The models and when to use them: guide/deep-dives/models.md
-      - How much texture each model keeps: guide/deep-dives/texture-study.md
       - Newer anime models, compared: guide/deep-dives/model-study.md
+      - How much texture each model keeps: guide/deep-dives/texture-study.md
       - Tuning notes: TUNING.md
+      - Designing AnimeUp 2.0: guide/deep-dives/design.md
 
 theme:
   name: material

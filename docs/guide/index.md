@@ -1,6 +1,6 @@
 ---
 title: AnimeUp user guide
-description: Step-by-step guide to AnimeUp, the local, offline anime upscaler for Apple Silicon Macs.
+description: How to use AnimeUp 2.0, the native Mac app that upscales anime on your own Mac, offline.
 ---
 
 <header class="animeup-hero">
@@ -9,7 +9,7 @@ description: Step-by-step guide to AnimeUp, the local, offline anime upscaler fo
     <img class="animeup-hero__icon animeup-logo__light" src="../assets/animeup-logo-light.png" alt="" aria-hidden="true">
   </span>
   <div class="animeup-hero__copy">
-    <span class="eyebrow">Version 1.4 · Apple Silicon</span>
+    <span class="eyebrow">Version 2.0 · Apple Silicon</span>
     <h1>AnimeUp user guide</h1>
     <p>Upscale anime episodes to 1080p and beyond on your own Mac, offline, with Real-ESRGAN and Real-CUGAN, and choose the model by looking at the result.</p>
   </div>
@@ -17,89 +17,118 @@ description: Step-by-step guide to AnimeUp, the local, offline anime upscaler fo
 
 ![Before and after: a 360p frame enlarged to 1080p with AnimeUp](../images/before-after.png){ .animeup-cover }
 
-![The AnimeUp window: settings sidebar on the left, the Processing tab with a job running on the right](img/overview.png)
-
 ## What AnimeUp is
 
-AnimeUp is a batch upscaler for anime that runs entirely on your Mac. It takes the episodes you copy into its `INPUT/` folder, enlarges them with an AI model on the Mac's GPU, and writes finished files to `OUTPUT/` with all the original audio, subtitles, chapters and fonts carried over.
+AnimeUp is a Mac app that makes old anime look good on a modern screen. You give it episodes at DVD or web-rip resolution (240p to 720p, typically), it enlarges every frame with an AI model on your Mac's GPU, and it writes a new video next to the original, with all the audio, subtitles, chapters and fonts carried over.
 
-It wraps four pieces of work that are tedious to do by hand:
+Everything happens on your Mac. Nothing is uploaded, there is no account, and after the first launch AnimeUp works offline.
 
-- **Source analysis**: resolution, frame rate, interlacing and telecine, truncated files and odd formats are detected before a job starts, not halfway through it.
-- **Model choice by eye**: AnimeUp finds difficult 10-second clips in your episode (dark, bright, static, fast motion), renders them with the models you pick and shows them side by side.
-- **Long, resumable jobs**: work is saved one chunk at a time, so a crash, a closed lid or a stopped job loses at most the chunk in progress.
-- **Honest time estimates**: once you have calibrated your Mac, the estimates use its real speed, encoding included.
+It takes care of the parts that are tedious to do by hand:
 
-Everything lives in one folder: the Python runtime, the dependencies, the upscaler binaries and the models. Nothing is installed system-wide, and no Homebrew is needed.
-
-## Who it's for
-
-AnimeUp is for people who keep a local anime library at DVD or web-rip resolution (240p to 720p, typically) and want a sharper 1080p version without uploading anything anywhere. You don't need to know what Real-ESRGAN or x265 are: the defaults are chosen from measurements, and each setting has a help bubble.
+- **It checks every file as it arrives**: frame rate, interlacing, tracks, truncated files. Problems show up before a job starts, not halfway through it.
+- **It lets you choose the model by eye**: it finds the hardest moments of an episode, renders them with each model and shows them side by side.
+- **It runs long jobs safely**: work is saved one chunk at a time, so stopping, quitting or a crash costs at most the chunk in progress.
+- **It tells you honestly how long it will take**, from the real speed of your Mac.
 
 !!! info "What AnimeUp is not"
     - It isn't a real-time player filter: an episode takes from minutes to hours, depending on its resolution, the model and your Mac.
-    - It doesn't deinterlace or inverse-telecine: an interlaced or telecined source is flagged (the job would still run, upscaling the combing lines), and you prepare it with a dedicated tool first.
-    - It runs **one job at a time**. Two upscalers on the same GPU only slow each other down, so the interface queues files rather than running them in parallel.
+    - It doesn't deinterlace or inverse-telecine. Such a file is flagged when it arrives; prepare it with a dedicated tool first.
+    - It processes **one file at a time**. Two upscalers on the same GPU only slow each other down.
 
-## The path at a glance
+## How a batch goes
 
-<picture>
-  <source media="(max-width: 44em)" srcset="img/guide-path-mobile.svg">
-  <img src="img/guide-path.svg" width="820" height="372" alt="Set up AnimeUp with Install and optional first-use Calibrate, then follow four numbered steps: Sources, Compare, Processing, Output.">
-</picture>
+Four steps, and only the first two are needed.
 
-Calibration is optional but recommended on first use: without it AnimeUp still works, but every time estimate comes from a different Mac.
+<div class="au-steps" markdown>
+
+<div class="au-step" markdown>
+![](img/v2/GuideSpotCalibrate.png)
+<div markdown>
+**1 · Calibrate.** Once per Mac, about 10 minutes with the GPU idle. AnimeUp times each model on your Mac, so every estimate fits it. [Calibrate your Mac](03-calibration.md)
+</div>
+</div>
+
+<div class="au-step" markdown>
+![](img/v2/GuideSpotAddVideos.png)
+<div markdown>
+**2 · Add videos.** Drop files or whole folders on the window. Each one is analysed as it arrives, and gets a recommended model and an estimate. [Start](04-start.md)
+</div>
+</div>
+
+<div class="au-step" markdown>
+![](img/v2/GuideSpotCompare.png)
+<div markdown>
+**3 · Compare** *(optional)*. Render a few hard clips with each model and pick the one you like by eye. [Compare](06-compare.md)
+</div>
+</div>
+
+<div class="au-step" markdown>
+![](img/v2/GuideSpotProcess.png)
+<div markdown>
+**4 · Process.** Start the queue and follow it. Pause, stop, resume and redo: nothing done is lost. [The Queue](05-queue.md)
+</div>
+</div>
+
+</div>
 
 ## Requirements
 
 | Requirement | Details |
 |---|---|
 | Mac | Apple Silicon (M1 or later). Intel Macs aren't supported. |
-| macOS | Developed and tested on macOS 26 (Tahoe). |
-| Internet | On the **first launch only**, to download a private Python runtime and FFmpeg into the AnimeUp folder. After that, AnimeUp works offline. |
-| Disk space | Upscaling extracts frames to disk: a single episode can temporarily take tens of GB. The interface shows how much a file needs and lets you set a cap. An external drive works fine. |
-| Browser | Any modern browser. The interface opens at <http://localhost:8899> and never leaves your Mac. |
-| Optional | [video-compare](https://github.com/pixop/video-compare) (installed with Homebrew) or [IINA](https://iina.io), to compare renders in motion from the Compare tab. |
+| macOS | macOS 26 (Tahoe) or later. |
+| Internet | On the **first launch only**, to download the video tools (about 220 MB). After that, AnimeUp works offline. |
+| Disk space | Upscaling works on extracted frames: a single episode can temporarily take tens of GB. AnimeUp shows how much it may use and lets you set a limit. An external drive works fine. |
 
-## Chapters
+## How this guide is organised
 
-| Chapter | What it covers |
+**Overview**
+
+| Page | What it covers |
 |---|---|
-| [01. Install and first launch](01-install.md) | Release zip or `git clone`, the Gatekeeper prompt, what the first launch downloads, updating |
-| [02. Calibrate your Mac](02-calibration.md) | Measuring your Mac's real speed so the estimates are right |
-| [03. The interface and its settings](03-interface.md) | Layout, tabs, help bubbles, every sidebar setting, closing AnimeUp |
-| [04. Sources: check your files](04-sources.md) | The analysis of each file and what its warnings mean |
-| [05. Compare: choose the model by eye](05-compare.md) | Difficult clips, test renders, image indicators, 1:1 crops |
-| [06. Processing: run, monitor, stop and resume](06-processing.md) | The queue, progress, Stop, Pause, Resume, Discard, the end summary |
-| [07. Output files and folders](07-output-and-folders.md) | What lands in `OUTPUT/`, and what every folder is for |
+| [01. Install and first launch](01-install.md) | Downloading the app, Open Anyway, the video tools, where AnimeUp keeps its files, updating |
+| [02. The interface at a glance](02-interface.md) | The window and its areas, the sidebar, menus, alerts, notifications, the narrow layout |
+
+**Using AnimeUp**
+
+| Page | What it covers |
+|---|---|
+| [03. Calibrate your Mac](03-calibration.md) | Why, what it measures, the results and how to read them |
+| [04. Start](04-start.md) | Adding videos, where files go, This Mac |
+| [05. The Queue](05-queue.md) | Analysis, the plan for each file, running, pausing, stopping, the outcome, Redo |
+| [06. Compare](06-compare.md) | Testing the models on hard clips and choosing by eye |
+| [07. Settings](07-settings.md) | Every setting, its default, and when it applies |
+| [08. Files and folders](08-files-and-folders.md) | Finished videos, work files, logs, names |
 
 **Reference**
 
 | Page | What it covers |
 |---|---|
-| [Command-line reference](reference/command-line.md) | Every `./animeup` command and option |
-| [Troubleshooting](reference/troubleshooting.md) | Symptom → fix tables |
+| [Command line](reference/command-line.md) | The portable folder and `./animeup` |
+| [Troubleshooting](reference/troubleshooting.md) | Symptom → fix |
 
-**Deep dives**
+**Appendix**
 
 | Page | What it covers |
 |---|---|
-| [How a job works inside](deep-dives/how-it-works.md) | Analysis, plan, extraction, deduplication, upscale, encoding, remux |
-| [The models and when to use them](deep-dives/models.md) | Real-ESRGAN animevideov3 and the Real-CUGAN variants |
+| [How a job works inside](deep-dives/how-it-works.md) | Analysis, plan, extraction, repeated frames, chunks, encoding, resuming |
+| [The models and when to use them](deep-dives/models.md) | The four models, and which source each one suits |
+| [Newer anime models, compared](deep-dives/model-study.md) | Twelve versions of eight frames, side by side |
+| [How much texture each model keeps](deep-dives/texture-study.md) | Paper and grain through each model |
 | [Tuning notes](../TUNING.md) | The measurements behind every default |
+| [Designing AnimeUp 2.0](deep-dives/design.md) | The design study behind the app: the approach, the design system, the states |
 
 !!! note "Language"
-    The interface is available in English and Italian: switch with **Language · Lingua** at the top of the sidebar. The command-line messages follow the same choice. This guide uses the English labels.
+    AnimeUp is available in English and Italian: it starts in the language of macOS, and you can switch in **Settings › General**. This guide uses the English labels.
 
-[Start: 01. Install and first launch →](01-install.md)
+[Next: 01. Install and first launch →](01-install.md)
 
 ---
 
-<small>Screenshots in this guide show footage from
+<small>Pictures in this guide show footage from
 [Morevna Episode 3](https://archive.org/details/morevna-ep3) (© Morevna
 Project, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/))
 and [Big Buck Bunny](https://peach.blender.org) (© 2008 Blender Foundation,
 [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)); the images are
 CC BY-SA 3.0. AnimeUp itself is free software under the
-[GNU GPL v3 or later](https://github.com/Interstellar0verdrive/AnimeUp/blob/main/LICENSE)
-(MIT up to 1.6.7).</small>
+[GNU GPL v3 or later](https://github.com/Interstellar0verdrive/AnimeUp/blob/main/LICENSE).</small>

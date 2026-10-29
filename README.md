@@ -19,11 +19,13 @@ Real-ESRGAN animevideov3 (right). Footage:
 [Morevna Episode 3](https://archive.org/details/morevna-ep3), © Morevna
 Project, CC BY-SA 3.0.</sub>
 
-> **2.0 is a new app.** AnimeUp 2.0 replaces the browser interface of 1.x
-> with a native macOS app. The [user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)
-> still describes 1.x and is being rewritten; the technical articles and the
-> [tuning notes](docs/TUNING.md) are still accurate. The app is in English and
-> Italian (Settings › General).
+![The AnimeUp window while a queue runs](docs/guide/img/v2/GuideWindow.png)
+
+**[Read the user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)**: installing,
+every page of the app, the model studies, and
+[the design study behind 2.0](https://interstellar0verdrive.github.io/AnimeUp/guide/deep-dives/design/).
+The app is in English and Italian (Settings › General).
+*In italiano: [LEGGIMI](docs/it/LEGGIMI.md).*
 
 ---
 
@@ -38,7 +40,7 @@ Project, CC BY-SA 3.0.</sub>
   episode (dark, bright, static, fast motion), renders them with each model
   and shows them in a split player, fitted to the window or at 1:1.
 - **Four models, picked for you.** Real-ESRGAN animevideov3, Real-CUGAN
-  denoise leggero, no-denoise and conservative. Each file gets the model that
+  light denoise, no-denoise and conservative. Each file gets the model that
   suits its resolution, and you can change it per file or for all of them.
 - **Deduplication.** Anime is often animated "on twos" or "on threes".
   Repeated frames are upscaled only once, which measured nearly 2× faster.

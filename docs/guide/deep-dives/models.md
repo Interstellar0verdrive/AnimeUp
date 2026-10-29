@@ -1,37 +1,39 @@
 ---
 title: The models and when to use them
-description: The three upscaling models AnimeUp offers, how it recommends one from the source resolution, how it picks the scale, and why some combinations can't reach the target.
+description: The four upscaling models AnimeUp offers, how it recommends one from the source resolution, how it picks the scale, and why some combinations can't reach the target.
 ---
 
-<span class="eyebrow">Deep dive · Models</span>
+<span class="eyebrow">Appendix · Models</span>
 
 # The models and when to use them
 
-AnimeUp offers three models. This page explains how they differ, what AnimeUp recommends and why, and the arithmetic that decides the scale and whether a model can reach your target.
+AnimeUp offers four models. This page explains how they differ, what AnimeUp recommends and why, and the arithmetic that decides the scale and whether a model can reach your target.
 
-The short version: the recommendation is a good starting point, and [05. Compare](../05-compare.md) is where you decide. AnimeUp never locks you into its suggestion.
+The short version: the recommendation is a good starting point, and [Compare](../06-compare.md) is where you decide. AnimeUp never locks you into its suggestion.
 
-## The three models
+## The four models
 
-They're listed in the interface in the same order as here, from the one that keeps the least to the one that keeps the most.
+They're listed in the app in the same order as here, from the one that keeps the least to the one that keeps the most.
 
 | Model (as shown) | Name in the output file | Scales | Cleans noise | Character |
 |---|---|---|---|---|
 | **Real-ESRGAN animevideov3** | `animevideov3` | x2, x3, x4 | Yes, built in | The fastest. Very crisp lines, but it flattens background texture: less detail and far fewer artefacts. |
 | **Real-CUGAN light denoise** | `cugan-denoise` | x2 only | Yes, lightly | The middle ground. Keeps texture and gradients while cleaning up the most visible noise: for sources that aren't clean. |
 | **Real-CUGAN no-denoise** | `cugan` | x2, x3, x4 | No | Keeps everything: texture, gradients and, unfortunately, the noise too. For sources that are already clean. |
+| **Real-CUGAN conservative** | `cugan-conservative` | x2, x3, x4 | No | The most faithful: keeps paper texture and film grain, and the leftovers too. For grainy or painted sources at 720p and above. |
 
-All three run on the Mac's GPU through ncnn with Vulkan. Real-CUGAN is roughly 2.7 times slower than animevideov3.
+All four run on the Mac's GPU through ncnn with Vulkan. The Real-CUGAN models are roughly 2.7 times slower than animevideov3; conservative is the same network as no-denoise with different weights, so it runs at the same speed.
 
 ### Factory speeds
 
-Until you [calibrate](../02-calibration.md), estimates use these speeds, in megapixels of *source* per second, measured on one Mac on 240-frame batches:
+Until you [calibrate](../03-calibration.md), estimates use these speeds, in megapixels of *source* per second, measured on one Mac on 240-frame batches:
 
 | Model | x2 | x3 | x4 |
 |---|---|---|---|
 | Real-ESRGAN animevideov3 | 1.95 | 1.79 | 1.80 |
 | Real-CUGAN light denoise | 1.02 | — | — |
 | Real-CUGAN no-denoise | 1.02 | 0.66 | 0.85 |
+| Real-CUGAN conservative | as no-denoise | | |
 
 Your Mac will differ, sometimes by a third in either direction. That's what calibration is for. [TUNING.md](../../TUNING.md) has a factory-versus-measured comparison on one machine.
 
@@ -40,17 +42,15 @@ Your Mac will differ, sometimes by a third in either direction. That's what cali
 
 ## What AnimeUp recommends
 
-The recommendation depends only on the **source's height** (the encoded height, as listed in Sources). There are three bands:
+The recommendation depends only on the **source's height** (the encoded height, as shown in the Queue). There are three bands:
 
-| Source height | Recommended | Light denoise | No-denoise |
-|---|---|---|---|
-| Below 380 | **animevideov3** · *recommended* | *not recommended* | *not recommended* |
-| 380 to 559 | **animevideov3** · *recommended* | *worth checking* | *not recommended* |
-| 560 and above | **CUGAN no-denoise** · *recommended* | — | — |
+| Source height | Recommended | Light denoise | No-denoise | Conservative |
+|---|---|---|---|---|
+| Below 380 | **animevideov3** · *recommended* | *not recommended* | *not recommended* | *not recommended* |
+| 380 to 559 | **animevideov3** · *recommended* | *worth checking* | *not recommended* | *not recommended* |
+| 560 and above | **CUGAN no-denoise** · *recommended* | — | — | — |
 
-The words in italics are the chips you see on the model cards in Compare. In the top band the other two models simply get no chip.
-
-![Compare: the Available models cards, each with its chip](../img/compare-models.png)
+The words in italics are the chips you see next to the model in the Queue. In the top band the other models simply get no chip; for grain or painted texture, try conservative too.
 
 ### Why the bands are where they are
 
@@ -61,9 +61,7 @@ It's not that small files are necessarily dirty (among the samples, a 360p file 
 
 The boundaries come from judging real jobs **during playback**, not just on still crops: three sources (720p, 400p, 288p), each processed with two models. Motion shows things a still frame can't, like flicker and how stable detail stays from one frame to the next. At 720p CUGAN was clearly better: sharper black lines, and background texture that animevideov3 flattens. At 400p CUGAN was still ahead, by less. At 288p animevideov3 was clearly better.
 
-**The middle band is honestly uncertain.** Three comparisons aren't enough to place two boundaries precisely, and between 380 and 559 lines the result changes from file to file depending on how dirty it is. There, animevideov3 is the safe baseline and light denoise is the candidate to check by eye. The Compare tab's **Which model should I choose?** panel says the same thing.
-
-![Compare: the "Which model should I choose?" panel, with the three bands](../img/compare-which-model.png)
+**The middle band is honestly uncertain.** Three comparisons aren't enough to place two boundaries precisely, and between 380 and 559 lines the result changes from file to file depending on how dirty it is. There, animevideov3 is the safe baseline and light denoise is the candidate to check by eye. The **Model guide** in Compare (and in the Help menu) says the same thing.
 
 !!! info "Why there's no noise meter"
     A measurement of noise was built and tested to drive the recommendation automatically. It was dropped because it was unstable: on the same three files, measuring one frame or four changed the values threefold and swapped which source looked noisier. A metric that changes its mind every run is worse than none, so the decision is left to your eyes in Compare.
@@ -91,7 +89,7 @@ The scale appears in the output file name (`x3`, `x4`). On the command line you 
 
 ## When a model can't reach the target
 
-If even the model's largest scale doesn't reach your output height, the last stretch would have to be covered by lanczos alone: plain enlargement with no added detail, which is exactly what the GPU hours are meant to avoid. So AnimeUp refuses. In Compare that model's card is greyed out with the chip ***can't reach 1080p*** (or whatever your height is). This overrides any recommendation chip: it's arithmetic, not opinion.
+If even the model's largest scale doesn't reach your output height, the last stretch would have to be covered by lanczos alone: plain enlargement with no added detail, which is exactly what the GPU hours are meant to avoid. So AnimeUp refuses. In Compare that model's card says *not available for this file*, and explains that it only exists at 2×. This overrides any recommendation chip: it's arithmetic, not opinion.
 
 This mostly concerns **Real-CUGAN light denoise**, which only exists at x2. It can reach a target only from a source at least half as tall:
 
@@ -103,24 +101,22 @@ This mostly concerns **Real-CUGAN light denoise**, which only exists at x2. It c
 | 2160p | 1080 lines |
 
 !!! warning "Light denoise and 1080p in the middle band"
-    At a 1080p target, light denoise can't reach from sources between 380 and 539 lines, which is most of the middle band. On those files it shows *can't reach 1080p*, and the general rule in Compare only suggests it from 540p up. If you want to try it there, lower **Output height** to 720p, or turn on **Allow upscales below the minimum** and accept that lanczos covers the gap (the plan then carries a "Forced:" warning).
+    At a 1080p target, light denoise can't reach from sources between 380 and 539 lines, which is most of the middle band. On those files it's not available, and the Model guide only suggests it from 540p up. If you want to try it there, lower that file's height to 720p in its Processing tab.
 
 Two more limits from the plan apply to every model:
 
 - **4× at most.** AnimeUp won't ask a model for more than 4× the source height. From a 240p source, a 1080p request becomes 960p, with a warning.
-- **1.25× at least.** Below that gain the job is refused as "upscale too small", unless **Allow upscales below the minimum** is on, in which case it's processed as `supersampling`.
+- **1.25× at least.** Below that gain the job is refused as "upscale too small", unless **Allow small enlargements** is on in Settings.
 
 ## Where you choose
 
 | Where | How |
 |---|---|
-| [05. Compare](../05-compare.md) | Run the models on short difficult clips of the episode and compare the results by eye |
-| [06. Processing](../06-processing.md) | Each file's row has a model selector, preset to the recommendation. **Same model for all…** sets every selected file at once. |
-| Command line | `./animeup run -m cugan` (or `cugan-denoise`, `animevideov3`). Left empty, the recommended model is used. |
+| [Compare](../06-compare.md) | Run the models on short difficult clips of the episode, compare the results by eye, then **Use for This File** or **Use for Multiple Files…** |
+| [The Queue](../05-queue.md#the-plan-for-each-file) | Each file's row has a model menu, preset to the recommendation. **Same for all** sets every ticked file at once. |
+| Command line | `./animeup run -m cugan` (or `cugan-denoise`, `cugan-conservative`, `animevideov3`). Left empty, the recommended model is used. |
 
-If you choose a model AnimeUp doesn't recommend for that file, it's still allowed. Compare reminds you with a note: *"…can still be selected, but isn't recommended for this file."*
-
-The **Denoise before upscaling** setting in the sidebar is separate from the model. It applies an FFmpeg denoise filter to the source frames before any model sees them, and can be combined with any of the three. It's rarely needed with animevideov3 or light denoise, which already clean.
+If you choose a model AnimeUp doesn't recommend for that file, it's still allowed: its chip says *chosen by you*.
 
 ## Models that aren't offered
 
@@ -129,10 +125,9 @@ The upscaler downloads come with more model files than AnimeUp uses (in `bin/mod
 | Model | Why it isn't offered |
 |---|---|
 | Real-CUGAN "pro" | Silently corrupted 2 frames out of 240: one with altered colour channels, one completely black |
-| Real-CUGAN conservative | Visible banding on soft gradients |
 | Real-ESRGAN x4plus-anime | Softer than animevideov3, and 4 times slower |
 
-Newer community models (AnimeJaNai, Fallin Soft, Adore and others) were also tested against the two AnimeUp uses: see [Newer anime models, compared](model-study.md).
+Newer community models (AnimeJaNai, Fallin Soft, Adore and others) were also tested against the ones AnimeUp uses: see [Newer anime models, compared](model-study.md).
 
 ## Before you move on
 
