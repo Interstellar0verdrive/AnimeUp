@@ -904,7 +904,7 @@
 }
 
 .md-typeset h3 {
-  font-size: 18px;
+  font-size: 20px;
   margin-top: 2.2em;   /* and above subsections (default 1.6em) */
 }
 
@@ -1093,7 +1093,9 @@
   .md-content__inner {
     box-sizing: border-box;
     margin: 0 auto !important;
-    max-width: 800px;
+    /* 800 px up to a 1500 px window, then it grows with the screen, up to 1140 px (30 Oct). The boards
+       are exported at 3x, so they stay sharp at that width */
+    max-width: min(1140px, max(800px, calc(100vw - 700px)));
     padding: 36px 20px 28px;
   }
 
@@ -1824,7 +1826,7 @@
 }
 
 /* "See more examples" under the cover: a button, so it isn't lost at the end of the caption */
-.md-typeset .au-more { margin: -0.4rem 0 1.6rem; }
+.md-typeset .au-more { margin: 0.5rem 0 1.6rem; }   /* a little air between the caption and the button */
 .md-typeset .au-more .au-more__btn {
   display: inline-flex;
   align-items: center;
