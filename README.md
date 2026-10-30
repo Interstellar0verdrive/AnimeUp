@@ -15,6 +15,8 @@ difficult clips, and runs long, resumable jobs, all on your Mac and offline.
 
 ![AnimeUp: the Queue running a file, its drawer open, and Compare in front with two versions of a frame side by side](docs/images/app-v2.png)
 
+![AnimeUp: Start with this Mac and its video tools, and the calibration results in front, comparing every model with the factory numbers](docs/images/app-start-calibration.png)
+
 **[Read the user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)**: installing,
 every page of the app, the model studies, and
 [the design study behind 2.0](https://interstellar0verdrive.github.io/AnimeUp/guide/deep-dives/design/).
