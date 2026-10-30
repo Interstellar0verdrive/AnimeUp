@@ -19,7 +19,7 @@ Calibration measures the same numbers on **your** Mac. AnimeUp works without it,
 
 The first time, **This Mac** on Start suggests it, and the sidebar says **Not done yet** with a **Calibrate** button. You can also use **AnimeUp › Calibrate This Mac…** or **Calibrate Again** in the sidebar at any time.
 
-![The calibration sheet, before starting](img/v2/GuideCalibrate.png){ .au }
+![The calibration sheet, before starting](img/v2/GuideCalibrate.webp){ .au }
 
 The sheet says what will be timed:
 
@@ -36,7 +36,7 @@ Close other apps that use the GPU first (games, video editors): anything else ru
 
 The sheet becomes a checklist: one row per model and per measurement, each ticked with its time as it finishes.
 
-![The calibration sheet while it runs](img/v2/GuideCalRunning.png){ .au }
+![The calibration sheet while it runs](img/v2/GuideCalRunning.webp){ .au }
 
 Each model is timed on a short sample (a scene from Big Buck Bunny, 854×480) at every scale it offers, and right after that at 1080p, because large sources run at a different speed per pixel. A step that fails gets a red **stopped** chip.
 
@@ -46,7 +46,7 @@ You can close the sheet: calibration carries on, and the activity card in the si
 
 When it finishes, the results open. You can reopen them any time by clicking the calibration date in the sidebar or on Start.
 
-![Calibration results, the Overview tab](img/v2/GuideCalResults.png){ .au }
+![Calibration results, the Overview tab](img/v2/GuideCalResults.webp){ .au }
 
 **Overview** answers the question you care about: how much faster or slower this Mac turned out, and what that means for an episode. For every model it shows how long a 24-minute episode would take to upscale, before and after, and a small chart for each model and scale.
 

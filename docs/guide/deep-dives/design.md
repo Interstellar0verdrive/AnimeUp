@@ -8,8 +8,8 @@ description: "The design study behind AnimeUp 2.0: why a native app, the hybrid 
 # Designing AnimeUp 2.0
 
 <div class="au-fade" role="img" aria-label="The boards of AnimeUp’s design system, seen from afar: foundations, buttons, controls and patterns, in the dark theme and in the light one">
-  <img src="../../img/v2/ds-cover-dark.png" alt="">
-  <img src="../../img/v2/ds-cover-light.png" alt="">
+  <img src="../../img/v2/ds-cover-dark.webp" alt="">
+  <img src="../../img/v2/ds-cover-light.webp" alt="">
   <svg class="au-fade__edge" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="0" x2="0" y2="0" vector-effect="non-scaling-stroke"/></svg>
 </div>
 
@@ -26,8 +26,8 @@ Up to 1.6, AnimeUp was a web page opened in the browser, built with [Streamlit](
 - **It lived in a tab.** Address bar, refresh, imitation dialogs, and work running with nothing on screen once the tab was closed.
 
 <div class="au-swap" role="img" aria-label="AnimeUp 1.6, a page in the browser, giving way to AnimeUp 2.0, a native Mac app, in the same place">
-  <img src="../../img/v2/renewal-20d-dark.png" alt="" loading="eager">
-  <img class="au-swap__from" src="../../img/v2/renewal-16d-dark.png" alt="" loading="eager">
+  <img src="../../img/v2/renewal-20d-dark.webp" alt="" loading="eager">
+  <img class="au-swap__from" src="../../img/v2/renewal-16d-dark.webp" alt="" loading="eager">
   <span class="au-swap__sun" aria-hidden="true"></span>
 </div>
 
@@ -39,7 +39,7 @@ For 2.0 I started again in SwiftUI, with the same engine underneath and one goal
 
 Two halves, kept apart on purpose: what the Mac already does well is left to the Mac, and what only AnimeUp does is designed for it.
 
-![AnimeUp 2.0: Compare picking the clips to test in a narrow window, with the pages as tabs at the top, and in front the Queue in a wide window, running a file with its drawer open](../img/v2/narrow-clips-and-queue-dark.png){ .au }
+![AnimeUp 2.0: Compare picking the clips to test in a narrow window, with the pages as tabs at the top, and in front the Queue in a wide window, running a file with its drawer open](../img/v2/narrow-clips-and-queue-dark.webp){ .au }
 
 - **The frame is the Mac's.** Glass sidebar, Settings window, sheets, alerts, menus, notifications, Dock progress, SF Pro and SF Symbols. Nothing the Mac already does is redrawn.
 - **The content is AnimeUp's.** File rows that are their own progress bars, the four steps and their chunks, the comparison player, the calibration charts, one cyan accent.
@@ -48,7 +48,7 @@ Two halves, kept apart on purpose: what the Mac already does well is left to the
 
 A Mac window can be any size, and AnimeUp often sits small beside a player or a folder while it works. So I designed every page at both widths, instead of letting the wide layout squeeze itself into the narrow one.
 
-![The Queue running a file with its drawer open, in a wide window with the sidebar and in a narrow window with the pages as tabs at the top: in the narrow one, the drawer stacks its groups](../img/v2/ds-responsive-dark.png){ .au }
+![The Queue running a file with its drawer open, in a wide window with the sidebar and in a narrow window with the pages as tabs at the top: in the narrow one, the drawer stacks its groups](../img/v2/ds-responsive-dark.webp){ .au }
 
 - **Below 1240 pt the sidebar becomes tabs.** Start, Compare and Queue move into a segmented control at the top of the window. The Queue tab keeps its count of files, with a spinner next to it while work is going on.
 - **Each page is drawn again, not shrunk.** Panels stack one above the other, and what you act on stays in view.
@@ -58,7 +58,7 @@ A Mac window can be any size, and AnimeUp often sits small beside a player or a 
 
 Every screen was drawn against a design system built first: colours, type, spacing and every component with all its states.
 
-![The screens drawn for AnimeUp 2.0 on one plane, with three of them raised in the light theme](../img/v2/all-screens-plane-dark.png){ .au }
+![The screens drawn for AnimeUp 2.0 on one plane, with three of them raised in the light theme](../img/v2/all-screens-plane-dark.webp){ .au }
 
 Not just the pages, but each of their states: empty, analysing, running, paused, stopped, failed, a full disk, a disconnected drive, a narrow window. More than a hundred boards, each reviewed, often several times, before a line of code; then the app was built to match them, detail by detail.
 
@@ -68,7 +68,7 @@ Not just the pages, but each of their states: empty, analysing, running, paused,
 
 Colour is kept for meaning: one accent for what AnimeUp is doing, three status colours, and greys for everything else.
 
-![The accent with its hover and pressed tones; its focus ring, soft line and selection; the done, notice and danger colours and their tints](../img/v2/ds-colours-dark.png){ .au }
+![The accent with its hover and pressed tones; its focus ring, soft line and selection; the done, notice and danger colours and their tints](../img/v2/ds-colours-dark.webp){ .au }
 
 - **One accent, one meaning.** Cyan says "AnimeUp is working" or "this is the way forward": the primary button, the progress, the current page. It's never decoration.
 - **Status always comes in three**: a text colour, a tint and a line. Green is done, yellow is worth a look, red is stopped or failed. A status is never colour alone: it always has a word and, where it fits, an icon.
@@ -78,7 +78,7 @@ Colour is kept for meaning: one accent for what AnimeUp is doing, three status c
 
 AnimeUp uses the Mac's own type: SF Pro for text, SF Mono for every number that changes. A native app should read like the rest of the Mac, and these are the faces macOS itself is set in, drawn for the screen and already on every Mac.
 
-![SF Pro and SF Mono with the weights in use; the scale of styles from page title to label; a Queue row whose words, numbers and chip share one baseline, and a button with its icon and label centred in it](../img/v2/ds-type-dark.png){ .au }
+![SF Pro and SF Mono with the weights in use; the scale of styles from page title to label; a Queue row whose words, numbers and chip share one baseline, and a button with its icon and label centred in it](../img/v2/ds-type-dark.webp){ .au }
 
 - **SF Pro, because it's the Mac's.** AnimeUp lives inside a frame macOS draws for it: menus, alerts, sheets, the Settings window. Any other face inside would show the seam. SF Pro is also built for screens: it changes cut and spacing with the size, so 11 pt labels stay open and 24 pt titles stay tight, and it has every accent the app's languages need.
 - **SF Mono, for numbers that change.** It's SF Pro's monospaced companion, drawn with the same proportions, so the two sit together without a jolt. Times, frames, sizes and speeds change while a job runs; with every digit the same width, a time left doesn't jitter as it counts down, and numbers in a column line up. It also tells data from words at a glance.
@@ -96,7 +96,7 @@ Contrast is the part I measured. I haven't yet tested AnimeUp with VoiceOver or 
 
 </div>
 
-![](../img/v2/ds-contrast-dark.png)
+![](../img/v2/ds-contrast-dark.webp)
 
 </div>
 
@@ -104,7 +104,7 @@ Contrast is the part I measured. I haven't yet tested AnimeUp with VoiceOver or 
 
 Every icon is an SF Symbol, the Mac's own set: thousands of symbols drawn to sit with SF Pro. Out of all of them I picked, for each idea, the one that says it most plainly, and kept it for that idea everywhere.
 
-![A grid of SF Symbols, most of them dimmed; the ones AnimeUp uses are lit, and five of them lifted out of the grid, larger](../img/v2/ds-icons-dark.png){ .au }
+![A grid of SF Symbols, most of them dimmed; the ones AnimeUp uses are lit, and five of them lifted out of the grid, larger](../img/v2/ds-icons-dark.webp){ .au }
 
 - **One symbol, one meaning.** The film stack is the Queue, in the sidebar and in the tabs of a narrow window alike, and it never stands for anything else.
 - **Regular weight, with the text.** An icon takes the weight and size of the label beside it, so the two read as one.
@@ -114,7 +114,7 @@ Every icon is an SF Symbol, the Mac's own set: thousands of symbols drawn to sit
 
 Six roles, three sizes, four states. A button is chosen by **what it does**, never by where it sits.
 
-![The six button roles, each in its default, hover, pressed and disabled state](../img/v2/ds-buttons-dark.png){ .au }
+![The six button roles, each in its default, hover, pressed and disabled state](../img/v2/ds-buttons-dark.webp){ .au }
 
 - **Chosen by what it does.** The same action looks the same in a row, in the sidebar and in a dialog.
 - **One primary per view.** If two actions compete, the second becomes secondary.
@@ -129,7 +129,7 @@ Six roles, three sizes, four states. A button is chosen by **what it does**, nev
 
 A chip is a status in a word or two: a small capsule, in SF Mono and lowercase, so it reads as a label and never as a button.
 
-![Status chips in five rows: waiting in grey, at work in cyan, done in green, worth a look in yellow, failed in red](../img/v2/ds-chips-dark.png){ .au }
+![Status chips in five rows: waiting in grey, at work in cyan, done in green, worth a look in yellow, failed in red](../img/v2/ds-chips-dark.webp){ .au }
 
 - **Five families, one per meaning.** Grey is waiting, cyan is at work, green is done, yellow is worth a look, red has failed: the same colours as everywhere else in the app.
 - **The word comes first.** The colour supports it and never replaces it; an icon is added only where it makes the state quicker to recognise, like the check for done or the two bars for paused.
@@ -143,7 +143,7 @@ One shape for every message: an icon, a bold title, the text, and the note's act
 
 After a calibration, AnimeUp shows what it measured on one sheet: how long an episode takes now, how fast each model runs on this Mac, and how fast the steps around the upscale are.
 
-![The calibration results: Overview and All numbers tabs, the menu to compare with the factory numbers or an earlier calibration, open; the upscaling time of an episode as pairs of bars, the frames per second of each model and scale from a ring to a dot, and a band of four figures for extraction, repeated frames, encoding and save threads](../img/v2/ds-charts-dark.png){ .au }
+![The calibration results: Overview and All numbers tabs, the menu to compare with the factory numbers or an earlier calibration, open; the upscaling time of an episode as pairs of bars, the frames per second of each model and scale from a ring to a dot, and a band of four figures for extraction, repeated frames, encoding and save threads](../img/v2/ds-charts-dark.webp){ .au }
 
 - **One sentence first.** Above the charts, the result in words: how much faster than the reference, and how much shorter the estimates get.
 - **Time as two bars.** For each model, the reference above in grey and this Mac below in cyan, on an axis in hours: shorter is faster, and you see the difference before you read a number. It's a duration, so plain bars, never a track that could look like something still running.
@@ -157,7 +157,7 @@ After a calibration, AnimeUp shows what it measured on one sheet: how long an ep
 
 A file in AnimeUp lives through many states, and the row in the Queue has to show each one at a glance, from across the room, while you're doing something else.
 
-![The states of a Queue row, from analysing to interrupted, grouped into before, while it runs and after](../img/v2/ds-states-dark.png){ .au }
+![The states of a Queue row, from analysing to interrupted, grouped into before, while it runs and after](../img/v2/ds-states-dark.webp){ .au }
 
 - **The row is its own progress bar.** A soft fill grows behind the row while it runs, with a slow wave moving through it; a thin bar along its bottom edge is split into the four steps, and the upscale into its chunks.
 - **Paused is yellow and still.** No wave, no breathing dot: nothing moves, because nothing is happening.
@@ -168,7 +168,7 @@ A file in AnimeUp lives through many states, and the row in the Queue has to sho
 
 Progress bars are split into pieces sized by their real share of the work, measured on real episodes: extraction is about 3% of the time, repeated frames 2%, the upscale 94%, assembly 1%.
 
-![A running row close up, and its bar drawn out: four steps with clear gaps, the upscale split into chunks by finer ones](../img/v2/ds-bar-dark.png){ .au }
+![A running row close up, and its bar drawn out: four steps with clear gaps, the upscale split into chunks by finer ones](../img/v2/ds-bar-dark.webp){ .au }
 
 Drawn to those exact shares, the three short steps would be almost invisible, so on the bar they get a little more room, while the bar still fills at an even pace.
 
@@ -176,7 +176,7 @@ Drawn to those exact shares, the three short steps would be almost invisible, so
 
 <div class="au-side au-side--left" markdown>
 
-![](../img/v2/ds-queue-card-dark.png)
+![](../img/v2/ds-queue-card-dark.webp)
 
 <div markdown>
 
@@ -198,7 +198,7 @@ Some rules only appeared while reviewing real screens, and then applied everywhe
 
 <div class="au-rule" markdown>
 
-![](../img/v2/rule-1-dark.png)
+![](../img/v2/rule-1-dark.webp)
 
 **Two lines, the second longer**
 A page's intro runs on two lines of similar length, the second slightly longer, so it reads as one balanced block.
@@ -207,7 +207,7 @@ A page's intro runs on two lines of similar length, the second slightly longer, 
 
 <div class="au-rule" markdown>
 
-![](../img/v2/rule-2-dark.png)
+![](../img/v2/rule-2-dark.webp)
 
 **No colour names**
 A text never names a colour ("the white mark"): the same mark changes colour between the dark and the light theme.
@@ -216,7 +216,7 @@ A text never names a colour ("the white mark"): the same mark changes colour bet
 
 <div class="au-rule" markdown>
 
-![](../img/v2/rule-3-dark.png)
+![](../img/v2/rule-3-dark.webp)
 
 **The full file name**
 Always the full file name with its extension, never a shortened one: files are often told apart by their last characters.
@@ -225,7 +225,7 @@ Always the full file name with its extension, never a shortened one: files are o
 
 <div class="au-rule" markdown>
 
-![](../img/v2/rule-4-dark.png)
+![](../img/v2/rule-4-dark.webp)
 
 **Clip times as a range**
 Clip times are a range, 05:28 – 05:38, so you can find the moment in the episode yourself.
@@ -234,7 +234,7 @@ Clip times are a range, 05:28 – 05:38, so you can find the moment in the episo
 
 <div class="au-rule" markdown>
 
-![](../img/v2/rule-5-dark.png)
+![](../img/v2/rule-5-dark.webp)
 
 **Next has an arrow**
 **Next** buttons carry a trailing arrow and **Back** stays plain, so the way forward is clear before you read it; a link that opens a page, like the calibration date, ends with a chevron.
@@ -243,7 +243,7 @@ Clip times are a range, 05:28 – 05:38, so you can find the moment in the episo
 
 <div class="au-rule" markdown>
 
-![](../img/v2/rule-6-dark.png)
+![](../img/v2/rule-6-dark.webp)
 
 **Outline in alerts, filled in text**
 Inside alerts every icon is an outline; small icons inside a line of text are filled, so they hold their shape.
@@ -252,7 +252,7 @@ Inside alerts every icon is an outline; small icons inside a line of text are fi
 
 <div class="au-rule" markdown>
 
-![](../img/v2/rule-7-dark.png)
+![](../img/v2/rule-7-dark.webp)
 
 **Lists fade at the end**
 Long lists fade out where they slide under a fixed bar, so it's clear there's more to scroll.
@@ -261,7 +261,7 @@ Long lists fade out where they slide under a fixed bar, so it's clear there's mo
 
 <div class="au-rule" markdown>
 
-![](../img/v2/rule-8-dark.png)
+![](../img/v2/rule-8-dark.webp)
 
 **Triangle warns, octagon stops**
 Information uses the circle, warnings the yellow triangle, errors the red octagon, on every page and in every note.
@@ -270,7 +270,7 @@ Information uses the circle, warnings the yellow triangle, errors the red octago
 
 <div class="au-rule" markdown>
 
-![](../img/v2/rule-9-dark.png)
+![](../img/v2/rule-9-dark.webp)
 
 **Small pieces, not text**
 Small graphic pieces, an icon and a value or a short bar, rather than empty space, and never walls of text.

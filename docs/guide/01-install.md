@@ -31,7 +31,7 @@ Before the first video, AnimeUp needs its tools. A window lists them, with their
 | Real-CUGAN 20220728 and its models | The three Real-CUGAN models |
 | Python 3.13 | The analysis and the queue |
 
-![The video tools window while it downloads](img/v2/GuideTools.png){ .au }
+![The video tools window while it downloads](img/v2/GuideTools.webp){ .au }
 
 About 220 MB in all. Each tool comes from its pinned official release and is checked against its published checksum before it's used. They stay inside AnimeUp's own folder: nothing else is installed on the Mac.
 

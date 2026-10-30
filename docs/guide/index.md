@@ -19,7 +19,7 @@ description: How to use AnimeUp 2.0, the native Mac app that upscales anime on y
   <img class="au-hero__pic" src="img/v2/hero2-after.jpg" alt="">
   <span class="au-hero__clip"><img class="au-hero__pic" src="img/v2/hero2-before.jpg" alt=""></span>
   <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-  <img src="img/v2/hero2-overlay.png" alt="">
+  <img src="img/v2/hero2-overlay.webp" alt="">
   <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
 </div>
 <p class="au-hero__caption">Drag across the picture: a close-up of the same frame at 720p, plainly enlarged on the left, and upscaled by AnimeUp with Real-CUGAN no-denoise on the right. <b>1:1</b> shows the whole frame at full size.</p>
@@ -50,28 +50,28 @@ Four steps, and only the first two are needed.
 <div class="au-steps" markdown>
 
 <div class="au-step" markdown>
-![](img/v2/GuideSpotCalibrate.png)
+![](img/v2/GuideSpotCalibrate.webp)
 <div markdown>
 **1 · Calibrate.** Once per Mac, about 10 minutes with the GPU idle. AnimeUp times each model on your Mac, so every estimate fits it. [Calibrate your Mac](03-calibration.md)
 </div>
 </div>
 
 <div class="au-step" markdown>
-![](img/v2/GuideSpotAddVideos.png)
+![](img/v2/GuideSpotAddVideos.webp)
 <div markdown>
 **2 · Add videos.** Drop files or whole folders on the window. Each one is analysed as it arrives, and gets a recommended model and an estimate. [Start](04-start.md)
 </div>
 </div>
 
 <div class="au-step" markdown>
-![](img/v2/GuideSpotCompare.png)
+![](img/v2/GuideSpotCompare.webp)
 <div markdown>
 **3 · Compare** *(optional)*. Render a few hard clips with each model and pick the one you like by eye. [Compare](06-compare.md)
 </div>
 </div>
 
 <div class="au-step" markdown>
-![](img/v2/GuideSpotProcess.png)
+![](img/v2/GuideSpotProcess.webp)
 <div markdown>
 **4 · Process.** Start the queue and follow it. Pause, stop, resume and redo: nothing done is lost. [The Queue](05-queue.md)
 </div>

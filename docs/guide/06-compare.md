@@ -46,7 +46,7 @@ The bar at the bottom says how many versions will be rendered and how long the t
 
 Each version appears as soon as it's ready, so you can start looking before the end. The test runs in the background: switch pages or close the window, and it carries on.
 
-![Compare results: clips, player and tested models, numbered](img/v2/GuideCompare.png){ .au }
+![Compare results: clips, player and tested models, numbered](img/v2/GuideCompare.webp){ .au }
 
 1. **The steps**: Clips, Models, Results. **Change the Test** goes back to them.
 2. **The clips**, one tab each, with their time range in the episode.

@@ -1,6 +1,6 @@
 # AnimeUp
 
-<img src="docs/images/readme-icon.png" alt="AnimeUp icon" width="128" align="right">
+<img src="docs/images/readme-icon.webp" alt="AnimeUp icon" width="128" align="right">
 
 [![tests](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml/badge.svg)](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml)
 [![latest release](https://img.shields.io/github/v/release/Interstellar0verdrive/AnimeUp)](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest)
@@ -13,9 +13,9 @@ AnimeUp batch-upscales anime episodes to 1080p and beyond with
 Mac app: it analyses your sources, lets you compare models side by side on
 difficult clips, and runs long, resumable jobs, all on your Mac and offline.
 
-![AnimeUp: the Queue running a file, its drawer open, and Compare in front with two versions of a frame side by side](docs/images/app-v2.png)
+![AnimeUp: the Queue running a file, its drawer open, and Compare in front with two versions of a frame side by side](docs/images/app-v2.webp)
 
-![AnimeUp: Start with this Mac and its video tools, and the calibration results in front, comparing every model with the factory numbers](docs/images/app-start-calibration.png)
+![AnimeUp: Start with this Mac and its video tools, and the calibration results in front, comparing every model with the factory numbers](docs/images/app-start-calibration.webp)
 
 **[Read the user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)**: installing,
 every page of the app, the model studies, and

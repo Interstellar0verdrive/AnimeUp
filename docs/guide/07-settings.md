@@ -9,7 +9,7 @@ description: Every setting in AnimeUp, its default, and when it applies.
 
 **AnimeUp › Settings…** (⌘,) or the gear at the top of the sidebar. Four tabs; every setting shows its default under its description.
 
-![Settings, the Output tab](img/v2/GuideSettings.png){ .au }
+![Settings, the Output tab](img/v2/GuideSettings.webp){ .au }
 
 !!! info "Locked while a job runs"
     Settings that change how files are processed are locked while the queue runs: the queue keeps the values it started with. Change them when it finishes, or after Stop All. A paused or interrupted file always resumes with its own values; Settings says so, with **Use Its Values** if you want them back.

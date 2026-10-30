@@ -9,7 +9,7 @@ description: Add videos, choose where finished videos and work files go, and see
 
 The page AnimeUp opens on: where videos come in, where they go, and what this Mac can do.
 
-![The Start page with five videos added](img/v2/GuideStart.png){ .au }
+![The Start page with five videos added](img/v2/GuideStart.webp){ .au }
 
 ## 1 · Add videos
 
