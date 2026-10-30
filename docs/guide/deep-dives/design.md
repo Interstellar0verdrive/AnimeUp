@@ -131,7 +131,17 @@ Drawn to those exact shares, the three short steps would be almost invisible, so
 
 ### Times that hold still
 
+<div class="au-side au-side--left" markdown>
+
+![](../img/v2/ds-queue-card-dark.png)
+
+<div markdown>
+
 A time left that jumps every second is a time nobody trusts. The time left is based on how long the work already done really took, and the queue's finish time changes only when the estimate really does.
+
+</div>
+
+</div>
 
 ## Rules fixed along the way
 

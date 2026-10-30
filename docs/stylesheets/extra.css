@@ -2010,3 +2010,6 @@
   .md-typeset .au-side { grid-template-columns: 1fr; }
   .md-typeset .au-side img { max-width: 280px; }
 }
+.md-typeset .au-side--left {
+  grid-template-columns: 240px minmax(0, 1fr);
+}
