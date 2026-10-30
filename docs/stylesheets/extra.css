@@ -1849,8 +1849,10 @@
   [data-md-color-scheme="animeup-auto"] .md-typeset img[src$="#only-dark"] { display: none; }
 }
 
-/* Two pictures that take turns: 4 s each, 1 s cross-fade (the design system, dark and light) */
+/* Two pictures, the dark one wiped away by the light one as the page scrolls (the design system):
+   --wipe goes from 0 to 1 while the picture crosses the window; a thin accent line marks the edge */
 .md-typeset .au-fade {
+  --wipe: 0;
   position: relative;
   margin: 1.2rem 0;
   border-radius: 0.7rem;
@@ -1868,13 +1870,17 @@
 .md-typeset .au-fade img + img {
   position: absolute;
   inset: 0;
-  animation: au-fade 10s ease-in-out infinite;
+  clip-path: inset(0 0 calc((1 - var(--wipe)) * 100%) 0);
 }
-@keyframes au-fade {
-  0%, 40% { opacity: 0; }
-  50%, 90% { opacity: 1; }
-  100% { opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .md-typeset .au-fade img + img { animation: none; opacity: 0; }
+.md-typeset .au-fade .au-fade__edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--wipe) * 100%);
+  height: 2px;
+  margin-top: -1px;
+  background: var(--animeup-accent);
+  box-shadow: 0 0 14px 2px rgba(42, 201, 222, 0.7);
+  opacity: calc(min(var(--wipe), 1 - var(--wipe)) * 12);
+  pointer-events: none;
 }
