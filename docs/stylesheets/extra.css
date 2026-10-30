@@ -1848,3 +1848,33 @@
   [data-md-color-scheme="animeup-auto"] .md-typeset img[src$="#only-light"] { display: block; }
   [data-md-color-scheme="animeup-auto"] .md-typeset img[src$="#only-dark"] { display: none; }
 }
+
+/* Two pictures that take turns: 4 s each, 1 s cross-fade (the design system, dark and light) */
+.md-typeset .au-fade {
+  position: relative;
+  margin: 1.2rem 0;
+  border-radius: 0.7rem;
+  overflow: hidden;
+  border: 1px solid var(--animeup-border);
+}
+.md-typeset .au-fade img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.md-typeset .au-fade img + img {
+  position: absolute;
+  inset: 0;
+  animation: au-fade 10s ease-in-out infinite;
+}
+@keyframes au-fade {
+  0%, 40% { opacity: 0; }
+  50%, 90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .au-fade img + img { animation: none; opacity: 0; }
+}
