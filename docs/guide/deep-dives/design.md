@@ -48,7 +48,7 @@ Every screen was then drawn against a design system built first: colours, type, 
 
 ### Colour
 
-![The accent; its focus ring, soft line and selection; the done, notice and danger colours and their tints](../img/v2/ds-colours-dark.png){ .au }
+![The accent with its hover and pressed tones; its focus ring, soft line and selection; the done, notice and danger colours and their tints](../img/v2/ds-colours-dark.png){ .au }
 
 - **One accent, one meaning.** Cyan says "AnimeUp is working" or "this is the way forward": the primary button, the progress, the current page. It's never decoration.
 - **Status always comes in three**: a text colour, a tint and a line. Green is done, yellow is worth a look, red is stopped or failed. A status is never colour alone: it always has a word and, where it fits, an icon.
