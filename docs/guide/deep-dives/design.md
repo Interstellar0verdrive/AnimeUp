@@ -137,7 +137,11 @@ Drawn to those exact shares, the three short steps would be almost invisible, so
 
 <div markdown>
 
-A time left that jumps every second is a time nobody trusts. The time left is based on how long the work already done really took, and the queue's finish time changes only when the estimate really does.
+A time that jumps every second is a time nobody trusts, and a number that keeps moving pulls the eye even when nothing that matters has changed. Upscaling an episode takes a long while, and most of that time you're doing something else: when you look back at AnimeUp, the times should tell you something you can act on, at a glance.
+
+- **The finish is a clock time.** "Ends around 18:40" answers the question you actually have, when it will be done, and it moves only when the estimate really changes.
+- **The time left counts down calmly.** It follows the pace of the work already done, so it doesn't swing at the start of every step.
+- **Estimates look like estimates.** "Around", "~ 34m", whole minutes: no seconds that pretend to a precision nobody has.
 
 </div>
 
