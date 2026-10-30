@@ -69,15 +69,16 @@ public enum AU {
     public static let textCode = Color(dark: "#C6CBD2", light: "#3A3F46")
 
     // Accent
-    public static let primary = Color(dark: "#2AC9DE", light: "#0895D8")
-    public static let primaryHover = Color(dark: "#4FD5E7", light: "#1FA2E2")
-    public static let primaryPress = Color(dark: "#1FB0C4", light: "#0784C0")
+    /// Light: hue 244°, white on it at 4.97 : 1, the hover lighter at 4.51, pressed 5.81 (board CT4, 31 Oct).
+    public static let primary = Color(dark: "#2AC9DE", light: "#0275B6")
+    public static let primaryHover = Color(dark: "#4FD5E7", light: "#067CC1")
+    public static let primaryPress = Color(dark: "#1FB0C4", light: "#056AA5")
     public static let onPrimary = Color(dark: "#06252A", light: "#FFFFFF")
-    public static let primaryText = Color(dark: "#2AC9DE", light: "#0A6E9E")
-    public static let focus = Color(dark: "rgba(42,201,222,.5)", light: "rgba(8,149,216,.45)")
-    public static let sel = Color(dark: "rgba(42,201,222,.16)", light: "rgba(8,149,216,.14)")
-    public static let soft = Color(dark: "rgba(42,201,222,.07)", light: "rgba(8,149,216,.07)")
-    public static let softLine = Color(dark: "rgba(42,201,222,.28)", light: "rgba(8,149,216,.28)")
+    public static let primaryText = Color(dark: "#2AC9DE", light: "#206CA1")
+    public static let focus = Color(dark: "rgba(42,201,222,.5)", light: "rgba(39,147,219,.45)")
+    public static let sel = Color(dark: "rgba(42,201,222,.16)", light: "rgba(39,147,219,.14)")
+    public static let soft = Color(dark: "rgba(42,201,222,.07)", light: "rgba(39,147,219,.07)")
+    public static let softLine = Color(dark: "rgba(42,201,222,.28)", light: "rgba(39,147,219,.28)")
     public static let track = Color(dark: "#2A2E34", light: "#DADDE2")
     public static let trackSoft = Color(dark: "rgba(255,255,255,.14)", light: "rgba(0,0,0,.10)")
 
