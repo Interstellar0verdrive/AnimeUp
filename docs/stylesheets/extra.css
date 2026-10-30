@@ -900,10 +900,12 @@
 .md-typeset h2 {
   font-size: clamp(23px, 2.2vw, 29px);
   line-height: 1.25;
+  margin-top: 2.4em;   /* more air above sections (Material's default is 1.6em) */
 }
 
 .md-typeset h3 {
   font-size: 18px;
+  margin-top: 2.2em;   /* and above subsections (default 1.6em) */
 }
 
 .animeup-hero {
