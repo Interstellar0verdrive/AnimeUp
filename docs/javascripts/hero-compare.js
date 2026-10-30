@@ -77,7 +77,7 @@
       '<div class="au-full__scroll"><div class="au-full__pic au-hero" style="width:' + w + 'px;height:' + h + 'px">' +
       '<img src="' + after + '" alt=""><img class="au-hero__before" src="' + before + '" alt="">' +
       '<span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span></div></div>' +
-      '<span class="au-full__tag au-full__tag--l">480p · the original</span><span class="au-full__tag au-full__tag--r">1080p · AnimeUp</span>' +
+      '<span class="au-full__tag au-full__tag--l">' + (hero.dataset.before || "") + '</span><span class="au-full__tag au-full__tag--r">' + (hero.dataset.after || "") + '</span>' +
       '<button class="au-full__close" type="button" aria-label="Close">×</button>';
     document.body.appendChild(box);
     document.documentElement.style.overflow = "hidden";
@@ -102,7 +102,19 @@
     sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2;
     sc.scrollTop = (sc.scrollHeight - sc.clientHeight) / 2;
   }
+  function gallery(g) {
+    if (g.dataset.ready) return;
+    g.dataset.ready = "1";
+    var slides = g.querySelectorAll(".au-hero"), tabs = g.querySelectorAll(".au-gallery__tabs button");
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () {
+        slides.forEach(function (s, j) { s.classList.toggle("is-on", i === j); });
+        tabs.forEach(function (b, j) { b.classList.toggle("is-on", i === j); b.setAttribute("aria-selected", i === j); });
+      });
+    });
+  }
   function init() {
+    document.querySelectorAll(".au-gallery").forEach(gallery);
     document.querySelectorAll(".au-hero").forEach(setup);
   }
   if (window.document$ && window.document$.subscribe) window.document$.subscribe(init);

@@ -1622,9 +1622,9 @@
    difference. 1:1 still opens the whole picture. */
 .md-typeset .au-hero img.au-hero__pic {
   inset: auto;
-  left: -37.5%;
-  top: -22.2%;
-  width: 200%;
+  left: var(--zx, 0);
+  top: var(--zy, 0);
+  width: var(--zw, 100%);
   max-width: none;
   height: auto;
 }
@@ -1786,3 +1786,28 @@
   font: 400 1.3rem/1 -apple-system, sans-serif;
   cursor: pointer;
 }
+
+/* Two covers: one shown at a time, chosen with the tabs under them. */
+.md-typeset .au-gallery .au-hero { display: none; margin-bottom: 0.6rem; }
+.md-typeset .au-gallery .au-hero.is-on { display: block; }
+
+.md-typeset .au-gallery__tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.4rem;
+}
+
+.md-typeset .au-gallery__tabs button {
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--animeup-border);
+  background: transparent;
+  color: var(--animeup-muted);
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.md-typeset .au-gallery__tabs button b { color: var(--animeup-text); margin-right: 0.3rem; }
+.md-typeset .au-gallery__tabs button.is-on { background: var(--animeup-accent); border-color: var(--animeup-accent); color: #0d1015; }
+.md-typeset .au-gallery__tabs button.is-on b { color: #0d1015; }
