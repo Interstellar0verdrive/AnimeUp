@@ -67,7 +67,7 @@ Colour is kept for meaning: one accent for what AnimeUp is doing, three status c
 
 ### Type
 
-AnimeUp uses the Mac's own type: SF Pro for text, SF Mono for every number that changes.
+AnimeUp uses the Mac's own type: SF Pro for text, SF Mono for every number that changes. A native app should read like the rest of the Mac, and these are the faces macOS itself is set in, drawn for the screen and already on every Mac.
 
 ![SF Pro and SF Mono with the weights in use; the scale of styles from page title to label; a Queue row whose words, numbers and chip share one baseline, and a button with its icon and label centred in it](../img/v2/ds-type-dark.png){ .au }
 
