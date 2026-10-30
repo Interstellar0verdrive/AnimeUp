@@ -69,7 +69,7 @@ Colour is kept for meaning: one accent for what AnimeUp is doing, three status c
 
 AnimeUp uses the Mac's own type: SF Pro for text, SF Mono for every number that changes.
 
-![SF Pro and SF Mono with the weights in use; the scale of styles from page title to label; a Queue row whose words, numbers and chip share one baseline, and a button centred on the same line](../img/v2/ds-type-dark.png){ .au }
+![SF Pro and SF Mono with the weights in use; the scale of styles from page title to label; a Queue row whose words, numbers and chip share one baseline, and a button with its icon and label centred in it](../img/v2/ds-type-dark.png){ .au }
 
 - **SF Pro, because it's the Mac's.** AnimeUp lives inside a frame macOS draws for it: menus, alerts, sheets, the Settings window. Any other face inside would show the seam. SF Pro is also built for screens: it changes cut and spacing with the size, so 11 pt labels stay open and 24 pt titles stay tight, it has every accent the app's languages need, and there's nothing to load.
 - **SF Mono, for numbers that change.** It's SF Pro's monospaced companion, drawn with the same proportions, so the two sit together without a jolt. Times, frames, sizes and speeds change while a job runs; with every digit the same width, a time left doesn't jitter as it counts down, and numbers in a column line up. It also tells data from words at a glance.
