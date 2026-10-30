@@ -1925,6 +1925,39 @@
   -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--swap) * 130% - 30%), #000 calc(var(--swap) * 130%));
   mask-image: linear-gradient(to bottom, transparent calc(var(--swap) * 130% - 30%), #000 calc(var(--swap) * 130%));
 }
+/* the sun: 2.0 comes in a little overexposed and settles; a soft, blurred band of white light rides the
+   edge and fades once the wipe is through. Only forwards: going back, the classes go at once and the light
+   with them. */
+.md-typeset .au-swap .au-swap__sun {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  height: 70%;
+  top: calc(var(--swap) * 130% - 15% - 35%);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.05) 30%,
+                              rgba(255, 255, 255, 0.11) 50%, rgba(255, 255, 255, 0.05) 70%, rgba(255, 255, 255, 0));
+  filter: blur(24px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  pointer-events: none;
+}
+.md-typeset .au-swap.is-sunlit .au-swap__sun {
+  animation: au-sun-band 2.2s ease-out both;
+}
+.md-typeset .au-swap.is-sunlit img:not(.au-swap__from) {
+  animation: au-sun-pic 2.6s ease-out both;
+}
+@keyframes au-sun-band {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  60% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+@keyframes au-sun-pic {
+  0% { filter: brightness(1.12); }
+  45% { filter: brightness(1.04); }
+  100% { filter: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .md-typeset .au-swap {
     transition: none;
@@ -1936,5 +1969,9 @@
   }
   .md-typeset .au-swap.is-gone .au-swap__from {
     opacity: 0;
+  }
+  .md-typeset .au-swap.is-sunlit .au-swap__sun,
+  .md-typeset .au-swap.is-sunlit img:not(.au-swap__from) {
+    animation: none;
   }
 }

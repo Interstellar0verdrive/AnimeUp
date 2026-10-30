@@ -1,17 +1,18 @@
-// "Where it started": once the picture is in view, AnimeUp 2.0 wipes in over 1.6 from the top down, with a
-// soft edge; scrolling back up past that point brings 1.6 back. The wipe itself is a CSS transition.
+// "Where it started": scrolling down, just before the picture reaches the middle of the window, AnimeUp 2.0 wipes
+// in over 1.6 from the top down with a soft edge, lit as if by a burst of sun that then fades. Scrolling back
+// up past that point brings 1.6 back the same way, without the light. The wipe itself is a CSS transition.
 (function () {
   function setup(box) {
     if (box.dataset.ready) return;
     box.dataset.ready = "1";
     var gone = false;
     function check() {
-      // it starts once the whole picture is in the window, or its top has passed the middle (a picture taller
-      // than the window never fits); it goes back once the picture is down again, mostly below the window
-      var r = box.getBoundingClientRect(), vh = window.innerHeight;
-      if (!gone && (r.bottom <= vh - 8 || r.top <= vh * 0.5)) gone = true;
-      else if (gone && r.top > vh * 0.75) gone = false;
+      // forwards just before the picture's middle reaches the window's; back once it's a little below again
+      var r = box.getBoundingClientRect(), mid = r.top + r.height / 2, vh = window.innerHeight;
+      if (!gone && mid <= vh * 0.62) gone = true;
+      else if (gone && mid > vh * 0.72) gone = false;
       else return;
+      box.classList.toggle("is-sunlit", gone);
       box.classList.toggle("is-gone", gone);
     }
     window.addEventListener("scroll", check, { passive: true });
