@@ -771,34 +771,23 @@ struct FilePanel: View {
 
     private func analysis(_ r: FileReport) -> some View {
         VStack(alignment: .leading, spacing: PanelRows.gap) {
-            HStack(alignment: .top, spacing: 32) {
-                DataGroup(title: model.t("nat.panel.timing"), items: [
-                    (model.t("nat.panel.frame_rate"), r.fpsText.map { "\($0) (\(r.fpsFraction ?? ""))" } ?? "—", false),
-                    (model.t("nat.panel.timebase"), r.timebaseLabel, r.timebase != "cfr"),
-                    (model.t("nat.panel.frames"), Fmt.count(r.frames), false),
-                    (model.t("nat.panel.duration"), Fmt.clockTenths(r.duration), false),
-                    (model.t("nat.panel.bitrate"), bitrate(r), false),
-                    (model.t("nat.panel.size"), file.size.map(Fmt.bytes) ?? "—", false),
-                ])
-                DataGroup(title: model.t("nat.panel.image"), items: [
-                    (model.t("nat.panel.geometry"), "\(r.width)×\(r.height)", false),
-                    (model.t("nat.panel.pixels"), r.anamorphic ? "SAR \(r.sar)" : model.t("nat.panel.square"), r.anamorphic),
-                    (model.t("nat.panel.format"), "\(r.pixFmt) · \(r.bitDepth) bit", false),
-                    (model.t("nat.panel.colour"), colour(r), r.colorSpace == nil),
-                    (model.t("nat.panel.codec"), r.codecLabel, false),
-                    (model.t("nat.panel.primaries"), primaries(r), false),
-                ])
-                DataGroup(title: model.t("nat.panel.tracks"), items: [
-                    (model.t("nat.panel.audio"), r.audioTracks > 0 ? "\(r.audioTracks)" : "—", false),
-                    (model.t("nat.panel.subtitles"), r.subtitleTracks > 0 ? "\(r.subtitleTracks) · \(r.subtitleCodecs.joined(separator: ", "))" : "—",
-                     r.subtitleCodecs.contains("mov_text")),
-                    (model.t("nat.panel.chapters"), r.chapters > 0 ? "\(r.chapters)" : "—", false),
-                    (model.t("nat.panel.fields"), fields(r), r.fields != nil && r.fields != "progressivo"),
-                    (model.t("nat.panel.container"), container(r), false),
-                ])
-                .frame(width: QueueColumns.panelLast(compact))
+            if compact {
+                // Board D6: Tracks under Timing and Image, on their columns.
+                HStack(alignment: .top, spacing: 32) {
+                    DataGroup(title: model.t("nat.panel.timing"), items: timingItems(r))
+                    DataGroup(title: model.t("nat.panel.image"), items: imageItems(r))
+                }
+                .panelRowScope()
+                DataGroup(title: model.t("nat.panel.tracks"), items: trackItems(r), wide: true)
+            } else {
+                HStack(alignment: .top, spacing: 32) {
+                    DataGroup(title: model.t("nat.panel.timing"), items: timingItems(r))
+                    DataGroup(title: model.t("nat.panel.image"), items: imageItems(r))
+                    DataGroup(title: model.t("nat.panel.tracks"), items: trackItems(r))
+                        .frame(width: QueueColumns.panelLast(compact))
+                }
+                .panelRowScope()
             }
-            .panelRowScope()
             if file.state == .analysing {
                 TimelineView(.periodic(from: .now, by: 1)) { ctx in
                     Text(model.t("nat.panel.analysing_note", ["elapsed": Fmt.elapsed(ctx.date.timeIntervalSince1970 - (file.analysisStarted ?? ctx.date.timeIntervalSince1970))]))
@@ -809,6 +798,39 @@ struct FilePanel: View {
                 NoteView(.yellow, text: w)
             }
         }
+    }
+
+    private func timingItems(_ r: FileReport) -> [(String, String, Bool)] {
+        [
+            (model.t("nat.panel.frame_rate"), r.fpsText.map { "\($0) (\(r.fpsFraction ?? ""))" } ?? "—", false),
+            (model.t("nat.panel.timebase"), r.timebaseLabel, r.timebase != "cfr"),
+            (model.t("nat.panel.frames"), Fmt.count(r.frames), false),
+            (model.t("nat.panel.duration"), Fmt.clockTenths(r.duration), false),
+            (model.t("nat.panel.bitrate"), bitrate(r), false),
+            (model.t("nat.panel.size"), file.size.map(Fmt.bytes) ?? "—", false),
+        ]
+    }
+
+    private func imageItems(_ r: FileReport) -> [(String, String, Bool)] {
+        [
+            (model.t("nat.panel.geometry"), "\(r.width)×\(r.height)", false),
+            (model.t("nat.panel.pixels"), r.anamorphic ? "SAR \(r.sar)" : model.t("nat.panel.square"), r.anamorphic),
+            (model.t("nat.panel.format"), "\(r.pixFmt) · \(r.bitDepth) bit", false),
+            (model.t("nat.panel.colour"), colour(r), r.colorSpace == nil),
+            (model.t("nat.panel.codec"), r.codecLabel, false),
+            (model.t("nat.panel.primaries"), primaries(r), false),
+        ]
+    }
+
+    private func trackItems(_ r: FileReport) -> [(String, String, Bool)] {
+        [
+            (model.t("nat.panel.audio"), r.audioTracks > 0 ? "\(r.audioTracks)" : "—", false),
+            (model.t("nat.panel.subtitles"), r.subtitleTracks > 0 ? "\(r.subtitleTracks) · \(r.subtitleCodecs.joined(separator: ", "))" : "—",
+             r.subtitleCodecs.contains("mov_text")),
+            (model.t("nat.panel.chapters"), r.chapters > 0 ? "\(r.chapters)" : "—", false),
+            (model.t("nat.panel.fields"), fields(r), r.fields != nil && r.fields != "progressivo"),
+            (model.t("nat.panel.container"), container(r), false),
+        ]
     }
 
     private func colour(_ r: FileReport) -> String {
@@ -907,39 +929,70 @@ struct DataGroup: View {
     var items: [(String, String, Bool)]
     /// A control in place of an item's value (the Height menu), by index.
     var controls: [Int: AnyView] = [:]
+    /// Board D6: in a narrow Queue the third group goes under the other two, across both,
+    /// its items on their four columns.
+    var wide = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title).auFont(12.5, .semibold).foregroundStyle(AU.text)
-                Rectangle().fill(AU.line).frame(height: 1)
+            DataGroupTitle(title)
+            if wide {
+                HStack(alignment: .top, spacing: 32) {
+                    grid(columns: 4, from: 0)
+                    grid(columns: 4, from: 2)
+                }
+                .panelRowScope()
+            } else {
+                grid(columns: 2, from: 0)
             }
-            Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: PanelRows.gap) {
-                ForEach(0..<(items.count + 1) / 2, id: \.self) { row in
-                    GridRow {
-                        ForEach(0..<2, id: \.self) { col in
-                            let i = row * 2 + col
-                            if i < items.count {
-                                VStack(alignment: .leading, spacing: controls[i] == nil ? 2 : 4) {
-                                    Text(items[i].0).auFont(11).foregroundStyle(AU.text3)
-                                    if let control = controls[i] {
-                                        control
-                                    } else {
-                                        Text(verbatim: items[i].1).auFont(AUFont.numbers)
-                                            .foregroundStyle(items[i].2 ? AU.yellowText : AU.text)
-                                            .lineLimit(2)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                    }
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .panelRow(row)
-                            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Two columns of items: every `columns` items a row, starting at `from` within each.
+    private func grid(columns: Int, from: Int) -> some View {
+        Grid(alignment: .topLeading, horizontalSpacing: 16, verticalSpacing: PanelRows.gap) {
+            ForEach(0..<(items.count + columns - 1) / columns, id: \.self) { row in
+                GridRow {
+                    ForEach(0..<2, id: \.self) { col in
+                        let i = row * columns + from + col
+                        if i < items.count {
+                            cell(i).panelRow(row)
+                        } else {
+                            Color.clear.frame(height: 0)
                         }
                     }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func cell(_ i: Int) -> some View {
+        VStack(alignment: .leading, spacing: controls[i] == nil ? 2 : 4) {
+            Text(items[i].0).auFont(11).foregroundStyle(AU.text3)
+            if let control = controls[i] {
+                control
+            } else {
+                Text(verbatim: items[i].1).auFont(AUFont.numbers)
+                    .foregroundStyle(items[i].2 ? AU.yellowText : AU.text)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// A data group's title over its rule.
+struct DataGroupTitle: View {
+    var title: String
+    init(_ title: String) { self.title = title }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).auFont(12.5, .semibold).foregroundStyle(AU.text)
+            Rectangle().fill(AU.line).frame(height: 1)
+        }
     }
 }
 
@@ -958,31 +1011,49 @@ struct ProcessingPanel<Outcome: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: PanelRows.gap) {
             outcome()
-            HStack(alignment: .top, spacing: 32) {
-                // Board F4b: Height and Output first, then the model, then the split in two items.
-                DataGroup(title: model.t("nat.plan.job"), items: [
-                    (model.t("nat.plan.height"), "", false),
-                    (model.t("nat.plan.output"), "\(plan.outputWidth ?? 0)×\(plan.outputHeight ?? 0)", false),
-                    (model.t("nat.col.model"), model.shortModel(plan.model ?? ""), plan.verdict == "no"),
-                    (model.t("nat.plan.pipeline"), pipeline, false),
-                    // Yellow only when a tight disk made more chunks, and only before the file is made.
-                    (model.t("nat.plan.split"), model.localizer.tn("nat.plan.split_n", plan.chunks ?? 1),
-                     plan.chunksTight == true && model.job(file.id)?.state != .done),
-                    (model.t("nat.plan.chunk_size"), model.t("nat.plan.chunk_frames", ["frames": Fmt.count(chunkSize)]), false),
-                ], controls: [0: AnyView(heightMenu)])
-                DataGroup(title: model.t("nat.plan.encoding"), items: [
-                    (model.t("nat.plan.codec"), "\((plan.codec ?? "").replacingOccurrences(of: "lib", with: "").replacingOccurrences(of: "x265", with: "hevc")) \(plan.pixFmt ?? "")", false),
-                    ("CRF", "\(plan.crf ?? 18)", false),
-                    (model.t("nat.plan.preset"), plan.preset ?? "", false),
-                    (model.t("nat.plan.restoration"), (plan.restoration ?? []).isEmpty ? model.t("nat.plan.none") : (plan.restoration ?? []).joined(separator: ", "), false),
-                    (model.t("nat.plan.av"), audioSubtitles, false),
-                    (model.t("nat.plan.colour"), model.t("nat.plan.tagged", ["c": colour]), false),
-                ])
-                outputGroup.frame(width: QueueColumns.panelLast(compact))
+            if compact {
+                // Board D6: Output file under Job and Encoding, on their columns.
+                HStack(alignment: .top, spacing: 32) {
+                    jobGroup
+                    encodingGroup
+                }
+                .panelRowScope()
+                outputGroupWide
+            } else {
+                HStack(alignment: .top, spacing: 32) {
+                    jobGroup
+                    encodingGroup
+                    outputGroup.frame(width: QueueColumns.panelLast(compact))
+                }
+                .panelRowScope()
             }
-            .panelRowScope()
             ForEach((plan.warnings ?? []), id: \.self) { w in NoteView(.yellow, text: w) }
         }
+    }
+
+    // Board F4b: Height and Output first, then the model, then the split in two items.
+    private var jobGroup: some View {
+        DataGroup(title: model.t("nat.plan.job"), items: [
+            (model.t("nat.plan.height"), "", false),
+            (model.t("nat.plan.output"), "\(plan.outputWidth ?? 0)×\(plan.outputHeight ?? 0)", false),
+            (model.t("nat.col.model"), model.shortModel(plan.model ?? ""), plan.verdict == "no"),
+            (model.t("nat.plan.pipeline"), pipeline, false),
+            // Yellow only when a tight disk made more chunks, and only before the file is made.
+            (model.t("nat.plan.split"), model.localizer.tn("nat.plan.split_n", plan.chunks ?? 1),
+             plan.chunksTight == true && model.job(file.id)?.state != .done),
+            (model.t("nat.plan.chunk_size"), model.t("nat.plan.chunk_frames", ["frames": Fmt.count(chunkSize)]), false),
+        ], controls: [0: AnyView(heightMenu)])
+    }
+
+    private var encodingGroup: some View {
+        DataGroup(title: model.t("nat.plan.encoding"), items: [
+            (model.t("nat.plan.codec"), "\((plan.codec ?? "").replacingOccurrences(of: "lib", with: "").replacingOccurrences(of: "x265", with: "hevc")) \(plan.pixFmt ?? "")", false),
+            ("CRF", "\(plan.crf ?? 18)", false),
+            (model.t("nat.plan.preset"), plan.preset ?? "", false),
+            (model.t("nat.plan.restoration"), (plan.restoration ?? []).isEmpty ? model.t("nat.plan.none") : (plan.restoration ?? []).joined(separator: ", "), false),
+            (model.t("nat.plan.av"), audioSubtitles, false),
+            (model.t("nat.plan.colour"), model.t("nat.plan.tagged", ["c": colour]), false),
+        ])
     }
 
     /// Frames in each chunk; the last one is what's left over.
@@ -1033,43 +1104,68 @@ struct ProcessingPanel<Outcome: View>: View {
 
     private var outputGroup: some View {
         VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(model.t("nat.plan.output_file")).auFont(12.5, .semibold).foregroundStyle(AU.text)
-                Rectangle().fill(AU.line).frame(height: 1)
-            }
+            DataGroupTitle(model.t("nat.plan.output_file"))
             VStack(alignment: .leading, spacing: PanelRows.gap) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(model.t("nat.plan.name")).auFont(11).foregroundStyle(AU.text3)
-                Text(verbatim: made.map { ($0 as NSString).lastPathComponent } ?? plan.outputName ?? "")
-                    .auFont(AUFont.numbers).foregroundStyle(AU.text)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .panelRow(0)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(model.t("nat.plan.folder")).auFont(11).foregroundStyle(AU.text3)
-                // Fixed when the file entered the Queue (as HandBrake does).
-                if plan.outputNextToSource == false, let folder = plan.outputFolder {
-                    Text(verbatim: (folder as NSString).abbreviatingWithTildeInPath).auFont(AUFont.numbers).foregroundStyle(AU.text)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text(model.t("nat.plan.next_to")).auFont(AUFont.numbers).foregroundStyle(AU.text)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .panelRow(1)
-            // The log exists once the file has started (board F4b).
-            if let log = model.job(file.id)?.log, !model.isRedo(file.id) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(model.t("nat.plan.log")).auFont(11).foregroundStyle(AU.text3)
-                    UnderlineLink(model.t("nat.btn.show_log"), tone: .neutral) { model.openLog(log) }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .panelRow(2)
-            }
+                nameCell.panelRow(0)
+                folderCell.panelRow(1)
+                logCell.panelRow(2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Board D6: in a narrow Queue, under Job and Encoding: the name across Job,
+    /// the folder and the log on Encoding's two columns.
+    private var outputGroupWide: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            DataGroupTitle(model.t("nat.plan.output_file"))
+            HStack(alignment: .top, spacing: 32) {
+                nameCell
+                HStack(alignment: .top, spacing: 16) {
+                    folderCell
+                    logCell
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var nameCell: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(model.t("nat.plan.name")).auFont(11).foregroundStyle(AU.text3)
+            Text(verbatim: made.map { ($0 as NSString).lastPathComponent } ?? plan.outputName ?? "")
+                .auFont(AUFont.numbers).foregroundStyle(AU.text)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var folderCell: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(model.t("nat.plan.folder")).auFont(11).foregroundStyle(AU.text3)
+            // Fixed when the file entered the Queue (as HandBrake does).
+            if plan.outputNextToSource == false, let folder = plan.outputFolder {
+                Text(verbatim: (folder as NSString).abbreviatingWithTildeInPath).auFont(AUFont.numbers).foregroundStyle(AU.text)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text(model.t("nat.plan.next_to")).auFont(AUFont.numbers).foregroundStyle(AU.text)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The log exists once the file has started (board F4b); until then its column stays empty.
+    @ViewBuilder private var logCell: some View {
+        if let log = model.job(file.id)?.log, !model.isRedo(file.id) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.t("nat.plan.log")).auFont(11).foregroundStyle(AU.text3)
+                UnderlineLink(model.t("nat.btn.show_log"), tone: .neutral) { model.openLog(log) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
+        }
     }
 }
 
