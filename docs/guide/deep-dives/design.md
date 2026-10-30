@@ -95,7 +95,7 @@ Contrast is the part I measured. I haven't yet tested AnimeUp with VoiceOver or 
 
 Six roles, three sizes, five states. A button is chosen by **what it does**, never by where it sits.
 
-![Button roles and their states](../img/v2/GuideDsButtons.png){ .au }
+![The six button roles, each in its default, hover, pressed and disabled state](../img/v2/ds-buttons-dark.png){ .au }
 
 | Role | Used for |
 |---|---|
