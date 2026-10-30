@@ -112,11 +112,22 @@ struct CompareStepper: View {
         let running = model.cmp.status?.running == true
         let versions = model.cmp.status?.request?.models.count ?? model.cmp.chosenModels.count
         let original = model.cmp.status?.request?.reference ?? model.cmp.includeOriginal
+        let notes = [model.localizer.tn("nat.cmp.n_picked", model.cmp.selected.count),
+                     original ? model.t("nat.cmp.original_plus", ["n": versions]) : model.localizer.tn("nat.cmp.n_models", versions)]
+        // A narrow window drops the small notes ("2 picked") before a label would wrap (31 Oct: at 780 pt
+        // "Clips" broke as "Clip/s").
+        ViewThatFits(in: .horizontal) {
+            pills(step, running, notes)
+            pills(step, running, ["", ""])
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func pills(_ step: CompareState.Step, _ running: Bool, _ notes: [String]) -> some View {
         HStack(spacing: 8) {
-            pill(0, model.t("nat.cmp.step.0"), state(0, step), note: model.localizer.tn("nat.cmp.n_picked", model.cmp.selected.count))
+            pill(0, model.t("nat.cmp.step.0"), state(0, step), note: notes[0])
             chevron
-            pill(1, model.t("nat.cmp.step.1"), state(1, step),
-                 note: original ? model.t("nat.cmp.original_plus", ["n": versions]) : model.localizer.tn("nat.cmp.n_models", versions))
+            pill(1, model.t("nat.cmp.step.1"), state(1, step), note: notes[1])
             chevron
             pill(2, model.t("nat.cmp.step.2"), running ? "busy" : state(2, step), note: "")
         }
@@ -155,6 +166,8 @@ struct CompareStepper: View {
             }
             .foregroundStyle(st == "done" ? AU.greenText : st == "next" ? AU.text2 : AU.text)
         }
+        .lineLimit(1)
+        .fixedSize()
         .padding(.leading, 4).padding(.trailing, 12)
         .frame(height: 30)
         .background(Capsule().fill(st == "done" ? AU.greenBg : (st == "now" || st == "busy") ? AU.sel : .clear))

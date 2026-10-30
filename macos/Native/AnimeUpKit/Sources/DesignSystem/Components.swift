@@ -418,32 +418,14 @@ public struct DropZone: View {
     public var body: some View {
         Group {
             if axis == .vertical {
-                VStack(spacing: 12) {
-                    thumbs
-                    VStack(spacing: 3) {
-                        Text(title).auFont(13, .medium).foregroundStyle(AU.text)
-                        if let text {
-                            Text(text).auSmall().multilineTextAlignment(.center)
-                                .frame(maxWidth: 420).fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    openButton
-                }
-                .padding(16)
+                vertical
             } else {
-                HStack(spacing: 14) {
-                    thumbs
-                    // The text takes the width the row has, the button stays on the right:
-                    // with a spacer the text kept only its ideal width and wrapped narrow.
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(title).auFont(13, .medium).foregroundStyle(AU.text)
-                        if let text { Text(text).auSmall().fixedSize(horizontal: false, vertical: true) }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.trailing, 2)
-                    openButton
+                // Too narrow for cards, words and button side by side: the vertical layout, rather
+                // than a title one word per line (31 Oct, Start at 1000 pt).
+                ViewThatFits(in: .horizontal) {
+                    horizontal
+                    vertical
                 }
-                .padding(.vertical, 16).padding(.leading, 18).padding(.trailing, 26)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -478,6 +460,40 @@ public struct DropZone: View {
         .onAppear {
             withAnimation(.timingCurve(0.2, 0.8, 0.2, 1, duration: 0.7).delay(0.25)) { fanned = true }
         }
+    }
+
+    private var vertical: some View {
+        VStack(spacing: 12) {
+            thumbs
+            VStack(spacing: 3) {
+                Text(title).auFont(13, .medium).foregroundStyle(AU.text).multilineTextAlignment(.center)
+                if let text {
+                    Text(text).auSmall().multilineTextAlignment(.center)
+                        .frame(maxWidth: 420).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            openButton
+        }
+        .padding(16)
+    }
+
+    private var horizontal: some View {
+        HStack(spacing: 14) {
+            thumbs
+            // The text takes the width the row has, the button stays on the right:
+            // with a spacer the text kept only its ideal width and wrapped narrow.
+            VStack(alignment: .leading, spacing: 3) {
+                // ViewThatFits compares ideal widths: an ideal of 80 pt keeps this layout while the
+                // title fits on three short lines, and no narrower.
+                Text(title).auFont(13, .medium).foregroundStyle(AU.text).lineLimit(3)
+                    .frame(minWidth: 80, idealWidth: 80, alignment: .leading)
+                if let text { Text(text).auSmall().fixedSize(horizontal: false, vertical: true) }
+            }
+            .frame(minWidth: 80, idealWidth: 80, maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 2)
+            openButton
+        }
+        .padding(.vertical, 16).padding(.leading, 18).padding(.trailing, 26)
     }
 
     private var openButton: some View {
