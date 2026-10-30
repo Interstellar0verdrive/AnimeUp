@@ -67,7 +67,17 @@ Colour is kept for meaning: one accent for what AnimeUp is doing, three status c
 
 ### Type
 
-Eight styles only, rounded to whole points and aligned with the macOS text styles (13 pt body). Numbers that change (times, frames, sizes) are in SF Mono, so they don't jump as they tick.
+AnimeUp uses the Mac's own type: SF Pro for text, SF Mono for every number that changes.
+
+![SF Pro and SF Mono; the three text levels with their contrast on the window colour; the page title, section title, body, numbers and label styles](../img/v2/ds-type-dark.png){ .au }
+
+- **Few styles, whole points.** Eight styles in all, aligned with the macOS text styles: 13 pt body, 15 pt section titles, 24 pt page titles, 11 pt labels. With few sizes the hierarchy reads at a glance, and whole points keep the text sharp.
+- **Numbers in SF Mono.** Times, frames, sizes and speeds change while a job runs. In a monospaced face every digit has the same width, so a time left doesn't jitter as it counts down, and numbers in a column line up.
+- **Three text levels.** The main text, a secondary grey for what explains it, a tertiary grey for labels and details. Each grey was chosen for contrast first, and only then for hierarchy.
+
+**Contrast.** I measured every text colour against the backgrounds it sits on. In the dark theme the three levels reach 15.7, 7.3 and 5.1 to 1 on the window, and the coloured texts (cyan, green, yellow, red) between 7.9 and 12.3 to 1; in the light theme every text colour stays between 4.7 and 17.8 to 1. All of them meet the 4.5 to 1 that WCAG AA asks for normal text. One exception I know of: the white label on the cyan button of the light theme is at 3.3 to 1, enough only for large text, and it's on the list for the next version.
+
+Contrast is the part I measured. I haven't yet tested AnimeUp with VoiceOver or run a full accessibility review, so I won't claim more than that.
 
 ### Buttons
 
