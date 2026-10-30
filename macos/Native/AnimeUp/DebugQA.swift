@@ -78,7 +78,8 @@ enum DebugQA {
     /// Lets the dev app be tested from the shell, without menus, panels or the
     /// screen: the same model methods the buttons and menus call.
     ///   tab start|compare|queue · add <path> · remove-all · finished <path>|next · start · stop-all
-    ///   work <path> · show <sheet> · sidebar · lang en|it · state
+    ///   work <path> · show <sheet> · sidebar · lang en|it · size <w> <h> · state
+    ///   compare-file · compare-models · compare-test
     static func watchCommands(_ file: URL, _ model: AppModel) {
         let out = file.appendingPathExtension("out")
         Task { @MainActor in
@@ -127,6 +128,24 @@ enum DebugQA {
         case "overwrite": for f in model.files where model.redoNeedsAnswer(f.id) { model.confirmOverwrite(f.id) }
         case "cancel-redo": for id in model.redo { model.cancelRedo(id) }
         case "stop-all": model.stoppedByUser = true; model.command("queue.stopAll")
+        // size <width> <height>: the main window's frame, top-left corner kept (layout checks at many sizes).
+        case "size":
+            let v = arg.split(separator: " ").compactMap { Double($0) }
+            guard v.count == 2, let w = NSApp.windows.first(where: { $0.isVisible && $0.title == "AnimeUp" }) else { return "size <width> <height>" }
+            var f = w.frame
+            f.origin.y += f.height - v[1]
+            f.size = NSSize(width: v[0], height: v[1])
+            w.setFrame(f, display: true)
+        // compare-file · compare-models · compare-test: Compare's three steps on the first file (layout checks)
+        case "compare-file":
+            guard let f = model.files.first else { return "no files" }
+            model.tab = .compare
+            model.selectCompareFile(f.id)
+        case "compare-models": model.goToModels()
+        case "compare-test":
+            model.cmp.chosenModels = ["animevideov3", "cugan"]
+            model.cmp.includeOriginal = true
+            model.startTest()
         case "state": break
         default: return "unknown command"
         }
