@@ -38,6 +38,8 @@ For 2.0 I started again in SwiftUI, with the same engine underneath and one goal
 
 Every screen was then drawn against a design system built first: colours, type, spacing and every component with all its states. Not just the pages, but each of their states: empty, analysing, running, paused, stopped, failed, a full disk, a disconnected drive, a narrow window. More than a hundred boards, each reviewed, often several times, before a line of code; the app was then built on the same tokens and components, and any difference between the two was a bug.
 
+![Every screen, sheet and alert drawn for AnimeUp 2.0, seen from afar](../img/v2/all-screens-dark.png){ .au }
+
 ## The design system
 
 ### Colour
