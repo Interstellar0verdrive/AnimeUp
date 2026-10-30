@@ -1,6 +1,6 @@
 # AnimeUp
 
-<img src="macos/Native/AnimeUp/AnimeUp.icon/Assets/AnimeUp-Dark-1024.png" alt="AnimeUp icon" width="128" align="right">
+<img src="docs/images/readme-icon.png" alt="AnimeUp icon" width="128" align="right">
 
 [![tests](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml/badge.svg)](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml)
 [![latest release](https://img.shields.io/github/v/release/Interstellar0verdrive/AnimeUp)](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest)
@@ -12,14 +12,6 @@ AnimeUp batch-upscales anime episodes to 1080p and beyond with
 (ncnn-vulkan builds, running on the Mac GPU through Metal). It's a native
 Mac app: it analyses your sources, lets you compare models side by side on
 difficult clips, and runs long, resumable jobs, all on your Mac and offline.
-
-![A picture at 720p, plainly enlarged on the left and upscaled to 1440p by AnimeUp with Real-CUGAN no-denoise on the right, with the divider sweeping across](docs/images/cover2.webp)
-<sub>A close-up of a picture at 720p, plainly enlarged on the left and upscaled to 1440p
-by AnimeUp with Real-CUGAN no-denoise on the right. In the
-[user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/) you can drag the
-divider yourself and see it at 1:1, and the
-[examples](https://interstellar0verdrive.github.io/AnimeUp/guide/examples/) show all
-four models on five kinds of source.</sub>
 
 ![AnimeUp: the Queue running a file, its drawer open, and Compare in front with two versions of a frame side by side](docs/images/app.png)
 
@@ -55,6 +47,14 @@ The app is in English and Italian (Settings › General).
 - **Honest time estimates.** A ten-minute calibration times every model on
   *your* Mac, at 480p and 1080p, and the results stay to compare with the next
   calibration.
+
+![A picture at 720p, plainly enlarged on the left and upscaled to 1440p by AnimeUp with Real-CUGAN no-denoise on the right, with the divider sweeping across](docs/images/cover2.webp)
+<sub>A close-up of a picture at 720p, plainly enlarged on the left and upscaled to 1440p
+by AnimeUp with Real-CUGAN no-denoise on the right. In the
+[user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/) you can drag the
+divider yourself and see it at 1:1, and the
+[examples](https://interstellar0verdrive.github.io/AnimeUp/guide/examples/) show all
+four models on five kinds of source.</sub>
 
 ## Requirements
 
