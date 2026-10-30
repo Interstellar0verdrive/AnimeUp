@@ -19,7 +19,7 @@ How AnimeUp went from a page in the browser to a Mac app, and the decisions behi
 
 Up to 1.6, AnimeUp was a web page opened in the browser, built with [Streamlit](https://streamlit.io). It was a great way to start: a few lines of Python, and I could try ideas on real files the same evening. But the further the design went, the harder it pushed back:
 
-- **A design system was a fight.** Streamlit draws its own widgets; giving them AnimeUp's look meant patching each one from outside, against internal names that could change with any update.
+- **A design system was a fight.** Streamlit draws its own widgets; giving them AnimeUp's look meant fighting each one, and any update could undo it.
 - **Responsive was bent, not designed.** The layout is a column of blocks Streamlit decides for you.
 - **Every click reran the page.** The page flickered, scroll jumped, open rows closed.
 - **The Mac was out of reach.** No native folder picker, notifications, Dock progress or quit confirmation without workarounds.
@@ -51,7 +51,7 @@ Every screen was drawn against a design system built first: colours, type, spaci
 
 ![The screens drawn for AnimeUp 2.0 on one plane, with three of them raised in the light theme](../img/v2/all-screens-plane-dark.png){ .au }
 
-Not just the pages, but each of their states: empty, analysing, running, paused, stopped, failed, a full disk, a disconnected drive, a narrow window. More than a hundred boards, each reviewed, often several times, before a line of code; the app was then built on the same tokens and components, and any difference between the two was a bug.
+Not just the pages, but each of their states: empty, analysing, running, paused, stopped, failed, a full disk, a disconnected drive, a narrow window. More than a hundred boards, each reviewed, often several times, before a line of code; then the app was built to match them, detail by detail.
 
 ## The design system
 
@@ -71,7 +71,7 @@ AnimeUp uses the Mac's own type: SF Pro for text, SF Mono for every number that 
 
 ![SF Pro and SF Mono with the weights in use; the scale of styles from page title to label; a Queue row whose words, numbers and chip share one baseline, and a button with its icon and label centred in it](../img/v2/ds-type-dark.png){ .au }
 
-- **SF Pro, because it's the Mac's.** AnimeUp lives inside a frame macOS draws for it: menus, alerts, sheets, the Settings window. Any other face inside would show the seam. SF Pro is also built for screens: it changes cut and spacing with the size, so 11 pt labels stay open and 24 pt titles stay tight, it has every accent the app's languages need, and there's nothing to load.
+- **SF Pro, because it's the Mac's.** AnimeUp lives inside a frame macOS draws for it: menus, alerts, sheets, the Settings window. Any other face inside would show the seam. SF Pro is also built for screens: it changes cut and spacing with the size, so 11 pt labels stay open and 24 pt titles stay tight, and it has every accent the app's languages need.
 - **SF Mono, for numbers that change.** It's SF Pro's monospaced companion, drawn with the same proportions, so the two sit together without a jolt. Times, frames, sizes and speeds change while a job runs; with every digit the same width, a time left doesn't jitter as it counts down, and numbers in a column line up. It also tells data from words at a glance.
 - **Few styles, whole points.** Eight styles in all, aligned with the macOS text styles: 13 pt body, 15 pt section titles, 24 pt page titles, 11 pt labels. With few sizes the hierarchy reads at a glance, and whole points keep the text sharp.
 - **Centred, on one baseline.** Text is always centred in its container, and centred with the icon beside it. Words and numbers in different faces and sizes on the same line always share one baseline.
@@ -127,27 +127,24 @@ Progress bars are split into pieces sized by their real share of the work, measu
 
 ![A running row close up, and its bar drawn out: four steps with clear gaps, the upscale split into chunks by finer ones](../img/v2/ds-bar-dark.png){ .au }
 
-A bar drawn to those shares would make the three short steps almost invisible, so on the bar they get a little more room (5%, 3% and 2%), taken from the upscale's 90%, and the fill is mapped so the pace stays even across the whole bar.
+Drawn to those exact shares, the three short steps would be almost invisible, so on the bar they get a little more room, while the bar still fills at an even pace.
 
 ### Times that hold still
 
-A time left that jumps every second is a time nobody trusts. The time left of a file comes from how long its finished chunks really took, and the queue's finish time moves only when the estimate really changes, at most once a minute. This is as much a design decision as a technical one.
+A time left that jumps every second is a time nobody trusts. The time left is based on how long the work already done really took, and the queue's finish time changes only when the estimate really does.
 
 ## Rules fixed along the way
 
 Some rules only appeared while reviewing real screens, and then applied everywhere:
 
-- Texts side by side on one line share the same baseline.
 - A page's intro runs on two lines of similar length, the second slightly longer.
 - Never name a colour in a text ("the white mark"): it changes between light and dark.
 - Always the full file name with its extension, never a shortened one.
 - Clip times are a range: 05:28 – 05:38.
 - **Next:** buttons have a trailing arrow; **Back** stays plain.
 - Inside alerts every icon is an outline; small icons inside text are filled.
-- English buttons in title case, Italian in sentence case, as Apple does.
 - Long lists end with a fade, so it's clear there's more.
-- Estimates read "~ 34m", with a space after the tilde.
-- Warnings use the filled yellow triangle, errors the filled red octagon, always with the "!" drawn in.
+- Warnings use the yellow triangle, errors the red octagon.
 - Small graphic pieces (an icon and a value, a line) rather than empty space, and never walls of text.
 
 ## Words
