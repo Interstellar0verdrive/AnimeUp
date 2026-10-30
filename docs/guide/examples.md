@@ -28,7 +28,7 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 ## An old DVD-size file, to 1080p
 
-<div class="au-hero" tabindex="0" role="img" style="--zx:0%;--zy:-66.67%;--zw:200%" data-before="480p · the original" data-after="1080p · AnimeUp" aria-label="A seaside station at 480p, plainly enlarged on the left and upscaled to 1080p by Real-ESRGAN animevideov3 on the right. Drag to compare.">
+<div class="au-hero" tabindex="0" role="img" style="--zx:-30%;--zy:-15.93%;--zw:200%" data-before="480p · the original" data-after="1080p · AnimeUp" aria-label="A seaside station at 480p, plainly enlarged on the left and upscaled to 1080p by Real-ESRGAN animevideov3 on the right. Drag to compare.">
   <img class="au-hero__pic" src="../img/v2/hero-after.jpg" alt="" loading="lazy">
   <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/hero-before.jpg" alt="" loading="lazy"></span>
   <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
@@ -38,7 +38,7 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 **480p → 1080p · Real-ESRGAN animevideov3**, the model AnimeUp recommends below 560 lines.
 
-**What to look at:** the two figures on the platform, the vending machine, the hydrangeas and the front of the train. At 480p every line turns grey and soft; animevideov3 redraws them black, straight and clean, and cleans the colour around them. It's made for this kind of drawing: firm outlines and flat colours.
+**What to look at:** the houses on the hill, their windows and roofs, the overhead wires and the trees between them. At 480p every line turns grey and soft; animevideov3 redraws them black, straight and clean, and cleans the colour around them. It's made for this kind of drawing: firm outlines and flat colours.
 
 !!! tip "Where animevideov3 is less at ease"
     Strokes thinner than a pixel of the small frame (single eyelashes, hair strands, fine hatching) are already gone in a 480p file, so no model can bring them back. animevideov3 draws clean lines from what's left; Compare shows you how a model treats your own episode before you commit to it.
