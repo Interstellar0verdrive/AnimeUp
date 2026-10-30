@@ -17,16 +17,19 @@ How AnimeUp went from a page in the browser to a Mac app, and the decisions behi
 
 ## Where it started
 
-Up to 1.6, AnimeUp's interface was a web page served from the Mac and opened in the browser. It worked, and it taught me a lot about what people need to see while a file runs for two hours. But it never felt like an app:
+Up to 1.6, AnimeUp's interface was a web page served from the Mac and opened in the browser, built with [Streamlit](https://streamlit.io). Streamlit was a great way to start: a few lines of Python gave me a working page, and I could try ideas on real files the same evening. It taught me a lot about what people need to see while a file runs for two hours.
 
-- it lived in a browser tab, with the browser's address bar, back button and refreshes;
-- dialogs, menus and alerts were web imitations of the Mac's own;
-- every control, from buttons to dialogs, had grown on its own, so two similar actions could look different on two pages;
-- closing the tab or the Terminal window could leave the work running with nothing on screen to say so.
+But the further the design went, the harder Streamlit pushed back:
+
+- **A design system was a fight.** Streamlit draws its own widgets. To give them AnimeUp's colours, sizes and states I had to restyle them from outside, aiming at internal class names that could change with any update. Every control ended up with its own patch, so two similar buttons on two pages could still look different.
+- **Responsive was bent, not designed.** The layout is a column of blocks Streamlit decides for you. Making the sidebar fold into a drawer, or the rows keep their columns in a narrow window, meant fighting its layout rather than describing mine.
+- **Every click reran the page.** Streamlit runs the whole script again at each interaction, so the page flickered, scroll positions jumped, and keeping a row open or a value half-edited took workarounds.
+- **The Mac was out of reach.** A web page can't open a native folder picker, send a notification, show progress on the Dock icon or ask before quitting. Each of those needed a bridge, or wasn't possible at all.
+- **It lived in a tab.** The browser's address bar, back button and refresh came with it, dialogs and alerts were web imitations of the Mac's own, and closing the tab or the Terminal window could leave the work running with nothing on screen to say so. Two copies could even fight over the same port, and an old session kept serving old code after an update.
 
 ![AnimeUp 1.6, a page in the browser, and AnimeUp 2.0, a Mac app, at the same moment of a queue](../img/v2/renewal-dark.png){ .au }
 
-For 2.0 I froze the browser interface and started again from a blank page, with one goal: an app that behaves like every other app on the Mac, and still looks like AnimeUp.
+For 2.0 I froze the browser interface and started again from a blank page, in SwiftUI, with one goal: an app that behaves like every other app on the Mac, and still looks like AnimeUp. The engine underneath stayed the same: the app talks to it directly, with no browser and no port in between.
 
 ## The approach: native frame, own content
 
