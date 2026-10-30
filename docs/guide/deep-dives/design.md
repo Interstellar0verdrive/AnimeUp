@@ -114,7 +114,7 @@ One shape for every message: an icon, a bold title, the text, and the note's act
 
 A file in AnimeUp lives through many states, and the row in the Queue has to show each one at a glance, from across the room, while you're doing something else.
 
-![The states of a Queue row](../img/v2/GuideDsStates.png){ .au }
+![The states of a Queue row, from analysing to interrupted, grouped into before, while it runs and after](../img/v2/ds-states-dark.png){ .au }
 
 - **The row is its own progress bar.** A soft fill grows behind the row while it runs, with a slow wave moving through it; a thin bar along its bottom edge is split into the four steps, and the upscale into its chunks.
 - **Paused is yellow and still.** No wave, no breathing dot: nothing moves, because nothing is happening.
