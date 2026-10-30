@@ -125,7 +125,7 @@ A file in AnimeUp lives through many states, and the row in the Queue has to sho
 
 Progress bars are split into pieces sized by their real share of the work, measured on real episodes: extraction is about 3% of the time, repeated frames 2%, the upscale 94%, assembly 1%.
 
-![The four steps on the bar](../img/v2/GuideBar.png){ .au }
+![A running row close up, and its bar drawn out: four steps with clear gaps, the upscale split into chunks by finer ones](../img/v2/ds-bar-dark.png){ .au }
 
 A bar drawn to those shares would make the three short steps almost invisible, so on the bar they get a little more room (5%, 3% and 2%), taken from the upscale's 90%, and the fill is mapped so the pace stays even across the whole bar.
 
