@@ -24,7 +24,7 @@ Up to 1.6, AnimeUp's interface was a web page served from the Mac and opened in 
 - every control, from buttons to dialogs, had grown on its own, so two similar actions could look different on two pages;
 - closing the tab or the Terminal window could leave the work running with nothing on screen to say so.
 
-![AnimeUp 1.6: the Processing tab in the browser](../img/processing-running.png)
+![AnimeUp 1.6, a page in the browser, and AnimeUp 2.0, a Mac app, at the same moment of a queue](../img/v2/renewal-dark.png){ .au }
 
 For 2.0 I froze the browser interface and started again from a blank page, with one goal: an app that behaves like every other app on the Mac, and still looks like AnimeUp.
 
@@ -37,7 +37,7 @@ I explored a few directions before writing any code, and kept the one I called *
 
 The test for every screen was the same: would someone who has never seen AnimeUp know where to click, because it works like the Mac apps they already use?
 
-![AnimeUp 2.0: the same moment, in the native app](../img/v2/GuideWindow.png){ .au }
+![AnimeUp 2.0: the Queue running a file with its drawer open, and Compare in front](../img/v2/GuideScreens.png){ .au }
 
 ## The process
 
