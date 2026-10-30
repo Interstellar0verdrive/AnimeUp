@@ -212,7 +212,7 @@ Inside alerts every icon is an outline; small icons inside a line of text are fi
 ![](../img/v2/rule-7-dark.png)
 
 **Lists fade at the end**
-Long lists end with a fade, so it's clear there's more to scroll.
+Long lists fade out where they slide under a fixed bar, so it's clear there's more to scroll.
 
 </div>
 
