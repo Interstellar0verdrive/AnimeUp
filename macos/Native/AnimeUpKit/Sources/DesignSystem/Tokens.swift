@@ -94,9 +94,10 @@ public enum AU {
     public static let yellowLine = Color(dark: "rgba(242,184,75,.45)", light: "rgba(245,180,0,.45)")
     public static let yellowTint = Color(dark: "rgba(242,184,75,.16)", light: "rgba(245,180,0,.22)")
     public static let onYellow = Color(dark: "#2A1C00", light: "#2A1C00")
-    public static let red = Color(dark: "#D9402E", light: "#D9402E")
-    public static let redHover = Color(dark: "#E4533F", light: "#E4533F")
-    public static let redPress = Color(dark: "#BF3423", light: "#BF3423")
+    /// White on red reaches 5.0 : 1 (was 4.45, under AA), hover 4.6, pressed 6.1 (board CT1, approved 31 Oct).
+    public static let red = Color(dark: "#CD3725", light: "#CD3725")
+    public static let redHover = Color(dark: "#D83A27", light: "#D83A27")
+    public static let redPress = Color(dark: "#B63121", light: "#B63121")
     public static let redText = Color(dark: "#F59B9B", light: "#B42323")
     public static let redBg = Color(dark: "rgba(242,109,109,.10)", light: "#FDECEA")
     public static let redBgPress = Color(dark: "rgba(242,109,109,.17)", light: "#FADAD6")
