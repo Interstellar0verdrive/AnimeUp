@@ -1987,3 +1987,26 @@
     padding-left: 7.4px;
   }
 }
+
+/* Text with a small decorative picture beside it (the Design page's contrast check); stacked when narrow */
+.md-typeset .au-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 28px;
+  align-items: start;
+  margin: 1em 0;
+}
+.md-typeset .au-side > p:last-child,
+.md-typeset .au-side img {
+  margin: 0;
+}
+.md-typeset .au-side img {
+  width: 100%;
+  border-radius: 0.7rem;
+  border: 1px solid var(--animeup-border);
+}
+.md-typeset .au-side > div > p:first-child { margin-top: 0; }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .au-side { grid-template-columns: 1fr; }
+  .md-typeset .au-side img { max-width: 280px; }
+}

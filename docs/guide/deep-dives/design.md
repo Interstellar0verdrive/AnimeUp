@@ -77,9 +77,19 @@ AnimeUp uses the Mac's own type: SF Pro for text, SF Mono for every number that 
 - **Centred, on one baseline.** Text is always centred in its container, and centred with the icon beside it. Words and numbers in different faces and sizes on the same line always share one baseline.
 - **Three text levels.** The main text, a secondary grey for what explains it, a tertiary grey for labels and details. Each grey was chosen for contrast first, and only then for hierarchy.
 
-**Contrast.** I measured every text colour against the backgrounds it sits on. In the dark theme the three levels reach 15.7, 7.3 and 5.1 to 1 on the window, and the coloured texts (cyan, green, yellow, red) between 7.9 and 12.3 to 1; in the light theme every text colour stays between 4.7 and 17.8 to 1. All of them meet the 4.5 to 1 that WCAG AA asks for normal text. One exception I know of: the white label on the cyan button of the light theme is at 3.3 to 1, enough only for large text, and it's on the list for the next version.
+<div class="au-side" markdown>
+
+<div markdown>
+
+**Contrast.** I measured the text colours against the backgrounds they sit on: the window, cards, controls, chips, notes and buttons. In the dark theme the three text levels reach 15.7, 7.3 and 5.1 to 1 on the window, and the coloured texts (cyan, green, yellow, red) between 6.6 and 12.3 to 1; in the light theme the text colours stay between 4.7 and 17.8 to 1. These meet the 4.5 to 1 that WCAG AA asks for normal text. Two exceptions I know of, both labels on solid buttons: white on the red confirm button is at 4.45 to 1, just short of the mark, and white on the cyan button of the light theme at 3.3 to 1, enough only for large text. Both are on the list for the next version.
 
 Contrast is the part I measured. I haven't yet tested AnimeUp with VoiceOver or run a full accessibility review, so I won't claim more than that.
+
+</div>
+
+![](../img/v2/ds-contrast-dark.png)
+
+</div>
 
 ### Buttons
 
