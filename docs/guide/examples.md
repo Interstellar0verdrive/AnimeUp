@@ -26,7 +26,7 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 **What to look at:** the pattern on the yukata, the paper of the lanterns, the wood grain of the houses, the leaves along the railing. A clean source has real detail to keep, and Real-CUGAN keeps it where Real-ESRGAN animevideov3 would flatten it into smooth patches.
 
-## An old DVD-size file, to 1080p
+## A DVD-size 480p file, to 1080p
 
 <div class="au-hero" tabindex="0" role="img" style="--zx:-26.32%;--zy:-18.71%;--zw:126.32%" data-before="480p · the original" data-after="1080p · AnimeUp" aria-label="A seaside station at 480p, plainly enlarged on the left and upscaled to 1080p by Real-ESRGAN animevideov3 on the right. Drag to compare.">
   <img class="au-hero__pic" src="../img/v2/hero-after.jpg" alt="" loading="lazy">
