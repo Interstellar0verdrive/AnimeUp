@@ -38,7 +38,7 @@ For 2.0 I started again in SwiftUI, with the same engine underneath and one goal
 - **The frame is the Mac's.** Glass sidebar, Settings window, sheets, alerts, menus, notifications, Dock progress, SF Pro and SF Symbols. Nothing the Mac already does is redrawn.
 - **The content is AnimeUp's.** File rows that are their own progress bars, the four steps and their chunks, the comparison player, the calibration charts, one cyan accent.
 
-![AnimeUp 2.0: Compare picking the clips to test, and in front the Queue running a file with its drawer open](../img/v2/clips-and-queue-dark.png){ .au }
+![AnimeUp 2.0: Compare picking the clips to test, and in front the Queue running a file with its drawer open](../img/v2/clips-and-queue-b-dark.png){ .au }
 
 Every screen was then drawn against a design system built first: colours, type, spacing and every component with all its states. Not just the pages, but each of their states: empty, analysing, running, paused, stopped, failed, a full disk, a disconnected drive, a narrow window. More than a hundred boards, each reviewed, often several times, before a line of code; the app was then built on the same tokens and components, and any difference between the two was a bug.
 
