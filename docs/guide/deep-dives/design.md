@@ -1,6 +1,6 @@
 ---
 title: Designing AnimeUp 2.0
-description: The design study behind AnimeUp 2.0: why a native app, the hybrid approach, the design system, the study of states and the rules that came out of it.
+description: "The design study behind AnimeUp 2.0: why a native app, the hybrid approach, the design system, the study of states and the rules that came out of it."
 ---
 
 <span class="eyebrow">Appendix · Design</span>

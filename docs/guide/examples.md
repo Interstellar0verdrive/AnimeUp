@@ -1,6 +1,6 @@
 ---
 title: Examples
-description: Real before-and-after examples: the same frame plainly enlarged and upscaled by AnimeUp, with the model each kind of source wants.
+description: "Real before-and-after examples: the same frame plainly enlarged and upscaled by AnimeUp, with the model each kind of source wants."
 ---
 
 <span class="eyebrow">Appendix · Examples</span>
