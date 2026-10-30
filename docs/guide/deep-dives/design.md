@@ -37,6 +37,8 @@ For 2.0 I started again in SwiftUI, with the same engine underneath and one goal
 
 ### Native frame, own content
 
+Two halves, kept apart on purpose: what the Mac already does well is left to the Mac, and what only AnimeUp does is designed for it.
+
 ![AnimeUp 2.0: Compare picking the clips to test in a narrow window, with the pages as tabs at the top, and in front the Queue in a wide window, running a file with its drawer open](../img/v2/narrow-clips-and-queue-dark.png){ .au }
 
 - **The frame is the Mac's.** Glass sidebar, Settings window, sheets, alerts, menus, notifications, Dock progress, SF Pro and SF Symbols. Nothing the Mac already does is redrawn.
@@ -45,13 +47,17 @@ For 2.0 I started again in SwiftUI, with the same engine underneath and one goal
 
 ### Every screen drawn first
 
+Every screen was drawn against a design system built first: colours, type, spacing and every component with all its states.
+
 ![The screens drawn for AnimeUp 2.0 on one plane, with three of them raised in the light theme](../img/v2/all-screens-plane-dark.png){ .au }
 
-Every screen was drawn against a design system built first: colours, type, spacing and every component with all its states. Not just the pages, but each of their states: empty, analysing, running, paused, stopped, failed, a full disk, a disconnected drive, a narrow window. More than a hundred boards, each reviewed, often several times, before a line of code; the app was then built on the same tokens and components, and any difference between the two was a bug.
+Not just the pages, but each of their states: empty, analysing, running, paused, stopped, failed, a full disk, a disconnected drive, a narrow window. More than a hundred boards, each reviewed, often several times, before a line of code; the app was then built on the same tokens and components, and any difference between the two was a bug.
 
 ## The design system
 
 ### Colour
+
+Colour is kept for meaning: one accent for what AnimeUp is doing, three status colours, and greys for everything else.
 
 ![The accent with its hover and pressed tones; its focus ring, soft line and selection; the done, notice and danger colours and their tints](../img/v2/ds-colours-dark.png){ .au }
 
@@ -65,9 +71,9 @@ Eight styles only, rounded to whole points and aligned with the macOS text style
 
 ### Buttons
 
-![Button roles and their states](../img/v2/GuideDsButtons.png){ .au }
+Six roles, three sizes, five states. A button is chosen by **what it does**, never by where it sits.
 
-Six roles, three sizes, five states. A button is chosen by **what it does**, never by where it sits:
+![Button roles and their states](../img/v2/GuideDsButtons.png){ .au }
 
 | Role | Used for |
 |---|---|
@@ -97,9 +103,11 @@ A file in AnimeUp lives through many states, and the row in the Queue has to sho
 
 ### Bars split by the real work
 
+Progress bars are split into pieces sized by their real share of the work, measured on real episodes: extraction is about 3% of the time, repeated frames 2%, the upscale 94%, assembly 1%.
+
 ![The four steps on the bar](../img/v2/GuideBar.png){ .au }
 
-Progress bars are split into pieces sized by their real share of the work, measured on real episodes: extraction is about 3% of the time, repeated frames 2%, the upscale 94%, assembly 1%. A bar drawn to those shares would make the three short steps almost invisible, so on the bar they get a little more room (5%, 3% and 2%), taken from the upscale's 90%, and the fill is mapped so the pace stays even across the whole bar.
+A bar drawn to those shares would make the three short steps almost invisible, so on the bar they get a little more room (5%, 3% and 2%), taken from the upscale's 90%, and the fill is mapped so the pace stays even across the whole bar.
 
 ### Times that hold still
 
