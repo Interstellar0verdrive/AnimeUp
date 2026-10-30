@@ -962,7 +962,7 @@
 @media screen and (min-width: 60em) {
   .md-header__inner.md-grid.animeup-header,
   .md-main__inner.md-grid {
-    grid-template-columns: clamp(250px, 21vw, 274px) minmax(0, 1fr) clamp(260px, 20vw, 320px);
+    grid-template-columns: clamp(250px, 21vw, 274px) minmax(0, 1fr) clamp(250px, 21vw, 274px);
   }
 
   .md-header__inner.md-grid.animeup-header {
@@ -1076,7 +1076,7 @@
     position: fixed;
     right: 0;
     top: 58px !important;
-    width: clamp(260px, 20vw, 320px);
+    width: clamp(250px, 21vw, 274px);
     z-index: 2;
   }
 
@@ -1101,7 +1101,7 @@
 
   .md-footer {
     display: grid;
-    grid-template-columns: clamp(250px, 21vw, 274px) minmax(0, 1fr) clamp(260px, 20vw, 320px);
+    grid-template-columns: clamp(250px, 21vw, 274px) minmax(0, 1fr) clamp(250px, 21vw, 274px);
   }
 
   .md-footer::before,
