@@ -2006,12 +2006,15 @@
   border: 1px solid var(--animeup-border);
 }
 .md-typeset .au-side > div > p:first-child { margin-top: 0; }
-@media screen and (max-width: 44.9375em) {
-  .md-typeset .au-side { grid-template-columns: 1fr; }
-  .md-typeset .au-side img { max-width: 280px; }
-}
 .md-typeset .au-side--left {
   grid-template-columns: 240px minmax(0, 1fr);
+}
+/* On a phone the picture goes above the text, whichever side it sits on: the --left rule used to come
+   after this and kept two columns, one word per line (found 31 Oct) */
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .au-side,
+  .md-typeset .au-side--left { grid-template-columns: 1fr; }
+  .md-typeset .au-side img { max-width: 280px; }
 }
 
 /* "Rules fixed along the way": a grid of small cards, a picture, a title and a few words each; three

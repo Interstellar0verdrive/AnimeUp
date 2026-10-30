@@ -165,7 +165,7 @@ With the same model and height, the new video would get the same name and replac
 
 ## The end of the queue
 
-When the last file is done, a summary sheet lists the videos made, each with the file it came from, its time and its warnings; files that failed or were stopped say so. **Show in Finder** selects the videos made.
+When the last file is done, a summary sheet lists the videos made, each with the file it came from, its time and its warnings; files that failed or were stopped say so, and after **Stop All** the files the queue never reached read **not started**. **Show in Finder** selects the videos made.
 
 ![The Processing finished sheet](img/v2/GuideFinished.webp){ .au }
 
