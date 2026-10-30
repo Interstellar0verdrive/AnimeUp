@@ -88,7 +88,10 @@ public struct StatusChip: View {
             if let symbol {
                 Image(systemName: symbol).font(.system(size: 10))
             }
-            Text(text)
+            // Measured on pixels (30 Oct): even in its own line box the text's weight sat 0.2–0.5 pt
+            // below the centre (lowercase, descenders), the icon dead centre. Half a point up, one
+            // pixel on a Retina screen, centres it without moving the chip or the icon.
+            Text(text).offset(y: -0.5)
         }
         // The font's own line box, centred in the chip's height: the fixed line box of
         // `auFont` puts its extra space above the text, which sat low (29 Oct).
