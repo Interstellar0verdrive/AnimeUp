@@ -9,8 +9,8 @@
     function check() {
       // forwards just before the picture's middle reaches the window's; back once it's a little below again
       var r = box.getBoundingClientRect(), mid = r.top + r.height / 2, vh = window.innerHeight;
-      if (!gone && mid <= vh * 0.62) gone = true;
-      else if (gone && mid > vh * 0.72) gone = false;
+      if (!gone && mid <= vh * 0.7) gone = true;
+      else if (gone && mid > vh * 0.8) gone = false;
       else return;
       box.classList.toggle("is-sunlit", gone);
       box.classList.toggle("is-gone", gone);

@@ -1124,7 +1124,7 @@
   .md-footer__inner.md-grid {
     grid-column: 2;
     grid-row: 1;
-    max-width: 800px;
+    max-width: min(1140px, max(800px, calc(100vw - 700px)));   /* as wide as the content above */
     padding: 16px 20px 36px;
     width: 100%;
   }
