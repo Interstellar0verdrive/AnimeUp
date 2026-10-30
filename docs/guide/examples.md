@@ -57,9 +57,9 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 **What to look at:** the pilot's hair, the harness straps and the red stripes of the flight suit, then the station and the ship behind, all panel lines and lit windows. At 360p they are a jagged, muddy blur; animevideov3 draws them back as clean black outlines and flat colour. One honest detail: a few of the tiniest stars, a single pixel in the 360p file, go with the noise it cleans away.
 
-## A compressed 540p web file, to 1080p
+## A badly compressed 540p web rip, to 1080p
 
-<div class="au-hero" tabindex="0" role="img" style="--zx:0%;--zy:-70.37%;--zw:200%" data-before="540p · a compressed web file" data-after="1080p · AnimeUp" aria-label="A lake at dawn from a compressed 540p file, plainly enlarged on the left and upscaled to 1080p by Real-CUGAN light denoise on the right. Drag to compare.">
+<div class="au-hero" tabindex="0" role="img" style="--zx:0%;--zy:-70.37%;--zw:200%" data-before="540p · badly compressed web rip" data-after="1080p · AnimeUp" aria-label="A lake at dawn from a badly compressed 540p web rip, plainly enlarged on the left and upscaled to 1080p by Real-CUGAN light denoise on the right. Drag to compare.">
   <img class="au-hero__pic" src="../img/v2/ex5-after.jpg" alt="" loading="lazy">
   <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/ex5-before.jpg" alt="" loading="lazy"></span>
   <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
@@ -69,7 +69,7 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 **540p → 1080p · Real-CUGAN light denoise**, for sources that aren't clean. In the app it's the model "worth checking" between 380 and 560 lines.
 
-**What to look at:** the grass, the flowers and the planks of the pier, then the water and the rocks behind. The 540p file was saved with the heavy compression of a low-bitrate web file, so its gradients break into blocks and its edges into smudges. Light denoise cleans that dirt away and keeps the drawing: the grass and the wood stay crisp, the water goes smooth again. Without the denoise, Real-CUGAN no-denoise would enlarge the blocks along with the picture.
+**What to look at:** the grass, the flowers and the planks of the pier, then the water and the rocks behind. The 540p file was saved the way the worst web rips are, at a starved bitrate: its gradients break into blocks, its edges into smudges. Light denoise cleans that dirt away and keeps the drawing: the grass and the wood stay crisp, the water goes smooth again. Without the denoise, Real-CUGAN no-denoise would enlarge the blocks along with the picture.
 
 ## A painted 720p frame, to 4K
 
