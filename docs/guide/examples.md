@@ -7,10 +7,10 @@ description: "Real before-and-after examples: the same frame plainly enlarged an
 
 # Examples
 
-What AnimeUp does, on three kinds of source. Each picture was shrunk to the size of a real episode, then upscaled by AnimeUp: the left side is that small frame plainly enlarged, the right side the model's real output, untouched. Drag across a picture to compare, or open it at **1:1** to see every pixel.
+What AnimeUp does, on four kinds of source. Each picture was shrunk to the size of a real episode, then upscaled by AnimeUp: the left side is that small frame plainly enlarged, the right side the model's real output, untouched. Drag across a picture to compare, or open it at **1:1** to see every pixel.
 
 !!! info "How these pictures were made"
-    The three pictures were drawn for this guide, then shrunk to 720p or 480p with the compression of a real video file. Nothing on the right was retouched: it's what the model produced from the small frame, the same way the app runs it.
+    The pictures were drawn for this guide, then shrunk to 720p, 480p or 360p with the compression of a real video file. Nothing on the right was retouched: it's what the model produced from the small frame, the same way the app runs it.
 
 ## A clean 720p file, to 1440p
 
@@ -43,6 +43,20 @@ What AnimeUp does, on three kinds of source. Each picture was shrunk to the size
 !!! tip "Where animevideov3 is less at ease"
     Strokes thinner than a pixel of the small frame (single eyelashes, hair strands, fine hatching) are already gone in a 480p file, so no model can bring them back. animevideov3 draws clean lines from what's left; Compare shows you how a model treats your own episode before you commit to it.
 
+## An old TV episode at 360p, to 1080p
+
+<div class="au-hero" tabindex="0" role="img" style="--zx:-64.58%;--zy:-33.33%;--zw:200%" data-before="360p · the original" data-after="1080p · AnimeUp" aria-label="A starship at a space station at 360p, plainly enlarged on the left and upscaled to 1080p by Real-ESRGAN animevideov3 on the right. Drag to compare.">
+  <img class="au-hero__pic" src="../img/v2/ex4-after.jpg" alt="" loading="lazy">
+  <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/ex4-before.jpg" alt="" loading="lazy"></span>
+  <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+  <img src="../img/v2/ex-labels-360-1080.png" alt="" loading="lazy">
+  <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
+</div>
+
+**360p → 1080p · Real-ESRGAN animevideov3**, three times the size, from the smallest kind of file you're likely to have.
+
+**What to look at:** the hull's panel lines, the lit windows, the red stripes and the window frame in front. At 360p they are a jagged, muddy blur; animevideov3 draws them back as clean black outlines and flat colour. One honest detail: a few of the tiniest stars, a single pixel in the 360p file, go with the noise it cleans away.
+
 ## A painted 720p frame, to 4K
 
 <div class="au-hero" tabindex="0" role="img" style="--zx:-46.05%;--zy:-49.07%;--zw:252.63%" data-before="720p · the original" data-after="2160p · AnimeUp" aria-label="A painted greenhouse library at 720p, plainly enlarged on the left and upscaled to 2160p by Real-CUGAN conservative on the right. Drag to compare.">
@@ -59,6 +73,6 @@ What AnimeUp does, on three kinds of source. Each picture was shrunk to the size
 
 ## Try it on your own episodes
 
-These are three cases; your series is a fourth. [Compare](06-compare.md) renders the hardest clips of your own file with each model and shows them side by side, exactly like these pictures, before you start the queue.
+These are four cases; your series is another one. [Compare](06-compare.md) renders the hardest clips of your own file with each model and shows them side by side, exactly like these pictures, before you start the queue.
 
 [Next: How a job works inside →](deep-dives/how-it-works.md)
