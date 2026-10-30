@@ -45,7 +45,7 @@ What AnimeUp does, on four kinds of source. Each picture was shrunk to the size 
 
 ## An old TV episode at 360p, to 1080p
 
-<div class="au-hero" tabindex="0" role="img" style="--zx:-64.58%;--zy:-33.33%;--zw:200%" data-before="360p · the original" data-after="1080p · AnimeUp" aria-label="A starship at a space station at 360p, plainly enlarged on the left and upscaled to 1080p by Real-ESRGAN animevideov3 on the right. Drag to compare.">
+<div class="au-hero" tabindex="0" role="img" style="--zx:0%;--zy:-22.22%;--zw:200%" data-before="360p · the original" data-after="1080p · AnimeUp" aria-label="A starship at a space station at 360p, plainly enlarged on the left and upscaled to 1080p by Real-ESRGAN animevideov3 on the right. Drag to compare.">
   <img class="au-hero__pic" src="../img/v2/ex4-after.jpg" alt="" loading="lazy">
   <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/ex4-before.jpg" alt="" loading="lazy"></span>
   <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
@@ -55,7 +55,7 @@ What AnimeUp does, on four kinds of source. Each picture was shrunk to the size 
 
 **360p → 1080p · Real-ESRGAN animevideov3**, three times the size, from the smallest kind of file you're likely to have.
 
-**What to look at:** the hull's panel lines, the lit windows, the red stripes and the window frame in front. At 360p they are a jagged, muddy blur; animevideov3 draws them back as clean black outlines and flat colour. One honest detail: a few of the tiniest stars, a single pixel in the 360p file, go with the noise it cleans away.
+**What to look at:** the pilot's hair, the harness straps and the red stripes of the flight suit, then the station and the ship behind, all panel lines and lit windows. At 360p they are a jagged, muddy blur; animevideov3 draws them back as clean black outlines and flat colour. One honest detail: a few of the tiniest stars, a single pixel in the 360p file, go with the noise it cleans away.
 
 ## A painted 720p frame, to 4K
 
