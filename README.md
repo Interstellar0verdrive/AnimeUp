@@ -21,7 +21,7 @@ divider yourself and see it at 1:1, and the
 [examples](https://interstellar0verdrive.github.io/AnimeUp/guide/examples/) show all
 four models on five kinds of source.</sub>
 
-![The AnimeUp window while a queue runs](docs/guide/img/v2/GuideWindow.png)
+![AnimeUp: the Queue running a file, its drawer open, and Compare in front with two versions of a frame side by side](docs/images/app.png)
 
 **[Read the user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)**: installing,
 every page of the app, the model studies, and
