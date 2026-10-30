@@ -1686,6 +1686,9 @@
   font: 600 0.62rem/1.2 ui-monospace, "SF Mono", Menlo, monospace;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
   cursor: zoom-in;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .md-typeset .au-hero .au-hero__zoom:hover {
