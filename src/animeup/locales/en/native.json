@@ -402,6 +402,7 @@
   "nat.fin.stopped": "stopped",
   "nat.fin.failed": "failed",
   "nat.fin.skipped": "skipped",
+  "nat.fin.not_started": "not started",
   "nat.fin.next_to": "The finished videos are next to the originals. Stopped files can be resumed from the Queue.",
   "nat.fin.show_finder": "Show in Finder",
   "nat.note.file_done_title": "File done",

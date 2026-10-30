@@ -231,15 +231,12 @@ struct RowStageLines: View {
         // files2.py `stage_line()` and the action line under it (board F4).
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                ForEach(Array(RunStages.order.enumerated()), id: \.offset) { i, stage in
-                    if i > 0 { Text(verbatim: "→").auFont(12).foregroundStyle(AU.text3) }
-                    HStack(alignment: .firstTextBaseline, spacing: 7) {
-                        StageDot(kind: i < current ? .done : i == current ? .now : .next, paused: job.state == .paused)
-                            .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
-                        Text(model.stageName(stage)).auFont(12, i == current ? .semibold : .regular)
-                            .foregroundStyle(i < current ? AU.greenText : i == current ? (job.state == .paused ? AU.yellowText : AU.text) : AU.text3)
-                        Text(Self.range(stage)).auFont(10.5, mono: true).foregroundStyle(AU.text3).opacity(0.6)
-                    }
+                // Narrow rows drop the shares, then the other steps: never a word split in two (31 Oct,
+                // the steps broke as "Extracti/on" at 720–780 pt).
+                ViewThatFits(in: .horizontal) {
+                    stages(current, shares: true)
+                    stages(current, shares: false)
+                    stages(current, shares: false, onlyCurrent: true)
                 }
                 Spacer(minLength: 8)
                 Text("\(Text(model.t("nat.run.completed")).foregroundStyle(AU.text2)) \(Text("\(Int(((job.fraction ?? 0) * 100).rounded()))%").auRun(15, .semibold, mono: true).foregroundStyle(job.state == .paused ? AU.yellowText : AU.text))")
@@ -264,6 +261,24 @@ struct RowStageLines: View {
                 } else if let estimate {
                     Text("\(Text(model.t("nat.run.estimated")).foregroundStyle(AU.text2)) \(Text(Fmt.estimate(estimate)).fontWeight(.semibold).foregroundStyle(AU.text))")
                         .auFont(12)
+                }
+            }
+        }
+    }
+
+    private func stages(_ current: Int, shares: Bool, onlyCurrent: Bool = false) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            ForEach(Array(RunStages.order.enumerated()), id: \.offset) { i, stage in
+                if !onlyCurrent || i == current {
+                    if i > 0 && !onlyCurrent { Text(verbatim: "→").auFont(12).foregroundStyle(AU.text3) }
+                    HStack(alignment: .firstTextBaseline, spacing: 7) {
+                        StageDot(kind: i < current ? .done : i == current ? .now : .next, paused: job.state == .paused)
+                            .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+                        Text(model.stageName(stage)).auFont(12, i == current ? .semibold : .regular)
+                            .foregroundStyle(i < current ? AU.greenText : i == current ? (job.state == .paused ? AU.yellowText : AU.text) : AU.text3)
+                        if shares { Text(Self.range(stage)).auFont(10.5, mono: true).foregroundStyle(AU.text3).opacity(0.6) }
+                    }
+                    .fixedSize()
                 }
             }
         }
@@ -400,7 +415,9 @@ struct FinishedSheet: View {
             else if names("failed").contains(n) || names("defective_outputs").contains(n) { state = "failed" }
             else if names("interrupted").contains(n) { state = "stopped" }
             else if names("skipped").contains(n) { state = "skipped" }
-            else { state = "done" }
+            else if names("already_done").contains(n) { state = "done" }
+            // In no list: the launch ended (Stop All) before this file began. It used to fall into "done" (31 Oct).
+            else { state = "not_started" }
             out.append(Row(name: n, state: state, warnings: job?.warnings ?? [], seconds: job?.seconds, file: f,
                            output: state == "done" || state == "warn" ? job?.output : nil))
         }
@@ -484,6 +501,7 @@ struct FinishedSheet: View {
         case "warn": StatusChip(model.localizer.tn("nat.chip.done_warn", r.warnings.count), tone: .yellow, symbol: "exclamationmark.triangle.fill")
         case "failed": StatusChip(model.t("nat.chip.failed"), tone: .red)
         case "stopped": StatusChip(model.t("nat.chip.interrupted"), tone: .yellow)   // as in the Queue: resumable
+        case "not_started": StatusChip(model.t("nat.fin.not_started"))
         default: StatusChip(model.t("nat.fin.skipped"))
         }
     }

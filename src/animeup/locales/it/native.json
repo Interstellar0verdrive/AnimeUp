@@ -402,6 +402,7 @@
   "nat.fin.stopped": "fermato",
   "nat.fin.failed": "fallito",
   "nat.fin.skipped": "saltato",
+  "nat.fin.not_started": "non avviato",
   "nat.fin.next_to": "I video finiti sono accanto agli originali. I file fermati si riprendono dalla Coda.",
   "nat.fin.show_finder": "Mostra nel Finder",
   "nat.note.file_done_title": "File finito",
