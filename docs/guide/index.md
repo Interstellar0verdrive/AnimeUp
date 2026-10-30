@@ -118,7 +118,7 @@ Four steps, and only the first two are needed.
 
 | Page | What it covers |
 |---|---|
-| [Examples, before and after](examples.md) | Real before-and-after comparisons on four kinds of source, with the model each one wants |
+| [Examples, before and after](examples.md) | Real before-and-after comparisons on five kinds of source, with the model each one wants |
 | [How a job works inside](deep-dives/how-it-works.md) | Analysis, plan, extraction, repeated frames, chunks, encoding, resuming |
 | [The models and when to use them](deep-dives/models.md) | The four models, and which source each one suits |
 | [Newer anime models, compared](deep-dives/model-study.md) | Twelve versions of eight frames, side by side |
