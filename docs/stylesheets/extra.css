@@ -1889,3 +1889,52 @@
   stroke: var(--animeup-accent);
   stroke-width: 2px;
 }
+
+/* "Where it started": 2.0 wiping in over 1.6 from the top down, with a soft edge (swap.js). Without the
+   script, 1.6 stays. --swap runs 0 → 1; the mask's soft band, 30% of the height, slides from above the
+   picture to below it. */
+@property --swap {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+.md-typeset .au-swap {
+  --swap: 0;
+  position: relative;
+  margin: 1.2rem 0;
+  border-radius: 0.7rem;
+  overflow: hidden;
+  border: 1px solid var(--animeup-border);
+  transition: --swap 1.4s cubic-bezier(0.45, 0, 0.25, 1);
+}
+.md-typeset .au-swap.is-gone {
+  --swap: 1;
+}
+.md-typeset .au-swap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.md-typeset .au-swap .au-swap__from {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent calc(var(--swap) * 130% - 30%), #000 calc(var(--swap) * 130%));
+  mask-image: linear-gradient(to bottom, transparent calc(var(--swap) * 130% - 30%), #000 calc(var(--swap) * 130%));
+}
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .au-swap {
+    transition: none;
+  }
+  .md-typeset .au-swap .au-swap__from {
+    -webkit-mask-image: none;
+    mask-image: none;
+    transition: opacity 0.6s;
+  }
+  .md-typeset .au-swap.is-gone .au-swap__from {
+    opacity: 0;
+  }
+}

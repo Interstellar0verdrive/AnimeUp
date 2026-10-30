@@ -25,7 +25,10 @@ Up to 1.6, AnimeUp was a web page opened in the browser, built with [Streamlit](
 - **The Mac was out of reach.** No native folder picker, notifications, Dock progress or quit confirmation without workarounds.
 - **It lived in a tab.** Address bar, refresh, imitation dialogs, and work running with nothing on screen once the tab was closed.
 
-![AnimeUp 1.6, a page in the browser, and AnimeUp 2.0, a Mac app, at the same moment of a queue](../img/v2/renewal-dark.png){ .au }
+<div class="au-swap" role="img" aria-label="AnimeUp 1.6, a page in the browser, giving way to AnimeUp 2.0, a native Mac app, in the same place">
+  <img src="../../img/v2/renewal-20-dark.png" alt="" loading="eager">
+  <img class="au-swap__from" src="../../img/v2/renewal-16-dark.png" alt="" loading="eager">
+</div>
 
 ## The approach: native frame, own content
 
