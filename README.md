@@ -14,14 +14,12 @@ Mac app: it analyses your sources, lets you compare models side by side on
 difficult clips, and runs long, resumable jobs, all on your Mac and offline.
 
 ![A picture at 720p, plainly enlarged on the left and upscaled to 1440p by AnimeUp with Real-CUGAN no-denoise on the right, with the divider sweeping across](docs/images/cover2.webp)
-
-![A picture at 480p, plainly enlarged on the left and upscaled to 1080p by AnimeUp with Real-ESRGAN animevideov3 on the right, with the divider sweeping across](docs/images/cover.webp)
-<sub>Close-ups of two pictures, plainly enlarged on the left and upscaled by AnimeUp on
-the right: a 720p frame through Real-CUGAN no-denoise, which keeps painted
-texture, and a 480p frame (DVD size) through Real-ESRGAN animevideov3, which
-redraws clean lines. In the [user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)
-you can drag the divider yourself, see them at 1:1, and find
-[more examples](https://interstellar0verdrive.github.io/AnimeUp/guide/examples/).</sub>
+<sub>A close-up of a picture at 720p, plainly enlarged on the left and upscaled to 1440p
+by AnimeUp with Real-CUGAN no-denoise on the right. In the
+[user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/) you can drag the
+divider yourself and see it at 1:1, and the
+[examples](https://interstellar0verdrive.github.io/AnimeUp/guide/examples/) show all
+four models on five kinds of source.</sub>
 
 ![The AnimeUp window while a queue runs](docs/guide/img/v2/GuideWindow.png)
 
