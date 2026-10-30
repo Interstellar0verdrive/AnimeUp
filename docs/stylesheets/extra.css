@@ -1979,3 +1979,11 @@
     animation: none;
   }
 }
+
+/* The table of contents' entries sit 7 px in from its title, as the navigation's do on the left
+   (Material's list indent put them 14 px in) (30 Oct) */
+@media screen and (min-width: 60em) {
+  .md-sidebar--secondary .md-nav--secondary > .md-nav__list {
+    padding-left: 7.4px;
+  }
+}
