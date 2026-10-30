@@ -93,20 +93,18 @@ Contrast is the part I measured. I haven't yet tested AnimeUp with VoiceOver or 
 
 ### Buttons
 
-Six roles, three sizes, five states. A button is chosen by **what it does**, never by where it sits.
+Six roles, three sizes, four states. A button is chosen by **what it does**, never by where it sits.
 
 ![The six button roles, each in its default, hover, pressed and disabled state](../img/v2/ds-buttons-dark.png){ .au }
 
-| Role | Used for |
-|---|---|
-| Primary | The one way forward in a view: **at most one per view** |
-| Secondary | Everything else |
-| Destructive | Ends or throws away work: outlined, so it never shouts louder than the primary |
-| Confirm destructive | Solid red, only inside the alert that asks for confirmation |
-| In a note | Takes the colour of its note: the yellow update note, for instance |
-| Plain | Icon-only actions; they get a tooltip |
-
-Disabled is always 40% opacity of the same button. Hover only lightens the same fill, it never changes colour family.
+- **Chosen by what it does.** The same action looks the same in a row, in the sidebar and in a dialog.
+- **One primary per view.** If two actions compete, the second becomes secondary.
+- **Order.** In a row of buttons the primary is on the right, as on macOS; in an alert they are stacked, with the answer on top and Cancel last.
+- **Three sizes, chosen by the place.** Large (32 pt) in alerts and dialogs, Regular (28 pt) in page headers and panels, Small (24 pt) inside file rows and the sidebar.
+- **Hover never changes the colour family.** It only lightens the same fill.
+- **Disabled is 40% of the same button**, with a tooltip that says why.
+- **An icon only when it helps** to recognise the action, always on the left; icon and label are centred in the capsule.
+- **Labels follow Apple**: Title Case in English, sentence case in Italian.
 
 ### Notes
 
