@@ -10,7 +10,7 @@ description: "The design study behind AnimeUp 2.0: why a native app, the hybrid 
 <div class="au-fade" role="img" aria-label="The boards of AnimeUp’s design system, seen from afar: foundations, buttons, controls and patterns, in the dark theme and in the light one">
   <img src="../../img/v2/ds-cover-dark.png" alt="">
   <img src="../../img/v2/ds-cover-light.png" alt="">
-  <span class="au-fade__edge"></span>
+  <svg class="au-fade__edge" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line x1="0" y1="0" x2="0" y2="0" vector-effect="non-scaling-stroke"/></svg>
 </div>
 
 How AnimeUp went from a page in the browser to a Mac app, and the decisions behind what you see. This page is for the curious, and for designers: you don't need it to use AnimeUp.
