@@ -48,7 +48,7 @@ The app is in English and Italian (Settings › General).
   *your* Mac, at 480p and 1080p, and the results stay to compare with the next
   calibration.
 
-![A picture at 720p, plainly enlarged on the left and upscaled to 1440p by AnimeUp with Real-CUGAN no-denoise on the right, with the divider sweeping across](docs/images/cover2.webp)
+![A picture at 720p, plainly enlarged on the left and upscaled to 1440p by AnimeUp with Real-CUGAN no-denoise on the right, with the divider sweeping across](docs/images/cover-night.webp)
 <sub>A close-up of a picture at 720p, plainly enlarged on the left and upscaled to 1440p
 by AnimeUp with Real-CUGAN no-denoise on the right. In the
 [user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/) you can drag the
