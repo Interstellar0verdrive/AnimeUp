@@ -22,7 +22,8 @@ description: How to use AnimeUp 2.0, the native Mac app that upscales anime on y
   <img src="img/v2/hero2-overlay.png" alt="">
   <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
 </div>
-<p class="au-hero__caption">Drag across the picture: a close-up of the same frame at 720p, plainly enlarged on the left, and upscaled by AnimeUp with Real-CUGAN no-denoise on the right. <b>1:1</b> shows the whole frame at full size. <a href="examples/">More examples →</a></p>
+<p class="au-hero__caption">Drag across the picture: a close-up of the same frame at 720p, plainly enlarged on the left, and upscaled by AnimeUp with Real-CUGAN no-denoise on the right. <b>1:1</b> shows the whole frame at full size.</p>
+<p class="au-more"><a class="au-more__btn" href="examples/">See more examples<span aria-hidden="true">→</span></a></p>
 
 ## What AnimeUp is
 
