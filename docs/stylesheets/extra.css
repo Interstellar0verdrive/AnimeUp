@@ -1838,3 +1838,13 @@
   transition: filter 0.15s ease;
 }
 .md-typeset .au-more .au-more__btn:hover { filter: brightness(1.08); color: #0d1015; }
+
+/* Pictures with a light and a dark twin: the guide's own schemes (dark is the default, "default" is
+   light, "animeup-auto" follows macOS), so Material's #only-light / #only-dark need these rules. */
+.md-typeset img[src$="#only-light"] { display: none; }
+[data-md-color-scheme="default"] .md-typeset img[src$="#only-light"] { display: block; }
+[data-md-color-scheme="default"] .md-typeset img[src$="#only-dark"] { display: none; }
+@media (prefers-color-scheme: light) {
+  [data-md-color-scheme="animeup-auto"] .md-typeset img[src$="#only-light"] { display: block; }
+  [data-md-color-scheme="animeup-auto"] .md-typeset img[src$="#only-dark"] { display: none; }
+}
