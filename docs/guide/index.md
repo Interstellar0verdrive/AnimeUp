@@ -16,7 +16,7 @@ description: How to use AnimeUp 2.0, the native Mac app that upscales anime on y
 </header>
 
 <div class="au-gallery">
-  <div class="au-hero is-on" tabindex="0" role="img" style="--zx:-37.5%;--zy:-22.2%;--zw:200%" data-before="480p · the original" data-after="1080p · AnimeUp" aria-label="Before and after: a picture at 480p, plainly enlarged on the left and upscaled to 1080p by AnimeUp with Real-ESRGAN animevideov3 on the right. Drag to compare.">
+  <div class="au-hero is-on" tabindex="0" role="img" style="--zx:-50%;--zy:-11.1%;--zw:200%" data-before="480p · the original" data-after="1080p · AnimeUp" aria-label="Before and after: a picture at 480p, plainly enlarged on the left and upscaled to 1080p by AnimeUp with Real-ESRGAN animevideov3 on the right. Drag to compare.">
     <img class="au-hero__pic" src="img/v2/hero-after.jpg" alt="">
     <span class="au-hero__clip"><img class="au-hero__pic" src="img/v2/hero-before.jpg" alt=""></span>
     <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
