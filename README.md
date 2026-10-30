@@ -20,7 +20,8 @@ difficult clips, and runs long, resumable jobs, all on your Mac and offline.
 the right: a 720p frame through Real-CUGAN no-denoise, which keeps painted
 texture, and a 480p frame (DVD size) through Real-ESRGAN animevideov3, which
 redraws clean lines. In the [user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)
-you can drag the divider yourself, and see them at 1:1.</sub>
+you can drag the divider yourself, see them at 1:1, and find
+[more examples](https://interstellar0verdrive.github.io/AnimeUp/guide/examples/).</sub>
 
 ![The AnimeUp window while a queue runs](docs/guide/img/v2/GuideWindow.png)
 

@@ -24,6 +24,7 @@ nav:
       - Command line: guide/reference/command-line.md
       - Troubleshooting: guide/reference/troubleshooting.md
   - Appendix:
+      - Examples, before and after: guide/examples.md
       - How a job works inside: guide/deep-dives/how-it-works.md
       - The models and when to use them: guide/deep-dives/models.md
       - Newer anime models, compared: guide/deep-dives/model-study.md

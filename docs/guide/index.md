@@ -15,27 +15,14 @@ description: How to use AnimeUp 2.0, the native Mac app that upscales anime on y
   </div>
 </header>
 
-<div class="au-gallery">
-  <div class="au-hero is-on" tabindex="0" role="img" style="--zx:-50%;--zy:-49.07%;--zw:168.42%" data-before="720p · the original" data-after="1440p · AnimeUp" aria-label="Before and after: a picture at 720p, plainly enlarged on the left and upscaled to 1440p by AnimeUp with Real-CUGAN no-denoise on the right. Drag to compare.">
-    <img class="au-hero__pic" src="img/v2/hero2-after.jpg" alt="">
-    <span class="au-hero__clip"><img class="au-hero__pic" src="img/v2/hero2-before.jpg" alt=""></span>
-    <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-    <img src="img/v2/hero2-overlay.png" alt="">
-    <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
-  </div>
-  <div class="au-hero" tabindex="0" role="img" style="--zx:-43.75%;--zy:-61.1%;--zw:200%" data-before="480p · the original" data-after="1080p · AnimeUp" aria-label="Before and after: a picture at 480p, plainly enlarged on the left and upscaled to 1080p by AnimeUp with Real-ESRGAN animevideov3 on the right. Drag to compare.">
-    <img class="au-hero__pic" src="img/v2/hero-after.jpg" alt="">
-    <span class="au-hero__clip"><img class="au-hero__pic" src="img/v2/hero-before.jpg" alt=""></span>
-    <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
-    <img src="img/v2/hero-overlay.png" alt="">
-    <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
-  </div>
-  <div class="au-gallery__tabs" role="tablist">
-    <button type="button" role="tab" class="is-on" aria-selected="true"><b>720p → 1440p</b> Real-CUGAN no-denoise</button>
-    <button type="button" role="tab" aria-selected="false"><b>480p → 1080p</b> Real-ESRGAN animevideov3</button>
-  </div>
+<div class="au-hero is-on" tabindex="0" role="img" style="--zx:-50%;--zy:-49.07%;--zw:168.42%" data-before="720p · the original" data-after="1440p · AnimeUp" aria-label="Before and after: a picture at 720p, plainly enlarged on the left and upscaled to 1440p by AnimeUp with Real-CUGAN no-denoise on the right. Drag to compare.">
+  <img class="au-hero__pic" src="img/v2/hero2-after.jpg" alt="">
+  <span class="au-hero__clip"><img class="au-hero__pic" src="img/v2/hero2-before.jpg" alt=""></span>
+  <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+  <img src="img/v2/hero2-overlay.png" alt="">
+  <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
 </div>
-<p class="au-hero__caption">Drag across the picture: a close-up of the same frame plainly enlarged on the left, and upscaled by AnimeUp on the right. A clean 720p file wants Real-CUGAN, which keeps painted texture; an old DVD-size file wants Real-ESRGAN animevideov3, which redraws clean lines. <b>1:1</b> shows the whole frame at full size.</p>
+<p class="au-hero__caption">Drag across the picture: a close-up of the same frame at 720p, plainly enlarged on the left, and upscaled by AnimeUp with Real-CUGAN no-denoise on the right. <b>1:1</b> shows the whole frame at full size. <a href="examples/">More examples →</a></p>
 
 ## What AnimeUp is
 
@@ -131,6 +118,7 @@ Four steps, and only the first two are needed.
 
 | Page | What it covers |
 |---|---|
+| [Examples, before and after](examples.md) | Real before-and-after comparisons on three kinds of source, with the model each one wants |
 | [How a job works inside](deep-dives/how-it-works.md) | Analysis, plan, extraction, repeated frames, chunks, encoding, resuming |
 | [The models and when to use them](deep-dives/models.md) | The four models, and which source each one suits |
 | [Newer anime models, compared](deep-dives/model-study.md) | Twelve versions of eight frames, side by side |
@@ -145,7 +133,7 @@ Four steps, and only the first two are needed.
 
 ---
 
-<small>The two cover pictures were made for this guide, then shrunk to 480p and 720p and upscaled by AnimeUp. Other pictures show footage from
+<small>The cover picture was made for this guide, then shrunk to 720p and upscaled by AnimeUp. Other pictures show footage from
 [Morevna Episode 3](https://archive.org/details/morevna-ep3) (© Morevna
 Project, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/))
 and [Big Buck Bunny](https://peach.blender.org) (© 2008 Blender Foundation,
