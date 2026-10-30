@@ -17,39 +17,26 @@ How AnimeUp went from a page in the browser to a Mac app, and the decisions behi
 
 ## Where it started
 
-Up to 1.6, AnimeUp's interface was a web page served from the Mac and opened in the browser, built with [Streamlit](https://streamlit.io). Streamlit was a great way to start: a few lines of Python gave me a working page, and I could try ideas on real files the same evening. It taught me a lot about what people need to see while a file runs for two hours.
+Up to 1.6, AnimeUp was a web page opened in the browser, built with [Streamlit](https://streamlit.io). It was a great way to start: a few lines of Python, and I could try ideas on real files the same evening. But the further the design went, the harder it pushed back:
 
-But the further the design went, the harder Streamlit pushed back:
-
-- **A design system was a fight.** Streamlit draws its own widgets. To give them AnimeUp's colours, sizes and states I had to restyle them from outside, aiming at internal class names that could change with any update. Every control ended up with its own patch, so two similar buttons on two pages could still look different.
-- **Responsive was bent, not designed.** The layout is a column of blocks Streamlit decides for you. Making the sidebar fold into a drawer, or the rows keep their columns in a narrow window, meant fighting its layout rather than describing mine.
-- **Every click reran the page.** Streamlit runs the whole script again at each interaction, so the page flickered, scroll positions jumped, and keeping a row open or a value half-edited took workarounds.
-- **The Mac was out of reach.** A web page can't open a native folder picker, send a notification, show progress on the Dock icon or ask before quitting. Each of those needed a bridge, or wasn't possible at all.
-- **It lived in a tab.** The browser's address bar, back button and refresh came with it, dialogs and alerts were web imitations of the Mac's own, and closing the tab or the Terminal window could leave the work running with nothing on screen to say so. Two copies could even fight over the same port, and an old session kept serving old code after an update.
+- **A design system was a fight.** Streamlit draws its own widgets; giving them AnimeUp's look meant patching each one from outside, against internal names that could change with any update.
+- **Responsive was bent, not designed.** The layout is a column of blocks Streamlit decides for you.
+- **Every click reran the page.** The page flickered, scroll jumped, open rows closed.
+- **The Mac was out of reach.** No native folder picker, notifications, Dock progress or quit confirmation without workarounds.
+- **It lived in a tab.** Address bar, refresh, imitation dialogs, and work running with nothing on screen once the tab was closed.
 
 ![AnimeUp 1.6, a page in the browser, and AnimeUp 2.0, a Mac app, at the same moment of a queue](../img/v2/renewal-dark.png){ .au }
 
-For 2.0 I froze the browser interface and started again from a blank page, in SwiftUI, with one goal: an app that behaves like every other app on the Mac, and still looks like AnimeUp. The engine underneath stayed the same: the app talks to it directly, with no browser and no port in between.
-
 ## The approach: native frame, own content
 
-I explored a few directions before writing any code, and kept the one I called **hybrid**:
+For 2.0 I started again in SwiftUI, with the same engine underneath and one goal: an app that behaves like every other Mac app, without losing what made AnimeUp recognisable, nor the skeleton of how it works: add videos, compare, process.
 
-- **The frame is the Mac's.** A glass sidebar with the window controls inside it, a real Settings window (⌘,), real sheets and alerts, menus and shortcuts, notifications and progress on the Dock icon. SF Pro and SF Mono for text, SF Symbols for icons. Nothing the Mac already does is redrawn.
-- **The content is AnimeUp's.** The things only AnimeUp has get a look of their own: the file rows that become their own progress bars, the four steps, the chunks, the comparison player, the calibration charts, one cyan accent.
-
-The test for every screen was the same: would someone who has never seen AnimeUp know where to click, because it works like the Mac apps they already use?
+- **The frame is the Mac's.** Glass sidebar, Settings window, sheets, alerts, menus, notifications, Dock progress, SF Pro and SF Symbols. Nothing the Mac already does is redrawn.
+- **The content is AnimeUp's.** File rows that are their own progress bars, the four steps and their chunks, the comparison player, the calibration charts, one cyan accent.
 
 ![AnimeUp 2.0: the Queue running a file with its drawer open, and Compare in front](../img/v2/GuideScreens.png){ .au }
 
-## The process
-
-1. **Inventory.** Every screen, state, message and control of 1.6, written down, with what was wrong with each.
-2. **A design system first.** Colours, type, spacing, corners, icons, then every component with all its states, before any screen.
-3. **Screens and states.** Every page drawn from those pieces only, then every state of every page: empty, analysing, running, paused, stopped, failed, a full disk, a disconnected drive, a narrow window. About a hundred boards.
-4. **Code that adopts the system.** The SwiftUI app was built on the same tokens and components, and every difference between the app and the boards was treated as a bug of the app, or a decision to bring back into the boards.
-
-Every board was reviewed, often several times. The rules below came out of those reviews.
+Every screen was then drawn against a design system built first: colours, type, spacing and every component with all its states. Not just the pages, but each of their states: empty, analysing, running, paused, stopped, failed, a full disk, a disconnected drive, a narrow window. More than a hundred boards, each reviewed, often several times, before a line of code; the app was then built on the same tokens and components, and any difference between the two was a bug.
 
 ## The design system
 
