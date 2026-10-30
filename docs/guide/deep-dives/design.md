@@ -194,7 +194,7 @@ Clip times are a range, 05:28 – 05:38, so you can find the moment in the episo
 ![](../img/v2/rule-5-dark.png)
 
 **Next has an arrow**
-**Next** buttons carry a trailing arrow; **Back** stays plain, so the way forward is clear before you read it.
+**Next** buttons carry a trailing arrow and **Back** stays plain, so the way forward is clear before you read it; a link that opens a page, like the calibration date, ends with a chevron.
 
 </div>
 
@@ -221,7 +221,7 @@ Long lists end with a fade, so it's clear there's more to scroll.
 ![](../img/v2/rule-8-dark.png)
 
 **Triangle warns, octagon stops**
-Warnings always use the yellow triangle, errors the red octagon, on every page and in every note.
+Information uses the circle, warnings the yellow triangle, errors the red octagon, on every page and in every note.
 
 </div>
 
