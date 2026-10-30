@@ -30,7 +30,7 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 <div class="au-hero" tabindex="0" role="img" style="--zx:-50.94%;--zy:-36.11%;--zw:300%" data-before="480p · the original" data-after="1080p · AnimeUp" aria-label="A seaside station at 480p, plainly enlarged on the left and upscaled to 1080p by Real-ESRGAN animevideov3 on the right. Drag to compare.">
   <img class="au-hero__pic" src="../img/v2/hero-after.jpg" alt="" loading="lazy">
-  <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/hero-before.jpg" alt="" loading="lazy"></span>
+  <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/hero-before.jpg" alt="" loading="eager"></span>
   <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
   <img src="../img/v2/ex-labels-480-1080.png" alt="" loading="lazy">
   <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
@@ -47,7 +47,7 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 <div class="au-hero" tabindex="0" role="img" style="--zx:0%;--zy:-22.22%;--zw:200%" data-before="360p · the original" data-after="1080p · AnimeUp" aria-label="A starship at a space station at 360p, plainly enlarged on the left and upscaled to 1080p by Real-ESRGAN animevideov3 on the right. Drag to compare.">
   <img class="au-hero__pic" src="../img/v2/ex4-after.jpg" alt="" loading="lazy">
-  <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/ex4-before.jpg" alt="" loading="lazy"></span>
+  <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/ex4-before.jpg" alt="" loading="eager"></span>
   <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
   <img src="../img/v2/ex-labels-360-1080.png" alt="" loading="lazy">
   <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
@@ -61,7 +61,7 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 <div class="au-hero" tabindex="0" role="img" style="--zx:0%;--zy:-70.37%;--zw:200%" data-before="540p · badly compressed web rip" data-after="1080p · AnimeUp" aria-label="A lake at dawn from a badly compressed 540p web rip, plainly enlarged on the left and upscaled to 1080p by Real-CUGAN light denoise on the right. Drag to compare.">
   <img class="au-hero__pic" src="../img/v2/ex5-after.jpg" alt="" loading="lazy">
-  <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/ex5-before.jpg" alt="" loading="lazy"></span>
+  <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/ex5-before.jpg" alt="" loading="eager"></span>
   <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
   <img src="../img/v2/ex-labels-540-1080.png" alt="" loading="lazy">
   <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
@@ -75,7 +75,7 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 <div class="au-hero" tabindex="0" role="img" style="--zx:-46.05%;--zy:-49.07%;--zw:252.63%" data-before="720p · the original" data-after="2160p · AnimeUp" aria-label="A painted greenhouse library at 720p, plainly enlarged on the left and upscaled to 2160p by Real-CUGAN conservative on the right. Drag to compare.">
   <img class="au-hero__pic" src="../img/v2/ex3-after.jpg" alt="" loading="lazy">
-  <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/ex3-before.jpg" alt="" loading="lazy"></span>
+  <span class="au-hero__clip"><img class="au-hero__pic" src="../img/v2/ex3-before.jpg" alt="" loading="eager"></span>
   <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
   <img src="../img/v2/ex-labels-720-2160.png" alt="" loading="lazy">
   <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
