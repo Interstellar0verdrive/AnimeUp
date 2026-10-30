@@ -149,17 +149,92 @@ A time that jumps every second is a time nobody trusts, and a number that keeps 
 
 ## Rules fixed along the way
 
-Some rules only appeared while reviewing real screens, and then applied everywhere:
+Some rules only appeared while reviewing real screens, and then applied everywhere.
 
-- A page's intro runs on two lines of similar length, the second slightly longer.
-- Never name a colour in a text ("the white mark"): it changes between light and dark.
-- Always the full file name with its extension, never a shortened one.
-- Clip times are a range: 05:28 – 05:38.
-- **Next:** buttons have a trailing arrow; **Back** stays plain.
-- Inside alerts every icon is an outline; small icons inside text are filled.
-- Long lists end with a fade, so it's clear there's more.
-- Warnings use the yellow triangle, errors the red octagon.
-- Small graphic pieces (an icon and a value, a line) rather than empty space, and never walls of text.
+<div class="au-rules" markdown>
+
+<div class="au-rule" markdown>
+
+![](../img/v2/rule-1-dark.png)
+
+**Two lines, the second longer**
+A page's intro runs on two lines of similar length, the second slightly longer, so it reads as one balanced block.
+
+</div>
+
+<div class="au-rule" markdown>
+
+![](../img/v2/rule-2-dark.png)
+
+**No colour names**
+A text never names a colour ("the white mark"): the same mark changes colour between the dark and the light theme.
+
+</div>
+
+<div class="au-rule" markdown>
+
+![](../img/v2/rule-3-dark.png)
+
+**The full file name**
+Always the full file name with its extension, never a shortened one: files are often told apart by their last characters.
+
+</div>
+
+<div class="au-rule" markdown>
+
+![](../img/v2/rule-4-dark.png)
+
+**Clip times as a range**
+Clip times are a range, 05:28 – 05:38, so you can find the moment in the episode yourself.
+
+</div>
+
+<div class="au-rule" markdown>
+
+![](../img/v2/rule-5-dark.png)
+
+**Next has an arrow**
+**Next** buttons carry a trailing arrow; **Back** stays plain, so the way forward is clear before you read it.
+
+</div>
+
+<div class="au-rule" markdown>
+
+![](../img/v2/rule-6-dark.png)
+
+**Outline in alerts, filled in text**
+Inside alerts every icon is an outline; small icons inside a line of text are filled, so they hold their shape.
+
+</div>
+
+<div class="au-rule" markdown>
+
+![](../img/v2/rule-7-dark.png)
+
+**Lists fade at the end**
+Long lists end with a fade, so it's clear there's more to scroll.
+
+</div>
+
+<div class="au-rule" markdown>
+
+![](../img/v2/rule-8-dark.png)
+
+**Triangle warns, octagon stops**
+Warnings always use the yellow triangle, errors the red octagon, on every page and in every note.
+
+</div>
+
+<div class="au-rule" markdown>
+
+![](../img/v2/rule-9-dark.png)
+
+**Small pieces, not text**
+Small graphic pieces, an icon and a value or a short bar, rather than empty space, and never walls of text.
+
+</div>
+
+</div>
 
 ## Words
 

@@ -2013,3 +2013,35 @@
 .md-typeset .au-side--left {
   grid-template-columns: 240px minmax(0, 1fr);
 }
+
+/* "Rules fixed along the way": a grid of small cards, a picture, a title and a few words each; three
+   across, two on narrower screens, one on a phone (30 Oct) */
+.md-typeset .au-rules {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px 24px;
+  margin: 1.2rem 0 1.6rem;
+}
+.md-typeset .au-rule img {
+  display: block;
+  width: 100%;
+  margin: 0 0 12px;
+  border-radius: 0.6rem;
+  border: 1px solid var(--animeup-border);
+}
+.md-typeset .au-rule p {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.md-typeset .au-rule strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+}
+@media screen and (max-width: 76.1875em) {
+  .md-typeset .au-rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .au-rules { grid-template-columns: 1fr; }
+}
