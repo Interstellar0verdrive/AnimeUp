@@ -69,11 +69,12 @@ Colour is kept for meaning: one accent for what AnimeUp is doing, three status c
 
 AnimeUp uses the Mac's own type: SF Pro for text, SF Mono for every number that changes.
 
-![SF Pro and SF Mono with the weights in use; the scale of styles from page title to label; a Queue row whose words, numbers and chip share one baseline; a button whose label sits just above the capsule's middle](../img/v2/ds-type-dark.png){ .au }
+![SF Pro and SF Mono with the weights in use; the scale of styles from page title to label; a Queue row whose words, numbers and chip share one baseline, and a button centred on the same line](../img/v2/ds-type-dark.png){ .au }
 
+- **SF Pro, because it's the Mac's.** AnimeUp lives inside a frame macOS draws for it: menus, alerts, sheets, the Settings window. Any other face inside would show the seam. SF Pro is also built for screens: it changes cut and spacing with the size, so 11 pt labels stay open and 24 pt titles stay tight, it has every accent the app's languages need, and there's nothing to load.
+- **SF Mono, for numbers that change.** It's SF Pro's monospaced companion, drawn with the same proportions, so the two sit together without a jolt. Times, frames, sizes and speeds change while a job runs; with every digit the same width, a time left doesn't jitter as it counts down, and numbers in a column line up. It also tells data from words at a glance.
 - **Few styles, whole points.** Eight styles in all, aligned with the macOS text styles: 13 pt body, 15 pt section titles, 24 pt page titles, 11 pt labels. With few sizes the hierarchy reads at a glance, and whole points keep the text sharp.
-- **Numbers in SF Mono.** Times, frames, sizes and speeds change while a job runs. In a monospaced face every digit has the same width, so a time left doesn't jitter as it counts down, and numbers in a column line up.
-- **Words and numbers on one baseline.** In a row the file name, its numbers and the status chip sit on the same baseline, whatever their family and size. Button labels are raised 1 pt from the capsule's geometric centre: next to an icon, and inside a rounded shape, that is where the eye reads the middle.
+- **Centred, on one baseline.** Text is always centred in its container, and centred with the icon beside it. Words and numbers in different faces and sizes on the same line always share one baseline.
 - **Three text levels.** The main text, a secondary grey for what explains it, a tertiary grey for labels and details. Each grey was chosen for contrast first, and only then for hierarchy.
 
 **Contrast.** I measured every text colour against the backgrounds it sits on. In the dark theme the three levels reach 15.7, 7.3 and 5.1 to 1 on the window, and the coloured texts (cyan, green, yellow, red) between 7.9 and 12.3 to 1; in the light theme every text colour stays between 4.7 and 17.8 to 1. All of them meet the 4.5 to 1 that WCAG AA asks for normal text. One exception I know of: the white label on the cyan button of the light theme is at 3.3 to 1, enough only for large text, and it's on the list for the next version.
