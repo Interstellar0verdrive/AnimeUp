@@ -25,12 +25,12 @@ nav:
       - Troubleshooting: guide/reference/troubleshooting.md
   - Appendix:
       - Examples, before and after: guide/examples.md
+      - Designing AnimeUp 2.0: guide/deep-dives/design.md
       - How a job works inside: guide/deep-dives/how-it-works.md
       - The models and when to use them: guide/deep-dives/models.md
       - Newer anime models, compared: guide/deep-dives/model-study.md
       - How much texture each model keeps: guide/deep-dives/texture-study.md
       - Tuning notes: TUNING.md
-      - Designing AnimeUp 2.0: guide/deep-dives/design.md
 
 theme:
   name: material

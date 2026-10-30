@@ -119,12 +119,12 @@ Four steps, and only the first two are needed.
 | Page | What it covers |
 |---|---|
 | [Examples, before and after](examples.md) | Real before-and-after comparisons on five kinds of source, with the model each one wants |
+| [Designing AnimeUp 2.0](deep-dives/design.md) | The design study behind the app: the approach, the design system, the states |
 | [How a job works inside](deep-dives/how-it-works.md) | Analysis, plan, extraction, repeated frames, chunks, encoding, resuming |
 | [The models and when to use them](deep-dives/models.md) | The four models, and which source each one suits |
 | [Newer anime models, compared](deep-dives/model-study.md) | Twelve versions of eight frames, side by side |
 | [How much texture each model keeps](deep-dives/texture-study.md) | Paper and grain through each model |
 | [Tuning notes](../TUNING.md) | The measurements behind every default |
-| [Designing AnimeUp 2.0](deep-dives/design.md) | The design study behind the app: the approach, the design system, the states |
 
 !!! note "Language"
     AnimeUp is available in English and Italian: it starts in the language of macOS, and you can switch in **Settings › General**. This guide uses the English labels.

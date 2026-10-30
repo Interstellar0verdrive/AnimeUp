@@ -89,4 +89,4 @@ What AnimeUp does, on five kinds of source. Each picture was shrunk to the size 
 
 These are five cases; your series is another one. [Compare](06-compare.md) renders the hardest clips of your own file with each model and shows them side by side, exactly like these pictures, before you start the queue.
 
-[Next: How a job works inside →](deep-dives/how-it-works.md)
+[Next: Designing AnimeUp 2.0 →](deep-dives/design.md)

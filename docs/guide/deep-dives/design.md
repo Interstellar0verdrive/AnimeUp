@@ -126,4 +126,4 @@ The wording went through the same reviews as the pixels. Two examples:
 
 2.0 is dark only. The light theme was designed alongside the dark one in the first boards, and comes back once the dark one has settled. The pictures in this guide will follow the theme of the page when it does.
 
-[Back to the guide's home](../index.md)
+[Next: How a job works inside →](how-it-works.md)
