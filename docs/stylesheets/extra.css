@@ -1683,12 +1683,12 @@
   border: 0;
   background: rgba(10, 12, 16, 0.72);
   color: #fff;
-  font: 600 0.62rem/1.2 ui-monospace, "SF Mono", Menlo, monospace;
+  font: 600 0.62rem/1 ui-monospace, "SF Mono", Menlo, monospace;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
   cursor: zoom-in;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .md-typeset .au-hero .au-hero__zoom:hover {
@@ -1814,3 +1814,9 @@
 .md-typeset .au-gallery__tabs button b { color: var(--animeup-text); margin-right: 0.3rem; }
 .md-typeset .au-gallery__tabs button.is-on { background: var(--animeup-accent); border-color: var(--animeup-accent); color: #0d1015; }
 .md-typeset .au-gallery__tabs button.is-on b { color: #0d1015; }
+
+.md-typeset .au-hero .au-hero__zoomicon {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+}

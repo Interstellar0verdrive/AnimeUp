@@ -21,14 +21,14 @@ description: How to use AnimeUp 2.0, the native Mac app that upscales anime on y
     <span class="au-hero__clip"><img class="au-hero__pic" src="img/v2/hero2-before.jpg" alt=""></span>
     <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
     <img src="img/v2/hero2-overlay.png" alt="">
-    <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 4.5V1h3.5M7.5 1H11v3.5M11 7.5V11H7.5M4.5 11H1V7.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
+    <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
   </div>
-  <div class="au-hero" tabindex="0" role="img" style="--zx:-50%;--zy:-11.1%;--zw:200%" data-before="480p · the original" data-after="1080p · AnimeUp" aria-label="Before and after: a picture at 480p, plainly enlarged on the left and upscaled to 1080p by AnimeUp with Real-ESRGAN animevideov3 on the right. Drag to compare.">
+  <div class="au-hero" tabindex="0" role="img" style="--zx:-43.75%;--zy:-61.1%;--zw:200%" data-before="480p · the original" data-after="1080p · AnimeUp" aria-label="Before and after: a picture at 480p, plainly enlarged on the left and upscaled to 1080p by AnimeUp with Real-ESRGAN animevideov3 on the right. Drag to compare.">
     <img class="au-hero__pic" src="img/v2/hero-after.jpg" alt="">
     <span class="au-hero__clip"><img class="au-hero__pic" src="img/v2/hero-before.jpg" alt=""></span>
     <span class="au-hero__line"><span class="au-hero__knob"><svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M7 2 2 7l5 5M13 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
     <img src="img/v2/hero-overlay.png" alt="">
-    <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 4.5V1h3.5M7.5 1H11v3.5M11 7.5V11H7.5M4.5 11H1V7.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
+    <button class="au-hero__zoom" type="button" title="Open at 100%, one picture pixel per screen pixel"><svg class="au-hero__zoomicon" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M7 1h4v4M11 1 7.2 4.8M5 11H1V7M1 11l3.8-3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>1:1</button>
   </div>
   <div class="au-gallery__tabs" role="tablist">
     <button type="button" role="tab" class="is-on" aria-selected="true"><b>720p → 1440p</b> Real-CUGAN no-denoise</button>
