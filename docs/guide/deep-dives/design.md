@@ -43,7 +43,16 @@ Two halves, kept apart on purpose: what the Mac already does well is left to the
 
 - **The frame is the Mac's.** Glass sidebar, Settings window, sheets, alerts, menus, notifications, Dock progress, SF Pro and SF Symbols. Nothing the Mac already does is redrawn.
 - **The content is AnimeUp's.** File rows that are their own progress bars, the four steps and their chunks, the comparison player, the calibration charts, one cyan accent.
-- **It fits the window.** Below 1240 pt the sidebar folds into tabs in the title bar, and the pages drop what matters least.
+
+### It fits the window
+
+A Mac window can be any size, and AnimeUp often sits small beside a player or a folder while it works. So I designed every page at both widths, instead of letting the wide layout squeeze itself into the narrow one.
+
+![The Queue running a file with its drawer open, in a wide window with the sidebar and in a narrow window with the pages as tabs at the top: in the narrow one, the drawer stacks its groups](../img/v2/ds-responsive-dark.png){ .au }
+
+- **Below 1240 pt the sidebar becomes tabs.** Start, Compare and Queue move into a segmented control at the top of the window. The Queue tab keeps its count of files, with a spinner next to it while work is going on.
+- **Each page is drawn again, not shrunk.** Panels stack one above the other, and what you act on stays in view.
+- **Nothing is lost.** Everything you can do in a wide window you can do in a narrow one: it's only arranged differently.
 
 ### Every screen drawn first
 
@@ -91,6 +100,16 @@ Contrast is the part I measured. I haven't yet tested AnimeUp with VoiceOver or 
 
 </div>
 
+### Icons
+
+Every icon is an SF Symbol, the Mac's own set: thousands of symbols drawn to sit with SF Pro. Out of all of them I picked, for each idea, the one that says it most plainly, and kept it for that idea everywhere.
+
+![A grid of SF Symbols, most of them dimmed; the ones AnimeUp uses are lit, and five of them lifted out of the grid, larger](../img/v2/ds-icons-dark.png){ .au }
+
+- **One symbol, one meaning.** The film stack is the Queue, in the sidebar and in the tabs of a narrow window alike, and it never stands for anything else.
+- **Regular weight, with the text.** An icon takes the weight and size of the label beside it, so the two read as one.
+- **The Mac's, not mine.** They come with macOS, so they look like the rest of the system and stay sharp at any size.
+
 ### Buttons
 
 Six roles, three sizes, four states. A button is chosen by **what it does**, never by where it sits.
@@ -106,9 +125,33 @@ Six roles, three sizes, four states. A button is chosen by **what it does**, nev
 - **An icon only when it helps** to recognise the action, always on the left; icon and label are centred in the capsule.
 - **Labels follow Apple**: Title Case in English, sentence case in Italian.
 
+### Status chips
+
+A chip is a status in a word or two: a small capsule, in SF Mono and lowercase, so it reads as a label and never as a button.
+
+![Status chips in five rows: waiting in grey, at work in cyan, done in green, worth a look in yellow, failed in red](../img/v2/ds-chips-dark.png){ .au }
+
+- **Five families, one per meaning.** Grey is waiting, cyan is at work, green is done, yellow is worth a look, red has failed: the same colours as everywhere else in the app.
+- **The word comes first.** The colour supports it and never replaces it; an icon is added only where it makes the state quicker to recognise, like the check for done or the two bars for paused.
+- **A number when it helps.** "analysing · 0:14" says how long it has been going, so the chip answers the next question too.
+
 ### Notes
 
 One shape for every message: an icon, a bold title, the text, and the note's actions, all in the status colour. A note never says only that something is wrong: it says what AnimeUp will do about it, or what you can do.
+
+### Charts
+
+After a calibration, AnimeUp shows what it measured on one sheet: how long an episode takes now, how fast each model runs on this Mac, and how fast the steps around the upscale are.
+
+![The calibration results: Overview and All numbers tabs, the menu to compare with the factory numbers or an earlier calibration, open; the upscaling time of an episode as pairs of bars, the frames per second of each model and scale from a ring to a dot, and a band of four figures for extraction, repeated frames, encoding and save threads](../img/v2/ds-charts-dark.png){ .au }
+
+- **One sentence first.** Above the charts, the result in words: how much faster than the reference, and how much shorter the estimates get.
+- **Time as two bars.** For each model, the reference above in grey and this Mac below in cyan, on an axis in hours: shorter is faster, and you see the difference before you read a number. It's a duration, so plain bars, never a track that could look like something still running.
+- **Speed as a dumbbell.** A ring for the reference, a dot for now, joined by a line: the longer the line, the bigger the gain, and every model and scale lines up for comparison.
+- **The rest in a band of figures.** Extraction, repeated frames, encoding and save threads don't need a chart: a number and its change say it all.
+- **The reference is your choice.** The menu at the top compares with the factory numbers or with any earlier calibration, each with the version of AnimeUp that made it, and both views follow it.
+- **Two views of the same numbers.** Overview draws them; All numbers lists every figure in a table, for whoever wants the detail.
+- **The numbers sit beside the marks.** Every bar and dot has its value in SF Mono and its change in green: the chart shows the numbers, it doesn't replace them.
 
 ## The study of states
 
