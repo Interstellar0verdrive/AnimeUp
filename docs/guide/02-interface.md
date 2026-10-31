@@ -38,7 +38,7 @@ Adding videos keeps you on the page you're on. The **Next:** buttons at the bott
 
 ## A narrow window
 
-Below about 1240 points of width, the sidebar folds into a bar at the top of the window: the three pages as a segmented control, the calibration status and the Settings gear. The Queue shows its number of files in a small capsule. **View › Show Sidebar** (⌃⌘S) brings the sidebar back over the page when you need it.
+Below about 1240 points of width, the sidebar folds into a bar at the top of the window: the three pages as a segmented control, the calibration status and the Settings gear. The Queue shows its number of files in a small capsule. In a wide window you can also hide the sidebar yourself with **View › Hide Sidebar** (⌃⌘S): the page takes the whole width, with the same bar at the top, and the button at its top left brings the sidebar back. In a narrow window the sidebar isn't available.
 
 The pages adapt too: Start's cards go in two columns or one, the Queue drops the columns that don't fit, and long texts keep balanced line breaks.
 
