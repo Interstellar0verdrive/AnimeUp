@@ -156,7 +156,7 @@ def chip() -> str:
     """Il nome del chip, l'identità della macchina ai fini della velocità."""
     try:
         esito = subprocess.run(
-            ["sysctl", "-n", "machdep.cpu.brand_string"],
+            ["/usr/sbin/sysctl", "-n", "machdep.cpu.brand_string"],
             capture_output=True, text=True, timeout=5,
         )
         nome = esito.stdout.strip()

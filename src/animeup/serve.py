@@ -95,7 +95,7 @@ def _impostazioni_inglese(valori: dict) -> dict:
 
 def _sysctl(nome: str) -> str:
     try:
-        return subprocess.run(["sysctl", "-n", nome], capture_output=True,
+        return subprocess.run(["/usr/sbin/sysctl", "-n", nome], capture_output=True,
                               text=True, timeout=5).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return ""
