@@ -112,7 +112,7 @@ def _intero(testo: str) -> int | None:
 def _gpu_core() -> int | None:
     """I core della GPU, dal registro di IOKit (system_profiler e' lento)."""
     try:
-        uscita = subprocess.run(["ioreg", "-rd1", "-c", "AGXAccelerator"],
+        uscita = subprocess.run(["/usr/sbin/ioreg", "-rd1", "-c", "AGXAccelerator"],
                                 capture_output=True, text=True, timeout=5).stdout
     except (OSError, subprocess.SubprocessError):
         return None

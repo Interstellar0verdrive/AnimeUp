@@ -138,7 +138,7 @@ def macchina_id() -> str:
         uuid = ""
         try:
             esito = subprocess.run(
-                ["ioreg", "-rd1", "-c", "IOPlatformExpertDevice"],
+                ["/usr/sbin/ioreg", "-rd1", "-c", "IOPlatformExpertDevice"],
                 capture_output=True, text=True, timeout=5)
             for riga in esito.stdout.splitlines():
                 if "IOPlatformUUID" in riga:
