@@ -20,7 +20,7 @@ Find the symptom, read what it means, apply the fix. Nothing on this page can da
 | The video tools window says **The download stopped** | The connection dropped. | **Try Again**: it picks up from where it stopped. |
 | A tool **arrived damaged, so it was set aside** | The download didn't match its published checksum. | **Try Again**. If it keeps happening, check the connection (a proxy or captive portal can alter downloads). |
 | **The engine didn't start** | AnimeUp's background engine couldn't start, or stopped several times in a row. | **Show Log** says why. Quit and reopen AnimeUp; if it persists, report it with the log. |
-| The tools window comes back on its own | A tool went missing, or no longer matches its checksum. | Let it download that tool again. |
+| The tools window comes back on its own | A tool went missing, its models are gone, or FFmpeg isn't the version AnimeUp expects. | Let it download that tool again. |
 
 ## Adding videos
 
@@ -40,9 +40,9 @@ Find the symptom, read what it means, apply the fix. Nothing on this page can da
 | **AnimeUp can't write in "folder"** | macOS doesn't allow changes there. | Pick another folder, or check its permissions in the Finder (Get Info). |
 | **Work files need a folder of their own** | The work folder is inside the finished videos' folder. | Pick one outside it, so cleaning up never touches a finished video. |
 | **The work disk isn't connected** | The disk with the work folder was disconnected. | Connect it: the queue waits, nothing is lost. |
-| A note says the disk is **nearly full** or **too full** | Work files need tens of GB. | Free some space, or choose a work folder on another disk. |
+| A yellow note under **Space AnimeUp may use there** says how little the disk has left | Work files need tens of GB, and the system needs some room too. | Free up some space, or choose a work folder on another disk. |
 | A file waits before starting | It would go past **Space AnimeUp may use there**. | Free some space, or raise the limit in Start or Settings › Folders. |
-| A plan says **Tight on space: more chunks** | The space per file is lower than ideal. | Nothing: it's only a bit slower. More space means fewer chunks. |
+| A plan's note starts with **Tight on space** | The space per file is lower than ideal. | Nothing: it's only a bit slower. More space means fewer chunks. |
 
 ## Processing
 
@@ -52,7 +52,7 @@ Find the symptom, read what it means, apply the fix. Nothing on this page can da
 | A model says it **can't reach** the output height | That model only exists at 2×, which isn't enough from this source. | Pick another model, or lower this file's height. |
 | A row says **interrupted** | The file was stopped, AnimeUp was quit, or the Mac shut down. | **Resume** continues from the chunk it was in; **Discard** throws the work away. |
 | A file **failed** | The upscaler or the encoder stopped with an error. Its outcome says where. | Open its log; tick it to try again. If it fails at the same point, report it with the log. |
-| A `….DEFECTIVE.mkv` appears next to the originals | The final checks found a problem (frames, size, audio), so the video was set aside. | Process the file again. |
+| A `….DEFECTIVE.mkv` appears where the finished video would be | The final checks found a problem (frames, size, audio), so the video was set aside. | Process the file again. |
 | The work folder takes a lot of space | Interrupted files keep their work, or **Keep everything** is on. | Resume or **Discard** interrupted files; check Settings › Folders. |
 | Estimates are far from the real time | The Mac isn't calibrated, or the material is unusual. | [Calibrate](../03-calibration.md). Estimates also learn from every finished file. |
 

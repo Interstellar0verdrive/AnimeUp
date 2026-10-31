@@ -7,12 +7,12 @@ description: Every setting in AnimeUp, its default, and when it applies.
 
 # 07. Settings
 
-**AnimeUp › Settings…** (⌘,) or the gear at the top of the sidebar. Four tabs; every setting shows its default under its description.
+**AnimeUp › Settings…** (⌘,) or the gear at the top of the sidebar. Four tabs. Most settings show their default under their description; the language, the work folder and the space per file don't, because they depend on your Mac.
 
 ![Settings, the Output tab](img/v2/GuideSettings.webp){ .au }
 
 !!! info "Locked while a job runs"
-    Settings that change how files are processed are locked while the queue runs: the queue keeps the values it started with. Change them when it finishes, or after Stop All. A paused or interrupted file always resumes with its own values; Settings says so, with **Use Its Values** if you want them back.
+    While the queue runs, every setting except those in Updates is locked: the queue keeps the values it started with. Change them when it finishes, or after Stop All. A paused or interrupted file always resumes with its own values; Settings says so, with **Use Its Values** if you want them back.
 
 ## General
 
@@ -53,7 +53,7 @@ These apply to every new file; the model is picked per file in the Queue.
 
 | Setting | Default | What it does |
 |---|---|---|
-| Check for updates automatically | on | Once a day, in the background |
+| Check for updates automatically | on | At every launch, in the background; **Check Now** asks straight away |
 
 **Check Now** asks GitHub straight away; the tab says whether this is the latest version, with links to the release notes and to AnimeUp on GitHub.
 

@@ -70,7 +70,7 @@ Extraction is the one step that isn't split into chunks: all source frames stay 
 
 ## 5. Deduplication
 
-With **Deduplicate frames** on, AnimeUp measures the difference between each frame and the **last frame it kept**, and marks a frame as a repeat only if:
+With **Skip repeated frames** on, AnimeUp measures the difference between each frame and the **last frame it kept**, and marks a frame as a repeat only if:
 
 > no single pixel, on any of the three colour channels, differs by more than 16/255.
 
@@ -114,7 +114,7 @@ The disk never gets filled beyond 85% of its free space, whatever you set.
 When every chunk is encoded, the segments are joined in order and the rest of the source is copied in from the original file:
 
 - all audio tracks, copied untouched;
-- all subtitle tracks, copied (only `mov_text` is converted to SRT, because MKV can't hold it);
+- all subtitle tracks, copied (only the text formats MKV can't hold, mostly `mov_text`, are converted to SRT);
 - attachments, including fansub fonts;
 - chapters.
 
@@ -146,7 +146,7 @@ Warnings (as opposed to defects) don't keep the job folder. A note isn't worth t
 
 ## Resuming: what is kept and what is redone
 
-A job can be interrupted by **Stop**, **Stop all**, a crash, a power cut or closing the Mac's lid. Everything needed to resume is in its job folder. When the job starts again, AnimeUp compares two **signatures** saved in `state.json` with the current plan:
+A job can be interrupted by **Stop**, **Stop All**, a crash, a power cut or closing the Mac's lid. Everything needed to resume is in its job folder. When the job starts again, AnimeUp compares two **signatures** saved in `state.json` with the current plan:
 
 | Signature | Made of | If it changes |
 |---|---|---|

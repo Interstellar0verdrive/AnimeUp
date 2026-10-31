@@ -37,7 +37,7 @@ About 220 MB in all. Each tool comes from its pinned official release and is che
 
 If the connection drops, the window says which tool stopped and offers **Try Again**, which picks up from where the download stopped. A tool that arrives damaged is set aside and downloaded again. When everything is in place, the window turns into the main window on **Start**, and from then on AnimeUp works offline.
 
-If a tool goes missing later, or no longer matches its checksum, the same window comes back with only that tool.
+If a tool goes missing later, or FFmpeg isn't the version AnimeUp expects, the same window comes back with only that tool.
 
 ## Where AnimeUp keeps its things
 
@@ -55,7 +55,7 @@ If a tool goes missing later, or no longer matches its checksum, the same window
 
 ## Updating
 
-**AnimeUp › Check for Updates…** asks GitHub for the latest release. If there's a newer one, a yellow note at the bottom of the sidebar says so, with **What's new** and **Install…**. AnimeUp also checks once a day on its own; you can turn that off in [Settings › Updates](07-settings.md#updates).
+**AnimeUp › Check for Updates…** asks GitHub for the latest release. If there's a newer one, a yellow note at the bottom of the sidebar says so, with **What's new** and **Install…**, which opens the release on GitHub. AnimeUp also checks at every launch on its own; you can turn that off in [Settings › Updates](07-settings.md#updates).
 
 To update, download the new app from the release, quit AnimeUp and replace `AnimeUp.app` in Applications. Your settings, calibration and the Queue stay as they are. macOS asks for **Open Anyway** once more for each version downloaded with a browser.
 

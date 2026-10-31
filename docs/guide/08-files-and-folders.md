@@ -26,10 +26,12 @@ Morevna Ep2 [480p] [upscale 1080p animevideov3 x4 crf18 dd].mkv
 | `x4` | The model's scale, before the final resize |
 | `crf18` | The x265 quality |
 | `dd` | Repeated frames were skipped |
+| `dn` | A light denoise before the model (command line only) |
+| `medium`, `slow`, `veryslow` | The x265 preset, only when it isn't the default `slower` |
 
 Because the name says how a video was made, versions made with different models or heights live side by side and never overwrite each other. A video with the same name is only replaced if you confirm it with [Redo](05-queue.md#redo-a-finished-file).
 
-The finished video is always an MKV with x265 (HEVC) 10-bit video, and every audio track, subtitle track, chapter and attached font of the original. Subtitles in `mov_text` (common in MP4) are converted to SRT, because MKV can't hold them; the outcome says so.
+The finished video is always an MKV with x265 (HEVC) 10-bit video, and every audio track, subtitle track, chapter and attached font of the original. Text subtitles that MKV can't hold (mostly `mov_text`, common in MP4) are converted to SRT; the outcome says so.
 
 !!! note "A video is written under its real name only when complete"
     While it's being assembled, the file has a temporary name, and it gets its real name at the very end. A file whose final check fails (wrong number of frames, wrong size, unreadable audio) is set aside as `….DEFECTIVE.mkv`, and its work files are kept so nothing is lost.

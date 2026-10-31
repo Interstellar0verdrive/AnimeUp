@@ -56,6 +56,7 @@ The folder has its own `INPUT/` and `OUTPUT/`: put videos in the first, finished
 | `--preset <name>` | slower | x265 preset: `medium`, `slow`, `slower`, `veryslow` |
 | `--disk <GB>` | 40 | The most one file may use while processed |
 | `--dedup` / `--no-dedup` | dedup | Skip repeated frames |
+| `--denoise` / `--no-denoise` | off | A light denoise (`hqdn3d`) before the model |
 | `--scale <n>` | automatic | Force the model's scale (2, 3 or 4) |
 | `--force` | off | Go ahead even below the minimum enlargement (1.25×) |
 | `--yes` | off | `run` only: don't ask for confirmation before starting |
@@ -66,6 +67,6 @@ The folder has its own `INPUT/` and `OUTPUT/`: put videos in the first, finished
 
 An interrupted `run` resumes when you run it again on the same file with the same options: what can be kept is kept (see [How a job works inside](../deep-dives/how-it-works.md#resuming-what-is-kept-and-what-is-redone)).
 
-**Exit code**: 0 when every file was completed or already there, 1 when at least one couldn't be planned, failed, or produced a defective output. Scripts can rely on it.
+**Exit code**: 1 when at least one file couldn't be planned, failed or produced a defective output, or when a calibration is running; 143 when the run is terminated; otherwise 0, so a file stopped on purpose doesn't count as a failure. Scripts can rely on it.
 
 [Next: Troubleshooting →](troubleshooting.md)

@@ -35,7 +35,7 @@ Tick the models to try. Each card says what the model is good at and how long it
 | Real-CUGAN no-denoise | Keeps everything: texture, gradients, and the noise too. |
 | Real-CUGAN conservative | The most faithful: keeps paper and film grain, and leftovers too. |
 
-**Model guide** (also in the Help menu) explains which model fits which source; [The models and when to use them](deep-dives/models.md) goes deeper.
+The box above the cards says which model fits which source; **Model guide** (also in the Help menu) opens [The models and when to use them](deep-dives/models.md), which goes deeper.
 
 The bar at the bottom says how many versions will be rendered and how long the test takes. Click **Start the Test**.
 
