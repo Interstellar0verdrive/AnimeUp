@@ -86,6 +86,10 @@ SOLO_NATIVE = {
     "tieni_lavoro": False,
     # Scaricare e installare gli aggiornamenti da soli (mai durante una coda).
     "installa_auto": False,
+    # Il disco (punto di montaggio) su cui l'utente ha scelto lo spazio per file;
+    # None = mai scelto, si usa il tetto. Finche' la cartella di lavoro resta su
+    # quel disco la scelta vale anche dopo un riavvio (utente, 31/10).
+    "disco_volume": None,
 }
 
 
@@ -205,7 +209,7 @@ def native_pulite(dati: object) -> dict:
     """Le chiavi solo native, controllate come le altre."""
     puliti = dict(SOLO_NATIVE)
     if isinstance(dati, dict):
-        for chiave in ("cartella_lavoro", "cartella_finiti"):
+        for chiave in ("cartella_lavoro", "cartella_finiti", "disco_volume"):
             cartella = dati.get(chiave)
             if isinstance(cartella, str) and cartella.startswith("/"):
                 puliti[chiave] = cartella
@@ -226,15 +230,35 @@ def cartella_finiti() -> Path | None:
     return Path(scelta) if scelta else None
 
 
+def volume_di(cartella: Path) -> str | None:
+    """Il punto di montaggio del disco che contiene `cartella`; None se la
+    cartella non c'e' (disco staccato): allora non si puo' dire se e' cambiato."""
+    import os
+    p = Path(cartella)
+    if not p.exists():
+        return None
+    p = p.resolve()
+    while not os.path.ismount(p) and p != p.parent:
+        p = p.parent
+    return str(p)
+
+
 def carica_native() -> dict:
-    """Tutte le preferenze come le vede l'app nativa: le comuni (con lo
-    spazio misurato sulla cartella di lavoro) piu' le sue."""
+    """Tutte le preferenze come le vede l'app nativa: le comuni piu' le sue.
+
+    Lo spazio per file: quello scelto, se e' stato scelto su questo stesso disco
+    (abbassato se ora il disco ha meno libero); se no il tetto che la regola
+    concede qui. Prima si ricalcolava sempre il tetto e la scelta andava persa
+    al riavvio (31/10)."""
     grezzo = _leggi_grezzo()
     native = native_pulite(grezzo)
     cartella = Path(native["cartella_lavoro"]) if native["cartella_lavoro"] \
         else cartella_lavoro_predefinita()
     puliti = pulite(grezzo, cartella)
-    puliti["disco"] = tetto_spazio(cartella)[0]
+    scelto = native["disco_volume"]
+    adesso = volume_di(cartella)
+    if not scelto or (adesso is not None and adesso != scelto):
+        puliti["disco"] = tetto_spazio(cartella)[0]
     return {**puliti, **native}
 
 
@@ -255,8 +279,13 @@ def aggiorna_native(cambi: dict) -> dict:
     # non dice niente di questo. Se lo stesso cambio porta anche lo spazio,
     # vince quello.
     prima = native_pulite(grezzo)["cartella_lavoro"]
-    if "disco" not in cambi and (prima or None) != (native["cartella_lavoro"] or None):
+    if "disco" in cambi:
+        unito["disco_volume"] = volume_di(cartella)
+    elif (prima or None) != (native["cartella_lavoro"] or None) \
+            and volume_di(cartella) != native["disco_volume"]:
         unito["disco"] = tetto_spazio(cartella)[0]
+        unito["disco_volume"] = None
+    native = native_pulite(unito)
     puliti = pulite(unito, cartella)
     PATHS.impostazioni.parent.mkdir(parents=True, exist_ok=True)
     PATHS.impostazioni.write_text(su_disco.dumps({**puliti, **native}, indent=2))

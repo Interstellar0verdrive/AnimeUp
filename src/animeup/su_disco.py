@@ -38,6 +38,7 @@ VOCABOLARIO: dict[str, str] = {
     "dock": "dock_progress",
     "tieni_lavoro": "keep_work_files",
     "installa_auto": "auto_install",
+    "disco_volume": "disk_gb_volume",
     # storico dei file (history.jsonl)
     "secondi": "seconds",
     "fasi": "stages",
