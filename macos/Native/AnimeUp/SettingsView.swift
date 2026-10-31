@@ -343,11 +343,8 @@ struct UpdateSettings: View {
                 Toggle("", isOn: model.binding("check_updates", \.checkUpdates, fallback: true))
                     .toggleStyle(.switch).labelsHidden().tint(AU.primary)
             }
-            SettingsRow(model.t("nat.set.auto_install"), description: model.t("nat.set.auto_install_desc"),
-                        defaultText: model.defaultText(model.t("nat.set.off"), current: model.settings?.autoInstall, is: false)) {
-                Toggle("", isOn: model.binding("auto_install", { $0.autoInstall ?? false }, fallback: false))
-                    .toggleStyle(.switch).labelsHidden().tint(AU.primary)
-            }
+            // No "Download and install automatically" row: the app can't install itself yet, and a toggle
+            // that does nothing promised it did (31 Oct). It comes back with a real in-app update.
         }
         SettingsGroup {
             HStack(spacing: 12) {

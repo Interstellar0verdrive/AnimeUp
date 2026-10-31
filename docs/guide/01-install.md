@@ -55,7 +55,7 @@ If a tool goes missing later, or FFmpeg isn't the version AnimeUp expects, the s
 
 ## Updating
 
-**AnimeUp › Check for Updates…** asks GitHub for the latest release. If there's a newer one, a yellow note at the bottom of the sidebar says so, with **What's new** and **Install…**, which opens the release on GitHub. AnimeUp also checks at every launch on its own; you can turn that off in [Settings › Updates](07-settings.md#updates).
+**AnimeUp › Check for Updates…** asks GitHub for the latest release. If there's a newer one, a yellow note at the bottom of the sidebar says so, with **What's new** and **Download…**, which opens the release on GitHub. AnimeUp also checks at every launch on its own; you can turn that off in [Settings › Updates](07-settings.md#updates).
 
 To update, download the new app from the release, quit AnimeUp and replace `AnimeUp.app` in Applications. Your settings, calibration and the Queue stay as they are. macOS asks for **Open Anyway** once more for each version downloaded with a browser.
 

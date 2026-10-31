@@ -248,7 +248,8 @@ struct UpdateCard: View {
             HStack(alignment: .firstTextBaseline) {
                 UnderlineLink(model.t("nat.side.whats_new"), tone: .yellow) { open() }
                 Spacer()
-                Button(model.t("nat.side.install")) { open() }.auButton(.notice, .small)
+                // Opens the release on GitHub: "Download…", not "Install…", until the app can install itself (31 Oct)
+                Button(model.t("nat.upd.download")) { open() }.auButton(.notice, .small)
             }
         }
         .foregroundStyle(AU.yellowText)
