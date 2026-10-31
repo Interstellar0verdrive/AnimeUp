@@ -578,6 +578,7 @@
   "nat.cmp.of_whole": "{pct}% di tutta la prova",
   "nat.cmp.version_of": "versione {i} di {n}",
   "nat.cmp.tested_models": "Modelli provati",
+  "nat.cmp.models_below": "Sotto ci sono i modelli provati, con i loro numeri e Usa per questo file",
   "nat.cmp.tick_note": "Il segno marca il semplice ingrandimento (100%): sopra il modello aggiunge, sotto toglie.",
   "nat.cmp.test_ready": "Prova pronta",
   "nat.cmp.clips_in.uno": "{n} clip in {time}",

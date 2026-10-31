@@ -578,6 +578,7 @@
   "nat.cmp.of_whole": "{pct}% of the whole test",
   "nat.cmp.version_of": "version {i} of {n}",
   "nat.cmp.tested_models": "Tested models",
+  "nat.cmp.models_below": "The tested models are below: their numbers and Use for This File",
   "nat.cmp.tick_note": "The tick marks the plain enlargement (100%): above it the model adds, below it removes.",
   "nat.cmp.test_ready": "Test ready",
   "nat.cmp.clips_in.uno": "{n} clip in {time}",

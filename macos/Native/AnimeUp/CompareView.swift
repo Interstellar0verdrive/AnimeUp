@@ -602,6 +602,7 @@ struct CompareResultsStep: View {
     /// the models go under it, and the frame scrolls.
     @State private var compact = false
     @State private var frameWidth: CGFloat = 0
+    @State private var modelsSeen = false
     static let compactBelow: CGFloat = 780
     /// Picker row, bar and their gaps around the picture in the player column.
     static let playerControls: CGFloat = 26 + 10 + 28 + 10
@@ -673,16 +674,31 @@ struct CompareResultsStep: View {
             .zIndex(1)
             Group {
                 if compact {
+                    ScrollViewReader { proxy in
                     ScrollView {
                         VStack(alignment: .leading, spacing: 18) {
                             playerArea(r).frame(height: frameWidth * 9 / 16 + Self.playerControls)
-                            modelsHeader
+                            modelsHeader.id("models")
+                                .onScrollVisibilityChange(threshold: 0.2) { modelsSeen = modelsSeen || $0 }
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 12, alignment: .top)], spacing: 12) {
                                 modelCards(models, r: r, st: st)
                             }
                         }
                     }
                     .scrollBounceBehavior(.basedOnSize)
+                    // The models sit under the player, often out of view (31 Oct, board CR2): a button pinned
+                    // over the bottom of the panel says so until they have been on screen once.
+                    .overlay(alignment: .bottom) {
+                        if !modelsSeen {
+                            Button { withAnimation { proxy.scrollTo("models", anchor: .top) } } label: {
+                                Label(model.t("nat.cmp.models_below"), systemImage: "arrow.down")
+                            }
+                            .auButton(.secondary, .regular)
+                            .shadow(color: .black.opacity(0.5), radius: 12, y: 4)
+                            .padding(.bottom, 10)
+                        }
+                    }
+                    }
                 } else {
                     HStack(alignment: .top, spacing: 14) {
                         playerArea(r)
