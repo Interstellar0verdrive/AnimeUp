@@ -11,7 +11,7 @@ The app is the way to use AnimeUp. For running it from an external drive, or in 
 
 ## The portable folder
 
-1. Download **`AnimeUp-v2.0.0-macos-arm64.zip`** from the [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest) and unzip it where you want AnimeUp to live: anywhere you can write to, external drives included.
+1. Download **`AnimeUp-v2.0.1-macos-arm64.zip`** from the [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest) and unzip it where you want AnimeUp to live: anywhere you can write to, external drives included.
 2. In the Terminal, go into the folder and run the setup once. It downloads FFmpeg (which can't be bundled, because of its licence) and checks everything else:
 
 ```bash

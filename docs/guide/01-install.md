@@ -11,7 +11,7 @@ Download the app, approve it once in macOS, and let the first launch fetch Anime
 
 ## Install the app
 
-1. Download **`AnimeUp-v2.0.0-macos-app.zip`** from the [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest) and unzip it.
+1. Download **`AnimeUp-v2.0.1-macos-app.zip`** from the [latest release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest) and unzip it.
 2. **Drag `AnimeUp.app` into Applications.** Don't run it from Downloads: until it's approved, macOS starts it from a temporary read-only copy.
 3. Open it. macOS refuses, because AnimeUp isn't signed with an Apple Developer ID. Close the warning.
 4. Open **System Settings › Privacy & Security**, scroll to the message about AnimeUp and click **Open Anyway**. Confirm with your password or Touch ID.
@@ -65,6 +65,6 @@ Delete the app, then `~/Library/Application Support/AnimeUp 2` (tools, settings 
 
 ## The portable folder
 
-The release also offers **`AnimeUp-v2.0.0-macos-arm64.zip`**: the same engine as a folder, without the app, used from the Terminal with `./animeup`. It's for running AnimeUp from an external drive or in scripts. See [Command line](reference/command-line.md).
+The release also offers **`AnimeUp-v2.0.1-macos-arm64.zip`**: the same engine as a folder, without the app, used from the Terminal with `./animeup`. It's for running AnimeUp from an external drive or in scripts. See [Command line](reference/command-line.md).
 
 [Next: 02. The interface at a glance →](02-interface.md)
