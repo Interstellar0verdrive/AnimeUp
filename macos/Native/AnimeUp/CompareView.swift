@@ -497,7 +497,7 @@ struct GuideBand: View {
                 Label(model.t("nat.cmp.guide_title"), systemImage: "info.circle").labelStyle(SmallIconLabel()).auLabel()
                 Spacer()
                 Button {
-                    NSWorkspace.shared.open(URL(string: "https://interstellar0verdrive.github.io/AnimeUp/guide/")!)
+                    NSWorkspace.shared.open(URL(string: "https://interstellar0verdrive.github.io/AnimeUp/guide/deep-dives/models/")!)
                 } label: {
                     HStack(spacing: 4) {
                         Text(model.t("nat.cmp.model_guide")).underline()

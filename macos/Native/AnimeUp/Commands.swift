@@ -75,7 +75,7 @@ struct AppCommands: Commands {
                 NSWorkspace.shared.open(URL(string: "https://interstellar0verdrive.github.io/AnimeUp/guide/")!)
             }
             Button(model.t("nat.cmp.model_guide")) {
-                NSWorkspace.shared.open(URL(string: "https://interstellar0verdrive.github.io/AnimeUp/guide/")!)
+                NSWorkspace.shared.open(URL(string: "https://interstellar0verdrive.github.io/AnimeUp/guide/deep-dives/models/")!)
             }
             Divider()
             Button(model.t("nat.menu.open_log")) { model.openLog(model.configuration.logFile.path) }
