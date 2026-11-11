@@ -192,7 +192,7 @@ def canvas(src, dst, gap_y=0):
     for k, n in list(c["notes"].items()):
         if n.get("page") == "screens":
             c["notes"][k + "-light"] = dict(n, page="screens-light", text=n["text"] + " · light")
-    Path(dst).write_text(json.dumps(c, ensure_ascii=False, indent=1))
+    Path(dst).write_text(json.dumps(c, ensure_ascii=False, indent=2))
 
 
 def _lum(hexc):
