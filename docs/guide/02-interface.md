@@ -11,7 +11,8 @@ One window with three pages, a sidebar that always says what's going on, and a b
 
 ## The window
 
-![The AnimeUp window while a queue runs, with its areas numbered](img/v2/GuideWindow.webp){ .au }
+![The AnimeUp window while a queue runs, with its areas numbered](img/v2/GuideWindow.webp#only-dark){ .au }
+![The AnimeUp window while a queue runs, with its areas numbered](img/v2/GuideWindow-light.webp#only-light){ .au }
 
 1. **The pages**: Start, Compare and Queue. Under each name, a line says what the page is doing: "Folders · This Mac", "Step 2 · models", "File 2 of 4 · 35%". A tick marks Start once it has nothing left to ask; a spinner marks the page that's using the GPU.
 2. **This Mac**: whether this Mac is calibrated (click the date for the [calibration results](03-calibration.md#the-results)), and how much space is free for work files.
@@ -92,5 +93,9 @@ At the end of a queue a summary sheet also opens in the window: see [The end of 
 ## Language
 
 AnimeUp starts in the language of macOS if it's English or Italian, and in English otherwise. **Settings › General › Language** switches it at once. The menus follow from the next launch.
+
+## Light and dark
+
+AnimeUp comes in a light and a dark appearance. **Settings › General › Appearance** picks one: **System**, the default, follows macOS and changes with it; **Light** and **Dark** keep one whatever macOS does. The switch is immediate, in the window, the sheets and the alerts. The pictures in this guide follow the appearance of the page.
 
 [Next: 03. Calibrate your Mac →](03-calibration.md)

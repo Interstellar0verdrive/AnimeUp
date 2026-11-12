@@ -1852,6 +1852,14 @@
   [data-md-color-scheme="animeup-auto"] .md-typeset img[src$="#only-light"] { display: block; }
   [data-md-color-scheme="animeup-auto"] .md-typeset img[src$="#only-dark"] { display: none; }
 }
+/* The same for what Markdown can't tag with #only-…: videos and pictures inside HTML blocks. */
+.md-typeset .au-only-light { display: none !important; }
+[data-md-color-scheme="default"] .md-typeset .au-only-light { display: block !important; }
+[data-md-color-scheme="default"] .md-typeset .au-only-dark { display: none !important; }
+@media (prefers-color-scheme: light) {
+  [data-md-color-scheme="animeup-auto"] .md-typeset .au-only-light { display: block !important; }
+  [data-md-color-scheme="animeup-auto"] .md-typeset .au-only-dark { display: none !important; }
+}
 
 /* Two pictures, the dark one wiped away by the light one as the page scrolls (the design system):
    --wipe goes from 0 to 1 while the picture crosses the window; a thin accent line marks the edge */

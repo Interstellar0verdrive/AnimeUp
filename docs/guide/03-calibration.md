@@ -19,7 +19,8 @@ Calibration measures the same numbers on **your** Mac. AnimeUp works without it,
 
 The first time, **This Mac** on Start suggests it, and the sidebar says **Not done yet** with a **Calibrate** button. You can also use **AnimeUp › Calibrate This Mac…** or **Calibrate Again** in the sidebar at any time.
 
-![The calibration sheet, before starting](img/v2/GuideCalibrate.webp){ .au }
+![The calibration sheet, before starting](img/v2/GuideCalibrate.webp#only-dark){ .au }
+![The calibration sheet, before starting](img/v2/GuideCalibrate-light.webp#only-light){ .au }
 
 The sheet says what will be timed:
 
@@ -36,7 +37,8 @@ Close other apps that use the GPU first (games, video editors): anything else ru
 
 The sheet becomes a checklist: one row per model and per measurement, each ticked with its time as it finishes.
 
-![The calibration sheet while it runs](img/v2/GuideCalRunning.webp){ .au }
+![The calibration sheet while it runs](img/v2/GuideCalRunning.webp#only-dark){ .au }
+![The calibration sheet while it runs](img/v2/GuideCalRunning-light.webp#only-light){ .au }
 
 Each model is timed on a short sample (a scene from Big Buck Bunny, 854×480) at every scale it offers, and right after that at 2× on 1080p frames, because large sources run at a different speed per pixel. Real-CUGAN conservative shares no-denoise's network, so it's timed at 2× only and borrows the rest. A step that fails gets a red **stopped** chip.
 
@@ -46,7 +48,8 @@ You can close the sheet: calibration carries on, and the activity card in the si
 
 When it finishes, the results open. You can reopen them any time by clicking the calibration date in the sidebar or on Start.
 
-![Calibration results, the Overview tab](img/v2/GuideCalResults.webp){ .au }
+![Calibration results, the Overview tab](img/v2/GuideCalResults.webp#only-dark){ .au }
+![Calibration results, the Overview tab](img/v2/GuideCalResults-light.webp#only-light){ .au }
 
 **Overview** answers the question you care about: how much faster or slower this Mac turned out, and what that means for an episode. For every model it shows how long a 24-minute episode would take to upscale, before and after, a chart with a row for each model and scale, before and now, and tiles for extraction, the repeated-frames scan, x265 and the save threads.
 

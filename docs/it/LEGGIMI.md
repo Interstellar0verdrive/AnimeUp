@@ -11,8 +11,8 @@ scrive un nuovo video accanto all'originale, con tutto l'audio, i
 sottotitoli, i capitoli e i font.
 
 Tutto succede sul tuo Mac: niente upload, niente account, e dopo il primo
-avvio AnimeUp funziona offline. L'app è in italiano e in inglese
-(Impostazioni › Generali).
+avvio AnimeUp funziona offline. L'app è in italiano e in inglese,
+chiara o scura (Impostazioni › Generali).
 
 ## Cosa fa
 

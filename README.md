@@ -13,14 +13,20 @@ AnimeUp batch-upscales anime episodes to 1080p and beyond with
 Mac app: it analyses your sources, lets you compare models side by side on
 difficult clips, and runs long, resumable jobs, all on your Mac and offline.
 
-![AnimeUp: the Queue running a file, its drawer open, and Compare in front with two versions of a frame side by side](docs/images/app-v2.webp)
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/guide/img/v2/narrow-clips-and-queue-light.webp">
+  <img alt="AnimeUp: Compare picking the clips to test in a narrow window, and in front the Queue in a wide window, running a file with its drawer open" src="docs/guide/img/v2/narrow-clips-and-queue-dark.webp">
+</picture>
 
-![AnimeUp: Start with this Mac and its video tools, and the calibration results in front, comparing every model with the factory numbers](docs/images/app-start-calibration.webp)
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/app-start-calibration-light.webp">
+  <img alt="AnimeUp: Start with this Mac and its video tools, and the calibration results in front, comparing every model with the factory numbers" src="docs/images/app-start-calibration.webp">
+</picture>
 
 **[Read the user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)**: installing,
 every page of the app, the model studies, and
 [the design study behind 2.0](https://interstellar0verdrive.github.io/AnimeUp/guide/deep-dives/design/).
-The app is in English and Italian (Settings › General).
+The app is in English and Italian, light or dark (Settings › General).
 *In italiano: [LEGGIMI](docs/it/LEGGIMI.md).*
 
 ---

@@ -9,7 +9,8 @@ description: Every setting in AnimeUp, its default, and when it applies.
 
 **AnimeUp › Settings…** (⌘,) or the gear at the top of the sidebar. Four tabs. Most settings show their default under their description; the language, the work folder and the space per file don't, because they depend on your Mac.
 
-![Settings, the Output tab](img/v2/GuideSettings.webp){ .au }
+![Settings, the Output tab](img/v2/GuideSettings.webp#only-dark){ .au }
+![Settings, the Output tab](img/v2/GuideSettings-light.webp#only-light){ .au }
 
 !!! info "Locked while a job runs"
     While the queue runs, every setting except those in Updates is locked: the queue keeps the values it started with. Change them when it finishes, or after Stop All. A paused or interrupted file always resumes with its own values; Settings says so, with **Use Its Values** if you want them back.
@@ -19,6 +20,7 @@ description: Every setting in AnimeUp, its default, and when it applies.
 | Setting | Default | What it does |
 |---|---|---|
 | Language | macOS's | English or Italiano. Starts in the language of macOS; English if it isn't one of these. |
+| Appearance | System | **System** follows macOS; **Light** and **Dark** keep one. |
 | macOS notifications | on | Banners when a file is done, the queue finishes, or something goes wrong |
 | Progress on the Dock icon | on | A progress bar on the Dock icon while a file runs |
 | Pause between files | 5 minutes | Lets the Mac cool down in long queues. **No pause** turns it off. |

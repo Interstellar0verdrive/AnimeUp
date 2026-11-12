@@ -50,28 +50,32 @@ Four steps, and only the first two are needed.
 <div class="au-steps" markdown>
 
 <div class="au-step" markdown>
-![](img/v2/GuideSpotCalibrate.webp)
+![](img/v2/GuideSpotCalibrate.webp#only-dark)
+![](img/v2/GuideSpotCalibrate-light.webp#only-light)
 <div markdown>
 **1 · Calibrate.** Once per Mac, about 10 minutes with the GPU idle. AnimeUp times each model on your Mac, so every estimate fits it. [Calibrate your Mac](03-calibration.md)
 </div>
 </div>
 
 <div class="au-step" markdown>
-![](img/v2/GuideSpotAddVideos.webp)
+![](img/v2/GuideSpotAddVideos.webp#only-dark)
+![](img/v2/GuideSpotAddVideos-light.webp#only-light)
 <div markdown>
 **2 · Add videos.** Drop files or whole folders on the window. Each one is analysed as it arrives, and gets a recommended model and an estimate. [Start](04-start.md)
 </div>
 </div>
 
 <div class="au-step" markdown>
-![](img/v2/GuideSpotCompare.webp)
+![](img/v2/GuideSpotCompare.webp#only-dark)
+![](img/v2/GuideSpotCompare-light.webp#only-light)
 <div markdown>
 **3 · Compare** *(optional)*. Render a few hard clips with each model and pick the one you like by eye. [Compare](06-compare.md)
 </div>
 </div>
 
 <div class="au-step" markdown>
-![](img/v2/GuideSpotProcess.webp)
+![](img/v2/GuideSpotProcess.webp#only-dark)
+![](img/v2/GuideSpotProcess-light.webp#only-light)
 <div markdown>
 **4 · Process.** Start the queue and follow it. Pause, stop, resume and redo: nothing done is lost. [The Queue](05-queue.md)
 </div>
@@ -128,7 +132,7 @@ Four steps, and only the first two are needed.
 | [Tuning notes](../TUNING.md) | The measurements behind every default |
 
 !!! note "Language"
-    AnimeUp is available in English and Italian: it starts in the language of macOS, and you can switch in **Settings › General**. This guide uses the English labels.
+    AnimeUp is available in English and Italian: it starts in the language of macOS, and you can switch in **Settings › General**. This guide uses the English labels, and its pictures follow the light or dark appearance of the page.
 
 [Next: 01. Install and first launch →](01-install.md)
 

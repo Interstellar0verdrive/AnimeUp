@@ -74,14 +74,22 @@ Files run one after another: those with the same model and height together, in t
 
 The file being processed shows its progress right in its row.
 
-<video class="au" autoplay muted loop playsinline poster="../img/v2/GuideRow.webp" aria-label="A file being processed: the row fills as the work goes on">
+<video class="au au-only-dark" autoplay muted loop playsinline poster="../img/v2/GuideRow.webp" aria-label="A file being processed: the row fills as the work goes on">
   <source src="../img/v2/GuideRow.webm" type="video/webm">
   <source src="../img/v2/GuideRow.mp4" type="video/mp4">
 </video>
+<video class="au au-only-light" autoplay muted loop playsinline poster="../img/v2/GuideRow-light.webp" aria-label="A file being processed: the row fills as the work goes on">
+  <source src="../img/v2/GuideRow-light.webm" type="video/webm">
+  <source src="../img/v2/GuideRow-light.mp4" type="video/mp4">
+</video>
 
-<video class="au" autoplay muted loop playsinline poster="../img/v2/GuideRowLeft.webp" aria-label="Close-up of the left half of the row, numbered 1 to 4">
+<video class="au au-only-dark" autoplay muted loop playsinline poster="../img/v2/GuideRowLeft.webp" aria-label="Close-up of the left half of the row, numbered 1 to 4">
   <source src="../img/v2/GuideRowLeft.webm" type="video/webm">
   <source src="../img/v2/GuideRowLeft.mp4" type="video/mp4">
+</video>
+<video class="au au-only-light" autoplay muted loop playsinline poster="../img/v2/GuideRowLeft-light.webp" aria-label="Close-up of the left half of the row, numbered 1 to 4">
+  <source src="../img/v2/GuideRowLeft-light.webm" type="video/webm">
+  <source src="../img/v2/GuideRowLeft-light.mp4" type="video/mp4">
 </video>
 
 1. **The file**: its name, then codec, size, frame rate and tracks from the analysis.
@@ -89,9 +97,13 @@ The file being processed shows its progress right in its row.
 3. **What it's doing now**: "Upscaling chunk 1 of 3 · 10,900 of 11,350 frames upscaled", then the speed of this step, how long it has left and how long it has been running.
 4. **The bar**: one piece per step, the upscale split into its chunks, each filling in turn.
 
-<video class="au" autoplay muted loop playsinline poster="../img/v2/GuideRowRight.webp" aria-label="Close-up of the right half of the row, numbered 5 to 8">
+<video class="au au-only-dark" autoplay muted loop playsinline poster="../img/v2/GuideRowRight.webp" aria-label="Close-up of the right half of the row, numbered 5 to 8">
   <source src="../img/v2/GuideRowRight.webm" type="video/webm">
   <source src="../img/v2/GuideRowRight.mp4" type="video/mp4">
+</video>
+<video class="au au-only-light" autoplay muted loop playsinline poster="../img/v2/GuideRowRight-light.webp" aria-label="Close-up of the right half of the row, numbered 5 to 8">
+  <source src="../img/v2/GuideRowRight-light.webm" type="video/webm">
+  <source src="../img/v2/GuideRowRight-light.mp4" type="video/mp4">
 </video>
 
 <ol start="5">
@@ -103,7 +115,8 @@ The file being processed shows its progress right in its row.
 
 ### The four steps
 
-![The progress bar with its four steps numbered](img/v2/GuideBar.webp){ .au }
+![The progress bar with its four steps numbered](img/v2/GuideBar.webp#only-dark){ .au }
+![The progress bar with its four steps numbered](img/v2/GuideBar-light.webp#only-light){ .au }
 
 1. **Extraction**: every frame comes out of the video, once, from start to finish.
 2. **Repeated frames**: identical frames are found, so each drawing is upscaled only once.
@@ -139,7 +152,8 @@ With **Pause between files** set in Settings › General, the queue rests a few 
 
 Open a finished row for its outcome, on top of the same details it ran with.
 
-![A finished file with two warnings](img/v2/GuideDone.webp){ .au }
+![A finished file with two warnings](img/v2/GuideDone.webp#only-dark){ .au }
+![A finished file with two warnings](img/v2/GuideDone-light.webp#only-light){ .au }
 
 - **Job completed**: the time it took and the name of the video it made. A file stopped and resumed counts the work of all its runs ("Done in 1h 12m, over 2 runs").
 - **with warnings**: each warning on its own line, for example subtitles converted to SRT, or a variable frame rate put on a constant grid. The video is fine; the warnings say what AnimeUp had to adjust.
@@ -147,7 +161,8 @@ Open a finished row for its outcome, on top of the same details it ran with.
 
 **Show in Finder** selects the video made, and **Show Log** (under Output file) opens the file's log.
 
-![A file that failed](img/v2/GuideFailed.webp){ .au }
+![A file that failed](img/v2/GuideFailed.webp#only-dark){ .au }
+![A file that failed](img/v2/GuideFailed-light.webp#only-light){ .au }
 
 A file that **failed** says where it stopped and why, with the steps it did finish. Tick it to try again, or open its log.
 
@@ -155,11 +170,13 @@ A file that **failed** says where it stopped and why, with the steps it did fini
 
 **Redo** puts a finished file back in the queue, for instance to try another model or another height.
 
-![Redo with another model: the new video gets its own name](img/v2/GuideRedoNew.webp){ .au }
+![Redo with another model: the new video gets its own name](img/v2/GuideRedoNew.webp#only-dark){ .au }
+![Redo with another model: the new video gets its own name](img/v2/GuideRedoNew-light.webp#only-light){ .au }
 
 With another model or height, the new video gets its own name, so the one already made stays where it is. The note shows the new name. **Don't Redo** takes it back.
 
-![Redo with the same model: AnimeUp asks before overwriting](img/v2/GuideRedoSame.webp){ .au }
+![Redo with the same model: AnimeUp asks before overwriting](img/v2/GuideRedoSame.webp#only-dark){ .au }
+![Redo with the same model: AnimeUp asks before overwriting](img/v2/GuideRedoSame-light.webp#only-light){ .au }
 
 With the same model and height, the new video would get the same name and replace the old one, so AnimeUp asks first: **Overwrite** or **Don't Redo**. The file is ticked only once you say yes.
 
@@ -167,7 +184,8 @@ With the same model and height, the new video would get the same name and replac
 
 When the last file is done, a summary sheet lists the videos made, each with the file it came from, its time and its warnings; files that failed or were stopped say so, and after **Stop All** the files the queue never reached read **not started**. **Show in Finder** selects the videos made.
 
-![The Processing finished sheet](img/v2/GuideFinished.webp){ .au }
+![The Processing finished sheet](img/v2/GuideFinished.webp#only-dark){ .au }
+![The Processing finished sheet](img/v2/GuideFinished-light.webp#only-light){ .au }
 
 AnimeUp also sends a macOS notification, if they're on, and the Dock icon's progress disappears.
 
