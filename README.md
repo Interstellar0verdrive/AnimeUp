@@ -31,7 +31,7 @@ The app is in English and Italian, light or dark (Settings › General).
 <a href="https://interstellar0verdrive.github.io/AnimeUp/guide/">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/images/readme-guide-light.webp">
-  <img alt="The AnimeUp user guide: its home page with a before and after picture, the Start chapter and the design study" src="docs/images/readme-guide-dark.webp">
+  <img alt="The AnimeUp user guide, the manual behind the app: how a job works inside, newer models compared, and the design of AnimeUp 2.0" src="docs/images/readme-guide-dark.webp">
 </picture>
 </a>
 

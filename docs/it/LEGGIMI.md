@@ -64,7 +64,7 @@ parametri usati, per esempio
 <a href="https://interstellar0verdrive.github.io/AnimeUp/guide/">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="../images/readme-guide-light.webp">
-  <img alt="La guida di AnimeUp: la home con un'immagine prima e dopo, il capitolo Start e lo studio di design" src="../images/readme-guide-dark.webp">
+  <img alt="La guida di AnimeUp: come funziona un job, il confronto dei modelli più recenti e il design di AnimeUp 2.0" src="../images/readme-guide-dark.webp">
 </picture>
 </a>
 
