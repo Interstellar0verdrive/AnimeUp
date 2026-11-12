@@ -11,6 +11,7 @@
   --animeup-warning: #f2b84b;
   --animeup-success: #45d483;
   --animeup-danger: #f26d6d;
+  --animeup-on-accent: #0d1015;   /* text on accent fills */
   --md-default-bg-color: var(--animeup-bg);
   --md-default-fg-color: var(--animeup-text);
   --md-default-fg-color--light: var(--animeup-muted);
@@ -39,6 +40,7 @@
   --animeup-warning: #a86d00;
   --animeup-success: #16834b;
   --animeup-danger: #bc3d43;
+  --animeup-on-accent: #ffffff;
   --md-default-bg-color: var(--animeup-bg);
   --md-default-fg-color: var(--animeup-text);
   --md-default-fg-color--light: var(--animeup-muted);
@@ -69,6 +71,7 @@
     --animeup-warning: #a86d00;
     --animeup-success: #16834b;
     --animeup-danger: #bc3d43;
+    --animeup-on-accent: #ffffff;
     --md-default-fg-color--lighter: #697d86;
     --md-primary-fg-color--light: #ffffff;
     --md-primary-fg-color--dark: #e7f0f2;
@@ -1697,7 +1700,7 @@
 
 .md-typeset .au-hero .au-hero__zoom:hover {
   background: var(--animeup-accent);
-  color: #0d1015;
+  color: var(--animeup-on-accent);
 }
 
 /* 1:1 overlay */
@@ -1816,8 +1819,8 @@
 }
 
 .md-typeset .au-gallery__tabs button b { color: var(--animeup-text); margin-right: 0.3rem; }
-.md-typeset .au-gallery__tabs button.is-on { background: var(--animeup-accent); border-color: var(--animeup-accent); color: #0d1015; }
-.md-typeset .au-gallery__tabs button.is-on b { color: #0d1015; }
+.md-typeset .au-gallery__tabs button.is-on { background: var(--animeup-accent); border-color: var(--animeup-accent); color: var(--animeup-on-accent); }
+.md-typeset .au-gallery__tabs button.is-on b { color: var(--animeup-on-accent); }
 
 .md-typeset .au-hero .au-hero__zoomicon {
   flex: none;
@@ -1834,14 +1837,14 @@
   padding: 0.45rem 1rem;
   border-radius: 999px;
   background: var(--animeup-accent);
-  color: #0d1015;
+  color: var(--animeup-on-accent);
   font-size: 0.72rem;
   font-weight: 600;
   text-decoration: none;
   box-shadow: 0 6px 18px rgba(42, 201, 222, 0.25);
   transition: filter 0.15s ease;
 }
-.md-typeset .au-more .au-more__btn:hover { filter: brightness(1.08); color: #0d1015; }
+.md-typeset .au-more .au-more__btn:hover { filter: brightness(1.08); color: var(--animeup-on-accent); }
 
 /* Pictures with a light and a dark twin: the guide's own schemes (dark is the default, "default" is
    light, "animeup-auto" follows macOS), so Material's #only-light / #only-dark need these rules. */
