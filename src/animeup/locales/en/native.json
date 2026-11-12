@@ -198,7 +198,7 @@
   "nat.set.off": "off",
   "nat.set.language_desc": "Starts in the language of macOS; English if it isn’t one of these.",
   "nat.set.appearance": "Appearance",
-  "nat.set.appearance_desc": "System follows macOS.",
+  "nat.set.appearance_desc": "Light or dark colours for the whole app. System changes with macOS.",
   "nat.set.theme.system": "System",
   "nat.set.theme.light": "Light",
   "nat.set.theme.dark": "Dark",

@@ -198,7 +198,7 @@
   "nat.set.off": "spento",
   "nat.set.language_desc": "Parte nella lingua di macOS; in inglese se non è una di queste.",
   "nat.set.appearance": "Aspetto",
-  "nat.set.appearance_desc": "Sistema segue l'aspetto di macOS.",
+  "nat.set.appearance_desc": "Colori chiari o scuri per tutta l'app. Sistema cambia insieme a macOS.",
   "nat.set.theme.system": "Sistema",
   "nat.set.theme.light": "Chiaro",
   "nat.set.theme.dark": "Scuro",
