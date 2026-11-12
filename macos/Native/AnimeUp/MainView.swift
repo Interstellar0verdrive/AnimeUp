@@ -18,14 +18,14 @@ struct MainView: View {
         }
         .onAppear { model.reopenMainWindow = { openWindow(id: "main") } }
         .sheet(isPresented: Binding(get: { model.showCalibration }, set: { if !$0 { model.closeCalibration() } })) {
-            CalibrationSheet().environment(model).preferredColorScheme(.dark)
+            CalibrationSheet().environment(model)
         }
         .sheet(isPresented: Binding(get: { model.showCalibrationDetails }, set: { model.showCalibrationDetails = $0 })) {
-            CalibrationDetailsSheet().environment(model).preferredColorScheme(.dark)
+            CalibrationDetailsSheet().environment(model)
         }
         .sheet(isPresented: Binding(get: { model.showFinished && !model.showCalibration && !model.showCalibrationDetails },
                                     set: { if !$0 { model.markFinishedSeen() } })) {
-            FinishedSheet().environment(model).preferredColorScheme(.dark)
+            FinishedSheet().environment(model)
         }
         .onChange(of: model.alert?.id) {
             guard let alert = model.alert else { return }

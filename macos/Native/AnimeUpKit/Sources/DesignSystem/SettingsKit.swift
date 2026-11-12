@@ -164,7 +164,7 @@ public struct CapsuleSegments<Value: Hashable>: View {
                         .foregroundStyle(on ? AU.text : AU.text2)
                         .padding(.horizontal, 14).padding(.vertical, 3)
                         .background(Capsule().fill(on ? AU.segOn : .clear)
-                            .shadow(color: .black.opacity(on ? 0.4 : 0), radius: 1, y: 1))
+                            .shadow(color: on ? AU.segShadow : .clear, radius: 1, y: 1))
                         .contentShape(Capsule())
                         // The other segment lights up under the pointer, like every clickable surface.
                         .auHover(Capsule(), enabled: !on)

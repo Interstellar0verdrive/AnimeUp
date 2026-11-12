@@ -541,7 +541,7 @@ public struct DropZone: View {
                     .padding(.bottom, 7)
             }
             .frame(width: width, height: height)
-            .shadow(color: .black.opacity(0.25), radius: 8, y: 6)
+            .shadow(color: AU.shadow.opacity(0.25), radius: 8, y: 6)
     }
 }
 
@@ -774,7 +774,7 @@ public struct TopBarSegment: View {
                         .foregroundStyle(selected ? AU.onPrimary : AU.text2)
                         .padding(.horizontal, 5)
                         .frame(minWidth: 16, minHeight: 16)
-                        .background(Capsule().fill(selected ? Color.black.opacity(0.18) : AU.glass))
+                        .background(Capsule().fill(selected ? AU.chipOnAccent : AU.glass))
                         .overlay(Capsule().strokeBorder(selected ? .clear : AU.glassLine))
                 }
                 if busy { Spinner(size: 10, tint: selected ? AU.onPrimary : AU.primary) }

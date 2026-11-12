@@ -95,7 +95,6 @@ menus, the video player) show as placeholders in these images.
 
 ## Known gaps
 
-- Light appearance: the app is dark only for now.
 - No Sparkle updates yet: Check for Updates only checks GitHub.
 - The release uses the same bundle identifier as the 1.6 app.
 - Compare: the player's split, hover and 1:1, and the native switches and

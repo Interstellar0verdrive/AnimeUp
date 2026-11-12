@@ -9,6 +9,11 @@ import SwiftUI
 /// Recording permission. `ANIMEUP_SNAPSHOT_TABS=1` also captures the other tabs.
 @MainActor
 enum DebugSnapshot {
+    /// Snapshots follow the app's appearance (Settings › General › Appearance).
+    static var scheme: ColorScheme {
+        NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? .dark : .light
+    }
+
     static func scheduleIfAsked(model: AppModel) {
         guard let base = ProcessInfo.processInfo.environment["ANIMEUP_SNAPSHOT"], !base.isEmpty else { return }
         if ProcessInfo.processInfo.environment["ANIMEUP_SNAPSHOT_TOOLS"] == "1" {
@@ -246,7 +251,7 @@ enum DebugSnapshot {
                 .padding(.top, 44)
                 .background(RoundedRectangle(cornerRadius: 16).fill(AU.side))
                 .background(AU.bg)
-                .environment(\.colorScheme, .dark))
+                .environment(\.colorScheme, Self.scheme))
         renderer.scale = 2
         if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
            let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
@@ -272,7 +277,7 @@ enum DebugSnapshot {
         .frame(minHeight: 840, alignment: .top)
         .background(AU.bg)
         .environment(model)
-        .environment(\.colorScheme, .dark).environment(\.auNoScroll, true)
+        .environment(\.colorScheme, Self.scheme).environment(\.auNoScroll, true)
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2
         if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
@@ -312,7 +317,7 @@ enum DebugSnapshot {
     }
 
     static func render<V: View>(_ view: V, width: CGFloat, _ path: String) {
-        let renderer = ImageRenderer(content: view.frame(width: width).environment(\.colorScheme, .dark)
+        let renderer = ImageRenderer(content: view.frame(width: width).environment(\.colorScheme, Self.scheme)
             .environment(\.auNoScroll, true))
         renderer.scale = 2
         if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
@@ -335,7 +340,7 @@ enum DebugSnapshot {
         .frame(width: 1360, height: 840, alignment: .top)
         .background(AU.bg)
         .environment(model)
-        .environment(\.colorScheme, .dark).environment(\.auNoScroll, true)
+        .environment(\.colorScheme, Self.scheme).environment(\.auNoScroll, true)
         .environment(\.auNoScroll, true)
         render(view, width: 1360, path)
     }
@@ -359,7 +364,7 @@ enum DebugSnapshot {
         .frame(minHeight: 840, alignment: .top)
         .background(AU.bg)
         .environment(model)
-        .environment(\.colorScheme, .dark).environment(\.auNoScroll, true)
+        .environment(\.colorScheme, Self.scheme).environment(\.auNoScroll, true)
         render(view, width: 1360, path)
     }
 

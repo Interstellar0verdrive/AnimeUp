@@ -11,7 +11,6 @@ struct AnimeUpApp: App {
         Window("AnimeUp", id: "main") {
             MainView()
                 .environment(model)
-                .preferredColorScheme(.dark)
                 .onAppear {
                     delegate.model = model
                     model.start()
@@ -31,7 +30,6 @@ struct AnimeUpApp: App {
         Settings {
             SettingsView()
                 .environment(model)
-                .preferredColorScheme(.dark)
         }
     }
 }
@@ -40,8 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var model: AppModel?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        // Dark first: light screens come once the dark ones are approved.
-        NSApp.appearance = NSAppearance(named: .darkAqua)
+        AppModel.applySavedTheme()
     }
 
     /// The red button closes the window; the app keeps running. ⌘Q quits.

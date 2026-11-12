@@ -461,7 +461,7 @@ private struct SplitIllustration: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(AU.glassLine))
-        .shadow(color: .black.opacity(0.45), radius: 20, y: 18)
+        .shadow(color: AU.shadow.opacity(0.45), radius: 20, y: 18)
     }
 
     private func tag(_ side: String, _ name: String) -> some View {

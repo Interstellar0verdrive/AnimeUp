@@ -94,7 +94,7 @@ struct AUButtonBody: View {
         case .secondary: pressed ? AU.glassPress : hovering ? AU.glassHover : AU.glass
         case .destructive: pressed ? AU.redBgPress : hovering ? AU.redBg : .clear
         case .destructiveSolid: pressed ? AU.redPress : hovering ? AU.redHover : AU.red
-        case .notice: pressed ? AU.yellow : hovering ? AU.yellowHover : AU.yellow
+        case .notice: pressed ? AU.noticePress : hovering ? AU.noticeHover : AU.noticeFill
         case .plain: pressed ? AU.glassPress : hovering ? AU.glass : .clear
         }
     }
@@ -103,6 +103,7 @@ struct AUButtonBody: View {
         switch role {
         case .secondary: AU.glassLine
         case .destructive: AU.redText
+        case .notice: AU.noticeLine
         default: .clear
         }
     }
@@ -113,7 +114,7 @@ struct AUButtonBody: View {
         case .secondary: AU.text
         case .destructive: AU.redText
         case .destructiveSolid: .white
-        case .notice: AU.onYellow
+        case .notice: AU.onNotice
         case .plain: AU.text2
         }
     }

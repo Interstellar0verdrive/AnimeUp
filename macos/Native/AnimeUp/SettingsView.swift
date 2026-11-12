@@ -92,8 +92,6 @@ extension AppModel {
 // MARK: - General
 
 struct GeneralSettings: View {
-    /// Off until the light theme exists (2.0 ships dark only).
-    static let lightTheme = false
     @Environment(AppModel.self) private var model
 
     var body: some View {
@@ -102,14 +100,11 @@ struct GeneralSettings: View {
                 CapsuleSegments(Localizer.languages.map { ($0.code, $0.name) },
                                 selection: Binding(get: { model.localizer.language }, set: { model.setLanguage($0) }))
             }
-            // Appearance comes back with the light theme: 2.0 is dark only.
-            if Self.lightTheme {
-                SettingsRow(model.t("nat.set.appearance"), description: model.t("nat.set.appearance_desc"),
-                            defaultText: model.defaultText(model.t("nat.set.theme.system"), current: model.settings?.theme, is: "system")) {
-                    CapsuleSegments([("system", model.t("nat.set.theme.system")), ("light", model.t("nat.set.theme.light")),
-                                     ("dark", model.t("nat.set.theme.dark"))],
-                                    selection: model.binding("theme", \.theme, fallback: "system"))
-                }
+            SettingsRow(model.t("nat.set.appearance"), description: model.t("nat.set.appearance_desc"),
+                        defaultText: model.defaultText(model.t("nat.set.theme.system"), current: model.settings?.theme, is: "system")) {
+                CapsuleSegments([("system", model.t("nat.set.theme.system")), ("light", model.t("nat.set.theme.light")),
+                                 ("dark", model.t("nat.set.theme.dark"))],
+                                selection: model.binding("theme", \.theme, fallback: "system"))
             }
         }
         SettingsGroup(model.t("nat.set.while_processing")) {

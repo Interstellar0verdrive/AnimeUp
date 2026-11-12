@@ -694,7 +694,7 @@ struct CompareResultsStep: View {
                                 Label(model.t("nat.cmp.models_below"), systemImage: "arrow.down")
                             }
                             .auButton(.secondary, .regular)
-                            .shadow(color: .black.opacity(0.5), radius: 12, y: 4)
+                            .shadow(color: AU.shadow.opacity(0.5), radius: 12, y: 4)
                             .padding(.bottom, 10)
                         }
                     }
@@ -744,7 +744,7 @@ struct CompareResultsStep: View {
             }
         }
         .sheet(isPresented: Binding(get: { model.cmp.showUseMany }, set: { model.cmp.showUseMany = $0 })) {
-            UseManySheet().environment(model).preferredColorScheme(.dark)
+            UseManySheet().environment(model)
         }
     }
 

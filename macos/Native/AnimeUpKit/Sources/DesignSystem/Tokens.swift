@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 // Colour tokens of the design system (boards DS1–DS4, generator ds/gen.py,
-// dict `V`). Dark first: the dark value is the approved one; the light value
-// is the generator's light set, used once light screens are approved.
+// dict `V`). Light values: boards DS1–DS4 light and the page
+// "Native screens · light" (design/boards/make_light.py, approved 12 Nov 2026).
 
 extension Color {
     /// A colour that follows the appearance: `dark` in Dark Mode, `light` otherwise.
@@ -48,10 +48,10 @@ public enum AU {
     public static let side = Color(dark: "rgba(30,33,38,.78)", light: "rgba(236,238,241,.82)")
     public static let surface = Color(dark: "#16181B", light: "#FFFFFF")
     public static let raised = Color(dark: "#1C1F23", light: "#EEF0F2")
-    /// Sheets and alerts (boards SHEET, K1, K2, O4, C5). Light value to be drawn with the light screens.
-    public static let sheet = Color(dark: "#22252A", light: "#FFFFFF")
-    /// AnimeUp's own alerts (boards O1–O3, edge.py `alert()`). Light value to be drawn with the light screens.
-    public static let alert = Color(dark: "#26292E", light: "#FFFFFF")
+    /// Sheets (boards SHEET, K1, K2, O4, C5). Light: a step below white, so the white cards inside read as cards.
+    public static let sheet = Color(dark: "#22252A", light: "#F3F4F6")
+    /// AnimeUp's own alerts (boards O1–O3, edge.py `alert()`).
+    public static let alert = Color(dark: "#26292E", light: "#F6F7F9")
     public static let surfaceHover = Color(dark: "#1C1F23", light: "#F3F4F6")
     public static let inset = Color(dark: "rgba(0,0,0,.25)", light: "rgba(0,0,0,.04)")
     public static let control = Color(dark: "#1C1F23", light: "#FFFFFF")
@@ -95,6 +95,13 @@ public enum AU {
     public static let yellowLine = Color(dark: "rgba(242,184,75,.45)", light: "rgba(245,180,0,.45)")
     public static let yellowTint = Color(dark: "rgba(242,184,75,.16)", light: "rgba(245,180,0,.22)")
     public static let onYellow = Color(dark: "#2A1C00", light: "#2A1C00")
+    /// The notice button (Install update, Download…) sits inside a yellow note: ochre with dark ink
+    /// in dark; in light white with yellow text on a yellow line (6.7 : 1), so it stands out from the note.
+    public static let noticeFill = Color(dark: "#F2B84B", light: "#FFFFFF")
+    public static let noticeHover = Color(dark: "#F5C76E", light: "#FFFAEB")
+    public static let noticePress = Color(dark: "#F2B84B", light: "#FFF0C4")
+    public static let onNotice = Color(dark: "#2A1C00", light: "#7F5300")
+    public static let noticeLine = Color(dark: "rgba(242,184,75,0)", light: "rgba(245,180,0,.45)")
     /// White on red reaches 5.0 : 1 (was 4.45, under AA), hover 4.6, pressed 6.1 (board CT1, approved 31 Oct).
     public static let red = Color(dark: "#CD3725", light: "#CD3725")
     public static let redHover = Color(dark: "#D83A27", light: "#D83A27")
@@ -103,12 +110,18 @@ public enum AU {
     public static let redBg = Color(dark: "rgba(242,109,109,.10)", light: "#FDECEA")
     public static let redBgPress = Color(dark: "rgba(242,109,109,.17)", light: "#FADAD6")
     public static let redLine = Color(dark: "rgba(242,109,109,.55)", light: "rgba(217,64,46,.45)")
-    public static let redSoft = Color(dark: "rgba(242,109,109,.07)", light: "rgba(217,64,46,.05)")
+    public static let redSoft = Color(dark: "rgba(242,109,109,.07)", light: "rgba(205,55,37,.10)")
     public static let redTint = Color(dark: "rgba(242,109,109,.16)", light: "rgba(217,64,46,.12)")
 
     public static let chipBg = Color(dark: "#1C1F23", light: "#EEF0F2")
     public static let chipLine = Color(dark: "rgba(255,255,255,.10)", light: "rgba(0,0,0,.08)")
     public static let segOn = Color(dark: "#3A3E44", light: "#FFFFFF")
+    public static let segShadow = Color(dark: "rgba(0,0,0,.4)", light: "rgba(0,0,0,.15)")
+    /// The count capsule on the selected (accent) sidebar tab.
+    public static let chipOnAccent = Color(dark: "rgba(0,0,0,.18)", light: "rgba(0,0,0,.08)")
+    /// Shadows: multiply with `.opacity(x)` where a board says `rgba(0,0,0,x)`.
+    /// Light: half strength, a cool ink instead of black.
+    public static let shadow = Color(dark: "#000000", light: "rgba(16,24,40,.5)")
 
     /// Corners (DS1): nested shapes get a smaller radius than their container.
     public enum Radius {

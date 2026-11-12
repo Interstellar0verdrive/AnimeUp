@@ -52,7 +52,7 @@ final class AppModel {
 
     var status: EngineStatus = .starting
     var hello: EngineHello?
-    var settings: EngineSettings?
+    var settings: EngineSettings? { didSet { if settings?.theme != oldValue?.theme { Self.applyTheme(settings?.theme) } } }
     var machine: MachineInfo?
     var calibration: CalibrationState?
     var tools: ToolsStatus?
@@ -387,10 +387,33 @@ final class AppModel {
     // MARK: helpers
 
     static func savedLanguage(in state: URL) -> String? {
+        savedSetting("language", in: state)
+    }
+
+    static func savedSetting(_ key: String, in state: URL) -> String? {
         let file = state.appendingPathComponent("records/settings.json")
         guard let data = try? Data(contentsOf: file),
               let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        return dict["language"] as? String
+        return dict[key] as? String
+    }
+
+    /// Settings › General › Appearance: System follows macOS, Light and Dark pin it.
+    static func applyTheme(_ theme: String?) {
+        switch theme {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: NSApp.appearance = nil
+        }
+    }
+
+    /// The saved theme, read before the window opens so it never flashes the other one.
+    static func applySavedTheme() {
+        #if DEBUG
+        let debug = true
+        #else
+        let debug = false
+        #endif
+        applyTheme(savedSetting("theme", in: EngineConfiguration.standard(debug: debug).stateFolder))
     }
 
     /// "29 Oct 2026 at 00:58", in the app's language.

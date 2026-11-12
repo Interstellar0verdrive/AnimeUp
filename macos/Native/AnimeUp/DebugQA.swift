@@ -112,6 +112,16 @@ enum DebugQA {
         case "show": show(arg, model)
         case "sidebar": model.toggleSidebar()
         case "lang": model.setLanguage(arg)
+        case "theme": model.set("theme", arg)
+        case "settings":
+            // The app menu's Settings… item (⌘,), as the user opens it.
+            let items = NSApp.mainMenu?.items.first?.submenu?.items ?? []
+            guard let item = items.first(where: { $0.keyEquivalent == "," }), let action = item.action else { return "no Settings item" }
+            NSApp.activate()
+            NSApp.sendAction(action, to: item.target, from: item)
+        case "dismiss":
+            model.showCalibration = false; model.showFinished = false; model.cmp.showUseMany = false
+            for w in NSApp.windows where w.isVisible && w.title != "AnimeUp" && w.sheetParent == nil && w.level == .normal { w.close() }
         case "open":
             // open processing|analysis: every row's drawer on that tab.
             for f in model.files {

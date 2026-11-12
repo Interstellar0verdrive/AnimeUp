@@ -79,7 +79,7 @@ public struct OuterShadow: View {
     public var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius)
         shape.fill(.black)
-            .shadow(color: .black.opacity(opacity), radius: blur / 2, y: y)
+            .shadow(color: AU.shadow.opacity(opacity), radius: blur / 2, y: y)
             .mask {
                 Rectangle().padding(-(blur + abs(y)) * 2)
                     .overlay(shape.blendMode(.destinationOut))
