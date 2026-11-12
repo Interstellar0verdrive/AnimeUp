@@ -273,3 +273,8 @@ thanks to all of them.
 
 Python dependencies are installed by uv from PyPI on first launch and are
 not part of this repository.
+
+---
+
+If you enjoy AnimeUp, you can [buy me a coffee ☕](https://ko-fi.com/Interstellar0verdrive).
+Totally optional, always appreciated!

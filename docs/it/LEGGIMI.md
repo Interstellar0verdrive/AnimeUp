@@ -75,3 +75,8 @@ sono in [TARATURE.md](TARATURE.md).
 
 AnimeUp è software libero, sotto licenza
 [GNU GPL v3 o successiva](../../LICENSE).
+
+---
+
+Se AnimeUp ti piace, puoi [offrirmi un caffè ☕](https://ko-fi.com/Interstellar0verdrive).
+Del tutto facoltativo, sempre apprezzato!
