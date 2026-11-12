@@ -112,6 +112,40 @@ RULES = [
     # --- text ------------------------------------------------------------------
     (r"color:#c9d1e0", "color:#3A3F46", "captions on the desk and the toast (text-code)"),
 
+    # --- guide boards (page "Guide"): grounds and dark values written by hand --
+    (r"#151a22", "#F3F6FA", "guide ground, top of the gradient"),
+    (r"#0b0d11", "#DCE2EA", "guide ground, bottom of the gradient"),
+    (r"rgba\(120,140,180,\.2\)", "rgba(255,255,255,.75)", "guide ground glow: lighter than the ground, as in dark"),
+    (r"rgba\(150,170,205,\.22\)", "rgba(255,255,255,.8)", "guide ground glow"),
+    (r"rgba\(90,110,160,\.16\)", "rgba(255,255,255,.6)", "guide ground glow"),
+    (r"#1d222b", "#E3E8EF", "guide ground, top glow of the close-ups"),
+    (r"#2AC9DE", "#0275B6", "accent written by hand (primary)"),
+    (r"#4FD5E7", "#067CC1", "accent hover written by hand"),
+    (r"#1FB0C4", "#056AA5", "accent pressed written by hand"),
+    (r"rgba\(255,255,255,\.(13|14|15|22)\)", lambda m: f"rgba(0,0,0,.{m.group(1)})", "tracks and lines written by hand"),
+    (r"#101113", "#F6F7F9", "bg written by hand"),
+    (r"#16181B", "#FFFFFF", "surface written by hand"),
+    (r"#1C1F23", "#EEF0F2", "raised written by hand"),
+    (r"#E8EAED", "#16181B", "text written by hand"),
+    (r"#9BA1A9", "#5C626A", "text-2 written by hand"),
+    (r"#80868E", "#656B73", "text-3 written by hand"),
+    (r"#C6CBD2", "#3A3F46", "text-code written by hand"),
+    (r"#7FE3AC", "#146C3E", "green-text written by hand"),
+    (r"#3DD68C", "#12A150", "green written by hand"),
+    (r"#F5CB78", "#7F5300", "yellow-text written by hand"),
+    (r"#F2B84B", "#F5B400", "yellow written by hand"),
+    (r"#2A2110", "#FFF0C4", "yellow-bg written by hand"),
+    (r"#F59B9B", "#B42323", "red-text written by hand"),
+    (r"rgba\(18,161,80,\.12\)", "#E6F5EC", "green-bg written by hand"),
+    (r"rgba\(242,109,109,\.10\)", "#FDECEA", "red-bg written by hand"),
+
+    (r"rgba\(30,33,38,1\)", "rgba(236,238,241,1)", "opaque sidebar written by hand"),
+    (r"rgba\(28,31,35,\.88\)", "rgba(255,255,255,.92)", "floating card written by hand"),
+    (r"rgba\(61,214,140,\.12\)", "#E6F5EC", "green-bg written by hand (old green)"),
+    (r"rgba\(61,214,140,\.35\)", "rgba(18,161,80,.35)", "green-line written by hand (old green)"),
+
+    (r"rgba\(22,24,27,\.92\)", "rgba(255,255,255,.92)", "action bar over a fading list"),
+
     # --- shadows: black at half strength, slightly blue as in --alert-shadow ---
     (r"(box-shadow:[^;\"]*?)rgba\(0,0,0,(\.\d+)\)", None, "shadows at half strength"),
 ]
@@ -123,6 +157,22 @@ def _shadow(m):
 
 
 ROOT = re.compile(r'(<div style=")(--desk:[^"]*)(">)')
+
+
+# Content that changes with the theme, per board (the name without .dc.html).
+BOARD_FIX = {
+    # #5C626A on #F6F7F9 measures 5.74 : 1 in light (7.3 in dark): AA, not AAA.
+    "GuideDsContrast": [
+        (">7.3</span>", ">5.7</span>"),
+        (re.compile(r'<span style="display:inline-flex;align-items:center;gap:5px;height:22px[^>]*><svg[^>]*><path[^>]*></path></svg>AAA</span>'), ""),
+    ],
+}
+
+
+def fix_board(name: str, html: str) -> str:
+    for old, new in BOARD_FIX.get(name, []):
+        html = old.sub(new, html) if hasattr(old, "sub") else html.replace(old, new)
+    return html
 
 
 def light_board(html: str) -> str:
@@ -251,7 +301,7 @@ if __name__ == "__main__":
             if f.stem.endswith("Light.dc"):
                 continue
             out = dst / f.name.replace(".dc.html", "Light.dc.html")
-            out.write_text(light_board(f.read_text()))
+            out.write_text(fix_board(f.name[:-8], light_board(f.read_text())))
         print(f"{len(files)} boards → {dst}")
     elif cmd == "audit":
         d, *names = a

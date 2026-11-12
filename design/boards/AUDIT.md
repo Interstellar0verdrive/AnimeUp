@@ -54,3 +54,19 @@ tints over surface, green/yellow/red backgrounds): all ≥ 4.5 : 1. Lowest:
 text-3 on red-tint 4.55, primary-text on red-tint 4.77. Buttons: white on
 primary 4.97, on primary-hover 4.51, on primary-press 5.81; white on red 5.04,
 on red-hover 4.61; on-yellow on yellow 9.02.
+
+## Applied (12 Nov 2026)
+
+- App: the forced dark appearance is gone; Settings › General › Appearance
+  (System / Light / Dark) sets `NSApp.appearance`, read from `settings.json`
+  before the window opens and applied again on every change. Debug snapshots
+  follow it. New tokens: `AU.shadow` (black in dark, `rgb(16,24,40)` at half
+  strength in light), `AU.segShadow`, `AU.chipOnAccent`, the `notice*` set;
+  `AU.sheet` / `AU.alert` / `AU.redSoft` have their light values.
+- Design file: page "Guide · light" with the light twins of the guide's boards
+  (`make_light.py`, guide rules and `BOARD_FIX`), and light thumbnails of the
+  screens in `gassets/scr2light`. Pictures exported by `export_light.py` and
+  `export_rows.py`; `guide_light_md.py` gives the pages their theme switch.
+- Left dark on purpose: the 1.6 frame of the renewal wipe (1.6 was shot in its
+  dark theme), the design-system covers (already a dark and a light one), and
+  pictures that only sit on a photo (example labels, cover overlay).
