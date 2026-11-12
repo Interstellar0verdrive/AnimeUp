@@ -53,7 +53,7 @@ LIGHT = ("--desk:#D9DDE3;--bg:#F6F7F9;--side:rgba(236,238,241,.82);--surface:#FF
          "--green-text:#146C3E;--green-bg:#E6F5EC;--green-line:rgba(18,161,80,.35);--yellow:#F5B400;"
          "--yellow-hover:#FFC21F;--yellow-text:#7F5300;--yellow-bg:#FFF0C4;--yellow-line:rgba(245,180,0,.45);"
          "--on-yellow:#2A1C00;--red:#CD3725;--red-hover:#D83A27;--red-press:#B63121;--red-text:#B42323;"
-         "--red-bg:#FDECEA;--red-bg-press:#FADAD6;--red-line:rgba(217,64,46,.45);--red-soft:rgba(217,64,46,.05);"
+         "--red-bg:#FDECEA;--red-bg-press:#FADAD6;--red-line:rgba(217,64,46,.45);--red-soft:rgba(205,55,37,.10);"
          "--red-tint:rgba(217,64,46,.12);--yellow-tint:rgba(245,180,0,.22);--green-tint:rgba(18,161,80,.14);"
          "--seg-on:#FFFFFF;--chip-bg:#EEF0F2;--chip-line:rgba(0,0,0,.08);--alert-bg:rgba(246,247,249,.96);"
          "--alert-shadow:rgba(16,24,40,.28);--box-line:rgba(0,0,0,.25);--seg-shadow:rgba(0,0,0,.15)")
@@ -73,6 +73,9 @@ RULES = [
     (r"background:#000\b", KEEP, "video frames: a picture is black behind, whatever the theme"),
     (r"mask-image:linear-gradient\(to bottom,#000", KEEP, "masks: only the alpha counts"),
     (r"\.dsol\{background:var\(--red\);color:#fff\}", KEEP, "white on the red button, both themes"),
+    (r"\.not\{background:var\(--yellow\);color:var\(--on-yellow\)",
+     ".not{background:var(--surface);border-color:var(--yellow-line);color:var(--yellow-text)",
+     "notice button: dark ink on ochre is heavy in light; it sits inside the yellow note, so white with yellow-text (7 : 1)"),
     (r"background:rgba\(0,0,0,\.(55|6)\);color:#fff", KEEP, "captions laid on a video frame"),
     (r"box-shadow:0 0 0 1px rgba\(255,255,255,\.25\)", KEEP, "ring of a caption on a video frame"),
     (r"background:rgba\(255,255,255,\.18\)", KEEP, "key cap inside a video caption"),
@@ -215,7 +218,7 @@ def ratio(a, b):
 def contrast():
     t = dict(re.findall(r"--([\w-]+):([^;]+)", LIGHT))
     grounds = {"bg": t["bg"], "surface": t["surface"], "raised": t["raised"], "sheet": SHEET_L, "alert": ALERT_L}
-    tints = {"sel": (39, 147, 219, .14), "soft": (39, 147, 219, .07), "red-tint": (217, 64, 46, .12),
+    tints = {"sel": (39, 147, 219, .14), "soft": (39, 147, 219, .07), "red-tint": (217, 64, 46, .12), "red-soft": (205, 55, 37, .10),
              "yellow-tint": (245, 180, 0, .22), "green-tint": (18, 161, 80, .14)}
     for k, v in tints.items():
         grounds[k + "/surface"] = _over(v, t["surface"])
@@ -231,7 +234,7 @@ def contrast():
             row.append(f"{r:5.2f}{'*' if r < 4.5 else ' '}".rjust(13))
         print(x.ljust(14) + "".join(row))
     for fg, bg in [("on-primary", "primary"), ("on-primary", "primary-hover"), ("on-primary", "primary-press"),
-                   ("on-yellow", "yellow")]:
+                   ("on-yellow", "yellow"), ("yellow-text", "yellow-bg"), ("yellow-text", "surface")]:
         print(f"{fg} on {bg}: {ratio(t[fg], t[bg]):.2f}")
     print(f"white on red: {ratio('#FFFFFF', t['red']):.2f}, on red-hover {ratio('#FFFFFF', t['red-hover']):.2f}")
     print(f"{fails} pairs under 4.5 (*)")

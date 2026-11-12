@@ -24,6 +24,8 @@ Every rule, with its reason, is in `RULES` in `make_light.py`; run
 | shadows `rgba(0,0,0,a)` | `rgba(16,24,40,a/2)` |
 | white veils and hairlines `rgba(255,255,255,a)` | `rgba(0,0,0,a)` |
 | captions on the desk `#c9d1e0` | `#3A3F46` (text-code) |
+| notice button `.not` (ochre, dark ink) | white, `yellow-text` on a `yellow-line` border (6.69 : 1): it sits inside the yellow note |
+| `--red-soft` (failed rows and cards) | `rgba(205,55,37,.10)`: at `.05` it read as grey |
 | macOS chrome: menu bar, notification banner, open panel, wallpaper | their macOS light look |
 
 ## App (Swift)
@@ -41,6 +43,8 @@ Every rule, with its reason, is in `RULES` in `make_light.py`; run
 | `EmptyStates.swift:449-477`, `SplitPlayer.swift`, `CompareView.swift:377-379` | handle, captions and frames on a video | keep |
 | `EmptyStates.swift:488-509` | sunset illustration | keep (a picture) |
 | `AppModel+Run.swift:302-307` | progress drawn on the Dock icon | keep (the icon does not follow the window theme) |
+| `Tokens.swift` `redSoft` | light `rgba(217,64,46,.05)` | `rgba(205,55,37,.10)`, as in the boards |
+| `Buttons.swift:116` `.notice` | `onYellow` on `yellow` | light: surface fill, `yellowText`, `yellowLine` border |
 | `Tokens.swift` `sheet`, `alert` | light "to be drawn" | `#F3F4F6`, `#F6F7F9` once the boards are approved |
 
 ## Contrast (light), `make_light.py contrast`
