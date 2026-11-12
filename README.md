@@ -1,6 +1,9 @@
 # AnimeUp
 
-<img src="docs/images/readme-icon.webp" alt="AnimeUp icon" width="128" align="right">
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/readme-icon-light.webp">
+  <img src="docs/images/readme-icon.webp" alt="AnimeUp icon" width="128" align="right">
+</picture>
 
 [![tests](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml/badge.svg)](https://github.com/Interstellar0verdrive/AnimeUp/actions/workflows/tests.yml)
 [![latest release](https://img.shields.io/github/v/release/Interstellar0verdrive/AnimeUp)](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest)

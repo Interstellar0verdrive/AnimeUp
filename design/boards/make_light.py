@@ -113,8 +113,8 @@ RULES = [
     (r"color:#c9d1e0", "color:#3A3F46", "captions on the desk and the toast (text-code)"),
 
     # --- guide boards (page "Guide"): grounds and dark values written by hand --
-    (r"#151a22", "#F3F6FA", "guide ground, top of the gradient"),
-    (r"#0b0d11", "#DCE2EA", "guide ground, bottom of the gradient"),
+    (r"#151a22", "#FBFCFD", "guide ground, top of the gradient"),
+    (r"#0b0d11", "#EEF1F5", "guide ground, bottom of the gradient"),
     (r"rgba\(120,140,180,\.2\)", "rgba(255,255,255,.75)", "guide ground glow: lighter than the ground, as in dark"),
     (r"rgba\(150,170,205,\.22\)", "rgba(255,255,255,.8)", "guide ground glow"),
     (r"rgba\(90,110,160,\.16\)", "rgba(255,255,255,.6)", "guide ground glow"),
@@ -161,6 +161,8 @@ ROOT = re.compile(r'(<div style=")(--desk:[^"]*)(">)')
 
 # Content that changes with the theme, per board (the name without .dc.html).
 BOARD_FIX = {
+    # The zoomed row fades out by its mask; the dark veil on its right half only dims it in light.
+    "GuideDsBar": [("linear-gradient(90deg,rgba(0,0,0,0) 50%,rgba(0,0,0,.2) 85%)", "transparent")],
     # #5C626A on #F6F7F9 measures 5.74 : 1 in light (7.3 in dark): AA, not AAA.
     "GuideDsContrast": [
         (">7.3</span>", ">5.7</span>"),
@@ -208,7 +210,7 @@ for _b in ("GuideRenewalA", "GuideRenewalB"):
 
 
 # The accent's glow on the guide's grounds: in light it is only a hint of blue.
-GLOW = (re.compile(r"(radial-gradient\((?:55% 60% at 72% 62%|55% 60% at 50% 50%),rgba\(39,147,219,)\.\d+\)"), r"\1.07)")
+GLOW = (re.compile(r"(radial-gradient\((?:55% 60% at 72% 62%|55% 60% at 50% 50%),rgba\(39,147,219,)\.\d+\)"), r"\1.035)")
 
 
 def fix_board(name: str, html: str) -> str:
