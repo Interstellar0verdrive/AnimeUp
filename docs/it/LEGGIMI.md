@@ -36,7 +36,7 @@ chiara o scura (Impostazioni › Generali).
 
 ## Installazione
 
-1. Scarica `AnimeUp-v2.0.0-macos-app.zip` dall'[ultima
+1. Scarica `AnimeUp-v2.1.0-macos-app.zip` dall'[ultima
    release](https://github.com/Interstellar0verdrive/AnimeUp/releases/latest),
    scompattalo e trascina **AnimeUp.app** in Applicazioni.
 2. Aprila. La prima volta macOS la blocca, perché AnimeUp non è firmata con un
@@ -60,6 +60,13 @@ parametri usati, per esempio
 `Episodio 01 [upscale 1080p cugan x3 crf18 dd].mkv`.
 
 ## Per saperne di più
+
+<a href="https://interstellar0verdrive.github.io/AnimeUp/guide/">
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="../images/readme-guide-light.webp">
+  <img alt="La guida di AnimeUp: la home con un'immagine prima e dopo, il capitolo Start e lo studio di design" src="../images/readme-guide-dark.webp">
+</picture>
+</a>
 
 La [guida](https://interstellar0verdrive.github.io/AnimeUp/guide/) è in
 inglese e spiega ogni pagina dell'app, i modelli e gli studi di confronto, e

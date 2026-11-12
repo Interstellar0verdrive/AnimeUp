@@ -23,11 +23,24 @@ difficult clips, and runs long, resumable jobs, all on your Mac and offline.
   <img alt="AnimeUp: Start with this Mac and its video tools, and the calibration results in front, comparing every model with the factory numbers" src="docs/images/app-start-calibration.webp">
 </picture>
 
-**[Read the user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)**: installing,
-every page of the app, the model studies, and
-[the design study behind 2.0](https://interstellar0verdrive.github.io/AnimeUp/guide/deep-dives/design/).
 The app is in English and Italian, light or dark (Settings › General).
 *In italiano: [LEGGIMI](docs/it/LEGGIMI.md).*
+
+## The user guide
+
+<a href="https://interstellar0verdrive.github.io/AnimeUp/guide/">
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/readme-guide-light.webp">
+  <img alt="The AnimeUp user guide: its home page with a before and after picture, the Start chapter and the design study" src="docs/images/readme-guide-dark.webp">
+</picture>
+</a>
+
+**[Read the user guide](https://interstellar0verdrive.github.io/AnimeUp/guide/)**. It starts from
+installing and the first launch, then takes every page of the app in turn: Calibrate, Start, the
+Queue, Compare, Settings. The appendix has the
+[examples, before and after](https://interstellar0verdrive.github.io/AnimeUp/guide/examples/),
+the model studies and
+[the design study behind 2.0](https://interstellar0verdrive.github.io/AnimeUp/guide/deep-dives/design/).
 
 ---
 
