@@ -46,6 +46,7 @@ GUIDE.update({
     "GuideDsStates2": ("ds-states-light", 3, "guide"),
     "GuideDsType": ("ds-type-light", 3, "guide"),
     "GuideScreens": ("narrow-clips-and-queue-light", 3, "guide"),
+    "GuideRenewalA": ("renewal-16d-light", 3, "guide"),
     "GuideRenewalB": ("renewal-20d-light", 3, "guide"),
     "GuideScreens3": ("app-start-calibration-light", 2, "images"),
 })

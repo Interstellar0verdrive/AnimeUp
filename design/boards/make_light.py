@@ -166,10 +166,54 @@ BOARD_FIX = {
         (">7.3</span>", ">5.7</span>"),
         (re.compile(r'<span style="display:inline-flex;align-items:center;gap:5px;height:22px[^>]*><svg[^>]*><path[^>]*></path></svg>AAA</span>'), ""),
     ],
+    # 1.6 gives way to 2.0: a light ground and dark captions (the 1.6 window stays as photographed).
+    "GuideRenewalA": [
+        ("background:radial-gradient(70% 75% at 50% 45%,#2b2c2f,#151617)",
+         "background:radial-gradient(70% 75% at 50% 45%,#FBFBFC,#E6E8EC)"),
+    ],
+    "GuideRenewalB": [
+        ("background:radial-gradient(55% 60% at 50% 50%,rgba(39,147,219,.42),transparent 72%),"
+         "radial-gradient(60% 70% at 12% 0%,rgba(40,110,255,.45),transparent 70%),"
+         "radial-gradient(60% 70% at 92% 100%,rgba(120,70,255,.38),transparent 70%),"
+         "linear-gradient(160deg,#0a2236,#08121f 55%,#140f2e)",
+         "background:radial-gradient(55% 60% at 50% 50%,rgba(39,147,219,.16),transparent 72%),"
+         "radial-gradient(60% 70% at 12% 0%,rgba(40,110,255,.18),transparent 70%),"
+         "radial-gradient(60% 70% at 92% 100%,rgba(120,70,255,.16),transparent 70%),"
+         "linear-gradient(160deg,#EEF5FB,#F5F7FA 55%,#F1EFFB)"),
+    ],
 }
+# Colours: white labels on the accent's hover and pressed bands, faint dividers, and the light values in the hex.
+BOARD_FIX["GuideDsColour2"] = [
+    ("color:#06252A80\">Hover", "color:rgba(255,255,255,.8)\">Hover"),
+    ("color:#06252A80\">Pressed", "color:rgba(255,255,255,.8)\">Pressed"),
+    ("height:1px;margin:0 1px;background:rgba(0,0,0,.35)", "height:1px;margin:0 1px;background:rgba(0,0,0,.08)"),
+    (">#0275B680<", ">#2793DB80<"), (">#0275B647<", ">#2793DB47<"), (">#0275B629<", ">#2793DB29<"),
+    (">#12A1501F<", ">#E6F5EC<"), (">#F26D6D1A<", ">#FDECEA<"),
+]
+# One mark in the two themes: the two halves show the dark and the light theme, as in the dark picture.
+BOARD_FIX["GuideRule2"] = [
+    ("background:#FFFFFF;color:#16181B\"><svg width=\"34\"", "background:#16181B;color:#E8EAED\"><svg width=\"34\""),
+    ("background:#F6F7F9;color:#FFFFFF\"><svg width=\"34\"", "background:#F6F7F9;color:#16181B\"><svg width=\"34\""),
+]
+# Queue and model cards: on white, as in the app, so the soft accent tint reads light, not grey.
+BOARD_FIX["GuideDsTimes"] = [
+    ('width:256px;border-radius:10px;background:rgba(236,238,241,1)', 'width:256px;border-radius:10px;background:#FFFFFF'),
+    ('width:256px;border-radius:10px;background:#F6F7F9', 'width:256px;border-radius:10px;background:#FFFFFF'),
+]
+# All screens on one plane: in light the three raised windows are dark, the reverse of the dark picture.
+BOARD_FIX["GuideAllScreens3"] = [("gassets/scr2l/", "gassets/scr2d/")]
+for _b in ("GuideRenewalA", "GuideRenewalB"):
+    BOARD_FIX[_b] += [('font-weight:600;color:#f2f3f5">AnimeUp', 'font-weight:600;color:#17191C">AnimeUp'),
+                      ("color:rgba(235,238,242,.55)\">A ", "color:rgba(23,25,28,.6)\">A ")]
+
+
+# The accent's glow on the guide's grounds: in light it is only a hint of blue.
+GLOW = (re.compile(r"(radial-gradient\((?:55% 60% at 72% 62%|55% 60% at 50% 50%),rgba\(39,147,219,)\.\d+\)"), r"\1.07)")
 
 
 def fix_board(name: str, html: str) -> str:
+    if name.startswith("Guide") and not name.startswith("GuideRenewal"):
+        html = GLOW[0].sub(GLOW[1], html)
     for old, new in BOARD_FIX.get(name, []):
         html = old.sub(new, html) if hasattr(old, "sub") else html.replace(old, new)
     return html

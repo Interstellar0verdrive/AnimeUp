@@ -1469,6 +1469,11 @@
 .md-typeset .ms-tag--app { color: var(--animeup-accent); }
 .md-typeset .ms-tag--new { color: var(--animeup-success); }
 .md-typeset .ms-tag--out { color: var(--animeup-danger); }
+/* In light the outline alone hardly tells blue from green: a faint fill of the same colour. */
+[data-md-color-scheme="default"] .md-typeset .ms-tag { background: color-mix(in srgb, currentColor 8%, transparent); }
+@media (prefers-color-scheme: light) {
+  [data-md-color-scheme="animeup-auto"] .md-typeset .ms-tag { background: color-mix(in srgb, currentColor 8%, transparent); }
+}
 
 .md-typeset .ms-wipe {
   margin: 1em 0 1.6em;

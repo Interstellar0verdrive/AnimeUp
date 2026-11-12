@@ -28,7 +28,8 @@ Up to 1.6, AnimeUp was a web page opened in the browser, built with [Streamlit](
 <div class="au-swap" role="img" aria-label="AnimeUp 1.6, a page in the browser, giving way to AnimeUp 2.0, a native Mac app, in the same place">
   <img class="au-only-dark" src="../../img/v2/renewal-20d-dark.webp" alt="" loading="eager">
   <img class="au-only-light" src="../../img/v2/renewal-20d-light.webp" alt="" loading="eager">
-  <img class="au-swap__from" src="../../img/v2/renewal-16d-dark.webp" alt="" loading="eager">
+  <img class="au-swap__from au-only-dark" src="../../img/v2/renewal-16d-dark.webp" alt="" loading="eager">
+  <img class="au-swap__from au-only-light" src="../../img/v2/renewal-16d-light.webp" alt="" loading="eager">
   <span class="au-swap__sun" aria-hidden="true"></span>
 </div>
 
