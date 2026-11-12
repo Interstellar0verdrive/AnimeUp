@@ -85,7 +85,7 @@ markdown_extensions:
       custom_checkbox: true
 
 extra_css:
-  - stylesheets/extra.css?v=20261031-guide-25
+  - stylesheets/extra.css?v=20261112-guide-26
 
 hooks:
   - hooks/hide_markdown_nav.py
@@ -97,7 +97,7 @@ extra_javascript:
   - javascripts/toc-current.js
   - javascripts/model-wipe.js
   - javascripts/hero-compare.js
-  - javascripts/scroll-wipe.js
+  - javascripts/scroll-wipe.js?v=20261112
   - javascripts/swap.js
 
 extra:

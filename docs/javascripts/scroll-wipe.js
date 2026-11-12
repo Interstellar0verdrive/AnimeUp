@@ -23,11 +23,11 @@
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     var line = box.querySelector(".au-fade__edge line");
     var update = function () {
-      // in page coordinates: the wipe starts just before the picture begins to slide under the header
-      // (or at once, if the page opens already past that point) and ends when half the picture is gone
+      // in page coordinates: the wipe starts with the first scroll and ends when half the picture
+      // has gone under the header
       var r = box.getBoundingClientRect(), y = window.scrollY;
       var head = document.querySelector(".md-header"), hh = head ? head.offsetHeight : 0;
-      var top = r.top + y - hh, start = Math.max(0, top - window.innerHeight * 0.08), end = top + r.height / 2;
+      var top = r.top + y - hh, start = 0, end = top + r.height / 2;
       var p = Math.max(0, Math.min(1, (y - start) / Math.max(1, end - start)));
       var a = Math.min(2 * p, 1), b = Math.max(2 * p - 1, 0);
       box.style.setProperty("--wipe", p.toFixed(4));
