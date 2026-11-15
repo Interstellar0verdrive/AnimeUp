@@ -276,5 +276,11 @@ not part of this repository.
 
 ---
 
-If you enjoy AnimeUp, you can [buy me a coffee ☕](https://ko-fi.com/Interstellar0verdrive).
-Totally optional, always appreciated!
+<p align="center">
+<a href="https://ko-fi.com/Interstellar0verdrive">
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="docs/images/support-kofi-light.webp">
+  <img alt="Enjoying this project? Support independent development on Ko-fi" src="docs/images/support-kofi-dark.webp" width="560">
+</picture>
+</a>
+</p>
