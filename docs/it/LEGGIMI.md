@@ -78,5 +78,11 @@ AnimeUp è software libero, sotto licenza
 
 ---
 
-Se AnimeUp ti piace, puoi [offrirmi un caffè ☕](https://ko-fi.com/Interstellar0verdrive).
-Del tutto facoltativo, sempre apprezzato!
+<p align="center">
+<a href="https://ko-fi.com/Interstellar0verdrive">
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="../images/support-kofi-light-it.webp">
+  <img alt="Sostieni lo sviluppo indipendente su Ko-fi: offrimi un caffè" src="../images/support-kofi-dark-it.webp" width="560">
+</picture>
+</a>
+</p>
